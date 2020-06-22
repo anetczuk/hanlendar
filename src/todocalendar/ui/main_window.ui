@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>ToDo Calendar</string>
+   <string>Calendar</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -78,13 +78,13 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QTabWidget" name="tabWidget">
+         <widget class="QTabWidget" name="lists_tabs">
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
-          <widget class="QWidget" name="tab">
+          <widget class="QWidget" name="tasks_tab">
            <attribute name="title">
-            <string>Tab 1</string>
+            <string>Tasks</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_8">
             <property name="leftMargin">
@@ -104,9 +104,9 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="tab_2">
+          <widget class="QWidget" name="month_tab">
            <attribute name="title">
-            <string>Tab 2</string>
+            <string>Month</string>
            </attribute>
           </widget>
          </widget>
