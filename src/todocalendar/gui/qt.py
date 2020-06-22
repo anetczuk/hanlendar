@@ -24,6 +24,7 @@ try:
     from PyQt5.QtWidgets import QStyle, QMenu, QAction
     from PyQt5.QtWidgets import QHBoxLayout
     from PyQt5.QtWidgets import QSplitter, QTabWidget
+    from PyQt5.QtWidgets import QMainWindow
 
     from PyQt5 import QtGui
     from PyQt5.QtGui import QIcon

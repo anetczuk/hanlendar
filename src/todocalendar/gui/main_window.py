@@ -26,16 +26,18 @@ import logging
 
 from . import uiloader
 from . import resources
-from .qt import qApp, QtCore, QEvent, QIcon, QWidget, QSplitter, QTabWidget
+from .qt import qApp, QtCore, QEvent, QIcon
+from .qt import QWidget, QSplitter, QTabWidget
+from .qt import QMainWindow                         ## for typecheck
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
+UiTargetClass, QMainWindow = uiloader.loadUiFromClassName( __file__ )
 
 
-class MainWindow(QtBaseClass):
+class MainWindow( QMainWindow ):
 
     logger: logging.Logger = None
 
