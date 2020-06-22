@@ -117,14 +117,14 @@ class MainWindow( QMainWindow ):
             settings.beginGroup( wKey )
             settings.setValue("geometry", w.saveGeometry() )
             settings.endGroup()
-            
+
         widgets = self.findChildren(QSplitter)
         for w in widgets:
             wKey = getWidgetKey(w)
             settings.beginGroup( wKey )
             settings.setValue("widgetState", w.saveState() )
             settings.endGroup()
-            
+
         widgets = self.findChildren(QTabWidget)
         for w in widgets:
             wKey = getWidgetKey(w)
