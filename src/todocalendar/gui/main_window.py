@@ -28,16 +28,15 @@ from . import uiloader
 from . import resources
 from .qt import qApp, QtCore, QEvent, QIcon
 from .qt import QWidget, QSplitter, QTabWidget
-from .qt import QMainWindow                         ## for typecheck
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-UiTargetClass, QMainWindow = uiloader.loadUiFromClassName( __file__ )
+UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
 
 
-class MainWindow( QMainWindow ):
+class MainWindow( QtBaseClass ):           # type: ignore
 
     logger: logging.Logger = None
 
@@ -77,7 +76,7 @@ class MainWindow( QMainWindow ):
             settings.beginGroup( wKey )
             geometry = settings.value("geometry")
             if geometry is not None:
-                w.restoreGeometry( geometry );
+                w.restoreGeometry( geometry )
             settings.endGroup()
 
         widgets = self.findChildren(QSplitter)
@@ -86,7 +85,7 @@ class MainWindow( QMainWindow ):
             settings.beginGroup( wKey )
             state = settings.value("widgetState")
             if state is not None:
-                w.restoreState( state );
+                w.restoreState( state )
             settings.endGroup()
 
         widgets = self.findChildren(QTabWidget)
@@ -96,7 +95,7 @@ class MainWindow( QMainWindow ):
             state = settings.value("currentIndex")
             if state is not None:
                 currIndex = int(state)
-                w.setCurrentIndex( currIndex );
+                w.setCurrentIndex( currIndex )
             settings.endGroup()
 
     def saveSettings(self):
