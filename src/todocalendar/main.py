@@ -83,7 +83,6 @@ def main():
 
     args = parser.parse_args()
 
-    _LOGGER.debug("\n\n")
     _LOGGER.debug("Starting the application")
     _LOGGER.debug("Logger log file: %s" % logger.log_file)
 

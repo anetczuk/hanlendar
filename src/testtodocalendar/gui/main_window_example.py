@@ -68,7 +68,6 @@ logger.configure( logFile )
 
 _LOGGER = logging.getLogger(__name__)
 
-_LOGGER.debug("\n\n")
 _LOGGER.debug("Starting the test application")
 
 _LOGGER.debug("Logger log file: %s" % logFile)
