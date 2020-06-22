@@ -26,7 +26,7 @@ import logging
 
 from . import uiloader
 from . import resources
-from .qt import qApp, QtCore, QEvent, QIcon
+from .qt import qApp, QtCore, QEvent, QIcon, QWidget, QSplitter, QTabWidget
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,15 +68,34 @@ class MainWindow(QtBaseClass):
             self.restoreState( state )
         settings.endGroup()
 
-#         ## store geometry of all widgets
-#         widgets = self.findChildren(QWidget)
-#         for w in widgets:
-#             wKey = getWidgetKey(w)
-#             settings.beginGroup( wKey )
-#             geometry = settings.value("geometry")
-#             if geometry is not None:
-#                 w.restoreGeometry( geometry );
-#             settings.endGroup()
+        ## store geometry of all widgets
+        widgets = self.findChildren(QWidget)
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            geometry = settings.value("geometry")
+            if geometry is not None:
+                w.restoreGeometry( geometry );
+            settings.endGroup()
+
+        widgets = self.findChildren(QSplitter)
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            state = settings.value("widgetState")
+            if state is not None:
+                w.restoreState( state );
+            settings.endGroup()
+
+        widgets = self.findChildren(QTabWidget)
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            state = settings.value("currentIndex")
+            if state is not None:
+                currIndex = int(state)
+                w.setCurrentIndex( currIndex );
+            settings.endGroup()
 
     def saveSettings(self):
         settings = self.getSettings()
@@ -89,13 +108,27 @@ class MainWindow(QtBaseClass):
         settings.setValue("windowState", self.saveState() )
         settings.endGroup()
 
-#         ## store geometry of all widgets
-#         widgets = self.findChildren(QWidget)
-#         for w in widgets:
-#             wKey = getWidgetKey(w)
-#             settings.beginGroup( wKey )
-#             settings.setValue("geometry", w.saveGeometry() );
-#             settings.endGroup()
+        ## store geometry of all widgets
+        widgets = self.findChildren(QWidget)
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            settings.setValue("geometry", w.saveGeometry() )
+            settings.endGroup()
+            
+        widgets = self.findChildren(QSplitter)
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            settings.setValue("widgetState", w.saveState() )
+            settings.endGroup()
+            
+        widgets = self.findChildren(QTabWidget)
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            settings.setValue("currentIndex", w.currentIndex() )
+            settings.endGroup()
 
         ## force save to file
         settings.sync()
