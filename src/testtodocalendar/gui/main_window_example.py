@@ -57,12 +57,13 @@ _LOGGER = logging.getLogger(__name__)
 def prepareExampleData( window: MainWindow ):
     dataManager = window.getManager()
     taskDate = date.today()
+    dataManager.addTask( taskDate, "test task 1" )
+    
     if taskDate.day > 15:
         taskDate = taskDate - timedelta(2)
     else:
         taskDate = taskDate + timedelta(2)
-    _LOGGER.info( "adding task: %s", taskDate )
-    dataManager.addTask( taskDate, "test task" )
+    dataManager.addTask( taskDate, "test task 2" )
     window.reloadData()
 
 

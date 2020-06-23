@@ -79,7 +79,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         return self.domainModel
 
     def reloadData(self):
-        pass
+        self.updateTasksList()
 
     def loadSettings(self):
         settings = self.getSettings()
