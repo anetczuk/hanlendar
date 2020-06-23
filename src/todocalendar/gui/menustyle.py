@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-#
 # MIT License
 #
 # Copyright (c) 2020 Arkadiusz Netczuk <dev.arnet@gmail.com>
