@@ -39,9 +39,12 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QCalendarWidget" name="navcalendar">
+          <widget class="NavCalendar" name="navcalendar">
            <property name="gridVisible">
             <bool>true</bool>
+           </property>
+           <property name="horizontalHeaderFormat">
+            <enum>QCalendarWidget::ShortDayNames</enum>
            </property>
           </widget>
          </item>
@@ -112,6 +115,20 @@
            <attribute name="title">
             <string>Month</string>
            </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+           </layout>
           </widget>
          </widget>
         </item>
@@ -163,6 +180,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>NavCalendar</class>
+   <extends>QCalendarWidget</extends>
+   <header>todocalendar.gui.navcalendar</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
