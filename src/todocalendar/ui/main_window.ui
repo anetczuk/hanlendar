@@ -87,7 +87,7 @@
         <item>
          <widget class="QTabWidget" name="lists_tabs">
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tasks_tab">
            <attribute name="title">
@@ -107,7 +107,7 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="QListWidget" name="listWidget_4"/>
+             <widget class="QListWidget" name="tasksList"/>
             </item>
            </layout>
           </widget>

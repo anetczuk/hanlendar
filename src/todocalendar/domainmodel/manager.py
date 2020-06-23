@@ -42,5 +42,12 @@ class Manager():
                 return True
         return False
 
-    def addTask(self, taskdate: date, title):
+    def getEntries( self, entriesDate: date ):
+        retList = list()
+        for taskDate, taskText in self.tasks:
+            if taskDate == entriesDate:
+                retList.append( taskText )
+        return retList
+
+    def addTask( self, taskdate: date, title ):
         self.tasks.append( (taskdate, title) )

@@ -71,6 +71,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.ui.navcalendar.highlightModel = DataHighlightModel( self.domainModel )
 
+        self.ui.navcalendar.selectionChanged.connect( self.updateTasksList )
+
         #self.statusBar().showMessage("Ready")
 
     def getManager(self):
@@ -172,6 +174,21 @@ class MainWindow( QtBaseClass ):           # type: ignore
         appName = qApp.applicationName()
         settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, orgName, appName, self)
         return settings
+
+    ## ===============================================================
+
+    def updateTasksList(self):
+        self.clearTasksList()
+        selectedDate: QDate = self.ui.navcalendar.selectedDate()
+        entryDate = selectedDate.toPyDate()
+        entries = self.domainModel.getEntries( entryDate )
+        for item in entries:
+            self.ui.tasksList.addItem( str(item) )
+
+    def clearTasksList(self):
+        tasksList = self.ui.tasksList
+        while( tasksList.count() > 0 ):
+            tasksList.takeItem(0)
 
 
 MainWindow.logger = _LOGGER.getChild(MainWindow.__name__)
