@@ -41,7 +41,7 @@ from todocalendar.gui.qt import QApplication
 from todocalendar.gui.sigint import setup_interrupt_handling
 from todocalendar.gui.main_window import MainWindow
 
-# from testtodocalendar.gui.device_connector_mock import DeviceConnectorMock
+from datetime import date, timedelta
 
 
 ## ============================= main section ===================================
@@ -50,7 +50,23 @@ from todocalendar.gui.main_window import MainWindow
 if __name__ != '__main__':
     sys.exit(0)
 
-parser = argparse.ArgumentParser(description='Linak desk application')
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def prepareExampleData( window: MainWindow ):
+    dataManager = window.getManager()
+    taskDate = date.today()
+    if taskDate.day > 15:
+        taskDate = taskDate - timedelta(2)
+    else:
+        taskDate = taskDate + timedelta(2)
+    _LOGGER.info( "adding task: %s", taskDate )
+    dataManager.addTask( taskDate, "test task" )
+    window.reloadData()
+
+
+parser = argparse.ArgumentParser(description='ToDo Calendar')
 parser.add_argument('--profile', action='store_const', const=True, default=False, help='Profile the code' )
 parser.add_argument('--pfile', action='store', default=None, help='Profile the code and output data to file' )
 # parser.add_argument('--mode', action='store', required=True, choices=["BF", "POLY", "COMMON"], help='Mode' )
@@ -84,6 +100,8 @@ try:
 
     window = MainWindow()
     window.loadSettings()
+
+    prepareExampleData( window )
 
     if args.minimized is False:
         window.show()

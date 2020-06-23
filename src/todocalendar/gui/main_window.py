@@ -21,19 +21,34 @@
 # SOFTWARE.
 #
 
-
 import logging
 
 from . import uiloader
 from . import resources
-from .qt import qApp, QtCore, QEvent, QIcon
+from .qt import qApp, QtCore, QIcon
 from .qt import QWidget, QSplitter, QTabWidget
+
+from .navcalendar import NavCalendarHighlightModel
+
+from ..domainmodel.manager import Manager
+
+from PyQt5.QtCore import QDate
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
 UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
+
+
+class DataHighlightModel( NavCalendarHighlightModel ):
+
+    def __init__(self, manager ):
+        self.manager = manager
+
+    def isHighlighted(self, date: QDate):
+        entryDate = date.toPyDate()
+        return self.manager.hasEntries( entryDate )
 
 
 class MainWindow( QtBaseClass ):           # type: ignore
@@ -46,13 +61,23 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
 
+        self.domainModel = Manager()
+
         self.settingsFilePath = None
 
         iconPath = resources.getImagePath( "calendar-white.png" )
         appIcon = QIcon( iconPath )
         self.setWindowIcon( appIcon )
 
+        self.ui.navcalendar.highlightModel = DataHighlightModel( self.domainModel )
+
         #self.statusBar().showMessage("Ready")
+
+    def getManager(self):
+        return self.domainModel
+
+    def reloadData(self):
+        pass
 
     def loadSettings(self):
         settings = self.getSettings()
