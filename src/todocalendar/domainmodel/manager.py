@@ -26,6 +26,7 @@ from datetime import date
 import logging
 
 from .task import Task
+from .event import Event
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,11 +53,21 @@ class Manager():
         return retList
 
     def addTask( self, task: Task ):
-        taskDate = task.startDate.date()
-        self.tasks.append( (taskDate, task) )
+        entityDate = task.startDate.date()
+        self.tasks.append( (entityDate, task) )
 
     def addNewTask( self, taskdate: date, title ):
         task = Task()
         task.title = title
         task.setDefaultDate( taskdate )
         self.addTask( task )
+
+    def addEvent( self, event: Event ):
+        entityDate = event.startDate.date()
+        self.tasks.append( (entityDate, event) )
+
+    def addNewEvent( self, eventdate: date, title ):
+        event = Event()
+        event.title = title
+        event.setDefaultDate( eventdate )
+        self.addEvent( event )

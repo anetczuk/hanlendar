@@ -33,9 +33,11 @@ from PyQt5.QtWidgets import QDialog
 
 from .navcalendar import NavCalendarHighlightModel
 from .taskdialog import TaskDialog
+from .eventdialog import EventDialog
 
 from todocalendar.domainmodel.manager import Manager
 from todocalendar.domainmodel.task import Task
+from todocalendar.domainmodel.event import Event
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,6 +77,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.ui.navcalendar.selectionChanged.connect( self.updateTasksList )
         self.ui.navcalendar.addTask.connect( self.addNewTask )
+        self.ui.navcalendar.addEvent.connect( self.addNewEvent )
 
         #self.statusBar().showMessage("Ready")
 
@@ -191,6 +194,19 @@ class MainWindow( QtBaseClass ):           # type: ignore
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.addTask( task )
+        self.updateTasksList()
+
+    def addNewEvent( self, date: QDate ):
+        event = Event()
+        startDate = date.toPyDate()
+        event.setDefaultDate( startDate )
+
+        eventDialog = EventDialog( event, self )
+        eventDialog.setModal( True )
+        dialogCode = eventDialog.exec_()
+        if dialogCode == QDialog.Rejected:
+            return
+        self.domainModel.addEvent( event )
         self.updateTasksList()
 
     def updateTasksList(self):

@@ -26,21 +26,18 @@
 
 import sys
 import os
+from datetime import datetime
 
 
 #### append local library
 sys.path.append(os.path.abspath( os.path.join(os.path.dirname(__file__), "../..") ))
 
 
-# import logging
-
-import todocalendar.logger as logger
-
 from todocalendar.gui.qt import QApplication
 from todocalendar.gui.sigint import setup_interrupt_handling
-from todocalendar.gui.main_window import MainWindow
+from todocalendar.gui.eventdialog import EventDialog
 
-from datetime import date, timedelta
+from todocalendar.domainmodel.event import Event
 
 
 ## ============================= main section ===================================
@@ -50,39 +47,21 @@ if __name__ != '__main__':
     sys.exit(0)
 
 
-def prepareExampleData( window: MainWindow ):
-    dataManager = window.getManager()
-    taskDate = date.today()
-    dataManager.addNewTask( taskDate, "test task 1" )
-    dataManager.addNewEvent( taskDate, "test event 1" )
-
-    if taskDate.day > 15:
-        taskDate = taskDate - timedelta(2)
-    else:
-        taskDate = taskDate + timedelta(2)
-    dataManager.addNewTask( taskDate, "test task 2" )
-    window.reloadData()
-
-
-logFile = logger.getLoggingOutputFile()
-logger.configure( logFile )
-
-
-# _LOGGER = logging.getLogger(__name__)
-
-
 app = QApplication(sys.argv)
 app.setApplicationName("ToDoCalendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
-window = MainWindow()
-window.loadSettings()
-
-prepareExampleData( window )
-
-window.show()
+event = Event()
+event.title = "Event title"
+event.description = "Description"
+event.completed = 50
+event.setDefaultDateTime( datetime.today() )
 
 setup_interrupt_handling()
 
-sys.exit( app.exec_() )
+dialog = EventDialog( event )
+dialogCode = dialog.exec_()
+
+print( "Dialog return:", dialogCode )
+print( "Created event:", event )
