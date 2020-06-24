@@ -101,7 +101,7 @@ class NavCalendar( QCalendarWidget ):
         addTaskAction  = contextMenu.addAction("New Task")
         addEventAction = contextMenu.addAction("New Event")
         action = contextMenu.exec_( globalPos )
-        
+
         if action == addTaskAction:
             dayIndex = (cellIndex.row() - 1) * 7 + (cellIndex.column() - 1)
             contextDate = self.dateAt( dayIndex )

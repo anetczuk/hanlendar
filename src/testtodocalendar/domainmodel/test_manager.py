@@ -44,17 +44,17 @@ class ManagerTest(unittest.TestCase):
     def test_hasEntries_entries(self):
         manager = Manager()
         taskDate = datetime.date( 2020, 5, 17 )
-        manager.addTask( taskDate, "xxx" )
+        manager.addNewTask( taskDate, "xxx" )
         self.assertEqual( manager.hasEntries(taskDate), True )
 
     def test_getEntries_entries(self):
         manager = Manager()
 
         taskDate1 = datetime.date( 2020, 5, 17 )
-        manager.addTask( taskDate1, "task1" )
+        manager.addNewTask( taskDate1, "task1" )
         taskDate2 = datetime.date( 2020, 5, 18 )
-        manager.addTask( taskDate2, "task2" )
+        manager.addNewTask( taskDate2, "task2" )
 
         entries = manager.getEntries(taskDate2)
         self.assertEqual( len(entries), 1 )
-        self.assertEqual( entries[0], "task2" )
+        self.assertEqual( entries[0].title, "task2" )

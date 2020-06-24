@@ -21,42 +21,32 @@
 # SOFTWARE.
 #
 
-from datetime import date
-
-import logging
-
-from .task import Task
+from datetime import date, time, datetime, timedelta
 
 
-_LOGGER = logging.getLogger(__name__)
-
-
-class Manager():
-    """Root class for domain data structure."""
+class Task():
+    """Task is entity that lasts over time."""
 
     def __init__(self):
-        """Constructor."""
-        self.tasks = list()
+        self.title               = ""
+        self.description         = ""
+        self.completed           = 0        ## in range [0..100]
+        self.priority            = 10       ## lower number, greater priority
+        self.startDate: datetime = None
+        self.dueDate: datetime   = None
+        self.reminder            = None
+        self.recurrence          = None
 
-    def hasEntries( self, entriesDate: date ):
-        for taskDate, _ in self.tasks:
-            if taskDate == entriesDate:
-                return True
-        return False
+    def setDefaultDateTime(self, start: datetime ):
+        self.startDate = start
+        self.dueDate = self.startDate + timedelta( hours=1 )
 
-    def getEntries( self, entriesDate: date ):
-        retList = list()
-        for taskDate, task in self.tasks:
-            if taskDate == entriesDate:
-                retList.append( task )
-        return retList
+    def setDefaultDate(self, startDate: date):
+        start = datetime.combine( startDate, time(10, 0, 0) )
+        self.setDefaultDateTime( start )
 
-    def addTask( self, task: Task ):
-        taskDate = task.startDate.date()
-        self.tasks.append( (taskDate, task) )
+    def __str__(self):
+        return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s]" % ( self.title, self.description, self.completed, self.priority,
+                                                                     self.startDate, self.dueDate,
+                                                                     self.reminder, self.recurrence )
 
-    def addNewTask( self, taskdate: date, title ):
-        task = Task()
-        task.title = title
-        task.setDefaultDate( taskdate )
-        self.addTask( task )

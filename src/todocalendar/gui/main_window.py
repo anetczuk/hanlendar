@@ -25,14 +25,17 @@ import logging
 
 from . import uiloader
 from . import resources
+
 from .qt import qApp, QtCore, QIcon
 from .qt import QWidget, QSplitter, QTabWidget
+from PyQt5.QtCore import QDate
+from PyQt5.QtWidgets import QDialog
 
 from .navcalendar import NavCalendarHighlightModel
+from .taskdialog import TaskDialog
 
-from ..domainmodel.manager import Manager
-
-from PyQt5.QtCore import QDate
+from todocalendar.domainmodel.manager import Manager
+from todocalendar.domainmodel.task import Task
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +60,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def __init__(self):
         super().__init__()
-
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
 
@@ -72,6 +74,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.navcalendar.highlightModel = DataHighlightModel( self.domainModel )
 
         self.ui.navcalendar.selectionChanged.connect( self.updateTasksList )
+        self.ui.navcalendar.addTask.connect( self.addNewTask )
 
         #self.statusBar().showMessage("Ready")
 
@@ -177,9 +180,23 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     ## ===============================================================
 
+    def addNewTask( self, date: QDate ):
+        task = Task()
+        startDate = date.toPyDate()
+        task.setDefaultDate( startDate )
+
+        taskDialog = TaskDialog( task, self )
+        taskDialog.setModal( True )
+        dialogCode = taskDialog.exec_()
+        if dialogCode == QDialog.Rejected:
+            return
+        self.domainModel.addTask( task )
+        self.updateTasksList()
+
     def updateTasksList(self):
         self.clearTasksList()
         selectedDate: QDate = self.ui.navcalendar.selectedDate()
+        _LOGGER.debug( "navcalendar selection changed: %s", selectedDate )
         entryDate = selectedDate.toPyDate()
         entries = self.domainModel.getEntries( entryDate )
         for item in entries:

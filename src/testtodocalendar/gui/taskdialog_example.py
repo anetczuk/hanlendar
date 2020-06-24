@@ -1,6 +1,8 @@
+#!/usr/bin/python3
+#
 # MIT License
 #
-# Copyright (c) 2020 Arkadiusz Netczuk <dev.arnet@gmail.com>
+# Copyright (c) 2017 Arkadiusz Netczuk <dev.arnet@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,42 +23,46 @@
 # SOFTWARE.
 #
 
-from datetime import date
 
-import logging
-
-from .task import Task
-
-
-_LOGGER = logging.getLogger(__name__)
+import sys
+import os
+from datetime import datetime, timedelta
 
 
-class Manager():
-    """Root class for domain data structure."""
+#### append local library
+sys.path.append(os.path.abspath( os.path.join(os.path.dirname(__file__), "../..") ))
 
-    def __init__(self):
-        """Constructor."""
-        self.tasks = list()
 
-    def hasEntries( self, entriesDate: date ):
-        for taskDate, _ in self.tasks:
-            if taskDate == entriesDate:
-                return True
-        return False
+from todocalendar.gui.qt import QApplication
+from todocalendar.gui.sigint import setup_interrupt_handling
+from todocalendar.gui.taskdialog import TaskDialog
 
-    def getEntries( self, entriesDate: date ):
-        retList = list()
-        for taskDate, task in self.tasks:
-            if taskDate == entriesDate:
-                retList.append( task )
-        return retList
+from todocalendar.domainmodel.task import Task
 
-    def addTask( self, task: Task ):
-        taskDate = task.startDate.date()
-        self.tasks.append( (taskDate, task) )
 
-    def addNewTask( self, taskdate: date, title ):
-        task = Task()
-        task.title = title
-        task.setDefaultDate( taskdate )
-        self.addTask( task )
+## ============================= main section ===================================
+
+
+if __name__ != '__main__':
+    sys.exit(0)
+
+
+app = QApplication(sys.argv)
+app.setApplicationName("ToDoCalendar")
+app.setOrganizationName("arnet")
+### app.setOrganizationDomain("www.my-org.com")
+
+task = Task()
+task.title = "Task title"
+task.description = "Description"
+task.completed = 50
+task.priority = 5
+task.setDefaultDateTime( datetime.today() )
+
+setup_interrupt_handling()
+
+dialog = TaskDialog( task )
+dialogCode = dialog.exec_()
+
+print( "Dialog return:", dialogCode )
+print( "Created task:", task )
