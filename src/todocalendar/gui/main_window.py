@@ -75,7 +75,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.ui.navcalendar.highlightModel = DataHighlightModel( self.domainModel )
 
-        self.ui.navcalendar.selectionChanged.connect( self.updateTasksList )
+        self.ui.navcalendar.selectionChanged.connect( self.updateTasksView )
         self.ui.navcalendar.addTask.connect( self.addNewTask )
         self.ui.navcalendar.addEvent.connect( self.addNewEvent )
 
@@ -85,7 +85,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         return self.domainModel
 
     def reloadData(self):
-        self.updateTasksList()
+        self.updateTasksView()
 
     def loadSettings(self):
         settings = self.getSettings()
@@ -194,7 +194,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.addTask( taskDialog.task )
-        self.updateTasksList()
+        self.updateTasksView()
 
     def addNewEvent( self, date: QDate ):
         event = Event()
@@ -207,21 +207,17 @@ class MainWindow( QtBaseClass ):           # type: ignore
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.addEvent( eventDialog.event )
-        self.updateTasksList()
+        self.updateTasksView()
 
-    def updateTasksList(self):
-        self.clearTasksList()
+    def updateTasksView(self):
         selectedDate: QDate = self.ui.navcalendar.selectedDate()
         _LOGGER.debug( "navcalendar selection changed: %s", selectedDate )
-        entryDate = selectedDate.toPyDate()
-        entries = self.domainModel.getEntries( entryDate )
-        for item in entries:
-            self.ui.tasksList.addItem( str(item) )
+        self.updateTasksTable()
 
-    def clearTasksList(self):
-        tasksList = self.ui.tasksList
-        while( tasksList.count() > 0 ):
-            tasksList.takeItem(0)
+    def updateTasksTable(self):
+        self.ui.tasksTable.clear()
+        tasksList = self.domainModel.getTasks()
+        self.ui.tasksTable.setTasks( tasksList )
 
 
 MainWindow.logger = _LOGGER.getChild(MainWindow.__name__)

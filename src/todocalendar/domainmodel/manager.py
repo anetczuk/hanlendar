@@ -52,6 +52,14 @@ class Manager():
                 retList.append( task )
         return retList
 
+    def getTasks( self ):
+        retList = list()
+        for _, task in self.tasks:
+            if isinstance(task, Task) is False:
+                continue
+            retList.append( task )
+        return retList
+
     def addTask( self, task: Task ):
         entityDate = task.startDate.date()
         self.tasks.append( (entityDate, task) )
