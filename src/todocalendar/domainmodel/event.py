@@ -21,7 +21,7 @@
 # SOFTWARE.
 #
 
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time
 
 
 class Event():
