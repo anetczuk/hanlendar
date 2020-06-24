@@ -65,4 +65,4 @@ dialog = TaskDialog( task )
 dialogCode = dialog.exec_()
 
 print( "Dialog return:", dialogCode )
-print( "Created task:", task )
+print( "Created task:", dialog.task )

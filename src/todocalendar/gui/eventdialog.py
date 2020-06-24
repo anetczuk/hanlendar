@@ -22,7 +22,8 @@
 #
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
+import copy
 
 from . import uiloader
 
@@ -42,14 +43,16 @@ class EventDialog( QtBaseClass ):           # type: ignore
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
 
-        self.event = eventObject
-        if self.event is None:
+        if eventObject is not None:
+            self.event = copy.deepcopy( eventObject )
+        else:
             self.event = Event()
+
+        if self.event.startDate is None:
+            self.event.startDate = datetime.today()
 
         self.ui.titleEdit.setText( self.event.title )
         self.ui.descriptionEdit.setText( self.event.description )
-        if self.event.startDate is None:
-            self.event.startDate = datetime.today()
         self.ui.completionSlider.setValue( self.event.completed )
         self.ui.startDateTime.setDateTime( self.event.startDate )
 

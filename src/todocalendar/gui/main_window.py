@@ -193,7 +193,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         dialogCode = taskDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return
-        self.domainModel.addTask( task )
+        self.domainModel.addTask( taskDialog.task )
         self.updateTasksList()
 
     def addNewEvent( self, date: QDate ):
@@ -206,7 +206,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         dialogCode = eventDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return
-        self.domainModel.addEvent( event )
+        self.domainModel.addEvent( eventDialog.event )
         self.updateTasksList()
 
     def updateTasksList(self):

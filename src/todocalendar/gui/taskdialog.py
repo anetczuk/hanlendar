@@ -23,6 +23,7 @@
 
 import logging
 from datetime import datetime, timedelta
+import copy
 
 from . import uiloader
 
@@ -42,19 +43,21 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
 
-        self.task = taskObject
-        if self.task is None:
+        if taskObject is not None:
+            self.task = copy.deepcopy( taskObject )
+        else:
             self.task = Task()
+
+        if self.task.startDate is None:
+            self.task.startDate = datetime.today()
+        if self.task.dueDate is None:
+            self.task.dueDate = self.task.startDate + timedelta(hours=1)
 
         self.ui.titleEdit.setText( self.task.title )
         self.ui.descriptionEdit.setText( self.task.description )
         self.ui.completionSlider.setValue( self.task.completed )
         self.ui.priorityBox.setValue( self.task.priority )
-        if self.task.startDate is None:
-            self.task.startDate = datetime.today()
         self.ui.startDateTime.setDateTime( self.task.startDate )
-        if self.task.dueDate is None:
-            self.task.dueDate = self.task.startDate + timedelta(hours=1)
         self.ui.dueDateTime.setDateTime( self.task.dueDate )
 
         self.ui.titleEdit.textChanged.connect( self._titleChanged )

@@ -64,4 +64,4 @@ dialog = EventDialog( event )
 dialogCode = dialog.exec_()
 
 print( "Dialog return:", dialogCode )
-print( "Created event:", event )
+print( "Created task:", dialog.event )
