@@ -85,4 +85,9 @@ window.show()
 
 setup_interrupt_handling()
 
-sys.exit( app.exec_() )
+exitCode = app.exec_()
+
+if exitCode == 0:
+    window.saveSettings()
+
+sys.exit( exitCode )
