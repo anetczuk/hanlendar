@@ -50,10 +50,12 @@ class EventDialog( QtBaseClass ):           # type: ignore
         self.ui.descriptionEdit.setText( self.event.description )
         if self.event.startDate is None:
             self.event.startDate = datetime.today()
+        self.ui.completionSlider.setValue( self.event.completed )
         self.ui.startDateTime.setDateTime( self.event.startDate )
 
         self.ui.titleEdit.textChanged.connect( self._titleChanged )
         self.ui.descriptionEdit.textChanged.connect( self._descriptionChanged )
+        self.ui.completionSlider.valueChanged.connect( self._completedChanged )
         self.ui.startDateTime.dateTimeChanged.connect( self._startChanged )
 
     def _titleChanged(self, newValue):
@@ -62,6 +64,9 @@ class EventDialog( QtBaseClass ):           # type: ignore
     def _descriptionChanged(self):
         newValue = self.ui.descriptionEdit.toPlainText()
         self.event.description = newValue
+
+    def _completedChanged(self, newValue):
+        self.event.completed = newValue
 
     def _startChanged(self, newValue):
         self.event.startDate = newValue.toPyDateTime()

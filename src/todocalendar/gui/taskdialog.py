@@ -48,6 +48,7 @@ class TaskDialog( QtBaseClass ):           # type: ignore
 
         self.ui.titleEdit.setText( self.task.title )
         self.ui.descriptionEdit.setText( self.task.description )
+        self.ui.completionSlider.setValue( self.task.completed )
         self.ui.priorityBox.setValue( self.task.priority )
         if self.task.startDate is None:
             self.task.startDate = datetime.today()
@@ -58,6 +59,7 @@ class TaskDialog( QtBaseClass ):           # type: ignore
 
         self.ui.titleEdit.textChanged.connect( self._titleChanged )
         self.ui.descriptionEdit.textChanged.connect( self._descriptionChanged )
+        self.ui.completionSlider.valueChanged.connect( self._completedChanged )
         self.ui.priorityBox.valueChanged.connect( self._priorityChanged )
         self.ui.startDateTime.dateTimeChanged.connect( self._startChanged )
         self.ui.dueDateTime.dateTimeChanged.connect( self._dueChanged )
@@ -68,6 +70,9 @@ class TaskDialog( QtBaseClass ):           # type: ignore
     def _descriptionChanged(self):
         newValue = self.ui.descriptionEdit.toPlainText()
         self.task.description = newValue
+
+    def _completedChanged(self, newValue):
+        self.task.completed = newValue
 
     def _priorityChanged(self, newValue):
         self.task.priority = newValue
