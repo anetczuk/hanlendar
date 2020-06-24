@@ -26,7 +26,7 @@
 
 import sys
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 #### append local library

@@ -32,8 +32,7 @@ import os
 sys.path.append(os.path.abspath( os.path.join(os.path.dirname(__file__), "../..") ))
 
 
-import argparse
-import logging
+# import logging
 
 import todocalendar.logger as logger
 
@@ -64,58 +63,25 @@ def prepareExampleData( window: MainWindow ):
     window.reloadData()
 
 
-parser = argparse.ArgumentParser(description='ToDo Calendar')
-parser.add_argument('--profile', action='store_const', const=True, default=False, help='Profile the code' )
-parser.add_argument('--pfile', action='store', default=None, help='Profile the code and output data to file' )
-# parser.add_argument('--mode', action='store', required=True, choices=["BF", "POLY", "COMMON"], help='Mode' )
-# parser.add_argument('--file', action='store', required=True, help='File with data' )
-parser.add_argument('--connect', action='store', default=None, help='BT address to connect to' )
-parser.add_argument('--minimized', action='store_const', const=True, default=False, help='Start minimized' )
-
-
-args = parser.parse_args()
-
-
 logFile = logger.getLoggingOutputFile()
 logger.configure( logFile )
 
 
-_LOGGER = logging.getLogger(__name__)
-
-_LOGGER.debug("Starting the test application")
-
-_LOGGER.debug("Logger log file: %s" % logFile)
+# _LOGGER = logging.getLogger(__name__)
 
 
-exitCode = 0
+app = QApplication(sys.argv)
+app.setApplicationName("ToDoCalendar")
+app.setOrganizationName("arnet")
+### app.setOrganizationDomain("www.my-org.com")
 
-try:
+window = MainWindow()
+window.loadSettings()
 
-    app = QApplication(sys.argv)
-    app.setApplicationName("ToDoCalendar")
-    app.setOrganizationName("arnet")
-    ### app.setOrganizationDomain("www.my-org.com")
+prepareExampleData( window )
 
-    window = MainWindow()
-    window.loadSettings()
+window.show()
 
-    prepareExampleData( window )
+setup_interrupt_handling()
 
-    if args.minimized is False:
-        window.show()
-
-    setup_interrupt_handling()
-
-    exitCode = app.exec_()
-
-    if exitCode == 0:
-        window.saveSettings()
-
-    _LOGGER.info("Done with exit code: %s", exitCode)
-
-except BaseException:
-    exitCode = 1
-    _LOGGER.exception("Exception occurred")
-    raise
-
-sys.exit(exitCode)
+sys.exit( app.exec_() )
