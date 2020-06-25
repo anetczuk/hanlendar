@@ -25,6 +25,7 @@ import logging
 
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
 from PyQt5.QtCore import Qt
+from PyQt5.QtCore import pyqtSignal
 
 from todocalendar.domainmodel.task import Task
 
@@ -33,6 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TaskTable( QTableWidget ):
+
+    selectedTask  = pyqtSignal( int )
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -52,14 +55,31 @@ class TaskTable( QTableWidget ):
         #header.setSectionResizeMode( QHeaderView.Stretch )
         header.setStretchLastSection(True)
 
+        self.itemSelectionChanged.connect( self.taskSelectionChanged )
+
+        self.tasksList = []
+        self.setTasks( [] )
+
     def clear(self):
         self.setRowCount( 0 )
+        self.selectedTask.emit( -1 )
+
+    def getTask(self, taskIndex):
+        if taskIndex < 0:
+            return None
+        if taskIndex >= len( self.tasksList ):
+            return None
+        return self.tasksList[ taskIndex ]
 
     def setTasks( self, tasksList ):
-        tasksSize = len(tasksList)
+        self.selectedTask.emit( -1 )
+
+        self.tasksList = tasksList
+        tasksSize = len( self.tasksList )
         self.setRowCount( tasksSize )
+
         for i in range(0, tasksSize):
-            task: Task = tasksList[i]
+            task: Task = self.tasksList[i]
 
             self.setItem( i, 0, QTableWidgetItem( task.title ) )
 
@@ -80,3 +100,7 @@ class TaskTable( QTableWidget ):
             dueItem = QTableWidgetItem( str(dueDate) )
             dueItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             self.setItem( i, 4, dueItem )
+
+    def taskSelectionChanged(self):
+        taskIndex = self.currentRow()
+        self.selectedTask.emit( taskIndex )

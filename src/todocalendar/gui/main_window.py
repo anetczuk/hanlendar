@@ -79,13 +79,16 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.navcalendar.addTask.connect( self.addNewTask )
         self.ui.navcalendar.addEvent.connect( self.addNewEvent )
 
+        self.ui.tasksTable.selectedTask.connect( self.tasksTableSelectionChanged )
+
         #self.statusBar().showMessage("Ready")
 
     def getManager(self):
         return self.domainModel
 
-    def reloadData(self):
+    def refreshView(self):
         self.updateTasksView()
+        self.setDetails( None )
 
     def loadSettings(self):
         settings = self.getSettings()
@@ -218,6 +221,21 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.tasksTable.clear()
         tasksList = self.domainModel.getTasks()
         self.ui.tasksTable.setTasks( tasksList )
+
+    def setDetails(self, entity):
+        if isinstance(entity, Task):
+            self.ui.taskDetails.setTask( entity )
+            self.ui.entityDetailsStack.setCurrentIndex( 1 )
+            return
+        if isinstance(entity, Event):
+            self.ui.entityDetailsStack.setCurrentIndex( 2 )
+            return
+        # unknown entity
+        self.ui.entityDetailsStack.setCurrentIndex( 0 )
+
+    def tasksTableSelectionChanged(self, taskIndex):
+        selectedTask = self.ui.tasksTable.getTask( taskIndex )
+        self.setDetails( selectedTask )
 
 
 MainWindow.logger = _LOGGER.getChild(MainWindow.__name__)

@@ -26,21 +26,18 @@
 
 import sys
 import os
+from datetime import datetime
 
 
 #### append local library
 sys.path.append(os.path.abspath( os.path.join(os.path.dirname(__file__), "../..") ))
 
 
-# import logging
-
-import todocalendar.logger as logger
-
 from todocalendar.gui.qt import QApplication
 from todocalendar.gui.sigint import setup_interrupt_handling
-from todocalendar.gui.main_window import MainWindow
+from todocalendar.gui.taskdetails import TaskDetails
 
-from datetime import date, timedelta
+from todocalendar.domainmodel.task import Task
 
 
 ## ============================= main section ===================================
@@ -50,44 +47,23 @@ if __name__ != '__main__':
     sys.exit(0)
 
 
-def prepareExampleData( window: MainWindow ):
-    dataManager = window.getManager()
-    taskDate = date.today()
-    dataManager.addNewTask( taskDate, "test task 1" )
-    dataManager.addNewEvent( taskDate, "test event 1" )
-
-    if taskDate.day > 15:
-        taskDate = taskDate - timedelta(2)
-    else:
-        taskDate = taskDate + timedelta(2)
-    dataManager.addNewTask( taskDate, "test task 2" )
-    window.refreshView()
-
-
-logFile = logger.getLoggingOutputFile()
-logger.configure( logFile )
-
-
-# _LOGGER = logging.getLogger(__name__)
-
-
 app = QApplication(sys.argv)
 app.setApplicationName("ToDoCalendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
-window = MainWindow()
-window.loadSettings()
-
-prepareExampleData( window )
-
-window.show()
+task = Task()
+task.title = "Task title"
+task.description = "Description"
+task.completed = 50
+task.priority = 5
+task.setDefaultDateTime( datetime.today() )
 
 setup_interrupt_handling()
 
+widget = TaskDetails()
+widget.setTask( task )
+widget.show()
+
 exitCode = app.exec_()
-
-if exitCode == 0:
-    window.saveSettings()
-
 sys.exit( exitCode )

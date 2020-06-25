@@ -65,7 +65,43 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QListWidget" name="listWidget_3"/>
+          <widget class="QStackedWidget" name="entityDetailsStack">
+           <property name="currentIndex">
+            <number>1</number>
+           </property>
+           <widget class="QWidget" name="empty_page">
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QLabel" name="label_3">
+               <property name="text">
+                <string>No item selected</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="task_page">
+            <layout class="QGridLayout" name="gridLayout">
+             <item row="0" column="0">
+              <widget class="TaskDetails" name="taskDetails" native="true"/>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="event_page">
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="text">
+                <string>TextLabel</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -233,6 +269,12 @@
    <class>TaskTable</class>
    <extends>QTableWidget</extends>
    <header>todocalendar.gui.tasktable</header>
+  </customwidget>
+  <customwidget>
+   <class>TaskDetails</class>
+   <extends>QWidget</extends>
+   <header>todocalendar.gui.taskdetails</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
