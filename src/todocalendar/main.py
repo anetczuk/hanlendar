@@ -63,6 +63,7 @@ def runApp(args):
 
     window = MainWindow()
     window.loadSettings()
+    window.loadData()
 
     window.show()
 
@@ -72,6 +73,7 @@ def runApp(args):
 
     if exitCode == 0:
         window.saveSettings()
+        window.saveData()
 
     return exitCode
 

@@ -24,6 +24,7 @@
 from datetime import date
 
 import logging
+import pickle
 
 from .task import Task
 from .event import Event
@@ -39,30 +40,42 @@ class Manager():
         """Constructor."""
         self.tasks = list()
 
+    def store(self, outputFile):
+        with open(outputFile, 'wb') as fp:
+            pickle.dump( self.tasks, fp )
+
+    def load(self, inputFile):
+        try:
+            with open( inputFile, 'rb') as fp:
+                self.tasks = pickle.load(fp)
+        except FileNotFoundError:
+            self.tasks = list()
+
     def hasEntries( self, entriesDate: date ):
-        for taskDate, _ in self.tasks:
-            if taskDate == entriesDate:
+        for entry in self.tasks:
+            currDate = entry.startDate.date()
+            if currDate == entriesDate:
                 return True
         return False
 
     def getEntries( self, entriesDate: date ):
         retList = list()
-        for taskDate, task in self.tasks:
-            if taskDate == entriesDate:
-                retList.append( task )
+        for entry in self.tasks:
+            currDate = entry.startDate.date()
+            if currDate == entriesDate:
+                retList.append( entry )
         return retList
 
     def getTasks( self ):
         retList = list()
-        for _, task in self.tasks:
+        for task in self.tasks:
             if isinstance(task, Task) is False:
                 continue
             retList.append( task )
         return retList
 
     def addTask( self, task: Task ):
-        entityDate = task.startDate.date()
-        self.tasks.append( (entityDate, task) )
+        self.tasks.append( task )
 
     def addNewTask( self, taskdate: date, title ):
         task = Task()
@@ -72,15 +85,10 @@ class Manager():
         return task
 
     def removeTask( self, task: Task ):
-        for item in self.tasks:
-            currTask = item[1]
-            if currTask is task:
-                self.tasks.remove( item )
-                break
+        self.tasks.remove( task )
 
     def addEvent( self, event: Event ):
-        entityDate = event.startDate.date()
-        self.tasks.append( (entityDate, event) )
+        self.tasks.append( event )
 
     def addNewEvent( self, eventdate: date, title ):
         event = Event()

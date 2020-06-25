@@ -210,6 +210,24 @@ class MainWindow( QtBaseClass ):           # type: ignore
         return settings
 
     ## ===============================================================
+    
+    def loadData(self):
+        dataPath = self.getDataPath()
+        self.domainModel.load( dataPath )
+        self.refreshView()
+    
+    def saveData(self):
+        dataPath = self.getDataPath()
+        self.domainModel.store( dataPath )
+    
+    def getDataPath(self):
+        settings = self.getSettings()
+        settingsFile = settings.fileName()
+        settingsFile = settingsFile[0:-4]       ## remove extension
+        settingsFile += "-data.obj"
+        return settingsFile
+    
+    ## ===============================================================
 
     def addNewTask( self, date: QDate = None ):
         task = Task()
