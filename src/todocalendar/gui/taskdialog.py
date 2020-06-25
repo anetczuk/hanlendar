@@ -49,21 +49,27 @@ class TaskDialog( QtBaseClass ):           # type: ignore
             self.task = Task()
 
         if self.task.startDate is None:
-            self.task.startDate = datetime.today()
-        if self.task.dueDate is None:
-            self.task.dueDate = self.task.startDate + timedelta(hours=1)
+            self.ui.deadlineBox.setChecked( True )
+            if self.task.dueDate is None:
+                self.task.dueDate = datetime.today()
+            self.ui.startDateTime.setDateTime( self.task.dueDate )
+        else:
+            self.ui.deadlineBox.setChecked( False )
+            self.ui.startDateTime.setDateTime( self.task.startDate )
+            if self.task.dueDate is None:
+                self.task.dueDate = self.task.startDate + timedelta(hours=1)
 
         self.ui.titleEdit.setText( self.task.title )
         self.ui.descriptionEdit.setText( self.task.description )
         self.ui.completionSlider.setValue( self.task.completed )
         self.ui.priorityBox.setValue( self.task.priority )
-        self.ui.startDateTime.setDateTime( self.task.startDate )
         self.ui.dueDateTime.setDateTime( self.task.dueDate )
 
         self.ui.titleEdit.textChanged.connect( self._titleChanged )
         self.ui.descriptionEdit.textChanged.connect( self._descriptionChanged )
         self.ui.completionSlider.valueChanged.connect( self._completedChanged )
         self.ui.priorityBox.valueChanged.connect( self._priorityChanged )
+        self.ui.deadlineBox.stateChanged.connect( self._deadlineChanged )
         self.ui.startDateTime.dateTimeChanged.connect( self._startChanged )
         self.ui.dueDateTime.dateTimeChanged.connect( self._dueChanged )
 
@@ -79,6 +85,13 @@ class TaskDialog( QtBaseClass ):           # type: ignore
 
     def _priorityChanged(self, newValue):
         self.task.priority = newValue
+
+    def _deadlineChanged(self, newValue):
+        if self.ui.deadlineBox.isChecked():
+            self.task.setDeadline()
+        else:
+            startDateTime = self.ui.startDateTime.dateTime()
+            self.task.startDate = startDateTime.toPyDateTime()
 
     def _startChanged(self, newValue):
         self.task.startDate = newValue.toPyDateTime()

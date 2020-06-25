@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Task</string>
+   <string>Task edit</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -140,6 +140,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="deadlineBox">
+         <property name="text">
+          <string>Deadline</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer_2">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -263,6 +270,22 @@
     <hint type="destinationlabel">
      <x>325</x>
      <y>245</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>deadlineBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>startDateTime</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>255</x>
+     <y>122</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>148</x>
+     <y>122</y>
     </hint>
    </hints>
   </connection>

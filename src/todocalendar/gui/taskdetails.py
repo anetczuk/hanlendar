@@ -58,5 +58,10 @@ class TaskDetails( QtBaseClass ):           # type: ignore
         self.ui.descriptionEdit.setText( task.description )
         self.ui.completionLabel.setText( str(task.completed) + "%" )
         self.ui.priorityBox.setValue( task.priority )
-        self.ui.startDateTime.setDateTime( task.startDate )
+        if task.startDate is None:
+            self.ui.deadlineBox.setChecked( True )
+            self.ui.startDateTime.setDateTime( task.dueDate )
+        else:
+            self.ui.deadlineBox.setChecked( False )
+            self.ui.startDateTime.setDateTime( task.startDate )
         self.ui.dueDateTime.setDateTime( task.dueDate )

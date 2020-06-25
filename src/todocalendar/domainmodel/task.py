@@ -51,6 +51,9 @@ class Task():
         start = datetime.combine( startDate, time(10, 0, 0) )
         self.setDefaultDateTime( start )
 
+    def setDeadline(self):
+        self.startDate = None
+
     def setDeadlineDateTime(self, due: datetime ):
         self.startDate = None
         self.dueDate = due
