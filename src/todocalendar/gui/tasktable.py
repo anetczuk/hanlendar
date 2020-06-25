@@ -43,7 +43,6 @@ class TaskTable( QTableWidget ):
         self.setSelectionBehavior( QAbstractItemView.SelectRows )
         self.setSelectionMode( QAbstractItemView.SingleSelection )
         self.setEditTriggers( QAbstractItemView.NoEditTriggers )
-        self.setSortingEnabled( True )
         self.setAlternatingRowColors( True )
         self.setShowGrid( False )
 
@@ -53,7 +52,9 @@ class TaskTable( QTableWidget ):
 
         header = self.horizontalHeader()
         #header.setSectionResizeMode( QHeaderView.Stretch )
-        header.setStretchLastSection(True)
+#         header.setStretchLastSection(True)
+        header.setHighlightSections( False )
+        header.setSectionResizeMode(4, QHeaderView.Stretch)
 
         self.itemSelectionChanged.connect( self.taskSelectionChanged )
 
@@ -100,6 +101,8 @@ class TaskTable( QTableWidget ):
             dueItem = QTableWidgetItem( str(dueDate) )
             dueItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             self.setItem( i, 4, dueItem )
+
+        self.setSortingEnabled( True )
 
     def taskSelectionChanged(self):
         taskIndex = self.currentRow()
