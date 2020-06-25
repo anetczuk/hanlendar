@@ -51,10 +51,8 @@ class TaskTable( QTableWidget ):
         self.setHorizontalHeaderLabels( headerLabels )
 
         header = self.horizontalHeader()
-        #header.setSectionResizeMode( QHeaderView.Stretch )
-#         header.setStretchLastSection(True)
         header.setHighlightSections( False )
-        header.setSectionResizeMode(4, QHeaderView.Stretch)
+        header.setSectionResizeMode( 0, QHeaderView.Stretch )
 
         self.itemSelectionChanged.connect( self.taskSelectionChanged )
 
