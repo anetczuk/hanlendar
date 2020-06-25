@@ -72,7 +72,7 @@ class TaskTable( QTableWidget ):
         return userData
 
     def setTasks( self, tasksList ):
-        self.selectedTask.emit( -1 )
+        self.setSortingEnabled( False )     ## workaround to fix disappearing cells content
 
         tasksSize = len( tasksList )
         self.setRowCount( tasksSize )
