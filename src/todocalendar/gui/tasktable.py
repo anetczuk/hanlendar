@@ -58,7 +58,6 @@ class TaskTable( QTableWidget ):
 
         self.itemSelectionChanged.connect( self.taskSelectionChanged )
 
-        self.tasksList = []
         self.setTasks( [] )
 
     def clear(self):
@@ -68,21 +67,24 @@ class TaskTable( QTableWidget ):
     def getTask(self, taskIndex):
         if taskIndex < 0:
             return None
-        if taskIndex >= len( self.tasksList ):
+        if taskIndex >= self.rowCount():
             return None
-        return self.tasksList[ taskIndex ]
+        tableItem = self.item( taskIndex, 0 )
+        userData = tableItem.data( Qt.UserRole )
+        return userData
 
     def setTasks( self, tasksList ):
         self.selectedTask.emit( -1 )
 
-        self.tasksList = tasksList
-        tasksSize = len( self.tasksList )
+        tasksSize = len( tasksList )
         self.setRowCount( tasksSize )
 
         for i in range(0, tasksSize):
-            task: Task = self.tasksList[i]
+            task: Task = tasksList[i]
 
-            self.setItem( i, 0, QTableWidgetItem( task.title ) )
+            titleItem = QTableWidgetItem( task.title )
+            titleItem.setData( Qt.UserRole, task )
+            self.setItem( i, 0, titleItem )
 
             priorityItem = QTableWidgetItem( str(task.priority) )
             priorityItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
