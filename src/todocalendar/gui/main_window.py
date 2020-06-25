@@ -82,6 +82,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.tasksTable.selectedTask.connect( self.tasksTableSelectionChanged )
         self.ui.tasksTable.addNewTask.connect( self.addNewTask )
         self.ui.tasksTable.editTask.connect( self.editTask )
+        self.ui.tasksTable.removeTask.connect( self.removeTask )
 
         #self.statusBar().showMessage("Ready")
 
@@ -222,6 +223,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
             return
         self.domainModel.addTask( taskDialog.task )
         self.updateTasksTable()
+        self.ui.navcalendar.repaint()
 
     def editTask(self, task: Task ):
         taskDialog = TaskDialog( task, self )
@@ -232,6 +234,12 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.domainModel.removeTask( task )
         self.domainModel.addTask( taskDialog.task )
         self.updateTasksTable()
+        self.ui.navcalendar.repaint()
+
+    def removeTask(self, task: Task ):
+        self.domainModel.removeTask( task )
+        self.updateTasksTable()
+        self.ui.navcalendar.repaint()
 
     def addNewEvent( self, date: QDate ):
         event = Event()

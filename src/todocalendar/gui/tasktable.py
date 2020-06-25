@@ -39,6 +39,7 @@ class TaskTable( QTableWidget ):
     selectedTask = pyqtSignal( int )
     addNewTask   = pyqtSignal()
     editTask     = pyqtSignal( Task )
+    removeTask   = pyqtSignal( Task )
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -75,6 +76,8 @@ class TaskTable( QTableWidget ):
         return userData
 
     def setTasks( self, tasksList ):
+        self.clear()
+        
         self.setSortingEnabled( False )     ## workaround to fix disappearing cells content
 
         tasksSize = len( tasksList )
@@ -122,12 +125,14 @@ class TaskTable( QTableWidget ):
             task = self.getTask( rowIndex )
 
         contextMenu = QMenu(self)
-        addTaskAction  = contextMenu.addAction("New Task")
+        addTaskAction = contextMenu.addAction("New Task")
         editTaskAction = contextMenu.addAction("Edit Task")
+        removeTaskAction = contextMenu.addAction("Remove Task")
 
         if task is None:
             ## context menu on background
             editTaskAction.setEnabled( False )
+            removeTaskAction.setEnabled( False )
 
         action = contextMenu.exec_( globalPos )
 
@@ -135,3 +140,5 @@ class TaskTable( QTableWidget ):
             self.addNewTask.emit()
         elif action == editTaskAction:
             self.editTask.emit( task )
+        elif action == removeTaskAction:
+            self.removeTask.emit( task )
