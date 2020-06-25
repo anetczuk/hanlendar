@@ -148,6 +148,10 @@ class MainWindow( QtBaseClass ):           # type: ignore
                 if state is not None:
                     currWidth = int(state)
                     w.setColumnWidth( c, currWidth )
+            sortColumn = settings.value( "sortColumn" )
+            sortOrder = settings.value( "sortOrder" )
+            if sortColumn is not None and sortOrder is not None:
+                w.sortByColumn( int(sortColumn), int(sortOrder) )
             settings.endGroup()
 
     def saveSettings(self):
@@ -190,6 +194,11 @@ class MainWindow( QtBaseClass ):           # type: ignore
             settings.beginGroup( wKey )
             for c in range(0, colsNum):
                 settings.setValue( "column" + str(c), w.columnWidth(c) )
+            header = w.horizontalHeader()
+            sortColumn = header.sortIndicatorSection()
+            settings.setValue( "sortColumn", sortColumn )
+            sortOrder = header.sortIndicatorOrder()
+            settings.setValue( "sortOrder", sortOrder )
             settings.endGroup()
 
         ## force save to file
