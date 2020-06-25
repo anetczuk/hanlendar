@@ -24,7 +24,8 @@
 import logging
 
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMenu
+from PyQt5.QtCore import Qt, QItemSelectionModel
 from PyQt5.QtCore import pyqtSignal
 
 from todocalendar.domainmodel.task import Task
@@ -35,7 +36,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class TaskTable( QTableWidget ):
 
-    selectedTask  = pyqtSignal( int )
+    selectedTask = pyqtSignal( int )
+    addNewTask   = pyqtSignal()
+    editTask     = pyqtSignal( Task )
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -107,3 +110,28 @@ class TaskTable( QTableWidget ):
     def taskSelectionChanged(self):
         taskIndex = self.currentRow()
         self.selectedTask.emit( taskIndex )
+
+    def contextMenuEvent( self, event ):
+        evPos     = event.pos()
+        globalPos = self.viewport().mapToGlobal( evPos )
+
+        task: Task = None
+        item = self.itemAt( evPos )
+        if item is not None:
+            rowIndex = self.row( item )
+            task = self.getTask( rowIndex )
+
+        contextMenu = QMenu(self)
+        addTaskAction  = contextMenu.addAction("New Task")
+        editTaskAction = contextMenu.addAction("Edit Task")
+
+        if task is None:
+            ## context menu on background
+            editTaskAction.setEnabled( False )
+
+        action = contextMenu.exec_( globalPos )
+
+        if action == addTaskAction:
+            self.addNewTask.emit()
+        elif action == editTaskAction:
+            self.editTask.emit( task )

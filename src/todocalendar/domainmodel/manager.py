@@ -69,6 +69,14 @@ class Manager():
         task.title = title
         task.setDefaultDate( taskdate )
         self.addTask( task )
+        return task
+
+    def removeTask( self, task: Task ):
+        for item in self.tasks:
+            currTask = item[1]
+            if currTask is task:
+                self.tasks.remove( item )
+                break
 
     def addEvent( self, event: Event ):
         entityDate = event.startDate.date()

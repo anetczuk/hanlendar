@@ -80,6 +80,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.navcalendar.addEvent.connect( self.addNewEvent )
 
         self.ui.tasksTable.selectedTask.connect( self.tasksTableSelectionChanged )
+        self.ui.tasksTable.addNewTask.connect( self.addNewTask )
+        self.ui.tasksTable.editTask.connect( self.editTask )
 
         #self.statusBar().showMessage("Ready")
 
@@ -207,16 +209,27 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     ## ===============================================================
 
-    def addNewTask( self, date: QDate ):
+    def addNewTask( self, date: QDate = None ):
         task = Task()
-        startDate = date.toPyDate()
-        task.setDefaultDate( startDate )
+        if date is not None:
+            startDate = date.toPyDate()
+            task.setDefaultDate( startDate )
 
         taskDialog = TaskDialog( task, self )
         taskDialog.setModal( True )
         dialogCode = taskDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return
+        self.domainModel.addTask( taskDialog.task )
+        self.updateTasksTable()
+
+    def editTask(self, task: Task ):
+        taskDialog = TaskDialog( task, self )
+        taskDialog.setModal( True )
+        dialogCode = taskDialog.exec_()
+        if dialogCode == QDialog.Rejected:
+            return
+        self.domainModel.removeTask( task )
         self.domainModel.addTask( taskDialog.task )
         self.updateTasksTable()
 
@@ -239,7 +252,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.updateTasksTable()
 
     def updateTasksTable(self):
-        self.ui.tasksTable.clear()
         tasksList = self.domainModel.getTasks()
         self.ui.tasksTable.setTasks( tasksList )
 

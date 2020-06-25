@@ -64,3 +64,20 @@ class ManagerTest(unittest.TestCase):
         entries = manager.getEntries(eventDate1)
         self.assertEqual( len(entries), 1 )
         self.assertEqual( entries[0].title, "event1" )
+
+    def test_removeTask(self):
+        manager = Manager()
+
+        taskDate1 = datetime.date( 2020, 5, 17 )
+        task1 = manager.addNewTask( taskDate1, "task1" )
+        taskDate2 = datetime.date( 2020, 5, 18 )
+        manager.addNewTask( taskDate2, "task2" )
+
+        tasks = manager.getTasks()
+        self.assertEqual( len(tasks), 2 )
+
+        manager.removeTask( task1 )
+
+        tasks = manager.getTasks()
+        self.assertEqual( len(tasks), 1 )
+        self.assertEqual( tasks[0].title, "task2" )
