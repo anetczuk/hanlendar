@@ -81,6 +81,13 @@ class Manager():
     def removeTask( self, task: Task ):
         self.tasks.remove( task )
 
+    def replaceTask( self, oldTask: Task, newTask: Task ):
+        for i in range(0, len(self.tasks)):
+            entry = self.tasks[i]
+            if entry == oldTask:
+                self.tasks[i] = newTask
+                break
+
     def addNewDeadline( self, eventdate: date, title ):
         event = Task()
         event.title = title

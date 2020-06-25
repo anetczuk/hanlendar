@@ -256,8 +256,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         dialogCode = taskDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return
-        self.domainModel.removeTask( task )
-        self.domainModel.addTask( taskDialog.task )
+        self.domainModel.replaceTask( task, taskDialog.task )
         self.updateTasksTable()
         self.ui.navcalendar.repaint()
 

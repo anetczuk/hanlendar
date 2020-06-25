@@ -23,8 +23,10 @@
 
 import unittest
 
-from todocalendar.domainmodel.manager import Manager
 import datetime
+
+from todocalendar.domainmodel.manager import Manager
+from todocalendar.domainmodel.task import Task
 
 
 class ManagerTest(unittest.TestCase):
@@ -81,3 +83,20 @@ class ManagerTest(unittest.TestCase):
         tasks = manager.getTasks()
         self.assertEqual( len(tasks), 1 )
         self.assertEqual( tasks[0].title, "task2" )
+
+    def test_replaceTask(self):
+        manager = Manager()
+
+        taskDate1 = datetime.date( 2020, 5, 17 )
+        task1 = manager.addNewTask( taskDate1, "task1" )
+        task2 = Task()
+        task2.title = "new task"
+
+        tasks = manager.getTasks()
+        self.assertEqual( len(tasks), 1 )
+
+        manager.replaceTask( task1, task2 )
+
+        tasks = manager.getTasks()
+        self.assertEqual( len(tasks), 1 )
+        self.assertEqual( tasks[0].title, "new task" )
