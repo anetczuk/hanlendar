@@ -29,7 +29,7 @@ from . import resources
 from .qt import qApp, QtCore, QIcon
 from .qt import QWidget, QSplitter, QTabWidget
 from PyQt5.QtCore import QDate
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QTableWidget
 
 from .navcalendar import NavCalendarHighlightModel
 from .taskdialog import TaskDialog
@@ -134,6 +134,18 @@ class MainWindow( QtBaseClass ):           # type: ignore
                 w.setCurrentIndex( currIndex )
             settings.endGroup()
 
+        widgets = self.findChildren( QTableWidget )
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            colsNum = w.columnCount()
+            for c in range(0, colsNum):
+                state = settings.value( "column" + str(c) )
+                if state is not None:
+                    currWidth = int(state)
+                    w.setColumnWidth( c, currWidth )
+            settings.endGroup()
+
     def saveSettings(self):
         settings = self.getSettings()
         self.logger.debug( "saving app state to %s", settings.fileName() )
@@ -146,25 +158,34 @@ class MainWindow( QtBaseClass ):           # type: ignore
         settings.endGroup()
 
         ## store geometry of all widgets
-        widgets = self.findChildren(QWidget)
+        widgets = self.findChildren( QWidget )
         for w in widgets:
             wKey = getWidgetKey(w)
             settings.beginGroup( wKey )
             settings.setValue("geometry", w.saveGeometry() )
             settings.endGroup()
 
-        widgets = self.findChildren(QSplitter)
+        widgets = self.findChildren( QSplitter )
         for w in widgets:
             wKey = getWidgetKey(w)
             settings.beginGroup( wKey )
             settings.setValue("widgetState", w.saveState() )
             settings.endGroup()
 
-        widgets = self.findChildren(QTabWidget)
+        widgets = self.findChildren( QTabWidget )
         for w in widgets:
             wKey = getWidgetKey(w)
             settings.beginGroup( wKey )
             settings.setValue("currentIndex", w.currentIndex() )
+            settings.endGroup()
+
+        widgets = self.findChildren( QTableWidget )
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            colsNum = w.columnCount()
+            settings.beginGroup( wKey )
+            for c in range(0, colsNum):
+                settings.setValue( "column" + str(c), w.columnWidth(c) )
             settings.endGroup()
 
         ## force save to file
