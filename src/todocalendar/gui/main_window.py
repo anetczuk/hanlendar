@@ -83,6 +83,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.tasksTable.addNewTask.connect( self.addNewTask )
         self.ui.tasksTable.editTask.connect( self.editTask )
         self.ui.tasksTable.removeTask.connect( self.removeTask )
+        self.ui.tasksTable.markCompleted.connect( self.markTaskCompleted )
 
         #self.statusBar().showMessage("Ready")
 
@@ -240,6 +241,10 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.domainModel.removeTask( task )
         self.updateTasksTable()
         self.ui.navcalendar.repaint()
+
+    def markTaskCompleted(self, task: Task ):
+        task.setCompleted()
+        self.updateTasksTable()
 
     def addNewEvent( self, date: QDate ):
         event = Event()

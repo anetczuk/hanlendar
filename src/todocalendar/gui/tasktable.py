@@ -36,10 +36,11 @@ _LOGGER = logging.getLogger(__name__)
 
 class TaskTable( QTableWidget ):
 
-    selectedTask = pyqtSignal( int )
-    addNewTask   = pyqtSignal()
-    editTask     = pyqtSignal( Task )
-    removeTask   = pyqtSignal( Task )
+    selectedTask  = pyqtSignal( int )
+    addNewTask    = pyqtSignal()
+    editTask      = pyqtSignal( Task )
+    removeTask    = pyqtSignal( Task )
+    markCompleted = pyqtSignal( Task )
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -77,7 +78,7 @@ class TaskTable( QTableWidget ):
 
     def setTasks( self, tasksList ):
         self.clear()
-        
+
         self.setSortingEnabled( False )     ## workaround to fix disappearing cells content
 
         tasksSize = len( tasksList )
@@ -128,11 +129,13 @@ class TaskTable( QTableWidget ):
         addTaskAction = contextMenu.addAction("New Task")
         editTaskAction = contextMenu.addAction("Edit Task")
         removeTaskAction = contextMenu.addAction("Remove Task")
+        markCompletedAction = contextMenu.addAction("Mark completed")
 
         if task is None:
             ## context menu on background
             editTaskAction.setEnabled( False )
             removeTaskAction.setEnabled( False )
+            markCompletedAction.setEnabled( False )
 
         action = contextMenu.exec_( globalPos )
 
@@ -142,3 +145,5 @@ class TaskTable( QTableWidget ):
             self.editTask.emit( task )
         elif action == removeTaskAction:
             self.removeTask.emit( task )
+        elif action == markCompletedAction:
+            self.markCompleted.emit( task )

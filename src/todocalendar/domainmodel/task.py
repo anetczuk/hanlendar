@@ -45,6 +45,9 @@ class Task():
         start = datetime.combine( startDate, time(10, 0, 0) )
         self.setDefaultDateTime( start )
 
+    def setCompleted(self):
+        self.completed = 100
+
     def __str__(self):
         return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s]" % ( self.title, self.description, self.completed, self.priority,
                                                                      self.startDate, self.dueDate,
