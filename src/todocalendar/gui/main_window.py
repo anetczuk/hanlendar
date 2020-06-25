@@ -75,7 +75,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.ui.navcalendar.highlightModel = DataHighlightModel( self.domainModel )
 
-        self.ui.navcalendar.selectionChanged.connect( self.updateTasksView )
+#         self.ui.navcalendar.selectionChanged.connect( self.updateTasksView )
         self.ui.navcalendar.addTask.connect( self.addNewTask )
         self.ui.navcalendar.addEvent.connect( self.addNewEvent )
 
@@ -218,7 +218,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.addTask( taskDialog.task )
-        self.updateTasksView()
+        self.updateTasksTable()
 
     def addNewEvent( self, date: QDate ):
         event = Event()
