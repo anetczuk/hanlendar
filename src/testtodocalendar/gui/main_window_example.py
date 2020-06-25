@@ -54,7 +54,7 @@ def prepareExampleData( window: MainWindow ):
     dataManager = window.getManager()
     taskDate = date.today()
     dataManager.addNewTask( taskDate, "test task 1" )
-    dataManager.addNewEvent( taskDate, "test event 1" )
+    dataManager.addNewDeadline( taskDate, "test deadline 1" )
 
     if taskDate.day > 15:
         taskDate = taskDate - timedelta(2)

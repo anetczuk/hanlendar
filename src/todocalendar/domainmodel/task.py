@@ -37,6 +37,12 @@ class Task():
         self.reminder            = None
         self.recurrence          = None
 
+    def getReferenceDate(self):
+        if self.startDate is None:
+            ## deadline case
+            return self.dueDate
+        return self.startDate
+
     def setDefaultDateTime(self, start: datetime ):
         self.startDate = start
         self.dueDate = self.startDate + timedelta( hours=1 )
@@ -44,6 +50,14 @@ class Task():
     def setDefaultDate(self, startDate: date):
         start = datetime.combine( startDate, time(10, 0, 0) )
         self.setDefaultDateTime( start )
+
+    def setDeadlineDateTime(self, due: datetime ):
+        self.startDate = None
+        self.dueDate = due
+
+    def setDeadlineDate(self, dueDate: date):
+        due = datetime.combine( dueDate, time(10, 0, 0) )
+        self.setDeadlineDateTime( due )
 
     def setCompleted(self):
         self.completed = 100

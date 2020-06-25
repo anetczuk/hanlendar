@@ -27,7 +27,6 @@ import logging
 import pickle
 
 from .task import Task
-from .event import Event
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +52,7 @@ class Manager():
 
     def hasEntries( self, entriesDate: date ):
         for entry in self.tasks:
-            currDate = entry.startDate.date()
+            currDate = entry.getReferenceDate().date()
             if currDate == entriesDate:
                 return True
         return False
@@ -61,18 +60,13 @@ class Manager():
     def getEntries( self, entriesDate: date ):
         retList = list()
         for entry in self.tasks:
-            currDate = entry.startDate.date()
+            currDate = entry.getReferenceDate().date()
             if currDate == entriesDate:
                 retList.append( entry )
         return retList
 
     def getTasks( self ):
-        retList = list()
-        for task in self.tasks:
-            if isinstance(task, Task) is False:
-                continue
-            retList.append( task )
-        return retList
+        return self.tasks
 
     def addTask( self, task: Task ):
         self.tasks.append( task )
@@ -87,11 +81,8 @@ class Manager():
     def removeTask( self, task: Task ):
         self.tasks.remove( task )
 
-    def addEvent( self, event: Event ):
-        self.tasks.append( event )
-
-    def addNewEvent( self, eventdate: date, title ):
-        event = Event()
+    def addNewDeadline( self, eventdate: date, title ):
+        event = Task()
         event.title = title
-        event.setDefaultDate( eventdate )
-        self.addEvent( event )
+        event.setDeadlineDate( eventdate )
+        self.addTask( event )

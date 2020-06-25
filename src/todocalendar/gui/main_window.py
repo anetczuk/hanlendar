@@ -33,11 +33,9 @@ from PyQt5.QtWidgets import QDialog, QTableWidget
 
 from .navcalendar import NavCalendarHighlightModel
 from .taskdialog import TaskDialog
-from .eventdialog import EventDialog
 
 from todocalendar.domainmodel.manager import Manager
 from todocalendar.domainmodel.task import Task
-from todocalendar.domainmodel.event import Event
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,7 +75,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
 #         self.ui.navcalendar.selectionChanged.connect( self.updateTasksView )
         self.ui.navcalendar.addTask.connect( self.addNewTask )
-        self.ui.navcalendar.addEvent.connect( self.addNewEvent )
 
         self.ui.tasksTable.selectedTask.connect( self.tasksTableSelectionChanged )
         self.ui.tasksTable.addNewTask.connect( self.addNewTask )
@@ -219,23 +216,23 @@ class MainWindow( QtBaseClass ):           # type: ignore
         return settings
 
     ## ===============================================================
-    
+
     def loadData(self):
         dataPath = self.getDataPath()
         self.domainModel.load( dataPath )
         self.refreshView()
-    
+
     def saveData(self):
         dataPath = self.getDataPath()
         self.domainModel.store( dataPath )
-    
+
     def getDataPath(self):
         settings = self.getSettings()
         settingsFile = settings.fileName()
         settingsFile = settingsFile[0:-4]       ## remove extension
         settingsFile += "-data.obj"
         return settingsFile
-    
+
     ## ===============================================================
 
     def addNewTask( self, date: QDate = None ):
@@ -273,19 +270,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
         task.setCompleted()
         self.updateTasksTable()
 
-    def addNewEvent( self, date: QDate ):
-        event = Event()
-        startDate = date.toPyDate()
-        event.setDefaultDate( startDate )
-
-        eventDialog = EventDialog( event, self )
-        eventDialog.setModal( True )
-        dialogCode = eventDialog.exec_()
-        if dialogCode == QDialog.Rejected:
-            return
-        self.domainModel.addEvent( eventDialog.event )
-        self.updateTasksView()
-
     def updateTasksView(self):
         selectedDate: QDate = self.ui.navcalendar.selectedDate()
         _LOGGER.debug( "navcalendar selection changed: %s", selectedDate )
@@ -299,9 +283,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
         if isinstance(entity, Task):
             self.ui.taskDetails.setTask( entity )
             self.ui.entityDetailsStack.setCurrentIndex( 1 )
-            return
-        if isinstance(entity, Event):
-            self.ui.entityDetailsStack.setCurrentIndex( 2 )
             return
         # unknown entity
         self.ui.entityDetailsStack.setCurrentIndex( 0 )

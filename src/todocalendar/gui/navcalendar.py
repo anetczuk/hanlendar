@@ -47,7 +47,6 @@ class NavCalendarHighlightModel():
 class NavCalendar( QCalendarWidget ):
 
     addTask  = pyqtSignal( QDate )
-    addEvent = pyqtSignal( QDate )
 
     def __init__( self, *args ):
         QCalendarWidget.__init__( self, *args )
@@ -99,17 +98,12 @@ class NavCalendar( QCalendarWidget ):
 
         contextMenu = QMenu(self)
         addTaskAction  = contextMenu.addAction("New Task")
-        addEventAction = contextMenu.addAction("New Event")
         action = contextMenu.exec_( globalPos )
 
         if action == addTaskAction:
             dayIndex = (cellIndex.row() - 1) * 7 + (cellIndex.column() - 1)
             contextDate = self.dateAt( dayIndex )
             self.addTask.emit( contextDate )
-        elif action == addEventAction:
-            dayIndex = (cellIndex.row() - 1) * 7 + (cellIndex.column() - 1)
-            contextDate = self.dateAt( dayIndex )
-            self.addEvent.emit( contextDate )
 
     def dateAt( self, dayIndex ):
         prevMonthDays = self.daysFromPreviousMonth()

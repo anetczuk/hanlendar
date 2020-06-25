@@ -99,7 +99,10 @@ class TaskTable( QTableWidget ):
             completedItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             self.setItem( i, 2, completedItem )
 
-            startDate = task.startDate.date()
+            startDate = "---"
+            if task.startDate is not None:
+                ## no start date -- deadline case
+                startDate = task.startDate.date()
             startItem = QTableWidgetItem( str(startDate) )
             startItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             self.setItem( i, 3, startItem )
