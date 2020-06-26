@@ -95,24 +95,29 @@ class ReminderWidget( QtBaseClass ):           # type: ignore
             self.ui.daysBox.setEnabled( False )
             self.ui.hoursEdit.setEnabled( False )
             self.ui.removePB.setEnabled( False )
-        else:
-            self.ui.daysBox.setEnabled( True )
-            self.ui.hoursEdit.setEnabled( True )
-            self.ui.removePB.setEnabled( True )
+            return
 
-            timeOffset = reminder.splitTimeOffset()
-            self.ui.daysBox.setValue( timeOffset[0] )
-            time = QTime.fromMSecsSinceStartOfDay( timeOffset[1] * 1000 )
-            self.ui.hoursEdit.setTime( time )
+        self.ui.daysBox.setEnabled( True )
+        self.ui.hoursEdit.setEnabled( True )
+        self.ui.removePB.setEnabled( True )
+
+        timeOffset = reminder.splitTimeOffset()
+        self.ui.daysBox.setValue( timeOffset[0] )
+        time = QTime.fromMSecsSinceStartOfDay( timeOffset[1] * 1000 )
+        self.ui.hoursEdit.setTime( time )
 
     def _daysChanged(self, newValue):
         reminder: Reminder = self._getCurrentReminder()
         reminder.setDays( newValue )
+        item = self.ui.reminderList.currentItem()
+        item.setText( reminder.printPretty() )
 
     def _hoursChanged(self, newTime):
         reminder: Reminder = self._getCurrentReminder()
         millis = newTime.msecsSinceStartOfDay()
         reminder.setMillis( millis )
+        item = self.ui.reminderList.currentItem()
+        item.setText( reminder.printPretty() )
 
     # ===================================================================
 
@@ -139,6 +144,7 @@ class ReminderWidget( QtBaseClass ):           # type: ignore
         self.ui.daysBox.setEnabled( False )
         self.ui.hoursEdit.setEnabled( False )
         self.ui.reminderList.setEnabled( True )
+        
         self.ui.reminderList.clear()
         for i in range( 0, len(self.task.reminderList) ):
             rem = self.task.reminderList[ i ]
