@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>651</width>
-    <height>492</height>
+    <height>805</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -206,6 +206,11 @@
       <attribute name="title">
        <string>Reminder</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="ReminderWidget" name="reminderWidget" native="true"/>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="recurrentTab">
       <attribute name="title">
@@ -223,6 +228,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ReminderWidget</class>
+   <extends>QWidget</extends>
+   <header>todocalendar.gui.reminderwidget</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

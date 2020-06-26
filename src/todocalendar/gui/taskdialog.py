@@ -48,6 +48,8 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         else:
             self.task = Task()
 
+        self.ui.reminderWidget.setTask( self.task )
+
         if self.task.startDate is None:
             self.ui.deadlineBox.setChecked( True )
             if self.task.dueDate is None:

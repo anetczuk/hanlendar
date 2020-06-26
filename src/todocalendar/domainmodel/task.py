@@ -23,19 +23,23 @@
 
 from datetime import date, time, datetime, timedelta
 
+from .reminder import Reminder
+
+from typing import List
+
 
 class Task():
     """Task is entity that lasts over time."""
 
     def __init__(self):
-        self.title               = ""
-        self.description         = ""
-        self.completed           = 0        ## in range [0..100]
-        self.priority            = 10       ## lower number, greater priority
-        self.startDate: datetime = None
-        self.dueDate: datetime   = None
-        self.reminder            = None
-        self.recurrence          = None
+        self.title                          = ""
+        self.description                    = ""
+        self.completed                      = 0        ## in range [0..100]
+        self.priority                       = 10       ## lower number, greater priority
+        self.startDate: datetime            = None
+        self.dueDate: datetime              = None
+        self.reminderList: List[Reminder]   = None
+        self.recurrence                     = None
 
     def getReferenceDate(self):
         if self.startDate is None:
@@ -68,5 +72,5 @@ class Task():
     def __str__(self):
         return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s]" % ( self.title, self.description, self.completed, self.priority,
                                                                      self.startDate, self.dueDate,
-                                                                     self.reminder, self.recurrence )
+                                                                     self.reminderList, self.recurrence )
 
