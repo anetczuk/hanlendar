@@ -25,6 +25,7 @@ import logging
 
 from . import uiloader
 from . import resources
+from . import tray_icon
 
 from .qt import qApp, QtCore, QIcon
 from .qt import QWidget, QSplitter, QTabWidget
@@ -70,6 +71,12 @@ class MainWindow( QtBaseClass ):           # type: ignore
         iconPath = resources.getImagePath( "calendar-white.png" )
         appIcon = QIcon( iconPath )
         self.setWindowIcon( appIcon )
+
+        self.trayIcon = tray_icon.TrayIcon(self)
+        self.trayIcon.setToolTip("ToDo Calendar")
+
+        self.setIconTheme( tray_icon.TrayIconTheme.WHITE )
+        self.trayIcon.show()
 
         self.ui.navcalendar.highlightModel = DataHighlightModel( self.domainModel )
 
@@ -289,6 +296,18 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def tasksTableSelectionChanged(self, taskIndex):
         selectedTask = self.ui.tasksTable.getTask( taskIndex )
         self.setDetails( selectedTask )
+
+    ## ====================================================================
+
+    def setIconTheme(self, theme: tray_icon.TrayIconTheme):
+        _LOGGER.debug("setting tray theme: %r", theme)
+
+        fileName = theme.value
+        iconPath = resources.getImagePath( fileName )
+        appIcon = QIcon( iconPath )
+
+        self.setWindowIcon( appIcon )
+        self.trayIcon.setIcon( appIcon )
 
 
 MainWindow.logger = _LOGGER.getChild(MainWindow.__name__)

@@ -144,7 +144,7 @@ class ReminderWidget( QtBaseClass ):           # type: ignore
         self.ui.daysBox.setEnabled( False )
         self.ui.hoursEdit.setEnabled( False )
         self.ui.reminderList.setEnabled( True )
-        
+
         self.ui.reminderList.clear()
         for i in range( 0, len(self.task.reminderList) ):
             rem = self.task.reminderList[ i ]
