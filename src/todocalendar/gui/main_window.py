@@ -299,6 +299,11 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     ## ====================================================================
 
+    ## slot
+    def closeApplication(self):
+        ##self.close()
+        qApp.quit()
+
     def setIconTheme(self, theme: tray_icon.TrayIconTheme):
         _LOGGER.debug("setting tray theme: %r", theme)
 
@@ -308,6 +313,18 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.setWindowIcon( appIcon )
         self.trayIcon.setIcon( appIcon )
+        
+    # Override closeEvent, to intercept the window closing event
+    def closeEvent(self, event):
+        event.ignore()
+        self.hide()
+        self.trayIcon.show()
+
+    def showEvent(self, event):
+        self.trayIcon.updateLabel()
+
+    def hideEvent(self, event):
+        self.trayIcon.updateLabel()
 
 
 MainWindow.logger = _LOGGER.getChild(MainWindow.__name__)
