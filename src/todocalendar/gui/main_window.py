@@ -34,9 +34,11 @@ from PyQt5.QtWidgets import QDialog, QTableWidget
 
 from .navcalendar import NavCalendarHighlightModel
 from .taskdialog import TaskDialog
+from .settingsdialog import SettingsDialog
 
 from todocalendar.domainmodel.manager import Manager
 from todocalendar.domainmodel.task import Task
+from todocalendar.gui.settingsdialog import AppSettings
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,18 +67,11 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.setupUi(self)
 
         self.domainModel = Manager()
-
-        self.settingsFilePath = None
-
-        iconPath = resources.getImagePath( "calendar-white.png" )
-        appIcon = QIcon( iconPath )
-        self.setWindowIcon( appIcon )
+        self.appSettings = AppSettings()
+        
 
         self.trayIcon = tray_icon.TrayIcon(self)
         self.trayIcon.setToolTip("ToDo Calendar")
-
-        self.setIconTheme( tray_icon.TrayIconTheme.WHITE )
-        self.trayIcon.show()
 
         self.ui.navcalendar.highlightModel = DataHighlightModel( self.domainModel )
 
@@ -89,6 +84,11 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.tasksTable.removeTask.connect( self.removeTask )
         self.ui.tasksTable.markCompleted.connect( self.markTaskCompleted )
 
+        self.ui.actionOptions.triggered.connect( self.openSettingsDialog )
+
+        self.handleSettings()
+        self.trayIcon.show()
+        
         #self.statusBar().showMessage("Ready")
 
     def getManager(self):
@@ -97,130 +97,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def refreshView(self):
         self.updateTasksView()
         self.setDetails( None )
-
-    def loadSettings(self):
-        settings = self.getSettings()
-        self.logger.debug( "loading app state from %s", settings.fileName() )
-        #self.ui.appSettings.loadSettings( settings )
-
-        ## restore widget state and geometry
-        settings.beginGroup( self.objectName() )
-        geometry = settings.value("geometry")
-        state = settings.value("windowState")
-        if geometry is not None:
-            self.restoreGeometry( geometry )
-        if state is not None:
-            self.restoreState( state )
-        settings.endGroup()
-
-        ## store geometry of all widgets
-        widgets = self.findChildren(QWidget)
-        for w in widgets:
-            wKey = getWidgetKey(w)
-            settings.beginGroup( wKey )
-            geometry = settings.value("geometry")
-            if geometry is not None:
-                w.restoreGeometry( geometry )
-            settings.endGroup()
-
-        widgets = self.findChildren(QSplitter)
-        for w in widgets:
-            wKey = getWidgetKey(w)
-            settings.beginGroup( wKey )
-            state = settings.value("widgetState")
-            if state is not None:
-                w.restoreState( state )
-            settings.endGroup()
-
-        widgets = self.findChildren(QTabWidget)
-        for w in widgets:
-            wKey = getWidgetKey(w)
-            settings.beginGroup( wKey )
-            state = settings.value("currentIndex")
-            if state is not None:
-                currIndex = int(state)
-                w.setCurrentIndex( currIndex )
-            settings.endGroup()
-
-        widgets = self.findChildren( QTableWidget )
-        for w in widgets:
-            wKey = getWidgetKey(w)
-            settings.beginGroup( wKey )
-            colsNum = w.columnCount()
-            for c in range(0, colsNum):
-                state = settings.value( "column" + str(c) )
-                if state is not None:
-                    currWidth = int(state)
-                    w.setColumnWidth( c, currWidth )
-            sortColumn = settings.value( "sortColumn" )
-            sortOrder = settings.value( "sortOrder" )
-            if sortColumn is not None and sortOrder is not None:
-                w.sortByColumn( int(sortColumn), int(sortOrder) )
-            settings.endGroup()
-
-    def saveSettings(self):
-        settings = self.getSettings()
-        self.logger.debug( "saving app state to %s", settings.fileName() )
-#         self.ui.appSettings.saveSettings( settings )
-
-        ## store widget state and geometry
-        settings.beginGroup( self.objectName() )
-        settings.setValue("geometry", self.saveGeometry() )
-        settings.setValue("windowState", self.saveState() )
-        settings.endGroup()
-
-        ## store geometry of all widgets
-        widgets = self.findChildren( QWidget )
-        for w in widgets:
-            wKey = getWidgetKey(w)
-            settings.beginGroup( wKey )
-            settings.setValue("geometry", w.saveGeometry() )
-            settings.endGroup()
-
-        widgets = self.findChildren( QSplitter )
-        for w in widgets:
-            wKey = getWidgetKey(w)
-            settings.beginGroup( wKey )
-            settings.setValue("widgetState", w.saveState() )
-            settings.endGroup()
-
-        widgets = self.findChildren( QTabWidget )
-        for w in widgets:
-            wKey = getWidgetKey(w)
-            settings.beginGroup( wKey )
-            settings.setValue("currentIndex", w.currentIndex() )
-            settings.endGroup()
-
-        widgets = self.findChildren( QTableWidget )
-        for w in widgets:
-            wKey = getWidgetKey(w)
-            colsNum = w.columnCount()
-            settings.beginGroup( wKey )
-            for c in range(0, colsNum):
-                settings.setValue( "column" + str(c), w.columnWidth(c) )
-            header = w.horizontalHeader()
-            sortColumn = header.sortIndicatorSection()
-            settings.setValue( "sortColumn", sortColumn )
-            sortOrder = header.sortIndicatorOrder()
-            settings.setValue( "sortOrder", sortOrder )
-            settings.endGroup()
-
-        ## force save to file
-        settings.sync()
-
-    def getSettings(self):
-#         ## store in app directory
-#         if self.settingsFilePath is None:
-# #             scriptDir = os.path.dirname(os.path.realpath(__file__))
-# #             self.settingsFilePath = os.path.realpath( scriptDir + "../../../../tmp/settings.ini" )
-#             self.settingsFilePath = "settings.ini"
-#         settings = QtCore.QSettings(self.settingsFilePath, QtCore.QSettings.IniFormat, self)
-
-        ## store in home directory
-        orgName = qApp.organizationName()
-        appName = qApp.applicationName()
-        settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, orgName, appName, self)
-        return settings
 
     ## ===============================================================
 
@@ -313,7 +189,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.setWindowIcon( appIcon )
         self.trayIcon.setIcon( appIcon )
-        
+
     # Override closeEvent, to intercept the window closing event
     def closeEvent(self, event):
         event.ignore()
@@ -325,6 +201,149 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def hideEvent(self, event):
         self.trayIcon.updateLabel()
+
+    ## ====================================================================
+
+    def openSettingsDialog(self):
+        dialog = SettingsDialog( self.appSettings, self )
+        dialog.setModal( True )
+        dialog.iconThemeChanged.connect( self.setIconTheme )
+        dialogCode = dialog.exec_()
+        if dialogCode == QDialog.Rejected:
+            self.handleSettings()
+            return
+        self.appSettings = dialog.appSettings
+        self.handleSettings()
+
+    def handleSettings(self):
+        self.setIconTheme( self.appSettings.trayIcon )
+
+    def loadSettings(self):
+        settings = self.getSettings()
+        self.logger.debug( "loading app state from %s", settings.fileName() )
+
+        self.appSettings.loadSettings( settings )
+        self.handleSettings()
+
+        ## restore widget state and geometry
+        settings.beginGroup( self.objectName() )
+        geometry = settings.value("geometry")
+        state = settings.value("windowState")
+        if geometry is not None:
+            self.restoreGeometry( geometry )
+        if state is not None:
+            self.restoreState( state )
+        settings.endGroup()
+
+        ## store geometry of all widgets
+        widgets = self.findChildren(QWidget)
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            geometry = settings.value("geometry")
+            if geometry is not None:
+                w.restoreGeometry( geometry )
+            settings.endGroup()
+
+        widgets = self.findChildren(QSplitter)
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            state = settings.value("widgetState")
+            if state is not None:
+                w.restoreState( state )
+            settings.endGroup()
+
+        widgets = self.findChildren(QTabWidget)
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            state = settings.value("currentIndex")
+            if state is not None:
+                currIndex = int(state)
+                w.setCurrentIndex( currIndex )
+            settings.endGroup()
+
+        widgets = self.findChildren( QTableWidget )
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            colsNum = w.columnCount()
+            for c in range(0, colsNum):
+                state = settings.value( "column" + str(c) )
+                if state is not None:
+                    currWidth = int(state)
+                    w.setColumnWidth( c, currWidth )
+            sortColumn = settings.value( "sortColumn" )
+            sortOrder = settings.value( "sortOrder" )
+            if sortColumn is not None and sortOrder is not None:
+                w.sortByColumn( int(sortColumn), int(sortOrder) )
+            settings.endGroup()
+
+    def saveSettings(self):
+        settings = self.getSettings()
+        self.logger.debug( "saving app state to %s", settings.fileName() )
+        
+        self.appSettings.saveSettings( settings )
+
+        ## store widget state and geometry
+        settings.beginGroup( self.objectName() )
+        settings.setValue("geometry", self.saveGeometry() )
+        settings.setValue("windowState", self.saveState() )
+        settings.endGroup()
+
+        ## store geometry of all widgets
+        widgets = self.findChildren( QWidget )
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            settings.setValue("geometry", w.saveGeometry() )
+            settings.endGroup()
+
+        widgets = self.findChildren( QSplitter )
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            settings.setValue("widgetState", w.saveState() )
+            settings.endGroup()
+
+        widgets = self.findChildren( QTabWidget )
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            settings.beginGroup( wKey )
+            settings.setValue("currentIndex", w.currentIndex() )
+            settings.endGroup()
+
+        widgets = self.findChildren( QTableWidget )
+        for w in widgets:
+            wKey = getWidgetKey(w)
+            colsNum = w.columnCount()
+            settings.beginGroup( wKey )
+            for c in range(0, colsNum):
+                settings.setValue( "column" + str(c), w.columnWidth(c) )
+            header = w.horizontalHeader()
+            sortColumn = header.sortIndicatorSection()
+            settings.setValue( "sortColumn", sortColumn )
+            sortOrder = header.sortIndicatorOrder()
+            settings.setValue( "sortOrder", sortOrder )
+            settings.endGroup()
+
+        ## force save to file
+        settings.sync()
+
+    def getSettings(self):
+#         ## store in app directory
+#         if self.settingsFilePath is None:
+# #             scriptDir = os.path.dirname(os.path.realpath(__file__))
+# #             self.settingsFilePath = os.path.realpath( scriptDir + "../../../../tmp/settings.ini" )
+#             self.settingsFilePath = "settings.ini"
+#         settings = QtCore.QSettings(self.settingsFilePath, QtCore.QSettings.IniFormat, self)
+
+        ## store in home directory
+        orgName = qApp.organizationName()
+        appName = qApp.applicationName()
+        settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, orgName, appName, self)
+        return settings
 
 
 MainWindow.logger = _LOGGER.getChild(MainWindow.__name__)

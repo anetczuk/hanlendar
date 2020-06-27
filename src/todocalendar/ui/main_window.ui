@@ -232,15 +232,14 @@
     </property>
     <addaction name="actionExit"/>
    </widget>
-   <widget class="QMenu" name="menuZoom">
+   <widget class="QMenu" name="menuEdit">
     <property name="title">
-     <string>&amp;Zoom</string>
+     <string>Edit</string>
     </property>
-    <addaction name="actionZoom_In"/>
-    <addaction name="actionZoom_Out"/>
+    <addaction name="actionOptions"/>
    </widget>
    <addaction name="menuConnect"/>
-   <addaction name="menuZoom"/>
+   <addaction name="menuEdit"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionExit">
@@ -256,6 +255,11 @@
   <action name="actionZoom_Out">
    <property name="text">
     <string>Zoom &amp;Out</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>Options</string>
    </property>
   </action>
  </widget>
@@ -283,7 +287,7 @@
    <sender>actionExit</sender>
    <signal>triggered()</signal>
    <receiver>mainWindow</receiver>
-   <slot>close()</slot>
+   <slot>closeApplication()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -296,4 +300,7 @@
    </hints>
   </connection>
  </connections>
+ <slots>
+  <slot>closeApplication()</slot>
+ </slots>
 </ui>
