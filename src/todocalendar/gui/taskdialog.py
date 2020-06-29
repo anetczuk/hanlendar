@@ -88,6 +88,7 @@ class TaskDialog( QtBaseClass ):           # type: ignore
     def _priorityChanged(self, newValue):
         self.task.priority = newValue
 
+    ## deadline checkbox
     def _deadlineChanged(self, newValue):
         if self.ui.deadlineBox.isChecked():
             self.task.setDeadline()
@@ -99,4 +100,4 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.task.startDate = newValue.toPyDateTime()
 
     def _dueChanged(self, newValue):
-        self.task.priority = newValue.toPyDateTime()
+        self.task.dueDate = newValue.toPyDateTime()
