@@ -216,6 +216,11 @@
       <attribute name="title">
        <string>Recurrent</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="RecurrentWidget" name="recurrentWidget" native="true"/>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
@@ -233,6 +238,12 @@
    <class>ReminderWidget</class>
    <extends>QWidget</extends>
    <header>todocalendar.gui.reminderwidget</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>RecurrentWidget</class>
+   <extends>QWidget</extends>
+   <header>todocalendar.gui.recurrentwidget</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
