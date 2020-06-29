@@ -94,6 +94,10 @@ class Task():
         ret.sort( key=Notification.sortByTime )
         return ret
 
+    def isTimedout(self):
+        currTime = datetime.today()
+        return currTime > self.dueDate
+
     def __str__(self):
         return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s]" % ( self.title, self.description, self.completed, self.priority,
                                                                      self.startDate, self.dueDate,

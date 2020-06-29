@@ -185,6 +185,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def showTaskNotification( self, notification: Notification ):
         self.trayIcon.displayMessage( notification.message )
+        self.updateTasksTable()
 
     ## ====================================================================
 

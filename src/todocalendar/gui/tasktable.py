@@ -27,6 +27,7 @@ from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, Q
 from PyQt5.QtWidgets import QMenu
 from PyQt5.QtCore import Qt, QItemSelectionModel
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QColor, QBrush
 
 from todocalendar.domainmodel.task import Task
 
@@ -86,30 +87,42 @@ class TaskTable( QTableWidget ):
 
         for i in range(0, tasksSize):
             task: Task = tasksList[i]
+            timedout = task.isTimedout()
 
             titleItem = QTableWidgetItem( task.title )
             titleItem.setData( Qt.UserRole, task )
+            if timedout:
+                titleItem.setForeground( QBrush(QColor(255, 0, 0)) )
             self.setItem( i, 0, titleItem )
 
             priorityItem = QTableWidgetItem( str(task.priority) )
             priorityItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
+            if timedout:
+                priorityItem.setForeground( QBrush(QColor(255, 0, 0)) )
             self.setItem( i, 1, priorityItem )
 
             completedItem = QTableWidgetItem( str(task.completed) )
             completedItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
+            if timedout:
+                completedItem.setForeground( QBrush(QColor(255, 0, 0)) )
             self.setItem( i, 2, completedItem )
 
             startDate = "---"
             if task.startDate is not None:
                 ## no start date -- deadline case
-                startDate = task.startDate.date()
+                startDate = task.startDate.strftime( "%Y-%m-%d %H:%M:%S" )
             startItem = QTableWidgetItem( str(startDate) )
             startItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
+            if timedout:
+                startItem.setForeground( QBrush(QColor(255, 0, 0)) )
             self.setItem( i, 3, startItem )
 
-            dueDate = task.dueDate.date()
+            dueDate = task.dueDate.strftime( "%Y-%m-%d %H:%M:%S" )
+            #dueDate = task.dueDate.date()
             dueItem = QTableWidgetItem( str(dueDate) )
             dueItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
+            if timedout:
+                dueItem.setForeground( QBrush(QColor(255, 0, 0)) )
             self.setItem( i, 4, dueItem )
 
         self.setSortingEnabled( True )
