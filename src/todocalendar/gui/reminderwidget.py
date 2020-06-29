@@ -46,6 +46,8 @@ class ReminderWidget( QtBaseClass ):           # type: ignore
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
 
+        self.task = None
+
         self.ui.daysBox.valueChanged.connect( self._daysChanged )
         self.ui.hoursEdit.timeChanged.connect( self._hoursChanged )
 
