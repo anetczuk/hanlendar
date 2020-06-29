@@ -44,10 +44,10 @@ class NotificationTimer( QObject ):
 
     def setNotifications(self, notifList):
         self.notifs = notifList
-        self.timer.stop()
         self.processNotifs()
 
     def processNotifs(self):
+        self.timer.stop()
         if len(self.notifs) < 1:
             _LOGGER.info("no notifications")
             self.nextNotif = None

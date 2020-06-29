@@ -138,6 +138,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.addTask( taskDialog.task )
+        self.updateNotificationTimer()
         self.updateTasksTable()
         self.ui.navcalendar.repaint()
 
@@ -148,16 +149,19 @@ class MainWindow( QtBaseClass ):           # type: ignore
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.replaceTask( task, taskDialog.task )
+        self.updateNotificationTimer()
         self.updateTasksTable()
         self.ui.navcalendar.repaint()
 
     def removeTask(self, task: Task ):
         self.domainModel.removeTask( task )
+        self.updateNotificationTimer()
         self.updateTasksTable()
         self.ui.navcalendar.repaint()
 
     def markTaskCompleted(self, task: Task ):
         task.setCompleted()
+        self.updateNotificationTimer()
         self.updateTasksTable()
 
     def updateTasksView(self):
