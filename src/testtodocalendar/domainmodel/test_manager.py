@@ -100,3 +100,20 @@ class ManagerTest(unittest.TestCase):
         tasks = manager.getTasks()
         self.assertEqual( len(tasks), 1 )
         self.assertEqual( tasks[0].title, "new task" )
+
+    def test_getNotificationList(self):
+        manager = Manager()
+
+        taskDate1 = datetime.datetime.today() + datetime.timedelta( seconds=60 )
+        manager.addNewDeadlineDateTime( taskDate1, "task1" )
+        taskDate2 = datetime.datetime.today() + datetime.timedelta( seconds=30 )
+        manager.addNewDeadlineDateTime( taskDate2, "task2" )
+
+        tasks = manager.getTasks()
+        self.assertEqual( len(tasks), 2 )
+
+        notifications = manager.getNotificationList()
+
+        self.assertEqual( len(notifications), 2 )
+        self.assertEqual( notifications[0].task.title, "task2" )
+        self.assertEqual( notifications[1].task.title, "task1" )

@@ -23,7 +23,7 @@
 
 from datetime import date, time, datetime, timedelta
 
-from .reminder import Reminder
+from .reminder import Reminder, Notification
 
 from typing import List
 
@@ -68,6 +68,31 @@ class Task():
 
     def setCompleted(self):
         self.completed = 100
+
+    def getNotifications(self):
+        if self.dueDate is None:
+            return list()
+        currTime = datetime.today()
+        ret = list()
+        if self.dueDate > currTime:
+            notif = Notification()
+            notif.notifyTime = self.dueDate
+            notif.task = self
+            notif.message = "task '%s' reached deadline" % self.title
+            ret.append( notif )
+
+        if self.reminderList is None:
+            return ret
+
+        for reminder in self.reminderList:
+            notif = Notification()
+            notif.notifyTime = self.dueDate - reminder.timeOffset
+            notif.task = self
+            notif.message = reminder.printPretty()
+            ret.append( notif )
+
+        ret.sort( key=Notification.sortByTime )
+        return ret
 
     def __str__(self):
         return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s]" % ( self.title, self.description, self.completed, self.priority,

@@ -21,12 +21,13 @@
 # SOFTWARE.
 #
 
-from datetime import date
+from datetime import date, datetime
 
 import logging
 import pickle
 
 from .task import Task
+from .reminder import Notification
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,6 +79,13 @@ class Manager():
         self.addTask( task )
         return task
 
+    def addNewTaskDateTime( self, taskdate: datetime, title ):
+        task = Task()
+        task.title = title
+        task.setDefaultDateTime( taskdate )
+        self.addTask( task )
+        return task
+
     def removeTask( self, task: Task ):
         self.tasks.remove( task )
 
@@ -93,3 +101,18 @@ class Manager():
         event.title = title
         event.setDeadlineDate( eventdate )
         self.addTask( event )
+
+    def addNewDeadlineDateTime( self, eventdate: datetime, title ):
+        event = Task()
+        event.title = title
+        event.setDeadlineDateTime( eventdate )
+        self.addTask( event )
+
+    def getNotificationList(self):
+        ret = list()
+        for i in range(0, len(self.tasks)):
+            task = self.tasks[i]
+            notifs = task.getNotifications()
+            ret.extend( notifs )
+        ret.sort( key=Notification.sortByTime )
+        return ret

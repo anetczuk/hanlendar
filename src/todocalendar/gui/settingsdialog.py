@@ -26,16 +26,16 @@ from . import tray_icon
 
 
 class AppSettings():
-    
+
     def __init__(self):
         self.trayIcon = tray_icon.TrayIconTheme.WHITE
-        
+
     def loadSettings(self, settings):
         settings.beginGroup( "app_settings" )
 
         trayName = settings.value("trayIcon", None, type=str)
         self.trayIcon = tray_icon.TrayIconTheme.findByName( trayName )
-        
+
         if self.trayIcon is None:
             self.trayIcon = tray_icon.TrayIconTheme.WHITE
 
@@ -63,7 +63,7 @@ class SettingsDialog(QtBaseClass):           # type: ignore
         super().__init__(parentWidget)
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
-        
+
         if appSettings is not None:
             self.appSettings = copy.deepcopy( appSettings )
         else:
@@ -73,10 +73,10 @@ class SettingsDialog(QtBaseClass):           # type: ignore
         for item in tray_icon.TrayIconTheme:
             itemName = item.name
             self.ui.trayThemeCB.addItem( itemName, item )
-        
+
         index = tray_icon.TrayIconTheme.indexOf( self.appSettings.trayIcon )
         self.ui.trayThemeCB.setCurrentIndex( index )
-        
+
         self.ui.trayThemeCB.currentIndexChanged.connect( self._trayThemeChanged )
 
     ## =====================================================

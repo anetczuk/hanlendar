@@ -21,10 +21,9 @@
 # SOFTWARE.
 #
 
-from datetime import timedelta
-import copy
-
 from enum import Enum, unique
+from datetime import datetime, timedelta
+# import copy
 
 
 @unique
@@ -37,6 +36,23 @@ class TimePointType(Enum):
 class RemainderDirectionType(Enum):
     Before = ()
 #     After  = ()
+
+
+class Notification():
+
+    def __init__(self):
+        self.notifyTime = None
+        self.message = None
+        self.task = None
+
+    def remainingSeconds(self):
+        currTime = datetime.today()
+        timeDiff = self.notifyTime - currTime
+        return timeDiff.total_seconds()
+
+    @staticmethod
+    def sortByTime( notification ):
+        return notification.notifyTime
 
 
 class Reminder():

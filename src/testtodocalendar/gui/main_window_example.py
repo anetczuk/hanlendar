@@ -40,7 +40,7 @@ from todocalendar.gui.qt import QApplication
 from todocalendar.gui.sigint import setup_interrupt_handling
 from todocalendar.gui.main_window import MainWindow
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 
 ## ============================= main section ===================================
@@ -52,15 +52,19 @@ if __name__ != '__main__':
 
 def prepareExampleData( window: MainWindow ):
     dataManager = window.getManager()
-    taskDate = date.today()
-    dataManager.addNewTask( taskDate, "test task 1" )
-    dataManager.addNewDeadline( taskDate, "test deadline 1" )
+    taskDate = datetime.today() - timedelta( seconds=5 )
+    dataManager.addNewTaskDateTime( taskDate, "test task 1" )
+    dataManager.addNewDeadlineDateTime( taskDate, "test deadline 1" )
 
     if taskDate.day > 15:
         taskDate = taskDate - timedelta(2)
     else:
         taskDate = taskDate + timedelta(2)
-    dataManager.addNewTask( taskDate, "test task 2" )
+    dataManager.addNewTaskDateTime( taskDate, "test task 2" )
+
+    deadlineDate = datetime.today() + timedelta( seconds=10 )
+    dataManager.addNewDeadlineDateTime( deadlineDate, "test deadline 2" )
+
     window.refreshView()
 
 

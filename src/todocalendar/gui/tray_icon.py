@@ -80,14 +80,11 @@ class TrayIcon(QSystemTrayIcon):
         tray_menu.addAction( quit_action )
         self.setContextMenu( tray_menu )
 
-#     def displayMessage(self, message):
-#         timeout = 10000
-#         ## under xfce4 there is problem with balloon icon -- it changes tray icon, so
-#         ## it cannot be changed back to proper one. Workaround is to use NoIcon parameter
-#         self.showMessage("Keyboard", message, QSystemTrayIcon.NoIcon, timeout)
-
-#     def setInfo(self, message):
-#         self.setToolTip("Keyboard: " + message)
+    def displayMessage(self, message):
+        timeout = 10000
+        ## under xfce4 there is problem with balloon icon -- it changes tray icon, so
+        ## it cannot be changed back to proper one. Workaround is to use NoIcon parameter
+        self.showMessage("ToDo Calendar", message, QSystemTrayIcon.NoIcon, timeout)
 
     def setIconTheme(self, theme: TrayIconTheme):
         _LOGGER.debug("setting tray theme: %r", theme)

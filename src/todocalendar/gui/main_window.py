@@ -35,10 +35,12 @@ from PyQt5.QtWidgets import QDialog, QTableWidget
 from .navcalendar import NavCalendarHighlightModel
 from .taskdialog import TaskDialog
 from .settingsdialog import SettingsDialog
+from todocalendar.gui.settingsdialog import AppSettings
+from todocalendar.gui.notifytimer import NotificationTimer
 
 from todocalendar.domainmodel.manager import Manager
 from todocalendar.domainmodel.task import Task
-from todocalendar.gui.settingsdialog import AppSettings
+from todocalendar.domainmodel.reminder import Notification
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,10 +70,11 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.domainModel = Manager()
         self.appSettings = AppSettings()
-        
 
         self.trayIcon = tray_icon.TrayIcon(self)
         self.trayIcon.setToolTip("ToDo Calendar")
+
+        self.notifsTimer = NotificationTimer( self )
 
         self.ui.navcalendar.highlightModel = DataHighlightModel( self.domainModel )
 
@@ -86,15 +89,18 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.ui.actionOptions.triggered.connect( self.openSettingsDialog )
 
+        self.notifsTimer.remindTask.connect( self.showTaskNotification )
+
         self.handleSettings()
         self.trayIcon.show()
-        
+
         #self.statusBar().showMessage("Ready")
 
     def getManager(self):
         return self.domainModel
 
     def refreshView(self):
+        self.updateNotificationTimer()
         self.updateTasksView()
         self.setDetails( None )
 
@@ -172,6 +178,13 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def tasksTableSelectionChanged(self, taskIndex):
         selectedTask = self.ui.tasksTable.getTask( taskIndex )
         self.setDetails( selectedTask )
+
+    def updateNotificationTimer(self):
+        notifs = self.domainModel.getNotificationList()
+        self.notifsTimer.setNotifications( notifs )
+
+    def showTaskNotification( self, notification: Notification ):
+        self.trayIcon.displayMessage( notification.message )
 
     ## ====================================================================
 
@@ -283,7 +296,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def saveSettings(self):
         settings = self.getSettings()
         self.logger.debug( "saving app state to %s", settings.fileName() )
-        
+
         self.appSettings.saveSettings( settings )
 
         ## store widget state and geometry

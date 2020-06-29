@@ -23,9 +23,33 @@
 
 import unittest
 
-import datetime
+from datetime import datetime, timedelta
 
-from todocalendar.domainmodel.reminder import Reminder
+from todocalendar.domainmodel.reminder import Reminder, Notification
+
+
+class NotificationTest(unittest.TestCase):
+    def setUp(self):
+        ## Called before testfunction is executed
+        pass
+
+    def tearDown(self):
+        ## Called after testfunction was executed
+        pass
+
+    def test_remainingSeconds_positive(self):
+        notify = Notification()
+        currTime = datetime.today() + timedelta( seconds=5 )
+        notify.notifyTime = currTime
+        secs = notify.remainingSeconds()
+        self.assertGreater( secs, 0 )
+
+    def test_remainingSeconds_negative(self):
+        notify = Notification()
+        currTime = datetime.today() - timedelta( seconds=5 )
+        notify.notifyTime = currTime
+        secs = notify.remainingSeconds()
+        self.assertLess( secs, 0 )
 
 
 class ReminderTest(unittest.TestCase):
