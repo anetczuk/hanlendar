@@ -54,7 +54,7 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
         self._repeatModeChanged()
 
         self.ui.repeatModeCB.currentIndexChanged.connect( self._repeatModeChanged )
-        self.ui.repeatSB.valueChanged.connect( self._repeatValueChanged )
+        self.ui.everySB.valueChanged.connect( self._everyValueChanged )
 
         self.setTask( None )
 
@@ -72,7 +72,7 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
             self._setRepeatMode( RepeatType.NEVER )
             return
         self._setRepeatMode( self.task.recurrence.mode )
-        self.ui.repeatSB.setValue( self.task.recurrence.repeat )
+        self.ui.everySB.setValue( self.task.recurrence.every )
         self._activateWidget()
 
     # ===================================================================
@@ -91,23 +91,30 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
 
         if self.task.recurrence is None:
             self.task.recurrence = Recurrent()
-            self.task.recurrence.repeat = self.ui.repeatSB.value()
+            self.task.recurrence.every = self.ui.everySB.value()
 
         self.task.recurrence.mode = repeatMode
         self._activateWidget()
 
-    def _repeatValueChanged(self, newValue):
-        self.task.recurrence.repeat = newValue
+    def _everyValueChanged(self, newValue):
+        self.task.recurrence.every = newValue
+        self._updateNextRepeat()
 
     def _disableWidget(self):
-        self.ui.repeatSB.setEnabled( False )
+        self.ui.everySB.setEnabled( False )
         self.ui.endDateEdit.setEnabled( False )
         self.ui.endDateCB.setEnabled( False )
+        self.ui.nextRepeatLabel.setText( "None" )
 
     def _activateWidget(self):
-        self.ui.repeatSB.setEnabled( True )
+        self.ui.everySB.setEnabled( True )
         self.ui.endDateCB.setEnabled( True )
         if self.ui.endDateCB.isChecked():
             self.ui.endDateEdit.setEnabled( True )
         else:
             self.ui.endDateEdit.setEnabled( False )
+        self._updateNextRepeat()
+
+    def _updateNextRepeat(self):
+        repeatText = self.task.printRecurrent()
+        self.ui.nextRepeatLabel.setText( repeatText )

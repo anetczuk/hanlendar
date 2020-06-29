@@ -55,7 +55,7 @@ class Recurrent():
 
     def __init__(self):
         self.mode: RepeatType = RepeatType.NEVER
-        self.repeat           = 0
+        self.every            = 0
 
     def __repr__(self):
-        return "[m:%s r:%s]" % ( self.mode, self.repeat )
+        return "[m:%s e:%s]" % ( self.mode, self.every )

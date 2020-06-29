@@ -22,10 +22,12 @@
 #
 
 from datetime import date, time, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 from .reminder import Reminder, Notification
 
 from typing import List
+from todocalendar.domainmodel.recurrent import RepeatType
 
 
 class Task():
@@ -100,6 +102,33 @@ class Task():
     def isTimedout(self):
         currTime = datetime.today()
         return currTime > self.dueDate
+
+    def printRecurrent(self) -> str:
+        if self.recurrence is None:
+            return "None"
+        if self.recurrence.every < 1:
+            return "None"
+        if self.recurrence.mode is RepeatType.NEVER:
+            return "None"
+        refDate = self.getReferenceDate()
+        if self.recurrence.mode is RepeatType.DAILY:
+            nextRepeat = refDate + relativedelta( days=1 )
+            dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
+            return dateText
+        if self.recurrence.mode is RepeatType.WEEKLY:
+            nextRepeat = refDate + relativedelta( days=7 )
+            dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
+            return dateText
+        if self.recurrence.mode is RepeatType.MONTHLY:
+            nextRepeat = refDate + relativedelta( months=1 )
+            dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
+            return dateText
+        if self.recurrence.mode is RepeatType.YEARLY:
+#             nextRepeat = refDate.replace( year = refDate.year + 1 )
+            nextRepeat = refDate + relativedelta( years=1 )
+            dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
+            return dateText
+        return "Unknown"
 
     def __str__(self):
         return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s]" % ( self.title, self.description, self.completed, self.priority,
