@@ -71,9 +71,9 @@ class ManagerTest(unittest.TestCase):
         manager = Manager()
         manager.addNewTask( datetime.date.today(), "task1" )
         manager.addNewTask( datetime.date.today(), "task2" )
-        
+
         self.assertEqual( len( manager.getTasks() ), 2 )
-        
+
         tasksList = manager.getTasks()
         tasksList.clear()
         self.assertEqual( len( manager.getTasks() ), 2 )

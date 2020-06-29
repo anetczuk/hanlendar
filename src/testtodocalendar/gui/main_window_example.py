@@ -61,6 +61,8 @@ def prepareExampleData( window: MainWindow ):
     else:
         taskDate = taskDate + timedelta(2)
     dataManager.addNewTaskDateTime( taskDate, "test task 2" )
+    completedTask = dataManager.addNewTaskDateTime( taskDate, "test completed task" )
+    completedTask.setCompleted()
 
     deadlineDate = datetime.today() + timedelta( seconds=10 )
     dataManager.addNewDeadlineDateTime( deadlineDate, "test deadline 2" )

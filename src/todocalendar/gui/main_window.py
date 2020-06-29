@@ -89,6 +89,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.ui.actionOptions.triggered.connect( self.openSettingsDialog )
 
+        self.ui.showCompletedCB.toggled.connect( self.showCompletedTasks )
+
         self.notifsTimer.remindTask.connect( self.showTaskNotification )
 
         self.handleSettings()
@@ -178,6 +180,10 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def tasksTableSelectionChanged(self, taskIndex):
         selectedTask = self.ui.tasksTable.getTask( taskIndex )
         self.setDetails( selectedTask )
+
+    def showCompletedTasks(self, checked):
+        self.ui.tasksTable.showCompletedTasks( checked )
+        self.updateTasksTable()
 
     def updateNotificationTimer(self):
         notifs = self.domainModel.getNotificationList()

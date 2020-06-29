@@ -46,6 +46,8 @@ class TaskTable( QTableWidget ):
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
 
+        self.showCompleted = False
+
         self.setSelectionBehavior( QAbstractItemView.SelectRows )
         self.setSelectionMode( QAbstractItemView.SingleSelection )
         self.setEditTriggers( QAbstractItemView.NoEditTriggers )
@@ -68,6 +70,9 @@ class TaskTable( QTableWidget ):
         self.setRowCount( 0 )
         self.selectedTask.emit( -1 )
 
+    def showCompletedTasks(self, show):
+        self.showCompleted = show
+
     def getTask(self, taskIndex):
         if taskIndex < 0:
             return None
@@ -82,9 +87,10 @@ class TaskTable( QTableWidget ):
 
         self.setSortingEnabled( False )     ## workaround to fix disappearing cells content
 
-        for task in tasksList:
-            if task.isCompleted():
-                tasksList.remove( task )
+        if self.showCompleted is False:
+            for task in tasksList:
+                if task.isCompleted():
+                    tasksList.remove( task )
 
         tasksSize = len( tasksList )
         self.setRowCount( tasksSize )
