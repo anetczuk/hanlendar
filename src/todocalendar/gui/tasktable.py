@@ -82,6 +82,10 @@ class TaskTable( QTableWidget ):
 
         self.setSortingEnabled( False )     ## workaround to fix disappearing cells content
 
+        for task in tasksList:
+            if task.isCompleted():
+                tasksList.remove( task )
+
         tasksSize = len( tasksList )
         self.setRowCount( tasksSize )
 

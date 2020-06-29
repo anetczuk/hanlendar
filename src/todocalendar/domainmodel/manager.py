@@ -67,7 +67,7 @@ class Manager():
         return retList
 
     def getTasks( self ):
-        return self.tasks
+        return list( self.tasks )       ## shallow copy of list
 
     def addTask( self, task: Task ):
         self.tasks.append( task )

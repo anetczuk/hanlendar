@@ -66,6 +66,9 @@ class Task():
         due = datetime.combine( dueDate, time(10, 0, 0) )
         self.setDeadlineDateTime( due )
 
+    def isCompleted(self):
+        return self.completed >= 100
+
     def setCompleted(self):
         self.completed = 100
 
