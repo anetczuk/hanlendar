@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>651</width>
-    <height>492</height>
+    <height>675</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,6 +36,20 @@
         <string>Completion:</string>
        </property>
       </widget>
+     </item>
+     <item row="2" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="completionLabel">
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item row="3" column="0">
       <widget class="QLabel" name="label_3">
@@ -78,27 +92,6 @@
        </property>
       </widget>
      </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Due:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <property name="spacing">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QLabel" name="completionLabel">
-         <property name="text">
-          <string>TextLabel</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
      <item row="5" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
@@ -136,6 +129,13 @@
        </item>
       </layout>
      </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Due:</string>
+       </property>
+      </widget>
+     </item>
      <item row="6" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <item>
@@ -163,13 +163,6 @@
        </item>
       </layout>
      </item>
-     <item row="7" column="1">
-      <widget class="QTextEdit" name="descriptionEdit">
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item row="7" column="0">
       <widget class="QLabel" name="label_7">
        <property name="text">
@@ -177,10 +170,45 @@
        </property>
       </widget>
      </item>
+     <item row="7" column="1">
+      <widget class="QTextEdit" name="descriptionEdit">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Reminder:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QListWidget" name="reminderList"/>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Recurrent:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1">
+      <widget class="RecurrentWidget" name="recurrentWidget" native="true"/>
+     </item>
     </layout>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>RecurrentWidget</class>
+   <extends>QWidget</extends>
+   <header>todocalendar.gui.recurrentwidget</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

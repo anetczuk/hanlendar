@@ -26,6 +26,8 @@ from datetime import datetime
 
 from . import uiloader
 
+from PyQt5.QtWidgets import QListWidgetItem
+
 from todocalendar.domainmodel.task import Task
 
 
@@ -41,6 +43,7 @@ class TaskDetails( QtBaseClass ):           # type: ignore
         super().__init__(parentWidget)
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
+        self.ui.recurrentWidget.setReadOnly( True )
         self.setTask( None )
 
     def setTask(self, task: Task):
@@ -52,6 +55,8 @@ class TaskDetails( QtBaseClass ):           # type: ignore
             todayDate = datetime.today()
             self.ui.startDateTime.setDateTime( todayDate )
             self.ui.dueDateTime.setDateTime( todayDate )
+            self.ui.reminderList.clear()
+            self.ui.recurrentWidget.setEnabled( False )
             return
 
         self.ui.titleEdit.setText( task.title )
@@ -65,3 +70,19 @@ class TaskDetails( QtBaseClass ):           # type: ignore
             self.ui.deadlineBox.setChecked( False )
             self.ui.startDateTime.setDateTime( task.startDate )
         self.ui.dueDateTime.setDateTime( task.dueDate )
+        self.ui.reminderList.clear()
+
+        self.ui.reminderList.clear()
+        remLen = 0
+        if task.reminderList is not None:
+            remLen = len(task.reminderList)
+        for i in range( 0, remLen ):
+            rem = task.reminderList[ i ]
+            item = QListWidgetItem( rem.printPretty() )
+            self.ui.reminderList.insertItem( i, item )
+
+        self.ui.recurrentWidget.setTask( task )
+        if task.recurrence is None:
+            self.ui.recurrentWidget.setEnabled( False )
+        else:
+            self.ui.recurrentWidget.setEnabled( True )
