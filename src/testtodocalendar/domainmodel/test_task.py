@@ -112,6 +112,6 @@ class TaskTest(unittest.TestCase):
         notifications = task.getNotifications()
         self.assertEqual( len(notifications), 2 )
         self.assertEqual( notifications[0].task, task )
-        self.assertEqual( notifications[0].message, "0:00:10 before due time" )
+        self.assertEqual( notifications[0].message, "task 'task 1': 0:00:10 before due time" )
         self.assertEqual( notifications[1].task, task )
         self.assertEqual( notifications[1].message, "task 'task 1' reached deadline" )
