@@ -41,7 +41,7 @@ class Task():
     def __init__(self):
         self.title                          = ""
         self.description                    = ""
-        self.completed                      = 0        ## in range [0..100]
+        self._completed                     = 0        ## in range [0..100]
         self.priority                       = 10       ## lower number, greater priority
         self.startDate: datetime            = None
         self.dueDate: datetime              = None
@@ -91,11 +91,23 @@ class Task():
 
         return False
 
-    def isCompleted(self):
-        return self.completed >= 100
+    @property
+    def completed(self): 
+        return self._completed
 
-    def setCompleted(self):
-        self.completed = 100
+    @completed.setter
+    def completed(self, value): 
+        self.setCompleted( value )
+        
+    def setCompleted(self, value=100):
+        if value < 0:
+            value = 0
+        elif value > 100:
+            value = 100
+        self._completed = value
+
+    def isCompleted(self):
+        return self._completed >= 100
 
     def getNotifications(self):
         if self.dueDate is None:
@@ -138,7 +150,7 @@ class Task():
         return dateText
 
     def __str__(self):
-        return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s]" % ( self.title, self.description, self.completed, self.priority,
+        return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s]" % ( self.title, self.description, self._completed, self.priority,
                                                                      self.startDate, self.dueDate,
                                                                      self.reminderList, self.recurrence )
 
