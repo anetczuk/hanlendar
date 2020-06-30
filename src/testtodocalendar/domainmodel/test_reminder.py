@@ -88,3 +88,10 @@ class ReminderTest(unittest.TestCase):
         time = reminder.splitTimeOffset()
         self.assertEqual( time[0], 5 )
         self.assertEqual( time[1], 2 )
+
+    def test_printPretty(self):
+        reminder = Reminder()
+        reminder.setDays( 3 )
+
+        text = reminder.printPretty()
+        self.assertEqual( text, "3 days before due time" )
