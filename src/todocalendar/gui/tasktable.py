@@ -97,7 +97,7 @@ class TaskTable( QTableWidget ):
 
         for i in range(0, tasksSize):
             task: Task = tasksList[i]
-            timedout = task.isTimedout()
+            timedout = task.isTimedout() and task.isCompleted() is False
 
             titleItem = QTableWidgetItem( task.title )
             titleItem.setData( Qt.UserRole, task )
