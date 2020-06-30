@@ -173,11 +173,13 @@ class Task():
             return ret
 
         for reminder in self.reminderList:
-            notif = Notification()
-            notif.notifyTime = self.dueDate - reminder.getOffset()
-            notif.task = self
-            notif.message = "task '%s': %s" % (self.title, reminder.printPretty())
-            ret.append( notif )
+            notifTime = self.dueDate - reminder.getOffset()
+            if notifTime > currTime:
+                notif = Notification()
+                notif.notifyTime = notifTime
+                notif.task = self
+                notif.message = "task '%s': %s" % (self.title, reminder.printPretty())
+                ret.append( notif )
 
         ret.sort( key=Notification.sortByTime )
         return ret
