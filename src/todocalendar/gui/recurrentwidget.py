@@ -31,6 +31,7 @@ from PyQt5.QtWidgets import QWidget
 
 from todocalendar.domainmodel.task import Task
 from todocalendar.domainmodel.recurrent import RepeatType, Recurrent
+from datetime import date
 
 
 UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
@@ -55,6 +56,8 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
         for item in RepeatType:
             itemName = item.name
             self.ui.repeatModeCB.addItem( itemName, item )
+
+        self.ui.endDateEdit.setDate( date.today() )
         
         ## update GUI
         self._repeatModeChanged()
