@@ -105,10 +105,12 @@ class TaskDialog( QtBaseClass ):           # type: ignore
 
     def _startChanged(self, newValue):
         self.task.startDate = newValue.toPyDateTime()
+        self.task.startDate = self.task.startDate.replace( second=0 )
         self.ui.recurrentWidget.refreshWidget()
 
     def _dueChanged(self, newValue):
         self.task.dueDate = newValue.toPyDateTime()
+        self.task.dueDate = self.task.dueDate.replace( second=0 )
         self.ui.recurrentWidget.refreshWidget()
 
     def _finished(self, result):

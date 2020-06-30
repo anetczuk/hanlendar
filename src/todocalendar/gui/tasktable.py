@@ -120,14 +120,14 @@ class TaskTable( QTableWidget ):
             startDate = "---"
             if task.startDate is not None:
                 ## no start date -- deadline case
-                startDate = task.startDate.strftime( "%Y-%m-%d %H:%M:%S" )
+                startDate = task.startDate.strftime( "%Y-%m-%d %H:%M" )
             startItem = QTableWidgetItem( str(startDate) )
             startItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             if timedout:
                 startItem.setForeground( QBrush(QColor(255, 0, 0)) )
             self.setItem( i, 3, startItem )
 
-            dueDate = task.dueDate.strftime( "%Y-%m-%d %H:%M:%S" )
+            dueDate = task.dueDate.strftime( "%Y-%m-%d %H:%M" )
             #dueDate = task.dueDate.date()
             dueItem = QTableWidgetItem( str(dueDate) )
             dueItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
