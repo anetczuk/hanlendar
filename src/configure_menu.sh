@@ -14,7 +14,7 @@ cat > $AUTOSTART_FILE << EOL
 Version=1.1
 Type=Application
 Name=ToDo Calendar
-Comment=A small descriptive blurb about this application.
+Comment=Calendar and ToDo list in one application.
 Icon=$SCRIPT_DIR/calendar/gui/img/calendar-black.png
 Exec=$SCRIPT_DIR/startcalendar
 Path=$SCRIPT_DIR
