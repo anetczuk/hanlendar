@@ -40,6 +40,26 @@ class TaskTest(unittest.TestCase):
         ## Called after testfunction was executed
         pass
 
+    def test_setCompleted(self):
+        taskDate = datetime.date( 2020, 5, 17 )
+        task = Task()
+        task.setDefaultDate( taskDate )
+        
+        task.setCompleted()
+        self.assertEqual( task.completed, 100 )
+
+    def test_setCompleted_recurrent(self):
+        taskDate = datetime.date( 2020, 5, 17 )
+        task = Task()
+        task.recurrence = Recurrent()
+        task.recurrence.setDaily()
+        task.setDefaultDate( taskDate )
+        
+        task.setCompleted()
+        self.assertEqual( task.completed, 0 )
+        self.assertEqual( task.startDate.date(), datetime.date( 2020, 5, 18 ) )
+        self.assertEqual( task.dueDate.date(), datetime.date( 2020, 5, 18 ) )
+
     def test_hasEntry_entries(self):
         taskDate = datetime.date( 2020, 5, 17 )
         task = Task()

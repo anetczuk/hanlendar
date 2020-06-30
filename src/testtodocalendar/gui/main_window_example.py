@@ -68,8 +68,8 @@ def prepareExampleData( window: MainWindow ):
     recurrentTask = dataManager.addNewTaskDateTime( taskDate.replace( day=20 ), "test recurrent task" )
     recurrentTask.recurrence = Recurrent()
     recurrentTask.recurrence.setDaily()
-    recurrentTask.recurrence.endDate = recurrentTask.getReferenceDate().date() + timedelta( days=2 )
-    
+    recurrentTask.recurrence.endDate = recurrentTask.getReferenceDateTime().date() + timedelta( days=2 )
+
     recurrentDate2 = datetime.today().replace( day=15 ) + timedelta( days=30 )
     recurrentTask2 = dataManager.addNewTaskDateTime( recurrentDate2, "test recurrent task 2" )
     recurrentTask2.setDeadline()

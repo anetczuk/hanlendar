@@ -43,12 +43,71 @@ class Task():
         self.description                    = ""
         self._completed                     = 0        ## in range [0..100]
         self.priority                       = 10       ## lower number, greater priority
-        self.startDate: datetime            = None
-        self.dueDate: datetime              = None
+        self._startDate: datetime           = None
+        self._dueDate: datetime             = None
         self.reminderList: List[Reminder]   = None
-        self.recurrence                     = None
+        self._recurrence                    = None
+        self._recurrentStartDate: datetime  = None
+        self._recurrentDueDate: datetime    = None
 
-    def getReferenceDate(self) -> datetime:
+    @property
+    def completed(self):
+        return self._completed
+
+    @completed.setter
+    def completed(self, value):
+        self.setCompleted( value )
+
+    def setCompleted(self, value=100):
+        if value < 0:
+            value = 0
+        elif value > 100:
+            value = 100
+        if self._progressRecurrence() is True:
+            # completed -- next occurrence
+            self._completed = 0
+        else:
+            self._completed = value
+
+    def isCompleted(self):
+        return self._completed >= 100
+
+    @property
+    def startDate(self):
+        if self._recurrence is not None:
+            return self._recurrentStartDate
+        return self._startDate
+
+    @startDate.setter
+    def startDate(self, value):
+        self._startDate = value
+        if self._recurrence is not None:
+            self._recurrentStartDate = self._startDate
+        
+    @property
+    def dueDate(self):
+        if self._recurrence is not None:
+            return self._recurrentDueDate
+        return self._dueDate
+
+    @dueDate.setter
+    def dueDate(self, value):
+        self._dueDate = value
+        if self._recurrence is not None:
+            self._recurrentDueDate = self._dueDate
+
+    @property
+    def recurrence(self):
+        return self._recurrence
+
+    @recurrence.setter
+    def recurrence(self, value):
+        if self._recurrence is None and value is not None:
+            self._recurrentStartDate = self._startDate
+            self._recurrentDueDate = self._dueDate
+        self._recurrence = value
+
+    def getReferenceDateTime(self) -> datetime:
         if self.startDate is None:
             ## deadline case
             return self.dueDate
@@ -74,40 +133,21 @@ class Task():
         self.setDeadlineDateTime( due )
 
     def hasEntry( self, entriesDate: date ):
-        currDate = self.getReferenceDate().date()
+        currDate = self.getReferenceDateTime().date()
         if currDate == entriesDate:
             return True
-        if self.recurrence is None:
+        if self._recurrence is None:
             return False
 
-        dateOffset = self.recurrence.getDateOffset()
         while( currDate < entriesDate ):
-            currDate = currDate + dateOffset
-            if self.recurrence.endDate is not None:
-                if currDate > self.recurrence.endDate:
-                    return False
+            currDate = self._recurrence.nextDate( currDate )
+            if currDate is None:
+                ## recurrence end date reached
+                return False
             if currDate == entriesDate:
                 return True
 
         return False
-
-    @property
-    def completed(self): 
-        return self._completed
-
-    @completed.setter
-    def completed(self, value): 
-        self.setCompleted( value )
-        
-    def setCompleted(self, value=100):
-        if value < 0:
-            value = 0
-        elif value > 100:
-            value = 100
-        self._completed = value
-
-    def isCompleted(self):
-        return self._completed >= 100
 
     def getNotifications(self):
         if self.dueDate is None:
@@ -139,18 +179,28 @@ class Task():
         return currTime > self.dueDate
 
     def printRecurrent(self) -> str:
-        if self.recurrence is None:
+        if self._recurrence is None:
             return "None"
-        dateOffset = self.recurrence.getDateOffset()
-        if dateOffset is None:
+        refDate = self.getReferenceDateTime()
+        nextRepeat = self._recurrence.nextDateTime( refDate )
+        if nextRepeat is None:
             return "None"
-        refDate = self.getReferenceDate()
-        nextRepeat = refDate + dateOffset
         dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
         return dateText
 
     def __str__(self):
-        return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s]" % ( self.title, self.description, self._completed, self.priority,
-                                                                     self.startDate, self.dueDate,
-                                                                     self.reminderList, self.recurrence )
+        return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s rsd:%s rdd:%s]" % ( 
+                                        self.title, self.description, self._completed, self.priority,
+                                        self.startDate, self.dueDate,
+                                        self.reminderList, self._recurrence,
+                                        self._recurrentStartDate, self._recurrentDueDate )
 
+    def _progressRecurrence(self) -> bool:
+        if self._recurrence is None:
+            return False
+        nextDue = self._recurrence.nextDateTime( self._recurrentDueDate )
+        if nextDue is None:
+            return False
+        self._recurrentDueDate = nextDue
+        self._recurrentStartDate = self._recurrence.nextDateTime( self._recurrentStartDate )
+        return True

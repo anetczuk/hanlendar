@@ -25,7 +25,7 @@ import logging
 
 from enum import Enum, unique, auto
 
-from datetime import date
+from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 
@@ -98,6 +98,26 @@ class Recurrent():
 
         _LOGGER.warn( "unhandled case" )
         return None
+
+    def nextDate(self, currDate: date) -> date:
+        if currDate is None:
+            return None
+        nextDate = currDate + self.getDateOffset()
+        if self.endDate is None:
+            return nextDate
+        if nextDate > self.endDate:
+            return None
+        return nextDate
+
+    def nextDateTime(self, currDate: datetime) -> datetime:
+        if currDate is None:
+            return None
+        nextDate = currDate + self.getDateOffset()
+        if self.endDate is None:
+            return nextDate
+        if nextDate.date() > self.endDate:
+            return None
+        return nextDate
 
     def __repr__(self):
         return "[m:%s e:%s ed:%s]" % ( self.mode, self.every, self.endDate )

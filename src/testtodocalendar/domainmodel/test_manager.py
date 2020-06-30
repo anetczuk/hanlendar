@@ -61,23 +61,23 @@ class ManagerTest(unittest.TestCase):
         recurrentDate = taskDate + timedelta(days=5)
         self.assertEqual( manager.hasEntries(recurrentDate), True )
 
-    def test_getEntries_entries(self):
-        manager = Manager()
-
-        taskDate1 = datetime.date( 2020, 5, 17 )
-        manager.addNewTask( taskDate1, "task1" )
-        taskDate2 = datetime.date( 2020, 5, 18 )
-        manager.addNewTask( taskDate2, "task2" )
-        eventDate1 = datetime.date( 2020, 5, 19 )
-        manager.addNewTask( eventDate1, "event1" )
-
-        entries = manager.getEntries(taskDate2)
-        self.assertEqual( len(entries), 1 )
-        self.assertEqual( entries[0].title, "task2" )
-
-        entries = manager.getEntries(eventDate1)
-        self.assertEqual( len(entries), 1 )
-        self.assertEqual( entries[0].title, "event1" )
+#     def test_getEntries_entries(self):
+#         manager = Manager()
+# 
+#         taskDate1 = datetime.date( 2020, 5, 17 )
+#         manager.addNewTask( taskDate1, "task1" )
+#         taskDate2 = datetime.date( 2020, 5, 18 )
+#         manager.addNewTask( taskDate2, "task2" )
+#         eventDate1 = datetime.date( 2020, 5, 19 )
+#         manager.addNewTask( eventDate1, "event1" )
+# 
+#         entries = manager.getEntries(taskDate2)
+#         self.assertEqual( len(entries), 1 )
+#         self.assertEqual( entries[0].title, "task2" )
+# 
+#         entries = manager.getEntries(eventDate1)
+#         self.assertEqual( len(entries), 1 )
+#         self.assertEqual( entries[0].title, "event1" )
 
     def test_getTasks(self):
         manager = Manager()

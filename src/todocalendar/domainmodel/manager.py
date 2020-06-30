@@ -57,13 +57,13 @@ class Manager():
                 return True
         return False
 
-    def getEntries( self, entriesDate: date ):
-        retList = list()
-        for entry in self.tasks:
-            currDate = entry.getReferenceDate().date()
-            if currDate == entriesDate:
-                retList.append( entry )
-        return retList
+#     def getEntries( self, entriesDate: date ):
+#         retList = list()
+#         for entry in self.tasks:
+#             currDate = entry.getReferenceDateTime().date()
+#             if currDate == entriesDate:
+#                 retList.append( entry )
+#         return retList
 
     def getTasks( self ):
         return list( self.tasks )       ## shallow copy of list
