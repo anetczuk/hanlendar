@@ -23,6 +23,8 @@
 
 from enum import Enum, unique, auto
 
+from datetime import date
+
 
 @unique
 class RepeatType(Enum):
@@ -56,6 +58,7 @@ class Recurrent():
     def __init__(self):
         self.mode: RepeatType = RepeatType.NEVER
         self.every            = 0
+        self.endDate: date    = None
 
     def __repr__(self):
-        return "[m:%s e:%s]" % ( self.mode, self.every )
+        return "[m:%s e:%s ed:%s]" % ( self.mode, self.every, self.endDate )

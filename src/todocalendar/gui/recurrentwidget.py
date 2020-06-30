@@ -55,6 +55,8 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
 
         self.ui.repeatModeCB.currentIndexChanged.connect( self._repeatModeChanged )
         self.ui.everySB.valueChanged.connect( self._everyValueChanged )
+        self.ui.endDateCB.stateChanged.connect( self._finiteChanged )
+        self.ui.endDateEdit.dateChanged.connect( self._endDateChanged )
 
         self.setTask( None )
 
