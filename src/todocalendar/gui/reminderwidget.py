@@ -67,18 +67,6 @@ class ReminderWidget( QtBaseClass ):           # type: ignore
         self.setEnabled( True )
         self.refreshWidget()
 
-#         self.ui.titleEdit.setText( task.title )
-#         self.ui.descriptionEdit.setText( task.description )
-#         self.ui.completionLabel.setText( str(task.completed) + "%" )
-#         self.ui.priorityBox.setValue( task.priority )
-#         if task.startDate is None:
-#             self.ui.deadlineBox.setChecked( True )
-#             self.ui.startDateTime.setDateTime( task.dueDate )
-#         else:
-#             self.ui.deadlineBox.setChecked( False )
-#             self.ui.startDateTime.setDateTime( task.startDate )
-#         self.ui.dueDateTime.setDateTime( task.dueDate )
-
     def _newReminder(self):
         if self.task.reminderList is None:
             self.task.reminderList = list()

@@ -91,7 +91,7 @@ class Task():
 
         for reminder in self.reminderList:
             notif = Notification()
-            notif.notifyTime = self.dueDate - reminder.timeOffset
+            notif.notifyTime = self.dueDate - reminder.getOffset()
             notif.task = self
             notif.message = reminder.printPretty()
             ret.append( notif )
