@@ -21,9 +21,15 @@
 # SOFTWARE.
 #
 
+import logging
+
 from enum import Enum, unique, auto
 
 from datetime import date
+from dateutil.relativedelta import relativedelta
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @unique
@@ -55,10 +61,39 @@ class RepeatType(Enum):
 
 class Recurrent():
 
-    def __init__(self):
-        self.mode: RepeatType = RepeatType.NEVER
-        self.every            = 0
+    def __init__(self, mode: RepeatType = None, every: int = None):
+        if mode is None:
+            mode = RepeatType.NEVER
+        if every is None:
+            every = 0
+        if every < 0:
+            every = 0
+
+        self.mode: RepeatType = mode
+        self.every            = every
         self.endDate: date    = None
+
+    def setDaily(self, every=1):
+        self.mode = RepeatType.DAILY
+        self.every = every
+
+    def getDateOffset( self ):
+        if self.every < 1:
+            return None
+
+        if self.mode is RepeatType.NEVER:
+            return None
+        if self.mode is RepeatType.DAILY:
+            return relativedelta( days=1 * self.every )
+        if self.mode is RepeatType.WEEKLY:
+            return relativedelta( days=7 * self.every )
+        if self.mode is RepeatType.MONTHLY:
+            return relativedelta( months=1 * self.every )
+        if self.mode is RepeatType.YEARLY:
+            return relativedelta( years=1 * self.every )
+
+        _LOGGER.warn( "unhandled case" )
+        return None
 
     def __repr__(self):
         return "[m:%s e:%s ed:%s]" % ( self.mode, self.every, self.endDate )

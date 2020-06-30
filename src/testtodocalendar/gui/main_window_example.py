@@ -39,6 +39,7 @@ import todocalendar.logger as logger
 from todocalendar.gui.qt import QApplication
 from todocalendar.gui.sigint import setup_interrupt_handling
 from todocalendar.gui.main_window import MainWindow
+from todocalendar.domainmodel.recurrent import Recurrent
 
 from datetime import date, datetime, timedelta
 
@@ -63,6 +64,11 @@ def prepareExampleData( window: MainWindow ):
     dataManager.addNewTaskDateTime( taskDate, "test task 2" )
     completedTask = dataManager.addNewTaskDateTime( taskDate, "test completed task" )
     completedTask.setCompleted()
+
+    recurrentTask = dataManager.addNewTaskDateTime( taskDate.replace( day=20 ), "test recurrent task" )
+    recurrentTask.recurrence = Recurrent()
+    recurrentTask.recurrence.setDaily()
+    recurrentTask.recurrence.endDate = recurrentTask.getReferenceDate().date() + timedelta( days=2 )
 
     deadlineDate = datetime.today() + timedelta( seconds=10 )
     dataManager.addNewDeadlineDateTime( deadlineDate, "test deadline 2" )

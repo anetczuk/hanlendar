@@ -58,7 +58,7 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
             self.ui.repeatModeCB.addItem( itemName, item )
 
         self.ui.endDateEdit.setDate( date.today() )
-        
+
         ## update GUI
         self._repeatModeChanged()
 
@@ -90,7 +90,7 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
         if self.task.recurrence is None:
             self._setRepeatMode( RepeatType.NEVER )
             return
-        
+
         self._setRepeatMode( self.task.recurrence.mode )
         self.ui.everySB.setValue( self.task.recurrence.every )
         if self.task.recurrence.endDate is not None:

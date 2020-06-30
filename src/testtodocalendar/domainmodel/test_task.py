@@ -24,9 +24,11 @@
 import unittest
 
 import datetime
+from datetime import timedelta
 
 from todocalendar.domainmodel.task import Task
 from todocalendar.domainmodel.reminder import Reminder
+from todocalendar.domainmodel.recurrent import Recurrent
 
 
 class TaskTest(unittest.TestCase):
@@ -37,6 +39,36 @@ class TaskTest(unittest.TestCase):
     def tearDown(self):
         ## Called after testfunction was executed
         pass
+
+    def test_hasEntry_entries(self):
+        taskDate = datetime.date( 2020, 5, 17 )
+        task = Task()
+        task.title = "xxx"
+        task.setDefaultDate( taskDate )
+        self.assertEqual( task.hasEntry(taskDate), True )
+
+    def test_hasEntry_recurrent(self):
+        taskDate = datetime.date( 2020, 5, 17 )
+        task = Task()
+        task.title = "xxx"
+        task.setDefaultDate( taskDate )
+        task.recurrence = Recurrent()
+        task.recurrence.setDaily()
+
+        recurrentDate = taskDate + timedelta(days=5)
+        self.assertEqual( task.hasEntry(recurrentDate), True )
+
+    def test_hasEntry_recurrent_endDate(self):
+        taskDate = datetime.date( 2020, 5, 17 )
+        task = Task()
+        task.title = "xxx"
+        task.setDefaultDate( taskDate )
+        task.recurrence = Recurrent()
+        task.recurrence.setDaily()
+        task.recurrence.endDate = taskDate + timedelta(days=3)
+
+        recurrentDate = taskDate + timedelta(days=5)
+        self.assertEqual( task.hasEntry(recurrentDate), False )
 
     def test_getNotifications_due(self):
         task = Task()

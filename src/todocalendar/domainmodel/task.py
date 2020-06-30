@@ -21,6 +21,8 @@
 # SOFTWARE.
 #
 
+import logging
+
 from datetime import date, time, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
@@ -28,6 +30,9 @@ from .reminder import Reminder, Notification
 
 from typing import List
 from todocalendar.domainmodel.recurrent import RepeatType
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Task():
@@ -43,7 +48,7 @@ class Task():
         self.reminderList: List[Reminder]   = None
         self.recurrence                     = None
 
-    def getReferenceDate(self):
+    def getReferenceDate(self) -> datetime:
         if self.startDate is None:
             ## deadline case
             return self.dueDate
@@ -67,6 +72,24 @@ class Task():
     def setDeadlineDate(self, dueDate: date):
         due = datetime.combine( dueDate, time(10, 0, 0) )
         self.setDeadlineDateTime( due )
+
+    def hasEntry( self, entriesDate: date ):
+        currDate = self.getReferenceDate().date()
+        if currDate == entriesDate:
+            return True
+        if self.recurrence is None:
+            return False
+
+        dateOffset = self.recurrence.getDateOffset()
+        while( currDate < entriesDate ):
+            currDate = currDate + dateOffset
+            if self.recurrence.endDate is not None:
+                if currDate > self.recurrence.endDate:
+                    return False
+            if currDate == entriesDate:
+                return True
+
+        return False
 
     def isCompleted(self):
         return self.completed >= 100
@@ -106,29 +129,13 @@ class Task():
     def printRecurrent(self) -> str:
         if self.recurrence is None:
             return "None"
-        if self.recurrence.every < 1:
-            return "None"
-        if self.recurrence.mode is RepeatType.NEVER:
+        dateOffset = self.recurrence.getDateOffset()
+        if dateOffset is None:
             return "None"
         refDate = self.getReferenceDate()
-        everyOffset = self.recurrence.every
-        if self.recurrence.mode is RepeatType.DAILY:
-            nextRepeat = refDate + relativedelta( days=1*everyOffset )
-            dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
-            return dateText
-        if self.recurrence.mode is RepeatType.WEEKLY:
-            nextRepeat = refDate + relativedelta( days=7*everyOffset )
-            dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
-            return dateText
-        if self.recurrence.mode is RepeatType.MONTHLY:
-            nextRepeat = refDate + relativedelta( months=1*everyOffset )
-            dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
-            return dateText
-        if self.recurrence.mode is RepeatType.YEARLY:
-            nextRepeat = refDate + relativedelta( years=1*everyOffset )
-            dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
-            return dateText
-        return "Unknown"
+        nextRepeat = refDate + dateOffset
+        dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
+        return dateText
 
     def __str__(self):
         return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s]" % ( self.title, self.description, self.completed, self.priority,

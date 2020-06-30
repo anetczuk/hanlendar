@@ -24,9 +24,11 @@
 import unittest
 
 import datetime
+from datetime import timedelta
 
 from todocalendar.domainmodel.manager import Manager
 from todocalendar.domainmodel.task import Task
+from todocalendar.domainmodel.recurrent import Recurrent
 
 
 class ManagerTest(unittest.TestCase):
@@ -48,6 +50,16 @@ class ManagerTest(unittest.TestCase):
         taskDate = datetime.date( 2020, 5, 17 )
         manager.addNewTask( taskDate, "xxx" )
         self.assertEqual( manager.hasEntries(taskDate), True )
+
+    def test_hasEntries_recurrent(self):
+        manager = Manager()
+        taskDate = datetime.date( 2020, 5, 17 )
+        task = manager.addNewTask( taskDate, "xxx" )
+        task.recurrence = Recurrent()
+        task.recurrence.setDaily()
+
+        recurrentDate = taskDate + timedelta(days=5)
+        self.assertEqual( manager.hasEntries(recurrentDate), True )
 
     def test_getEntries_entries(self):
         manager = Manager()

@@ -52,9 +52,8 @@ class Manager():
             self.tasks = list()
 
     def hasEntries( self, entriesDate: date ):
-        for entry in self.tasks:
-            currDate = entry.getReferenceDate().date()
-            if currDate == entriesDate:
+        for task in self.tasks:
+            if task.hasEntry( entriesDate ):
                 return True
         return False
 
