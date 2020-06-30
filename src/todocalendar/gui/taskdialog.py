@@ -77,7 +77,7 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.ui.deadlineBox.stateChanged.connect( self._deadlineChanged )
         self.ui.startDateTime.dateTimeChanged.connect( self._startChanged )
         self.ui.dueDateTime.dateTimeChanged.connect( self._dueChanged )
-        
+
         self.finished.connect( self._finished )
 
     def _titleChanged(self, newValue):

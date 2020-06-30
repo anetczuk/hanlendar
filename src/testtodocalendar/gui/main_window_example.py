@@ -40,6 +40,7 @@ from todocalendar.gui.qt import QApplication
 from todocalendar.gui.sigint import setup_interrupt_handling
 from todocalendar.gui.main_window import MainWindow
 from todocalendar.domainmodel.recurrent import Recurrent
+from todocalendar.domainmodel.reminder import Reminder
 
 from datetime import date, datetime, timedelta
 
@@ -61,7 +62,9 @@ def prepareExampleData( window: MainWindow ):
         taskDate = taskDate - timedelta(2)
     else:
         taskDate = taskDate + timedelta(2)
+
     dataManager.addNewTaskDateTime( taskDate, "test task 2" )
+
     completedTask = dataManager.addNewTaskDateTime( taskDate, "test completed task" )
     completedTask.setCompleted()
 
@@ -77,7 +80,9 @@ def prepareExampleData( window: MainWindow ):
     recurrentTask2.recurrence.setMonthly()
 
     deadlineDate = datetime.today() + timedelta( seconds=10 )
-    dataManager.addNewDeadlineDateTime( deadlineDate, "test deadline 2" )
+    deadlineTaks = dataManager.addNewDeadlineDateTime( deadlineDate, "test deadline 2" )
+    reminder = deadlineTaks.addReminder()
+    reminder.setMillis( 5000 )
 
     window.refreshView()
 

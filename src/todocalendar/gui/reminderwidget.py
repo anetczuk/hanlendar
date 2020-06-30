@@ -68,9 +68,7 @@ class ReminderWidget( QtBaseClass ):           # type: ignore
         self.refreshWidget()
 
     def _newReminder(self):
-        if self.task.reminderList is None:
-            self.task.reminderList = list()
-        self.task.reminderList.append( Reminder() )
+        self.task.addReminder()
         self._activateWidget()
 
     def _removeReminder(self):

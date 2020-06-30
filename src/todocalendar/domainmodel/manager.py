@@ -102,10 +102,11 @@ class Manager():
         self.addTask( event )
 
     def addNewDeadlineDateTime( self, eventdate: datetime, title ):
-        event = Task()
-        event.title = title
-        event.setDeadlineDateTime( eventdate )
-        self.addTask( event )
+        eventTask = Task()
+        eventTask.title = title
+        eventTask.setDeadlineDateTime( eventdate )
+        self.addTask( eventTask )
+        return eventTask
 
     def getNotificationList(self):
         ret = list()

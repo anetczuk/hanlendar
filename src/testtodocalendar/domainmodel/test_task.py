@@ -44,7 +44,7 @@ class TaskTest(unittest.TestCase):
         taskDate = datetime.date( 2020, 5, 17 )
         task = Task()
         task.setDefaultDate( taskDate )
-        
+
         task.setCompleted()
         self.assertEqual( task.completed, 100 )
 
@@ -54,7 +54,7 @@ class TaskTest(unittest.TestCase):
         task.recurrence = Recurrent()
         task.recurrence.setDaily()
         task.setDefaultDate( taskDate )
-        
+
         task.setCompleted()
         self.assertEqual( task.completed, 0 )
         self.assertEqual( task.startDate.date(), datetime.date( 2020, 5, 18 ) )
@@ -107,8 +107,7 @@ class TaskTest(unittest.TestCase):
 
         reminder = Reminder()
         reminder.setTime( 0, 10 )
-        task.reminderList = list()
-        task.reminderList.append( reminder )
+        task.addReminder( reminder )
 
         notifications = task.getNotifications()
         self.assertEqual( len(notifications), 2 )

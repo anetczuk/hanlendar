@@ -83,7 +83,7 @@ class Task():
         self._startDate = value
         if self._recurrence is not None:
             self._recurrentStartDate = self._startDate
-        
+
     @property
     def dueDate(self):
         if self._recurrence is not None:
@@ -149,11 +149,19 @@ class Task():
 
         return False
 
-    def getNotifications(self):
+    def addReminder( self, reminder=None ):
+        if self.reminderList is None:
+            self.reminderList = list()
+        if reminder is None:
+            reminder = Reminder()
+        self.reminderList.append( reminder )
+        return reminder
+
+    def getNotifications(self) -> List[Notification]:
         if self.dueDate is None:
             return list()
         currTime = datetime.today()
-        ret = list()
+        ret: List[Notification] = list()
         if self.dueDate > currTime:
             notif = Notification()
             notif.notifyTime = self.dueDate
@@ -168,7 +176,7 @@ class Task():
             notif = Notification()
             notif.notifyTime = self.dueDate - reminder.getOffset()
             notif.task = self
-            notif.message = reminder.printPretty()
+            notif.message = "task '%s': %s" % (self.title, reminder.printPretty())
             ret.append( notif )
 
         ret.sort( key=Notification.sortByTime )
@@ -189,7 +197,7 @@ class Task():
         return dateText
 
     def __str__(self):
-        return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s rsd:%s rdd:%s]" % ( 
+        return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s rsd:%s rdd:%s]" % (
                                         self.title, self.description, self._completed, self.priority,
                                         self.startDate, self.dueDate,
                                         self.reminderList, self._recurrence,
