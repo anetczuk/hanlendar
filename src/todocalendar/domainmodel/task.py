@@ -111,21 +111,21 @@ class Task():
         if self.recurrence.mode is RepeatType.NEVER:
             return "None"
         refDate = self.getReferenceDate()
+        everyOffset = self.recurrence.every
         if self.recurrence.mode is RepeatType.DAILY:
-            nextRepeat = refDate + relativedelta( days=1 )
+            nextRepeat = refDate + relativedelta( days=1*everyOffset )
             dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
             return dateText
         if self.recurrence.mode is RepeatType.WEEKLY:
-            nextRepeat = refDate + relativedelta( days=7 )
+            nextRepeat = refDate + relativedelta( days=7*everyOffset )
             dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
             return dateText
         if self.recurrence.mode is RepeatType.MONTHLY:
-            nextRepeat = refDate + relativedelta( months=1 )
+            nextRepeat = refDate + relativedelta( months=1*everyOffset )
             dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
             return dateText
         if self.recurrence.mode is RepeatType.YEARLY:
-#             nextRepeat = refDate.replace( year = refDate.year + 1 )
-            nextRepeat = refDate + relativedelta( years=1 )
+            nextRepeat = refDate + relativedelta( years=1*everyOffset )
             dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
             return dateText
         return "Unknown"
