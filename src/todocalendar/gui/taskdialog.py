@@ -48,6 +48,8 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         else:
             self.task = Task()
 
+        self.completed = 0
+
         self.ui.reminderWidget.setTask( self.task )
         self.ui.recurrentWidget.setTask( self.task )
 
@@ -75,6 +77,8 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.ui.deadlineBox.stateChanged.connect( self._deadlineChanged )
         self.ui.startDateTime.dateTimeChanged.connect( self._startChanged )
         self.ui.dueDateTime.dateTimeChanged.connect( self._dueChanged )
+        
+        self.finished.connect( self._finished )
 
     def _titleChanged(self, newValue):
         self.task.title = newValue
@@ -84,7 +88,8 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.task.description = newValue
 
     def _completedChanged(self, newValue):
-        self.task.completed = newValue
+        #self.task.completed = newValue
+        self.completed = newValue
 
     def _priorityChanged(self, newValue):
         self.task.priority = newValue
@@ -105,3 +110,6 @@ class TaskDialog( QtBaseClass ):           # type: ignore
     def _dueChanged(self, newValue):
         self.task.dueDate = newValue.toPyDateTime()
         self.ui.recurrentWidget.refreshWidget()
+
+    def _finished(self, result):
+        self.task.completed = self.completed

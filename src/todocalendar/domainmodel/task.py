@@ -63,7 +63,7 @@ class Task():
             value = 0
         elif value > 100:
             value = 100
-        if self._progressRecurrence() is True:
+        if value == 100 and self._progressRecurrence() is True:
             # completed -- next occurrence
             self._completed = 0
         else:
