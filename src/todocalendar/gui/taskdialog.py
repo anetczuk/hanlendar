@@ -27,6 +27,10 @@ import copy
 
 from . import uiloader
 
+from PyQt5.QtWidgets import QDialog, QFileDialog
+from PyQt5.QtCore import QUrl
+from PyQt5.QtGui import QDesktopServices
+
 from todocalendar.domainmodel.task import Task
 
 
@@ -72,11 +76,15 @@ class TaskDialog( QtBaseClass ):           # type: ignore
 
         self.ui.titleEdit.textChanged.connect( self._titleChanged )
         self.ui.descriptionEdit.textChanged.connect( self._descriptionChanged )
+        self.ui.descriptionEdit.anchorClicked.connect( self._openLink )
         self.ui.completionSlider.valueChanged.connect( self._completedChanged )
         self.ui.priorityBox.valueChanged.connect( self._priorityChanged )
         self.ui.deadlineBox.stateChanged.connect( self._deadlineChanged )
         self.ui.startDateTime.dateTimeChanged.connect( self._startChanged )
         self.ui.dueDateTime.dateTimeChanged.connect( self._dueChanged )
+
+        self.ui.openLocalFilePB.clicked.connect( self._openLocalFile )
+        self.ui.addUrlPB.clicked.connect( self._addUrl )
 
         self.finished.connect( self._finished )
 
@@ -84,7 +92,7 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.task.title = newValue
 
     def _descriptionChanged(self):
-        newValue = self.ui.descriptionEdit.toPlainText()
+        newValue = self.ui.descriptionEdit.toHtml()
         self.task.description = newValue
 
     def _completedChanged(self, newValue):
@@ -112,6 +120,30 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.task.dueDate = newValue.toPyDateTime()
         self.task.dueDate = self.task.dueDate.replace( second=0 )
         self.ui.recurrentWidget.refreshWidget()
+
+    def _openLocalFile(self):
+        fielDialog = QFileDialog( self )
+        fielDialog.setFileMode( QFileDialog.ExistingFile )
+        dialogCode = fielDialog.exec_()
+        if dialogCode == QDialog.Rejected:
+            return
+        selectedFile = fielDialog.selectedFiles()[0]
+        fileUrl = QUrl.fromLocalFile( selectedFile )
+        self.ui.urlEdit.setText( fileUrl.toString() )
+
+    def _addUrl(self):
+        urlText = self.ui.urlEdit.text()
+        if len(urlText) < 1:
+            return
+        hrefText = "<a href=\"%s\">%s</a> " % (urlText, urlText)
+        self.ui.descriptionEdit.insertHtml( hrefText )
+        self.ui.urlEdit.setText( "" )
+
+    def _openLink( self, link ):
+#         QDesktopServices.openUrl( QUrl("http://google.com") )
+#         QDesktopServices.openUrl( QUrl("file:///media/E/bluetooth.txt") )
+        self.ui.urlEdit.setText( link.toLocalFile() )
+        QDesktopServices.openUrl( link )
 
     def _finished(self, result):
         self.task.completed = self.completed

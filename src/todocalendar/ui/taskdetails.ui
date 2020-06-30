@@ -170,13 +170,6 @@
        </property>
       </widget>
      </item>
-     <item row="7" column="1">
-      <widget class="QTextEdit" name="descriptionEdit">
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item row="8" column="0">
       <widget class="QLabel" name="label_6">
        <property name="text">
@@ -196,6 +189,19 @@
      </item>
      <item row="9" column="1">
       <widget class="RecurrentWidget" name="recurrentWidget" native="true"/>
+     </item>
+     <item row="7" column="1">
+      <widget class="QTextBrowser" name="descriptionEdit">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::TextBrowserInteraction</set>
+       </property>
+       <property name="openLinks">
+        <bool>false</bool>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

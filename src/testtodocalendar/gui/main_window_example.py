@@ -55,7 +55,9 @@ if __name__ != '__main__':
 def prepareExampleData( window: MainWindow ):
     dataManager = window.getManager()
     taskDate = datetime.today() - timedelta( seconds=5 )
-    dataManager.addNewTaskDateTime( taskDate, "test task 1" )
+    task1 = dataManager.addNewTaskDateTime( taskDate, "test task 1" )
+    task1.description = "<a href=\"http://www.google.com\">xxx</a> <br> <a href=\"file:///media/E/bluetooth.txt\">yyy</a> <br> <a href=\"file:///media/E/Pani1.jpg\">zzz</a>"
+
     dataManager.addNewDeadlineDateTime( taskDate, "test deadline 1" )
 
     if taskDate.day > 15:

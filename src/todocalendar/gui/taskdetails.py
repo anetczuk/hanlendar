@@ -27,6 +27,7 @@ from datetime import datetime
 from . import uiloader
 
 from PyQt5.QtWidgets import QListWidgetItem
+from PyQt5.QtGui import QDesktopServices
 
 from todocalendar.domainmodel.task import Task
 
@@ -44,6 +45,9 @@ class TaskDetails( QtBaseClass ):           # type: ignore
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
         self.ui.recurrentWidget.setReadOnly( True )
+
+        self.ui.descriptionEdit.anchorClicked.connect( self._openLink )
+
         self.setTask( None )
 
     def setTask(self, task: Task):
@@ -86,3 +90,8 @@ class TaskDetails( QtBaseClass ):           # type: ignore
             self.ui.recurrentWidget.setEnabled( False )
         else:
             self.ui.recurrentWidget.setEnabled( True )
+
+    def _openLink( self, link ):
+#         QDesktopServices.openUrl( QUrl("http://google.com") )
+#         QDesktopServices.openUrl( QUrl("file:///media/E/bluetooth.txt") )
+        QDesktopServices.openUrl( link )

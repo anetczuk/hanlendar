@@ -198,7 +198,48 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QTextEdit" name="descriptionEdit"/>
+        <widget class="QTextBrowser" name="descriptionEdit">
+         <property name="readOnly">
+          <bool>false</bool>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextEditable|Qt::TextEditorInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+         <property name="openLinks">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Url:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="urlEdit"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="openLocalFilePB">
+           <property name="text">
+            <string>Open File</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="addUrlPB">
+           <property name="text">
+            <string>Add</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
@@ -235,15 +276,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ReminderWidget</class>
-   <extends>QWidget</extends>
-   <header>todocalendar.gui.reminderwidget</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>RecurrentWidget</class>
    <extends>QWidget</extends>
    <header>todocalendar.gui.recurrentwidget</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ReminderWidget</class>
+   <extends>QWidget</extends>
+   <header>todocalendar.gui.reminderwidget</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
