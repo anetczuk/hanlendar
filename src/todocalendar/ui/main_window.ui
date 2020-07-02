@@ -279,11 +279,12 @@
     <property name="title">
      <string>Fi&amp;le</string>
     </property>
+    <addaction name="actionImportNotes"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
-     <string>Edit</string>
+     <string>E&amp;dit</string>
     </property>
     <addaction name="actionOptions"/>
    </widget>
@@ -309,6 +310,11 @@
   <action name="actionOptions">
    <property name="text">
     <string>&amp;Options</string>
+   </property>
+  </action>
+  <action name="actionImportNotes">
+   <property name="text">
+    <string>&amp;Import from Xfce Notes</string>
    </property>
   </action>
  </widget>

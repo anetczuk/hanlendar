@@ -93,6 +93,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.notifsTimer.remindTask.connect( self.showTaskNotification )
 
+        self.ui.actionImportNotes.triggered.connect( self.importXfceNotes )
+
         self.handleSettings()
         self.trayIcon.show()
 
@@ -104,6 +106,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def refreshView(self):
         self.updateNotificationTimer()
         self.updateTasksView()
+        self.updateNotesView()
         self.setDetails( None )
 
     ## ===============================================================
@@ -197,6 +200,17 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.trayIcon.displayMessage( notification.message )
         self.updateTasksTable()
 
+    ## ====================================================================
+    
+    def updateNotesView(self):
+        notesDict = self.domainModel.getNotes()
+        self.ui.notesWidget.setNotes( notesDict )
+    
+    def importXfceNotes(self):
+        #print( "cccc" )
+        self.domainModel.importXfceNotes()
+        self.updateNotesView()
+    
     ## ====================================================================
 
     ## slot

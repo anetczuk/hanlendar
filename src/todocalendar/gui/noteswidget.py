@@ -88,8 +88,15 @@ class NotesWidget( QtBaseClass ):           # type: ignore
         self.ui.notes_tabs.clear()
         self.addTab( "notes" )
 
-    def addTab(self, title):
-        self.ui.notes_tabs.addTab( SinglePageWidget(self), title )
+    def setNotes(self, notesDict):
+        self.ui.notes_tabs.clear()
+        for key, value in notesDict.items():
+            self.addTab( key, value )
+
+    def addTab(self, title, text=""):
+        pageWidget = SinglePageWidget(self)
+        pageWidget.textEdit.setText( text )
+        self.ui.notes_tabs.addTab( pageWidget, title )
 
     def contextMenuEvent( self, event ):
         evPos     = event.pos()

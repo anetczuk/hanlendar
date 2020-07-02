@@ -21,6 +21,7 @@
 # SOFTWARE.
 #
 
+import os
 from datetime import date, datetime
 
 import logging
@@ -39,6 +40,7 @@ class Manager():
     def __init__(self):
         """Constructor."""
         self.tasks = list()
+        self.notes = { "notes": "" }        ## default notes
 
     def store(self, outputFile):
         with open(outputFile, 'wb') as fp:
@@ -116,3 +118,25 @@ class Manager():
             ret.extend( notifs )
         ret.sort( key=Notification.sortByTime )
         return ret
+
+    def getNotes(self):
+        return self.notes
+
+    def importXfceNotes(self):
+        newNotes = {}
+        
+        notes_dir = os.path.expanduser( "~/.local/share/notes" )
+        for groupName in os.listdir( notes_dir ):
+            group_dir = notes_dir + "/" + groupName
+            for noteName in os.listdir( group_dir ):
+                note_path = group_dir + "/" + noteName
+                with open( note_path, 'r') as file:
+                    data = file.read()
+                    if noteName in newNotes:
+                        ## the same note name in different groups -- append notes
+                        newNotes[ noteName ] = newNotes[ noteName ] + "\n" + data
+                    else:
+                        newNotes[ noteName ] = data
+
+        if len(newNotes) > 0:
+            self.notes = newNotes
