@@ -236,6 +236,28 @@
             </property>
            </layout>
           </widget>
+          <widget class="QWidget" name="notes_tab">
+           <attribute name="title">
+            <string>Notes</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="NotesWidget" name="notesWidget" native="true"/>
+            </item>
+           </layout>
+          </widget>
          </widget>
         </item>
        </layout>
@@ -286,7 +308,7 @@
   </action>
   <action name="actionOptions">
    <property name="text">
-    <string>Options</string>
+    <string>&amp;Options</string>
    </property>
   </action>
  </widget>
@@ -305,6 +327,12 @@
    <class>TaskDetails</class>
    <extends>QWidget</extends>
    <header>todocalendar.gui.taskdetails</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NotesWidget</class>
+   <extends>QWidget</extends>
+   <header>todocalendar.gui.noteswidget</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
