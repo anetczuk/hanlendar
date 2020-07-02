@@ -124,7 +124,7 @@ class Manager():
 
     def importXfceNotes(self):
         newNotes = {}
-        
+
         notes_dir = os.path.expanduser( "~/.local/share/notes" )
         for groupName in os.listdir( notes_dir ):
             group_dir = notes_dir + "/" + groupName

@@ -30,7 +30,7 @@ from . import uiloader
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMenu, QInputDialog
 from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtCore import QDir
- 
+
 # from todocalendar.domainmodel.task import Task
 # from todocalendar.domainmodel.recurrent import RepeatType, Recurrent
 # from datetime import date
@@ -46,15 +46,15 @@ NOTES_BG_COLOR = "#f7ec9d"
 
 
 class SinglePageWidget( QWidget ):
-    
+
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
-        
+
         vlayout = QVBoxLayout()
-        vlayout.setContentsMargins(0,0,0,0)
+        vlayout.setContentsMargins( 0, 0, 0, 0 )
         self.setLayout( vlayout )
         self.textEdit = QTextEdit(self)
-        
+
 #         self.textEdit.setStyleSheet( "background-color: #f7ec9d;" )
         self.setStyleSheet(
             """
@@ -63,7 +63,7 @@ class SinglePageWidget( QWidget ):
             }
             """ % NOTES_BG_COLOR
         )
-        
+
         vlayout.addWidget( self.textEdit )
 
 
@@ -73,7 +73,7 @@ class NotesWidget( QtBaseClass ):           # type: ignore
         super().__init__(parentWidget)
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
-        
+
         self.ui.notes_tabs.setStyleSheet(
             """
             QTabWidget {
@@ -109,13 +109,13 @@ class NotesWidget( QtBaseClass ):           # type: ignore
         newAction     = contextMenu.addAction("New")
         renameAction  = contextMenu.addAction("Rename")
         deleteAction  = contextMenu.addAction("Delete")
-  
+
         if tabIndex < 0:
             renameAction.setEnabled( False )
             deleteAction.setEnabled( False )
 
         action = contextMenu.exec_( globalPos )
-  
+
         if action == newAction:
             self._newTabRequest()
         elif action == renameAction:
@@ -131,16 +131,16 @@ class NotesWidget( QtBaseClass ):           # type: ignore
     def _renameTabRequest( self, tabIndex ):
         if tabIndex < 0:
             return
-        
+
         tabText = self.ui.notes_tabs.tabText( tabIndex )
         newText = self._requestTabName(tabText)
         if len(newText) > 0:
             self.ui.notes_tabs.setTabText( tabIndex, newText )
 
     def _requestTabName( self, currName ):
-        newText, ok = QInputDialog.getText( self, 
+        newText, ok = QInputDialog.getText( self,
                                             "Rename Note",
-                                            "Note name:", 
+                                            "Note name:",
                                             QLineEdit.Normal,
                                             currName )
         if ok and len(newText) > 0:

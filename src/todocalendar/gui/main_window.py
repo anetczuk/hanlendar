@@ -201,16 +201,15 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.updateTasksTable()
 
     ## ====================================================================
-    
+
     def updateNotesView(self):
         notesDict = self.domainModel.getNotes()
         self.ui.notesWidget.setNotes( notesDict )
-    
+
     def importXfceNotes(self):
-        #print( "cccc" )
         self.domainModel.importXfceNotes()
         self.updateNotesView()
-    
+
     ## ====================================================================
 
     ## slot
