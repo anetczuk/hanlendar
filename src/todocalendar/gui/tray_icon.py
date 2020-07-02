@@ -36,8 +36,9 @@ _LOGGER = logging.getLogger(__name__)
 
 @unique
 class TrayIconTheme(Enum):
-    WHITE   = 'calendar-white.png'
-    BLACK   = 'calendar-black.png'
+    WHITE         = 'calendar-white.png'
+    BLACK         = 'calendar-black.png'
+    BLACK_WHITE   = 'calendar-bw.png'
 
     @classmethod
     def findByName(cls, name):
