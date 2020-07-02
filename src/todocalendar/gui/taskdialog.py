@@ -84,6 +84,7 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.ui.dueDateTime.dateTimeChanged.connect( self._dueChanged )
 
         self.ui.openLocalFilePB.clicked.connect( self._openLocalFile )
+        self.ui.openLocalDirPB.clicked.connect( self._openLocalDir )
         self.ui.addUrlPB.clicked.connect( self._addUrl )
 
         self.finished.connect( self._finished )
@@ -124,6 +125,16 @@ class TaskDialog( QtBaseClass ):           # type: ignore
     def _openLocalFile(self):
         fielDialog = QFileDialog( self )
         fielDialog.setFileMode( QFileDialog.ExistingFile )
+        dialogCode = fielDialog.exec_()
+        if dialogCode == QDialog.Rejected:
+            return
+        selectedFile = fielDialog.selectedFiles()[0]
+        fileUrl = QUrl.fromLocalFile( selectedFile )
+        self.ui.urlEdit.setText( fileUrl.toString() )
+
+    def _openLocalDir(self):
+        fielDialog = QFileDialog( self )
+        fielDialog.setFileMode( QFileDialog.Directory )
         dialogCode = fielDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return

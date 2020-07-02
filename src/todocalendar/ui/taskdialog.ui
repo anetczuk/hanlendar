@@ -225,6 +225,26 @@
          <item>
           <widget class="QLineEdit" name="urlEdit"/>
          </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <spacer name="horizontalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
          <item>
           <widget class="QPushButton" name="openLocalFilePB">
            <property name="text">
@@ -233,9 +253,16 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="openLocalDirPB">
+           <property name="text">
+            <string>Open Dir</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="addUrlPB">
            <property name="text">
-            <string>Add</string>
+            <string>Add Url</string>
            </property>
           </widget>
          </item>
