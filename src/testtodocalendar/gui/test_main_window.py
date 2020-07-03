@@ -53,5 +53,5 @@ class MainWindowTest(unittest.TestCase):
 
     def test_getDataPath(self):
         dataPath = self.widget.getDataPath()
-        self.assertTrue( "ToDoCalendar-data.obj" in dataPath )
+        self.assertTrue( "ToDoCalendar-data" in dataPath )
 
