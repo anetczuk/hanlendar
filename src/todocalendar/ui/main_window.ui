@@ -279,6 +279,7 @@
     <property name="title">
      <string>Fi&amp;le</string>
     </property>
+    <addaction name="actionSave_data"/>
     <addaction name="actionImportNotes"/>
     <addaction name="actionExit"/>
    </widget>
@@ -315,6 +316,11 @@
   <action name="actionImportNotes">
    <property name="text">
     <string>&amp;Import from Xfce Notes</string>
+   </property>
+  </action>
+  <action name="actionSave_data">
+   <property name="text">
+    <string>Save data</string>
    </property>
   </action>
  </widget>

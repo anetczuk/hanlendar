@@ -93,6 +93,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.notifsTimer.remindTask.connect( self.showTaskNotification )
 
+        self.ui.actionSave_data.triggered.connect( self.saveData )
         self.ui.actionImportNotes.triggered.connect( self.importXfceNotes )
 
         self.handleSettings()

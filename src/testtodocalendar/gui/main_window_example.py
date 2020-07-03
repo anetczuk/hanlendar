@@ -102,6 +102,7 @@ app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
 window = MainWindow()
+window.ui.actionSave_data.setEnabled( False )
 window.loadSettings()
 
 prepareExampleData( window )
