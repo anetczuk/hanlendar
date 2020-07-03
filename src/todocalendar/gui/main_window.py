@@ -109,6 +109,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.updateNotificationTimer()
         self.updateTasksView()
         self.updateTrayToolTip()
+        self._updateTasksTrayIndicator()
         self.updateNotesView()
         self.setDetails( None )
 
@@ -197,6 +198,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def showTaskNotification( self, notification: Notification ):
         self.trayIcon.displayMessage( notification.message )
         self.updateTasksTable()
+        self._updateTasksTrayIndicator()
 
     def updateTrayToolTip(self):
         deadlineTask = self.domainModel.getNextDeadline()
@@ -205,11 +207,25 @@ class MainWindow( QtBaseClass ):           # type: ignore
             toolTip += "\n" + "Next deadline: " + deadlineTask.title
         self.trayIcon.setToolTip( toolTip )
 
+    def _updateTasksTrayIndicator(self):
+        self.setIconTheme( self.appSettings.trayIcon )          ## required to clear old number
+        deadlinedTasks = self.domainModel.getDeadlinedTasks()
+        num = len(deadlinedTasks)
+        if num > 0:
+            self.trayIcon.drawNumber( num, "red" )
+            return
+        remindedTasks = self.domainModel.getRemindedTasks()
+        num = len(remindedTasks)
+        if num > 0:
+            self.trayIcon.drawNumber( num, "orange" )
+            return
+
     def _handleTasksChange(self):
         self.updateNotificationTimer()
         self.updateTasksTable()
         self.ui.navcalendar.repaint()
         self.updateTrayToolTip()
+        self._updateTasksTrayIndicator()
 
     ## ====================================================================
 

@@ -110,6 +110,32 @@ class Manager():
                 retTask = task
         return retTask
 
+    def getDeadlinedTasks(self):
+        tSize = len(self.tasks)
+        if tSize < 1:
+            return list()
+        retTasks = list()
+        for i in range(0, tSize):
+            task = self.tasks[i]
+            if task.isCompleted():
+                continue
+            if task.isTimedout():
+                retTasks.append( task )
+        return retTasks
+
+    def getRemindedTasks(self):
+        tSize = len(self.tasks)
+        if tSize < 1:
+            return list()
+        retTasks = list()
+        for i in range(0, tSize):
+            task = self.tasks[i]
+            if task.isCompleted():
+                continue
+            if task.isReminded():
+                retTasks.append( task )
+        return retTasks
+
     def addTask( self, task: Task ):
         self.tasks.append( task )
 

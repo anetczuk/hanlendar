@@ -186,5 +186,6 @@ def getTaskForegroundColor( task: Task ) -> QBrush:
         return QBrush( QColor(255, 0, 0) )
     if task.isReminded():
         ## orange
-        return QBrush( QColor(255, 165, 0) )
+        return QBrush( QColor("orange") )
+#         return QBrush( QColor(255, 165, 0) )
     return QBrush( QColor(0, 0, 0) )

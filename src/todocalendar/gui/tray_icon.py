@@ -26,7 +26,8 @@ import logging
 from enum import Enum, unique
 
 from .qt import qApp, QSystemTrayIcon, QMenu, QAction
-from .qt import QIcon
+from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QImage, QPainterPath, QBrush, QColor, QPen, QFontMetrics, QTransform
 
 from . import resources
 
@@ -87,11 +88,43 @@ class TrayIcon(QSystemTrayIcon):
         ## it cannot be changed back to proper one. Workaround is to use NoIcon parameter
         self.showMessage("ToDo Calendar", message, QSystemTrayIcon.NoIcon, timeout)
 
-    def setIconTheme(self, theme: TrayIconTheme):
-        _LOGGER.debug("setting tray theme: %r", theme)
-        fileName = theme.value
-        iconPath = resources.getImagePath( fileName )
-        self.setIcon( QIcon( iconPath ) )
+    def drawNumber(self, number, numColor="red"):
+        icon = self.icon()
+
+        pixmap = icon.pixmap( 512, 512 )
+        pixSize = pixmap.rect()
+
+        painter = QPainter( pixmap )
+
+        font = painter.font()
+        font.setPixelSize( 256 + 128 )
+        painter.setFont(font)
+
+        path = QPainterPath()
+        path.addText( 0, 0, font, str(number) )
+        pathBBox = path.boundingRect()
+
+        xOffset = ( pixSize.width() - pathBBox.width() ) / 2 - pathBBox.left()
+        yOffset = ( pixSize.height() + pathBBox.height() ) / 2
+
+        path.translate( xOffset, yOffset )
+
+#         pathPen = QPen(QColor("black"))
+        pathPen = QPen( QColor(0, 0, 0, 200) )
+        pathPen.setWidth( 180 )
+        painter.strokePath( path, pathPen )
+
+        fillColor = QColor( numColor )
+        painter.fillPath( path, QBrush(fillColor) )
+
+        ## make number bolder
+        pathPen = QPen( fillColor )
+        pathPen.setWidth( 20 )
+        painter.strokePath( path, pathPen )
+
+        painter.end()
+
+        self.setIcon( QIcon( pixmap ) )
 
     def _icon_activated(self, reason):
 #         print("tray clicked, reason:", reason)
