@@ -97,24 +97,22 @@ class TaskTable( QTableWidget ):
 
         for i in range(0, tasksSize):
             task: Task = tasksList[i]
-            timedout = task.isTimedout() and task.isCompleted() is False
+
+            fgColor = getTaskForegroundColor( task )
 
             titleItem = QTableWidgetItem( task.title )
             titleItem.setData( Qt.UserRole, task )
-            if timedout:
-                titleItem.setForeground( QBrush(QColor(255, 0, 0)) )
+            titleItem.setForeground( fgColor )
             self.setItem( i, 0, titleItem )
 
             priorityItem = QTableWidgetItem( str(task.priority) )
             priorityItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
-            if timedout:
-                priorityItem.setForeground( QBrush(QColor(255, 0, 0)) )
+            priorityItem.setForeground( fgColor )
             self.setItem( i, 1, priorityItem )
 
             completedItem = QTableWidgetItem( str(task.completed) )
             completedItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
-            if timedout:
-                completedItem.setForeground( QBrush(QColor(255, 0, 0)) )
+            completedItem.setForeground( fgColor )
             self.setItem( i, 2, completedItem )
 
             startDate = "---"
@@ -123,16 +121,14 @@ class TaskTable( QTableWidget ):
                 startDate = task.startDate.strftime( "%Y-%m-%d %H:%M" )
             startItem = QTableWidgetItem( str(startDate) )
             startItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
-            if timedout:
-                startItem.setForeground( QBrush(QColor(255, 0, 0)) )
+            startItem.setForeground( fgColor )
             self.setItem( i, 3, startItem )
 
             dueDate = task.dueDate.strftime( "%Y-%m-%d %H:%M" )
             #dueDate = task.dueDate.date()
             dueItem = QTableWidgetItem( str(dueDate) )
             dueItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
-            if timedout:
-                dueItem.setForeground( QBrush(QColor(255, 0, 0)) )
+            dueItem.setForeground( fgColor )
             self.setItem( i, 4, dueItem )
 
         self.setSortingEnabled( True )
@@ -173,3 +169,16 @@ class TaskTable( QTableWidget ):
             self.removeTask.emit( task )
         elif action == markCompletedAction:
             self.markCompleted.emit( task )
+
+
+def getTaskForegroundColor( task: Task ) -> QBrush:
+    if task.isCompleted():
+        ## black
+        return QBrush( QColor(0, 0, 0) )
+    if task.isTimedout():
+        ## red
+        return QBrush( QColor(255, 0, 0) )
+    if task.isReminded():
+        ## orange
+        return QBrush( QColor(255, 165, 0) )
+    return QBrush( QColor(0, 0, 0) )

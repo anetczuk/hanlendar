@@ -115,3 +115,18 @@ class TaskTest(unittest.TestCase):
         self.assertEqual( notifications[0].message, "task 'task 1': 0:00:10 before due time" )
         self.assertEqual( notifications[1].task, task )
         self.assertEqual( notifications[1].message, "task 'task 1' reached deadline" )
+
+    def test_isReminded(self):
+        task = Task()
+        task.dueDate = datetime.datetime.today() + datetime.timedelta( seconds=30 )
+        self.assertEqual( task.isReminded(), False )
+
+    def test_isReminded_reminded(self):
+        task = Task()
+        task.dueDate = datetime.datetime.today() + datetime.timedelta( seconds=30 )
+
+        reminder = Reminder()
+        reminder.setTime( 0, 300 )
+        task.addReminder( reminder )
+
+        self.assertEqual( task.isReminded(), True )

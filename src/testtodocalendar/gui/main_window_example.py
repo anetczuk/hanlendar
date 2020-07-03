@@ -86,6 +86,10 @@ def prepareExampleData( window: MainWindow ):
     reminder = deadlineTaks.addReminder()
     reminder.setMillis( 5000 )
 
+    remindedTask = dataManager.addNewTaskDateTime( taskDate, "reminded task 1" )
+    reminder = remindedTask.addReminder()
+    reminder.setDays( 30 )
+
     window.refreshView()
 
 

@@ -188,6 +188,19 @@ class Task():
         currTime = datetime.today()
         return currTime > self.dueDate
 
+    def isReminded(self):
+        if self.dueDate is None:
+            return False
+        if self.reminderList is None:
+            return False
+
+        currTime = datetime.today()
+        for reminder in self.reminderList:
+            notifTime = self.dueDate - reminder.getOffset()
+            if notifTime < currTime:
+                return True
+        return False
+
     def printRecurrent(self) -> str:
         if self._recurrence is None:
             return "None"
