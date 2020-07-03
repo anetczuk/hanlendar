@@ -72,7 +72,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.appSettings = AppSettings()
 
         self.trayIcon = tray_icon.TrayIcon(self)
-        self.trayIcon.setToolTip("ToDo Calendar")
+        self.updateTrayToolTip()
 
         self.notifsTimer = NotificationTimer( self )
 
@@ -106,6 +106,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def refreshView(self):
         self.updateNotificationTimer()
         self.updateTasksView()
+        self.updateTrayToolTip()
         self.updateNotesView()
         self.setDetails( None )
 
@@ -143,9 +144,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.addTask( taskDialog.task )
-        self.updateNotificationTimer()
-        self.updateTasksTable()
-        self.ui.navcalendar.repaint()
+        self._handleTasksChange()
 
     def editTask(self, task: Task ):
         taskDialog = TaskDialog( task, self )
@@ -154,20 +153,15 @@ class MainWindow( QtBaseClass ):           # type: ignore
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.replaceTask( task, taskDialog.task )
-        self.updateNotificationTimer()
-        self.updateTasksTable()
-        self.ui.navcalendar.repaint()
+        self._handleTasksChange()
 
     def removeTask(self, task: Task ):
         self.domainModel.removeTask( task )
-        self.updateNotificationTimer()
-        self.updateTasksTable()
-        self.ui.navcalendar.repaint()
+        self._handleTasksChange()
 
     def markTaskCompleted(self, task: Task ):
         task.setCompleted()
-        self.updateNotificationTimer()
-        self.updateTasksTable()
+        self._handleTasksChange()
 
     def updateTasksView(self):
         selectedDate: QDate = self.ui.navcalendar.selectedDate()
@@ -201,6 +195,19 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def showTaskNotification( self, notification: Notification ):
         self.trayIcon.displayMessage( notification.message )
         self.updateTasksTable()
+
+    def updateTrayToolTip(self):
+        deadlineTask = self.domainModel.getNextDeadline()
+        toolTip = "ToDo Calendar"
+        if deadlineTask is not None:
+            toolTip += "\n" + "Next deadline: " + deadlineTask.title
+        self.trayIcon.setToolTip( toolTip )
+
+    def _handleTasksChange(self):
+        self.updateNotificationTimer()
+        self.updateTasksTable()
+        self.ui.navcalendar.repaint()
+        self.updateTrayToolTip()
 
     ## ====================================================================
 

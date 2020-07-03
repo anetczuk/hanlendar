@@ -95,6 +95,21 @@ class Manager():
     def getTasks( self ):
         return list( self.tasks )       ## shallow copy of list
 
+    def getNextDeadline(self) -> Task:
+        tSize = len(self.tasks)
+        if tSize < 1:
+            return None
+        retTask: Task = None
+        for i in range(0, tSize):
+            task = self.tasks[i]
+            if task.isCompleted():
+                continue
+            if retTask is None:
+                retTask = task
+            elif task.dueDate < retTask.dueDate:
+                retTask = task
+        return retTask
+
     def addTask( self, task: Task ):
         self.tasks.append( task )
 
@@ -168,3 +183,11 @@ class Manager():
 
         if len(newNotes) > 0:
             self.notes = newNotes
+
+    def printTasks(self):
+        retStr = ""
+        tSize = len(self.tasks)
+        for i in range(0, tSize):
+            task = self.tasks[i]
+            retStr += str(task) + "\n"
+        return retStr

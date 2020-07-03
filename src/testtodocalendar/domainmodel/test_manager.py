@@ -90,6 +90,25 @@ class ManagerTest(unittest.TestCase):
         tasksList.clear()
         self.assertEqual( len( manager.getTasks() ), 2 )
 
+    def test_getNextDeadline(self):
+        manager = Manager()
+        taskDate = datetime.datetime.today()
+        manager.addNewTaskDateTime( taskDate + timedelta(seconds=5), "task1" )
+        manager.addNewTaskDateTime( taskDate, "task2" )
+
+        deadlineTask = manager.getNextDeadline()
+        self.assertEqual( deadlineTask.title, "task2" )
+
+    def test_getNextDeadline_completed(self):
+        manager = Manager()
+        taskDate = datetime.datetime.today()
+        manager.addNewTaskDateTime( taskDate + timedelta(seconds=5), "task1" )
+        task2 = manager.addNewTaskDateTime( taskDate, "task2" )
+        task2.setCompleted()
+
+        deadlineTask = manager.getNextDeadline()
+        self.assertEqual( deadlineTask.title, "task1" )
+
     def test_removeTask(self):
         manager = Manager()
 
