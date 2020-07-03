@@ -6,23 +6,21 @@ SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 
 
 ## add udev rule
-AUTOSTART_FILE=~/.local/share/applications/menulibre-todocalendar.desktop
+AUTOSTART_FILE=~/.config/autostart/ToDoCalendar.desktop
 
 
 cat > $AUTOSTART_FILE << EOL
 [Desktop Entry]
 Name=ToDo Calendar
+GenericName=ToDo Calendar
 Comment=Calendar and ToDo list in one application.
-Version=1.1
 Type=Application
-Exec=$SCRIPT_DIR/startcalendar
-Path=$SCRIPT_DIR
-Icon=$SCRIPT_DIR/todocalendar/gui/img/calendar-bw.png
-Actions=
 Categories=Office;
-StartupNotify=true
+Exec=$SCRIPT_DIR/startcalendar --minimized
+Icon=$SCRIPT_DIR/todocalendar/gui/img/calendar-bw.png
 Terminal=false
-
+StartupNotify=true
+X-GNOME-Autostart-enabled=true
 EOL
 
 
