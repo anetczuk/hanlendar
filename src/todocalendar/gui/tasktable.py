@@ -63,6 +63,7 @@ class TaskTable( QTableWidget ):
         header.setSectionResizeMode( 0, QHeaderView.Stretch )
 
         self.itemSelectionChanged.connect( self.taskSelectionChanged )
+        self.itemDoubleClicked.connect( self.taskDoubleClicked )
 
         self.setTasks( [] )
 
@@ -169,6 +170,11 @@ class TaskTable( QTableWidget ):
             self.removeTask.emit( task )
         elif action == markCompletedAction:
             self.markCompleted.emit( task )
+
+    def taskDoubleClicked(self, item):
+        rowIndex = self.row( item )
+        task = self.getTask( rowIndex )
+        self.editTask.emit( task )
 
 
 def getTaskForegroundColor( task: Task ) -> QBrush:
