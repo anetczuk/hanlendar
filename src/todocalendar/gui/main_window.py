@@ -30,13 +30,14 @@ from . import tray_icon
 from .qt import qApp, QtCore, QIcon
 from .qt import QWidget, QSplitter, QTabWidget
 from PyQt5.QtCore import QDate
-from PyQt5.QtWidgets import QDialog, QTableWidget
+from PyQt5.QtWidgets import QTableWidget
+from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from .navcalendar import NavCalendarHighlightModel
 from .taskdialog import TaskDialog
 from .settingsdialog import SettingsDialog
-from todocalendar.gui.settingsdialog import AppSettings
-from todocalendar.gui.notifytimer import NotificationTimer
+from .settingsdialog import AppSettings
+from .notifytimer import NotificationTimer
 
 from todocalendar.domainmodel.manager import Manager
 from todocalendar.domainmodel.task import Task
@@ -217,8 +218,10 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.notesWidget.setNotes( notesDict )
 
     def importXfceNotes(self):
-        self.domainModel.importXfceNotes()
-        self.updateNotesView()
+        retButton = QMessageBox.question(self, "Import Notes", "Do you want to import Xfce Notes (previous notes will be lost)?")
+        if retButton == QMessageBox.Yes:
+            self.domainModel.importXfceNotes()
+            self.updateNotesView()
 
     ## ====================================================================
 
