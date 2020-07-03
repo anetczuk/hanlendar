@@ -42,16 +42,41 @@ class Manager():
         self.tasks = list()
         self.notes = { "notes": "" }        ## default notes
 
-    def store(self, outputFile):
-        with open(outputFile, 'wb') as fp:
+    def store( self, outputDir ):
+        outputTasksFile = outputDir + "/tasks.obj"
+        _LOGGER.info( "saving tasks to: %s", outputTasksFile )
+        with open(outputTasksFile, 'wb') as fp:
             pickle.dump( self.tasks, fp )
 
-    def load(self, inputFile):
+        outputNotesFile = outputDir + "/notes.obj"
+        _LOGGER.info( "saving notes to: %s", outputNotesFile )
+        with open(outputNotesFile, 'wb') as fp:
+            pickle.dump( self.notes, fp )
+
+    def load( self, inputDir ):
         try:
-            with open( inputFile, 'rb') as fp:
+            inputTasksFile = inputDir + "/tasks.obj"
+            _LOGGER.info( "loading tasks from: %s", inputTasksFile )
+            with open( inputTasksFile, 'rb') as fp:
                 self.tasks = pickle.load(fp)
         except FileNotFoundError:
+            _LOGGER.exception("failed to load")
             self.tasks = list()
+        except Exception:
+            _LOGGER.exception("failed to load")
+            raise
+
+        try:
+            inputNotesFile = inputDir + "/notes.obj"
+            _LOGGER.info( "loading notes from: %s", inputNotesFile )
+            with open( inputNotesFile, 'rb') as fp:
+                self.notes = pickle.load(fp)
+        except FileNotFoundError:
+            _LOGGER.exception("failed to load")
+            self.notes = { "notes": "" }        ## default notes
+        except Exception:
+            _LOGGER.exception("failed to load")
+            raise
 
     def hasEntries( self, entriesDate: date ):
         for task in self.tasks:
@@ -121,6 +146,9 @@ class Manager():
 
     def getNotes(self):
         return self.notes
+
+    def setNotes(self, notesDict):
+        self.notes = notesDict
 
     def importXfceNotes(self):
         newNotes = {}

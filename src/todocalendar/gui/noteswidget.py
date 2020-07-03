@@ -66,6 +66,9 @@ class SinglePageWidget( QWidget ):
 
         vlayout.addWidget( self.textEdit )
 
+    def getText(self):
+        return self.textEdit.toPlainText()
+
 
 class NotesWidget( QtBaseClass ):           # type: ignore
 
@@ -87,6 +90,16 @@ class NotesWidget( QtBaseClass ):           # type: ignore
 
         self.ui.notes_tabs.clear()
         self.addTab( "notes" )
+
+    def getNotes(self):
+        notes = dict()
+        notesSize = self.ui.notes_tabs.count()
+        for tabIndex in range(0, notesSize):
+            title = self.ui.notes_tabs.tabText( tabIndex )
+            pageWidget = self.ui.notes_tabs.widget( tabIndex )
+            text = pageWidget.getText()
+            notes[ title ] = text
+        return notes
 
     def setNotes(self, notesDict):
         self.ui.notes_tabs.clear()

@@ -118,14 +118,16 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def saveData(self):
         dataPath = self.getDataPath()
+        notes = self.ui.notesWidget.getNotes()
+        self.domainModel.setNotes( notes )
         self.domainModel.store( dataPath )
 
     def getDataPath(self):
         settings = self.getSettings()
-        settingsFile = settings.fileName()
-        settingsFile = settingsFile[0:-4]       ## remove extension
-        settingsFile += "-data.obj"
-        return settingsFile
+        settingsDir = settings.fileName()
+        settingsDir = settingsDir[0:-4]       ## remove extension
+        settingsDir += "-data"
+        return settingsDir
 
     ## ===============================================================
 
