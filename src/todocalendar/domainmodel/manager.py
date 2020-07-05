@@ -25,8 +25,10 @@ import os
 from datetime import date, datetime
 
 import logging
-import pickle
 
+import glob
+
+from todocalendar import persist
 from .task import Task
 from .reminder import Notification
 
@@ -43,40 +45,31 @@ class Manager():
         self.notes = { "notes": "" }        ## default notes
 
     def store( self, outputDir ):
+        self.backupData( outputDir )
+
         outputTasksFile = outputDir + "/tasks.obj"
         _LOGGER.info( "saving tasks to: %s", outputTasksFile )
-        with open(outputTasksFile, 'wb') as fp:
-            pickle.dump( self.tasks, fp )
+        persist.storeObject( self.tasks, outputTasksFile )
 
         outputNotesFile = outputDir + "/notes.obj"
         _LOGGER.info( "saving notes to: %s", outputNotesFile )
-        with open(outputNotesFile, 'wb') as fp:
-            pickle.dump( self.notes, fp )
+        persist.storeObject( self.notes, outputNotesFile )
 
     def load( self, inputDir ):
-        try:
-            inputTasksFile = inputDir + "/tasks.obj"
-            _LOGGER.info( "loading tasks from: %s", inputTasksFile )
-            with open( inputTasksFile, 'rb') as fp:
-                self.tasks = pickle.load(fp)
-        except FileNotFoundError:
-            _LOGGER.exception("failed to load")
+        inputTasksFile = inputDir + "/tasks.obj"
+        self.tasks = persist.loadObject( inputTasksFile )
+        if self.tasks is None:
             self.tasks = list()
-        except Exception:
-            _LOGGER.exception("failed to load")
-            raise
 
-        try:
-            inputNotesFile = inputDir + "/notes.obj"
-            _LOGGER.info( "loading notes from: %s", inputNotesFile )
-            with open( inputNotesFile, 'rb') as fp:
-                self.notes = pickle.load(fp)
-        except FileNotFoundError:
-            _LOGGER.exception("failed to load")
-            self.notes = { "notes": "" }        ## default notes
-        except Exception:
-            _LOGGER.exception("failed to load")
-            raise
+        inputNotesFile = inputDir + "/notes.obj"
+        self.notes = persist.loadObject( inputNotesFile )
+        if self.notes is None:
+            self.notes = { "notes": "" }
+
+    def backupData(self, dataDir):
+        objFiles = glob.glob( dataDir + "/*.obj" )
+        storedZipFile = dataDir + "/data.zip"
+        persist.backupFiles( objFiles, storedZipFile )
 
     def hasEntries( self, entriesDate: date ):
         for task in self.tasks:
