@@ -30,13 +30,16 @@ from .reminder import Reminder, Notification
 
 from typing import List
 from todocalendar.domainmodel.recurrent import RepeatType
+from todocalendar import persist
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class Task():
+class Task( persist.Versionable ):
     """Task is entity that lasts over time."""
+
+    _class_version = 0
 
     def __init__(self, title="" ):
         self.title                          = title
@@ -49,6 +52,13 @@ class Task():
         self._recurrence                    = None
         self._recurrentStartDate: datetime  = None
         self._recurrentDueDate: datetime    = None
+
+    def _convertstate_(self, dict_, dictVersion_ ):
+        _LOGGER.info( "converting object from version %s to %s", dictVersion_, self._class_version )
+        if dictVersion_ is None:
+            self.__dict__ = dict_
+            return
+        self.__dict__ = dict_
 
     @property
     def completed(self):

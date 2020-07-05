@@ -28,6 +28,8 @@ import zipfile
 import filecmp
 import pickle
 
+import abc
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +54,7 @@ def storeObject( inputObject, outputFile ):
 
     if os.path.isfile( outputFile ) is False:
         ## output file does not exist -- rename file
+        _LOGGER.info( "saving data to: %s", outputFile )
         os.rename( tmpFile, outputFile )
         return
 
@@ -61,6 +64,7 @@ def storeObject( inputObject, outputFile ):
         os.remove( tmpFile )
         return
 
+    _LOGGER.info( "saving data to: %s", outputFile )
     os.remove( outputFile )
     os.rename( tmpFile, outputFile )
 
@@ -104,3 +108,22 @@ def backupFiles( inputFiles, outputArchive ):
 
     os.rename( storedZipFile, nextFile )
     os.rename( tmpZipFile, storedZipFile )
+
+
+class Versionable( metaclass=abc.ABCMeta ):
+
+    def __getstate__(self):
+        if not hasattr(self, "_class_version"):
+            raise Exception("Your class must define _class_version class variable")
+        return dict(_class_version=self._class_version, **self.__dict__)
+
+    def __setstate__(self, dict_):
+        version_present_in_pickle = dict_.pop("_class_version", None)
+        if version_present_in_pickle == self._class_version:
+            self.__dict__ = dict_
+        else:
+            self._convertstate_( dict_, version_present_in_pickle )
+
+    @abc.abstractmethod
+    def _convertstate_(self, dict_, dictVersion_ ):
+        raise NotImplementedError('You need to define this method in derived class!')

@@ -39,30 +39,39 @@ _LOGGER = logging.getLogger(__name__)
 class Manager():
     """Root class for domain data structure."""
 
+    _class_version = 0
+
     def __init__(self):
         """Constructor."""
         self.tasks = list()
         self.notes = { "notes": "" }        ## default notes
 
     def store( self, outputDir ):
+        outputFile = outputDir + "/version.obj"
+        persist.storeObject( self._class_version, outputFile )
+
+        outputFile = outputDir + "/tasks.obj"
+        persist.storeObject( self.tasks, outputFile )
+
+        outputFile = outputDir + "/notes.obj"
+        persist.storeObject( self.notes, outputFile )
+        
         self.backupData( outputDir )
 
-        outputTasksFile = outputDir + "/tasks.obj"
-        _LOGGER.info( "saving tasks to: %s", outputTasksFile )
-        persist.storeObject( self.tasks, outputTasksFile )
-
-        outputNotesFile = outputDir + "/notes.obj"
-        _LOGGER.info( "saving notes to: %s", outputNotesFile )
-        persist.storeObject( self.notes, outputNotesFile )
-
     def load( self, inputDir ):
-        inputTasksFile = inputDir + "/tasks.obj"
-        self.tasks = persist.loadObject( inputTasksFile )
+        inputFile = inputDir + "/version.obj"
+        mngrVersion = persist.loadObject( inputFile )
+        if mngrVersion != self. _class_version:
+            _LOGGER.info( "converting object from version %s to %s", mngrVersion, self._class_version )
+            ## do nothing for now
+
+        inputFile = inputDir + "/tasks.obj"
+        self.tasks = persist.loadObject( inputFile )
         if self.tasks is None:
             self.tasks = list()
 
-        inputNotesFile = inputDir + "/notes.obj"
-        self.notes = persist.loadObject( inputNotesFile )
+        inputFile = inputDir + "/notes.obj"
+        self.notes = persist.loadObject( inputFile )
         if self.notes is None:
             self.notes = { "notes": "" }
 
