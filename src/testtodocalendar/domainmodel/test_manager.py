@@ -90,6 +90,14 @@ class ManagerTest(unittest.TestCase):
         tasksList.clear()
         self.assertEqual( len( manager.getTasks() ), 2 )
 
+    def test_getNextDeadline_None(self):
+        manager = Manager()
+        manager.addTask( Task("task1") )
+        manager.addTask( Task("task2") )
+
+        deadlineTask = manager.getNextDeadline()
+        self.assertEqual( deadlineTask, None )
+
     def test_getNextDeadline(self):
         manager = Manager()
         taskDate = datetime.datetime.today()

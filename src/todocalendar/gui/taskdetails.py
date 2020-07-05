@@ -69,11 +69,15 @@ class TaskDetails( QtBaseClass ):           # type: ignore
         self.ui.priorityBox.setValue( task.priority )
         if task.startDate is None:
             self.ui.deadlineBox.setChecked( True )
-            self.ui.startDateTime.setDateTime( task.dueDate )
+            if task.dueDate is not None:
+                self.ui.startDateTime.setDateTime( task.dueDate )
         else:
             self.ui.deadlineBox.setChecked( False )
             self.ui.startDateTime.setDateTime( task.startDate )
-        self.ui.dueDateTime.setDateTime( task.dueDate )
+        if task.dueDate is not None:
+            self.ui.dueDateTime.setDateTime( task.dueDate )
+        else:
+            self.ui.dueDateTime.setEnabled( False )
         self.ui.reminderList.clear()
 
         self.ui.reminderList.clear()

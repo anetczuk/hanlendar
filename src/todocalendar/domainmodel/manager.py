@@ -97,6 +97,8 @@ class Manager():
             task = self.tasks[i]
             if task.isCompleted():
                 continue
+            if task.dueDate is None:
+                continue
             if retTask is None:
                 retTask = task
             elif task.dueDate < retTask.dueDate:

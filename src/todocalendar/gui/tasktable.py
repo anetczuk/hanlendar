@@ -125,7 +125,9 @@ class TaskTable( QTableWidget ):
             startItem.setForeground( fgColor )
             self.setItem( i, 3, startItem )
 
-            dueDate = task.dueDate.strftime( "%Y-%m-%d %H:%M" )
+            dueDate = "---"
+            if task.dueDate is not None:
+                dueDate = task.dueDate.strftime( "%Y-%m-%d %H:%M" )
             #dueDate = task.dueDate.date()
             dueItem = QTableWidgetItem( str(dueDate) )
             dueItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )

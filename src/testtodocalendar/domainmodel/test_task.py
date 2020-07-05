@@ -60,6 +60,12 @@ class TaskTest(unittest.TestCase):
         self.assertEqual( task.startDate.date(), datetime.date( 2020, 5, 18 ) )
         self.assertEqual( task.dueDate.date(), datetime.date( 2020, 5, 18 ) )
 
+    def test_hasEntry_None(self):
+        task = Task()
+        task.title = "xxx"
+        taskDate = datetime.date( 2020, 5, 17 )
+        self.assertEqual( task.hasEntry(taskDate), False )
+
     def test_hasEntry_entries(self):
         taskDate = datetime.date( 2020, 5, 17 )
         task = Task()
@@ -115,6 +121,10 @@ class TaskTest(unittest.TestCase):
         self.assertEqual( notifications[0].message, "task 'task 1': 0:00:10 before due time" )
         self.assertEqual( notifications[1].task, task )
         self.assertEqual( notifications[1].message, "task 'task 1' reached deadline" )
+
+    def test_isTimedout(self):
+        task = Task()
+        self.assertEqual( task.isTimedout(), False )
 
     def test_isReminded(self):
         task = Task()

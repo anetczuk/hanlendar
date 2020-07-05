@@ -38,8 +38,8 @@ _LOGGER = logging.getLogger(__name__)
 class Task():
     """Task is entity that lasts over time."""
 
-    def __init__(self):
-        self.title                          = ""
+    def __init__(self, title="" ):
+        self.title                          = title
         self.description                    = ""
         self._completed                     = 0        ## in range [0..100]
         self.priority                       = 10       ## lower number, greater priority
@@ -133,7 +133,10 @@ class Task():
         self.setDeadlineDateTime( due )
 
     def hasEntry( self, entriesDate: date ):
-        currDate = self.getReferenceDateTime().date()
+        refDate = self.getReferenceDateTime()
+        if refDate is None:
+            return False
+        currDate = refDate.date()
         if currDate == entriesDate:
             return True
         if self._recurrence is None:
@@ -185,6 +188,8 @@ class Task():
         return ret
 
     def isTimedout(self):
+        if self.dueDate is None:
+            return False
         currTime = datetime.today()
         return currTime > self.dueDate
 
