@@ -134,11 +134,16 @@ class TrayIcon(QSystemTrayIcon):
 
     def _toggleParent(self):
         parent = self.parent()
-        if parent.isHidden():
-            parent.show()
-        else:
-            parent.hide()
         self.updateLabel()
+        if parent.isHidden() is False:
+            ## hide window
+            parent.hide()
+            return
+        ## show
+        if parent.isMinimized():
+            parent.showNormal()
+        else:
+            parent.show()
 
     def updateLabel(self):
         parent = self.parent()
