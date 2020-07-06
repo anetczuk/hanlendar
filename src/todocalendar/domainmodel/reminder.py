@@ -106,11 +106,11 @@ class Reminder():
 def printTimedelta( value: timedelta ):
     s = ""
     secs = value.seconds
-    if secs != 0:
+    days = value.days
+    if secs != 0 or days == 0:
         mm, ss = divmod(secs, 60)
         hh, mm = divmod(mm, 60)
         s = "%d:%02d:%02d" % (hh, mm, ss)
-    days = value.days
     if days:
         def plural(n):
             return n, abs(n) != 1 and "s" or ""

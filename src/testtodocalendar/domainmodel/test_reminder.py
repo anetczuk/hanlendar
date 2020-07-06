@@ -95,3 +95,9 @@ class ReminderTest(unittest.TestCase):
 
         text = reminder.printPretty()
         self.assertEqual( text, "3 days before due time" )
+
+    def test_printPretty_zero(self):
+        reminder = Reminder()
+
+        text = reminder.printPretty()
+        self.assertEqual( text, "0:00:00 before due time" )
