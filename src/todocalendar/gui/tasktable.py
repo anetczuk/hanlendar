@@ -30,6 +30,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QColor, QBrush
 
 from todocalendar.domainmodel.task import Task
+from _datetime import datetime, date
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +52,17 @@ class TaskTable( QTableWidget ):
         self.setSelectionBehavior( QAbstractItemView.SelectRows )
         self.setSelectionMode( QAbstractItemView.SingleSelection )
         self.setEditTriggers( QAbstractItemView.NoEditTriggers )
-        self.setAlternatingRowColors( True )
+
+#         self.setAlternatingRowColors( True )
+#         self.setStyleSheet("""
+#         QTableView::item:alternate {
+#             background-color: #bfffbf;
+#         }
+#         QTableView::item {
+#             background-color: #deffde;
+#         }
+#         """);
+
         self.setShowGrid( False )
 
         headerLabels = [ "Summary", "Priority", "Complete", "Start Date", "Due Date" ]
@@ -96,24 +107,37 @@ class TaskTable( QTableWidget ):
         tasksSize = len( tasksList )
         self.setRowCount( tasksSize )
 
+        nowDate = date.today()
+
         for i in range(0, tasksSize):
             task: Task = tasksList[i]
 
             fgColor = getTaskForegroundColor( task )
+            bgColor = None
+            if task.hasEntryInMonth( nowDate ):
+                bgColor = QColor( "beige" )
+#                 bgColor = QColor( "#deffde" )
+#                 bgColor = QColor( "#bfffbf" )
 
             titleItem = QTableWidgetItem( task.title )
             titleItem.setData( Qt.UserRole, task )
             titleItem.setForeground( fgColor )
+            if bgColor is not None:
+                titleItem.setBackground( bgColor )
             self.setItem( i, 0, titleItem )
 
             priorityItem = QTableWidgetItem( str(task.priority) )
             priorityItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             priorityItem.setForeground( fgColor )
+            if bgColor is not None:
+                priorityItem.setBackground( bgColor )
             self.setItem( i, 1, priorityItem )
 
             completedItem = QTableWidgetItem( str(task.completed) )
             completedItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             completedItem.setForeground( fgColor )
+            if bgColor is not None:
+                completedItem.setBackground( bgColor )
             self.setItem( i, 2, completedItem )
 
             startDate = "---"
@@ -123,6 +147,8 @@ class TaskTable( QTableWidget ):
             startItem = QTableWidgetItem( str(startDate) )
             startItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             startItem.setForeground( fgColor )
+            if bgColor is not None:
+                startItem.setBackground( bgColor )
             self.setItem( i, 3, startItem )
 
             dueDate = "---"
@@ -132,9 +158,13 @@ class TaskTable( QTableWidget ):
             dueItem = QTableWidgetItem( str(dueDate) )
             dueItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             dueItem.setForeground( fgColor )
+            if bgColor is not None:
+                dueItem.setBackground( bgColor )
             self.setItem( i, 4, dueItem )
 
         self.setSortingEnabled( True )
+
+        # printTree( self )
 
     def taskSelectionChanged(self):
         taskIndex = self.currentRow()
@@ -188,6 +218,6 @@ def getTaskForegroundColor( task: Task ) -> QBrush:
         return QBrush( QColor(255, 0, 0) )
     if task.isReminded():
         ## orange
-        return QBrush( QColor("orange") )
+        return QBrush( QColor("brown") )
 #         return QBrush( QColor(255, 165, 0) )
     return QBrush( QColor(0, 0, 0) )

@@ -96,6 +96,14 @@ class TaskTest(unittest.TestCase):
         recurrentDate = taskDate + timedelta(days=5)
         self.assertEqual( task.hasEntry(recurrentDate), False )
 
+    def test_hasEntryInMonth(self):
+        taskDate = datetime.date( 2020, 5, 17 )
+        task = Task()
+        task.setDefaultDate( taskDate )
+        has = task.hasEntryInMonth( taskDate )
+
+        self.assertEqual( has, True )
+
     def test_getNotifications_due(self):
         task = Task()
         task.title = "task 1"

@@ -162,6 +162,31 @@ class Task( persist.Versionable ):
 
         return False
 
+    def hasEntryInMonth( self, month: date ):
+        refDate = self.getReferenceDateTime()
+        if refDate is None:
+            return False
+
+        intYear  = month.year
+        intMonth = month.month
+
+        nextMonthDate = month + timedelta( days=31)
+        currDate = refDate.date()
+        if currDate.year == intYear and currDate.month == intMonth:
+            return True
+        if self._recurrence is None:
+            return False
+
+        while( currDate < nextMonthDate ):
+            currDate = self._recurrence.nextDate( currDate )
+            if currDate is None:
+                ## recurrence end date reached
+                return False
+            if currDate.year == intYear and currDate.year == intMonth:
+                return True
+
+        return False
+
     def addReminder( self, reminder=None ):
         if self.reminderList is None:
             self.reminderList = list()

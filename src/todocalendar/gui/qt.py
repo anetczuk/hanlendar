@@ -46,3 +46,9 @@ def clearLayout(layout):
         if item.layout() is not None:
             clearLayout( item.layout() )
 
+
+def printTree( qtObject: QObject, indent=0 ):
+    print( " " * indent + "object:", qtObject )
+    childList = qtObject.children()
+    for child in childList:
+        printTree( child, indent + 4 )

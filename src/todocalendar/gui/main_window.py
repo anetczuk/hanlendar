@@ -253,7 +253,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         remindedTasks = self.domainModel.getRemindedTasks()
         num = len(remindedTasks)
         if num > 0:
-            self.trayIcon.drawNumber( num, "orange" )
+            self.trayIcon.drawNumber( num, "brown" )
             return
 
     def _updateIconTheme(self, theme: tray_icon.TrayIconTheme):
