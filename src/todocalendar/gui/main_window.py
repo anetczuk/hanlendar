@@ -97,7 +97,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.actionSave_data.triggered.connect( self.saveData )
         self.ui.actionImportNotes.triggered.connect( self.importXfceNotes )
 
-        self.handleSettings()
+        self.applySettings()
         self.trayIcon.show()
 
         #self.statusBar().showMessage("Ready")
@@ -207,19 +207,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
             toolTip += "\n" + "Next deadline: " + deadlineTask.title
         self.trayIcon.setToolTip( toolTip )
 
-    def _updateTasksTrayIndicator(self):
-        self.setIconTheme( self.appSettings.trayIcon )          ## required to clear old number
-        deadlinedTasks = self.domainModel.getDeadlinedTasks()
-        num = len(deadlinedTasks)
-        if num > 0:
-            self.trayIcon.drawNumber( num, "red" )
-            return
-        remindedTasks = self.domainModel.getRemindedTasks()
-        num = len(remindedTasks)
-        if num > 0:
-            self.trayIcon.drawNumber( num, "orange" )
-            return
-
     def _handleTasksChange(self):
         self.updateNotificationTimer()
         self.updateTasksTable()
@@ -246,9 +233,30 @@ class MainWindow( QtBaseClass ):           # type: ignore
         ##self.close()
         qApp.quit()
 
+    ## ====================================================================
+
     def setIconTheme(self, theme: tray_icon.TrayIconTheme):
         _LOGGER.debug("setting tray theme: %r", theme)
+        self._updateIconTheme( theme )
+        self._setTasksTrayIndicator( theme )
 
+    def _updateTasksTrayIndicator(self):
+        self._setTasksTrayIndicator( self.appSettings.trayIcon )              ## required to clear old number
+
+    def _setTasksTrayIndicator(self, theme: tray_icon.TrayIconTheme):
+        self._updateIconTheme( theme )                                  ## required to clear old number
+        deadlinedTasks = self.domainModel.getDeadlinedTasks()
+        num = len(deadlinedTasks)
+        if num > 0:
+            self.trayIcon.drawNumber( num, "red" )
+            return
+        remindedTasks = self.domainModel.getRemindedTasks()
+        num = len(remindedTasks)
+        if num > 0:
+            self.trayIcon.drawNumber( num, "orange" )
+            return
+
+    def _updateIconTheme(self, theme: tray_icon.TrayIconTheme):
         fileName = theme.value
         iconPath = resources.getImagePath( fileName )
         appIcon = QIcon( iconPath )
@@ -276,12 +284,12 @@ class MainWindow( QtBaseClass ):           # type: ignore
         dialog.iconThemeChanged.connect( self.setIconTheme )
         dialogCode = dialog.exec_()
         if dialogCode == QDialog.Rejected:
-            self.handleSettings()
+            self.applySettings()
             return
         self.appSettings = dialog.appSettings
-        self.handleSettings()
+        self.applySettings()
 
-    def handleSettings(self):
+    def applySettings(self):
         self.setIconTheme( self.appSettings.trayIcon )
 
     def loadSettings(self):
@@ -289,7 +297,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.logger.debug( "loading app state from %s", settings.fileName() )
 
         self.appSettings.loadSettings( settings )
-        self.handleSettings()
+        self.applySettings()
 
         ## restore widget state and geometry
         settings.beginGroup( self.objectName() )

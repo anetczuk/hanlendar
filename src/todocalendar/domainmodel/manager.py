@@ -55,7 +55,7 @@ class Manager():
 
         outputFile = outputDir + "/notes.obj"
         persist.storeObject( self.notes, outputFile )
-        
+
         self.backupData( outputDir )
 
     def load( self, inputDir ):
