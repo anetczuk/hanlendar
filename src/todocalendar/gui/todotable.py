@@ -89,9 +89,7 @@ class ToDoTable( QTableWidget ):
         self.setSortingEnabled( False )     ## workaround to fix disappearing cells content
 
         if self.showCompleted is False:
-            for todo in todosList:
-                if todo.isCompleted():
-                    todosList.remove( todo )
+            todosList = [ todo for todo in todosList if not todo.isCompleted() ]
 
         todosSize = len( todosList )
         self.setRowCount( todosSize )
