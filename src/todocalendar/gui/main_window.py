@@ -33,14 +33,12 @@ from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QTableWidget
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
+from .dataobject import DataObject
 from .navcalendar import NavCalendarHighlightModel
-from .taskdialog import TaskDialog
-from .tododialog import ToDoDialog
 from .settingsdialog import SettingsDialog
 from .settingsdialog import AppSettings
 from .notifytimer import NotificationTimer
 
-from todocalendar.domainmodel.manager import Manager
 from todocalendar.domainmodel.task import Task
 from todocalendar.domainmodel.reminder import Notification
 from todocalendar.domainmodel.todo import ToDo
@@ -71,7 +69,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
 
-        self.domainModel = Manager()
+        self.data = DataObject( self )
         self.appSettings = AppSettings()
 
         self.trayIcon = tray_icon.TrayIcon(self)
@@ -79,28 +77,34 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.notifsTimer = NotificationTimer( self )
 
-        self.ui.navcalendar.highlightModel = DataHighlightModel( self.domainModel )
+        self.ui.navcalendar.highlightModel = DataHighlightModel( self.data.getManager() )
 
-#         self.ui.navcalendar.selectionChanged.connect( self.updateTasksView )
-        self.ui.navcalendar.addTask.connect( self.addNewTask )
+        ## === connecting signals ===
+
+        self.data.taskChanged.connect( self._handleTasksChange )
+        self.ui.navcalendar.addTask.connect( self.data.addNewTask )
+        self.ui.tasksTable.addNewTask.connect( self.data.addNewTask )
+        self.ui.tasksTable.editTask.connect( self.data.editTask )
+        self.ui.tasksTable.removeTask.connect( self.data.removeTask )
+        self.ui.tasksTable.markCompleted.connect( self.data.markTaskCompleted )
+
+        self.data.todoChanged.connect( self._handleToDosChange )
+        self.ui.todosTable.addNewToDo.connect( self.data.addNewToDo )
+        self.ui.todosTable.editToDo.connect( self.data.editToDo )
+        self.ui.todosTable.removeToDo.connect( self.data.removeToDo )
+        self.ui.todosTable.markCompleted.connect( self.data.markToDoCompleted )
+
+        # self.ui.navcalendar.selectionChanged.connect( self.updateTasksView )
 
         self.ui.tasksTable.selectedTask.connect( self.tasksTableSelectionChanged )
-        self.ui.tasksTable.addNewTask.connect( self.addNewTask )
-        self.ui.tasksTable.editTask.connect( self.editTask )
-        self.ui.tasksTable.removeTask.connect( self.removeTask )
-        self.ui.tasksTable.markCompleted.connect( self.markTaskCompleted )
         self.ui.showCompletedTasksCB.toggled.connect( self.showCompletedTasks )
 
         self.ui.todosTable.selectedToDo.connect( self.todosTableSelectionChanged )
-        self.ui.todosTable.addNewToDo.connect( self.addNewToDo )
-        self.ui.todosTable.editToDo.connect( self.editToDo )
-        self.ui.todosTable.removeToDo.connect( self.removeToDo )
-        self.ui.todosTable.markCompleted.connect( self.markToDoCompleted )
         self.ui.showCompletedToDosCB.toggled.connect( self.showCompletedToDos )
 
         self.notifsTimer.remindTask.connect( self.showTaskNotification )
 
-        ## main menu settings
+        ## === main menu settings ===
 
         self.ui.actionSave_data.triggered.connect( self.saveData )
         self.ui.actionImportNotes.triggered.connect( self.importXfceNotes )
@@ -113,7 +117,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         #self.statusBar().showMessage("Ready")
 
     def getManager(self):
-        return self.domainModel
+        return self.data.getManager()
 
     def refreshView(self):
         self.updateNotificationTimer()
@@ -128,14 +132,14 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def loadData(self):
         dataPath = self.getDataPath()
-        self.domainModel.load( dataPath )
+        self.data.load( dataPath )
         self.refreshView()
 
     def saveData(self):
         dataPath = self.getDataPath()
         notes = self.ui.notesWidget.getNotes()
-        self.domainModel.setNotes( notes )
-        self.domainModel.store( dataPath )
+        self.data.getManager().setNotes( notes )
+        self.data.store( dataPath )
 
     def getDataPath(self):
         settings = self.getSettings()
@@ -146,44 +150,13 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     ## ===============================================================
 
-    def addNewTask( self, date: QDate = None ):
-        task = Task()
-        if date is not None:
-            startDate = date.toPyDate()
-            task.setDefaultDate( startDate )
-
-        taskDialog = TaskDialog( task, self )
-        taskDialog.setModal( True )
-        dialogCode = taskDialog.exec_()
-        if dialogCode == QDialog.Rejected:
-            return
-        self.domainModel.addTask( taskDialog.task )
-        self._handleTasksChange()
-
-    def editTask(self, task: Task ):
-        taskDialog = TaskDialog( task, self )
-        taskDialog.setModal( True )
-        dialogCode = taskDialog.exec_()
-        if dialogCode == QDialog.Rejected:
-            return
-        self.domainModel.replaceTask( task, taskDialog.task )
-        self._handleTasksChange()
-
-    def removeTask(self, task: Task ):
-        self.domainModel.removeTask( task )
-        self._handleTasksChange()
-
-    def markTaskCompleted(self, task: Task ):
-        task.setCompleted()
-        self._handleTasksChange()
-
     def updateTasksView(self):
         selectedDate: QDate = self.ui.navcalendar.selectedDate()
         _LOGGER.debug( "navcalendar selection changed: %s", selectedDate )
         self.updateTasksTable()
 
     def updateTasksTable(self):
-        tasksList = self.domainModel.getTasks()
+        tasksList = self.data.getManager().getTasks()
         self.ui.tasksTable.setTasks( tasksList )
 
     def setDetails(self, entity):
@@ -207,7 +180,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.updateTasksTable()
 
     def updateNotificationTimer(self):
-        notifs = self.domainModel.getNotificationList()
+        notifs = self.data.getManager().getNotificationList()
         self.notifsTimer.setNotifications( notifs )
 
     def showTaskNotification( self, notification: Notification ):
@@ -216,7 +189,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self._updateTasksTrayIndicator()
 
     def updateTrayToolTip(self):
-        deadlineTask = self.domainModel.getNextDeadline()
+        deadlineTask = self.data.getManager().getNextDeadline()
         toolTip = "ToDo Calendar"
         if deadlineTask is not None:
             toolTip += "\n" + "Next deadline: " + deadlineTask.title
@@ -231,33 +204,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     ## ====================================================================
 
-    def addNewToDo( self ):
-        todo = ToDo()
-        todoDialog = ToDoDialog( todo, self )
-        todoDialog.setModal( True )
-        dialogCode = todoDialog.exec_()
-        if dialogCode == QDialog.Rejected:
-            return
-        self.domainModel.addToDo( todoDialog.todo )
-        self._handleToDosChange()
-
-    def editToDo(self, todo: ToDo ):
-        todoDialog = ToDoDialog( todo, self )
-        todoDialog.setModal( True )
-        dialogCode = todoDialog.exec_()
-        if dialogCode == QDialog.Rejected:
-            return
-        self.domainModel.replaceToDo( todo, todoDialog.todo )
-        self._handleToDosChange()
-
-    def removeToDo(self, todo: ToDo ):
-        self.domainModel.removeToDo( todo )
-        self._handleToDosChange()
-
-    def markToDoCompleted(self, todo: ToDo ):
-        todo.setCompleted()
-        self._handleToDosChange()
-
     def todosTableSelectionChanged(self, todoIndex):
         selectedToDo = self.ui.todosTable.getToDo( todoIndex )
         self.setDetails( selectedToDo )
@@ -270,19 +216,19 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.updateToDosTable()
 
     def updateToDosTable(self):
-        todosList = self.domainModel.getToDos()
+        todosList = self.data.getManager().getToDos()
         self.ui.todosTable.setToDos( todosList )
 
     ## ====================================================================
 
     def updateNotesView(self):
-        notesDict = self.domainModel.getNotes()
+        notesDict = self.data.getManager().getNotes()
         self.ui.notesWidget.setNotes( notesDict )
 
     def importXfceNotes(self):
         retButton = QMessageBox.question(self, "Import Notes", "Do you want to import Xfce Notes (previous notes will be lost)?")
         if retButton == QMessageBox.Yes:
-            self.domainModel.importXfceNotes()
+            self.data.getManager().importXfceNotes()
             self.updateNotesView()
 
     ## ====================================================================
@@ -304,12 +250,12 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def _setTasksTrayIndicator(self, theme: tray_icon.TrayIconTheme):
         self._updateIconTheme( theme )                                  ## required to clear old number
-        deadlinedTasks = self.domainModel.getDeadlinedTasks()
+        deadlinedTasks = self.data.getManager().getDeadlinedTasks()
         num = len(deadlinedTasks)
         if num > 0:
             self.trayIcon.drawNumber( num, "red" )
             return
-        remindedTasks = self.domainModel.getRemindedTasks()
+        remindedTasks = self.data.getManager().getRemindedTasks()
         num = len(remindedTasks)
         if num > 0:
             self.trayIcon.drawNumber( num, "brown" )
