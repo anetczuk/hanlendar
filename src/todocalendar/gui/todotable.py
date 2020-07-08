@@ -62,6 +62,7 @@ class ToDoTable( QTableWidget ):
         header.setSectionResizeMode( 0, QHeaderView.Stretch )
 
         self.itemSelectionChanged.connect( self.todoSelectionChanged )
+        self.itemClicked.connect( self.todoClicked )
         self.itemDoubleClicked.connect( self.todoDoubleClicked )
 
         self.setToDos( [] )
@@ -114,10 +115,6 @@ class ToDoTable( QTableWidget ):
 
         # printTree( self )
 
-    def todoSelectionChanged(self):
-        todoIndex = self.currentRow()
-        self.selectedToDo.emit( todoIndex )
-
     def contextMenuEvent( self, event ):
         evPos     = event.pos()
         globalPos = self.viewport().mapToGlobal( evPos )
@@ -150,6 +147,14 @@ class ToDoTable( QTableWidget ):
             self.removeToDo.emit( todo )
         elif action == markCompletedAction:
             self.markCompleted.emit( todo )
+
+    def todoSelectionChanged(self):
+        rowIndex = self.currentRow()
+        self.selectedToDo.emit( rowIndex )
+
+    def todoClicked(self, item):
+        rowIndex = self.row( item )
+        self.selectedToDo.emit( rowIndex )
 
     def todoDoubleClicked(self, item):
         rowIndex = self.row( item )

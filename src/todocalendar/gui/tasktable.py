@@ -74,6 +74,7 @@ class TaskTable( QTableWidget ):
         header.setSectionResizeMode( 0, QHeaderView.Stretch )
 
         self.itemSelectionChanged.connect( self.taskSelectionChanged )
+        self.itemClicked.connect( self.taskClicked )
         self.itemDoubleClicked.connect( self.taskDoubleClicked )
 
         self.setTasks( [] )
@@ -166,10 +167,6 @@ class TaskTable( QTableWidget ):
 
         # printTree( self )
 
-    def taskSelectionChanged(self):
-        taskIndex = self.currentRow()
-        self.selectedTask.emit( taskIndex )
-
     def contextMenuEvent( self, event ):
         evPos     = event.pos()
         globalPos = self.viewport().mapToGlobal( evPos )
@@ -202,6 +199,14 @@ class TaskTable( QTableWidget ):
             self.removeTask.emit( task )
         elif action == markCompletedAction:
             self.markCompleted.emit( task )
+
+    def taskSelectionChanged(self):
+        taskIndex = self.currentRow()
+        self.selectedTask.emit( taskIndex )
+
+    def taskClicked(self, item):
+        rowIndex = self.row( item )
+        self.selectedTask.emit( rowIndex )
 
     def taskDoubleClicked(self, item):
         rowIndex = self.row( item )
