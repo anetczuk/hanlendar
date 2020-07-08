@@ -29,7 +29,7 @@ from . import uiloader
 from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtGui import QDesktopServices
 
-from todocalendar.domainmodel.task import Task
+from todocalendar.domainmodel.todo import ToDo
 
 
 UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
@@ -38,62 +38,29 @@ UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
 _LOGGER = logging.getLogger(__name__)
 
 
-class TaskDetails( QtBaseClass ):           # type: ignore
+class ToDoDetails( QtBaseClass ):           # type: ignore
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
-        self.ui.recurrentWidget.setReadOnly( True )
 
         self.ui.descriptionEdit.anchorClicked.connect( self._openLink )
 
-        self.setTask( None )
+        self.setToDo( None )
 
-    def setTask(self, task: Task):
-        if task is None:
+    def setToDo(self, todo: ToDo):
+        if todo is None:
             self.ui.titleEdit.clear()
             self.ui.descriptionEdit.clear()
             self.ui.completionLabel.clear()
             self.ui.priorityBox.setValue( 0 )
-            todayDate = datetime.today()
-            self.ui.startDateTime.setDateTime( todayDate )
-            self.ui.dueDateTime.setDateTime( todayDate )
-            self.ui.reminderList.clear()
-            self.ui.recurrentWidget.setEnabled( False )
             return
 
-        self.ui.titleEdit.setText( task.title )
-        self.ui.descriptionEdit.setText( task.description )
-        self.ui.completionLabel.setText( str(task.completed) + "%" )
-        self.ui.priorityBox.setValue( task.priority )
-        if task.startDate is None:
-            self.ui.deadlineBox.setChecked( True )
-            if task.dueDate is not None:
-                self.ui.startDateTime.setDateTime( task.dueDate )
-        else:
-            self.ui.deadlineBox.setChecked( False )
-            self.ui.startDateTime.setDateTime( task.startDate )
-        if task.dueDate is not None:
-            self.ui.dueDateTime.setDateTime( task.dueDate )
-        else:
-            self.ui.dueDateTime.setEnabled( False )
-        self.ui.reminderList.clear()
-
-        self.ui.reminderList.clear()
-        remLen = 0
-        if task.reminderList is not None:
-            remLen = len(task.reminderList)
-        for i in range( 0, remLen ):
-            rem = task.reminderList[ i ]
-            item = QListWidgetItem( rem.printPretty() )
-            self.ui.reminderList.insertItem( i, item )
-
-        self.ui.recurrentWidget.setTask( task )
-        if task.recurrence is None:
-            self.ui.recurrentWidget.setEnabled( False )
-        else:
-            self.ui.recurrentWidget.setEnabled( True )
+        self.ui.titleEdit.setText( todo.title )
+        self.ui.descriptionEdit.setText( todo.description )
+        self.ui.completionLabel.setText( str(todo.completed) + "%" )
+        self.ui.priorityBox.setValue( todo.priority )
 
     def _openLink( self, link ):
         QDesktopServices.openUrl( link )

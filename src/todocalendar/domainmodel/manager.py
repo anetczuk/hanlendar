@@ -30,6 +30,7 @@ import glob
 
 from todocalendar import persist
 from .task import Task
+from .todo import ToDo
 from .reminder import Notification
 
 
@@ -44,6 +45,7 @@ class Manager():
     def __init__(self):
         """Constructor."""
         self.tasks = list()
+        self.todos = list()
         self.notes = { "notes": "" }        ## default notes
 
     def store( self, outputDir ):
@@ -52,6 +54,9 @@ class Manager():
 
         outputFile = outputDir + "/tasks.obj"
         persist.storeObject( self.tasks, outputFile )
+
+        outputFile = outputDir + "/todos.obj"
+        persist.storeObject( self.todos, outputFile )
 
         outputFile = outputDir + "/notes.obj"
         persist.storeObject( self.notes, outputFile )
@@ -69,6 +74,11 @@ class Manager():
         self.tasks = persist.loadObject( inputFile )
         if self.tasks is None:
             self.tasks = list()
+
+        inputFile = inputDir + "/todos.obj"
+        self.todos = persist.loadObject( inputFile )
+        if self.todos is None:
+            self.todos = list()
 
         inputFile = inputDir + "/notes.obj"
         self.notes = persist.loadObject( inputFile )
@@ -161,11 +171,7 @@ class Manager():
         self.tasks.remove( task )
 
     def replaceTask( self, oldTask: Task, newTask: Task ):
-        for i in range(0, len(self.tasks)):
-            entry = self.tasks[i]
-            if entry == oldTask:
-                self.tasks[i] = newTask
-                break
+        replaceInList( self.tasks, oldTask, newTask )
 
     def addNewDeadline( self, eventdate: date, title ):
         event = Task()
@@ -188,6 +194,28 @@ class Manager():
             ret.extend( notifs )
         ret.sort( key=Notification.sortByTime )
         return ret
+
+    ## ========================================================
+
+    def getToDos( self ):
+        return list( self.todos )       ## shallow copy of list
+
+    def addToDo( self, todo: ToDo ):
+        self.todos.append( todo )
+
+    def addNewToDo( self, title ):
+        todo = ToDo()
+        todo.title = title
+        self.addToDo( todo )
+        return todo
+
+    def removeToDo( self, todo: ToDo ):
+        self.todos.remove( todo )
+
+    def replaceToDo( self, oldToDo: ToDo, newToDo: ToDo ):
+        replaceInList( self.todos, oldToDo, newToDo )
+
+    ## ========================================================
 
     def getNotes(self):
         return self.notes
@@ -221,3 +249,11 @@ class Manager():
             task = self.tasks[i]
             retStr += str(task) + "\n"
         return retStr
+
+
+def replaceInList( aList, oldObject, newObject ):
+    for i in range(0, len(aList)):
+        entry = aList[i]
+        if entry == oldObject:
+            aList[i] = newObject
+            break

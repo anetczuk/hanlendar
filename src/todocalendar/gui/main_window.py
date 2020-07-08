@@ -35,6 +35,7 @@ from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from .navcalendar import NavCalendarHighlightModel
 from .taskdialog import TaskDialog
+from .tododialog import ToDoDialog
 from .settingsdialog import SettingsDialog
 from .settingsdialog import AppSettings
 from .notifytimer import NotificationTimer
@@ -42,6 +43,7 @@ from .notifytimer import NotificationTimer
 from todocalendar.domainmodel.manager import Manager
 from todocalendar.domainmodel.task import Task
 from todocalendar.domainmodel.reminder import Notification
+from todocalendar.domainmodel.todo import ToDo
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,15 +89,23 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.tasksTable.editTask.connect( self.editTask )
         self.ui.tasksTable.removeTask.connect( self.removeTask )
         self.ui.tasksTable.markCompleted.connect( self.markTaskCompleted )
+        self.ui.showCompletedTasksCB.toggled.connect( self.showCompletedTasks )
 
-        self.ui.actionOptions.triggered.connect( self.openSettingsDialog )
-
-        self.ui.showCompletedCB.toggled.connect( self.showCompletedTasks )
+        self.ui.todosTable.selectedToDo.connect( self.todosTableSelectionChanged )
+        self.ui.todosTable.addNewToDo.connect( self.addNewToDo )
+        self.ui.todosTable.editToDo.connect( self.editToDo )
+        self.ui.todosTable.removeToDo.connect( self.removeToDo )
+        self.ui.todosTable.markCompleted.connect( self.markToDoCompleted )
+        self.ui.showCompletedToDosCB.toggled.connect( self.showCompletedToDos )
 
         self.notifsTimer.remindTask.connect( self.showTaskNotification )
 
+        ## main menu settings
+
         self.ui.actionSave_data.triggered.connect( self.saveData )
         self.ui.actionImportNotes.triggered.connect( self.importXfceNotes )
+
+        self.ui.actionOptions.triggered.connect( self.openSettingsDialog )
 
         self.applySettings()
         self.trayIcon.show()
@@ -110,6 +120,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.updateTasksView()
         self.updateTrayToolTip()
         self._updateTasksTrayIndicator()
+        self.updateToDosTable()
         self.updateNotesView()
         self.setDetails( None )
 
@@ -180,6 +191,10 @@ class MainWindow( QtBaseClass ):           # type: ignore
             self.ui.taskDetails.setTask( entity )
             self.ui.entityDetailsStack.setCurrentIndex( 1 )
             return
+        if isinstance(entity, ToDo):
+            self.ui.todoDetails.setToDo( entity )
+            self.ui.entityDetailsStack.setCurrentIndex( 2 )
+            return
         # unknown entity
         self.ui.entityDetailsStack.setCurrentIndex( 0 )
 
@@ -213,6 +228,50 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.navcalendar.repaint()
         self.updateTrayToolTip()
         self._updateTasksTrayIndicator()
+
+    ## ====================================================================
+
+    def addNewToDo( self ):
+        todo = ToDo()
+        todoDialog = ToDoDialog( todo, self )
+        todoDialog.setModal( True )
+        dialogCode = todoDialog.exec_()
+        if dialogCode == QDialog.Rejected:
+            return
+        self.domainModel.addToDo( todoDialog.todo )
+        self._handleToDosChange()
+
+    def editToDo(self, todo: ToDo ):
+        todoDialog = ToDoDialog( todo, self )
+        todoDialog.setModal( True )
+        dialogCode = todoDialog.exec_()
+        if dialogCode == QDialog.Rejected:
+            return
+        self.domainModel.replaceToDo( todo, todoDialog.todo )
+        self._handleToDosChange()
+
+    def removeToDo(self, todo: ToDo ):
+        self.domainModel.removeToDo( todo )
+        self._handleToDosChange()
+
+    def markToDoCompleted(self, todo: ToDo ):
+        todo.setCompleted()
+        self._handleToDosChange()
+
+    def todosTableSelectionChanged(self, todoIndex):
+        selectedToDo = self.ui.todosTable.getToDo( todoIndex )
+        self.setDetails( selectedToDo )
+
+    def showCompletedToDos(self, checked):
+        self.ui.todosTable.showCompletedToDos( checked )
+        self.updateToDosTable()
+
+    def _handleToDosChange(self):
+        self.updateToDosTable()
+
+    def updateToDosTable(self):
+        todosList = self.domainModel.getToDos()
+        self.ui.todosTable.setToDos( todosList )
 
     ## ====================================================================
 
