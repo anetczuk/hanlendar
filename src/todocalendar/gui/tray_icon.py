@@ -28,6 +28,7 @@ from enum import Enum, unique
 from .qt import qApp, QSystemTrayIcon, QMenu, QAction
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QImage, QPainterPath, QBrush, QColor, QPen, QFontMetrics, QTransform
+from PyQt5.QtWidgets import QApplication
 
 from . import resources
 
@@ -144,6 +145,7 @@ class TrayIcon(QSystemTrayIcon):
             parent.showNormal()
         else:
             parent.show()
+        QApplication.setActiveWindow( parent )      ## fix for KDE
 
     def updateLabel(self):
         parent = self.parent()
