@@ -52,7 +52,7 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         else:
             self.task = Task()
 
-        self.completed = 0
+        self.completed = self.task.completed
 
         self.ui.reminderWidget.setTask( self.task )
         self.ui.recurrentWidget.setTask( self.task )
