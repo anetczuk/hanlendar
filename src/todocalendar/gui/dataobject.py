@@ -73,8 +73,11 @@ class DataObject( QObject ):
         dialogCode = taskDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return
-        self.domainModel.addTask( taskDialog.task )
-        self.taskChanged.emit( taskDialog.task )
+        self.addTask( taskDialog.task )
+
+    def addTask(self, task: Task ):
+        self.domainModel.addTask( task )
+        self.taskChanged.emit( task )
 
     def editTask(self, task: Task ):
         taskDialog = TaskDialog( task, self.parentWidget )
@@ -83,17 +86,14 @@ class DataObject( QObject ):
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.replaceTask( task, taskDialog.task )
-        #self._handleTasksChange()
         self.taskChanged.emit( taskDialog.task )
 
     def removeTask(self, task: Task ):
         self.domainModel.removeTask( task )
-        #self._handleTasksChange()
         self.taskChanged.emit( task )
 
     def markTaskCompleted(self, task: Task ):
         task.setCompleted()
-        #self._handleTasksChange()
         self.taskChanged.emit( task )
 
     ## ==============================================================
@@ -106,7 +106,6 @@ class DataObject( QObject ):
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.addToDo( todoDialog.todo )
-        #self._handleToDosChange()
         self.todoChanged.emit( todoDialog.todo )
 
     def editToDo(self, todo: ToDo ):
@@ -116,15 +115,27 @@ class DataObject( QObject ):
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.replaceToDo( todo, todoDialog.todo )
-        #self._handleToDosChange()
         self.todoChanged.emit( todoDialog.todo )
 
     def removeToDo(self, todo: ToDo ):
         self.domainModel.removeToDo( todo )
-        #self._handleToDosChange()
         self.todoChanged.emit( todo )
+
+    def convertToDoToTask(self, todo: ToDo ):
+        task = Task()
+        task.title       = todo.title
+        task.description = todo.description
+        task._completed  = todo._completed
+        task.priority    = todo.priority
+
+        taskDialog = TaskDialog( task, self.parentWidget )
+        taskDialog.setModal( True )
+        dialogCode = taskDialog.exec_()
+        if dialogCode == QDialog.Rejected:
+            return
+        self.addTask( taskDialog.task )
+        self.removeToDo( todo )
 
     def markToDoCompleted(self, todo: ToDo ):
         todo.setCompleted()
-        #self._handleToDosChange()
         self.todoChanged.emit( todo )

@@ -36,11 +36,12 @@ from todocalendar.domainmodel.todo import ToDo
 
 class ToDoTable( QTableWidget ):
 
-    selectedToDo  = pyqtSignal( int )
-    addNewToDo    = pyqtSignal()
-    editToDo      = pyqtSignal( ToDo )
-    removeToDo    = pyqtSignal( ToDo )
-    markCompleted = pyqtSignal( ToDo )
+    selectedToDo        = pyqtSignal( int )
+    addNewToDo          = pyqtSignal()
+    editToDo            = pyqtSignal( ToDo )
+    removeToDo          = pyqtSignal( ToDo )
+    convertToDoToTask   = pyqtSignal( ToDo )
+    markCompleted       = pyqtSignal( ToDo )
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -127,12 +128,14 @@ class ToDoTable( QTableWidget ):
         addToDoAction = contextMenu.addAction("New ToDo")
         editToDoAction = contextMenu.addAction("Edit ToDo")
         removeToDoAction = contextMenu.addAction("Remove ToDo")
+        convertToDoAction = contextMenu.addAction("Convert to Task")
         markCompletedAction = contextMenu.addAction("Mark completed")
 
         if todo is None:
             ## context menu on background
             editToDoAction.setEnabled( False )
             removeToDoAction.setEnabled( False )
+            convertToDoAction.setEnabled( False )
             markCompletedAction.setEnabled( False )
 
         action = contextMenu.exec_( globalPos )
@@ -143,6 +146,8 @@ class ToDoTable( QTableWidget ):
             self.editToDo.emit( todo )
         elif action == removeToDoAction:
             self.removeToDo.emit( todo )
+        elif action == convertToDoAction:
+            self.convertToDoToTask.emit( todo )
         elif action == markCompletedAction:
             self.markCompleted.emit( todo )
 
