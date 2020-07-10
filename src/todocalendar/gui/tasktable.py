@@ -23,6 +23,8 @@
 
 import logging
 
+from datetime import datetime, date, timedelta
+
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
 from PyQt5.QtWidgets import QMenu
 from PyQt5.QtCore import Qt, QItemSelectionModel
@@ -30,7 +32,6 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QColor, QBrush
 
 from todocalendar.domainmodel.task import Task
-from _datetime import datetime, date
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -214,13 +215,19 @@ class TaskTable( QTableWidget ):
 
 def getTaskForegroundColor( task: Task ) -> QBrush:
     if task.isCompleted():
-        ## black
+        ## completed -- black
         return QBrush( QColor(0, 0, 0) )
     if task.isTimedout():
-        ## red
+        ## timed out -- red
         return QBrush( QColor(255, 0, 0) )
     if task.isReminded():
-        ## orange
+        ## already reminded -- orange
         return QBrush( QColor("brown") )
 #         return QBrush( QColor(255, 165, 0) )
+    taskFirstDate = task.getFirstDateTime()
+    if taskFirstDate is not None:
+        diff = taskFirstDate - datetime.today()
+        if diff > timedelta( days=90 ):
+            ## far task -- light gray
+            return QBrush( QColor( 180, 180, 180 ) )
     return QBrush( QColor(0, 0, 0) )

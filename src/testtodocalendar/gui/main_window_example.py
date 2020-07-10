@@ -70,6 +70,9 @@ def prepareExampleData( window: MainWindow ):
     completedTask = dataManager.addNewTaskDateTime( taskDate, "test completed task" )
     completedTask.setCompleted()
 
+    ## add far task
+    dataManager.addNewTaskDateTime( datetime.today() + timedelta( days=360 ), "far task" )
+
     recurrentTask = dataManager.addNewTaskDateTime( taskDate.replace( day=20 ), "test recurrent task" )
     recurrentTask.recurrence = Recurrent()
     recurrentTask.recurrence.setDaily()

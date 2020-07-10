@@ -79,6 +79,7 @@ class Reminder():
         days = self.timeOffset.days
         self.timeOffset = timedelta( days=days, milliseconds=millis )
 
+    # returns positive value
     def getOffset(self) -> timedelta:
         if self.timeOffset is None:
             return timedelta()

@@ -123,6 +123,17 @@ class Task( persist.Versionable ):
             return self.dueDate
         return self.startDate
 
+    def getFirstDateTime(self) -> datetime:
+        if self.dueDate is None:
+            return None
+        minDate = self.dueDate
+        if self.startDate is not None and self.startDate < minDate:
+            minDate = self.startDate
+        remindDate = self.getReminderFirstDate()
+        if remindDate is not None and remindDate < minDate:
+            minDate = remindDate
+        return minDate
+
     def setDefaultDateTime(self, start: datetime ):
         self.startDate = start
         self.dueDate = self.startDate + timedelta( hours=1 )
@@ -194,6 +205,23 @@ class Task( persist.Versionable ):
             reminder = Reminder()
         self.reminderList.append( reminder )
         return reminder
+
+    def getReminderFirstDate(self) -> datetime:
+        if self.dueDate is None:
+            return None
+        if self.reminderList is None:
+            return None
+        retOffset = None
+        for reminder in self.reminderList:
+            if retOffset is None:
+                retOffset = reminder.getOffset()
+                continue
+            currOffset = reminder.getOffset()
+            if currOffset > retOffset:
+                retOffset = currOffset
+        if retOffset is None:
+            return None
+        return self.dueDate - retOffset
 
     def getNotifications(self) -> List[Notification]:
         if self.dueDate is None:
