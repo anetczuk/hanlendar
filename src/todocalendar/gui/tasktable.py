@@ -230,4 +230,5 @@ def getTaskForegroundColor( task: Task ) -> QBrush:
         if diff > timedelta( days=90 ):
             ## far task -- light gray
             return QBrush( QColor( 180, 180, 180 ) )
+    ## normal
     return QBrush( QColor(0, 0, 0) )
