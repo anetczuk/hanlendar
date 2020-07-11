@@ -63,6 +63,7 @@ class DataHighlightModel( NavCalendarHighlightModel ):
 class MainWindow( QtBaseClass ):           # type: ignore
 
     logger: logging.Logger = None
+    toolTip = "ToDo Calendar"
 
     def __init__(self):
         super().__init__()
@@ -190,7 +191,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def updateTrayToolTip(self):
         deadlineTask = self.data.getManager().getNextDeadline()
-        toolTip = "ToDo Calendar"
+        toolTip = self.toolTip
         if deadlineTask is not None:
             toolTip += "\n" + "Next deadline: " + deadlineTask.title
         self.trayIcon.setToolTip( toolTip )

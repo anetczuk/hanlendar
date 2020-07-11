@@ -113,6 +113,8 @@ app.setApplicationName("ToDoCalendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
+MainWindow.toolTip = MainWindow.toolTip + " Preview"
+
 window = MainWindow()
 window.ui.actionSave_data.setEnabled( False )
 window.loadSettings()
