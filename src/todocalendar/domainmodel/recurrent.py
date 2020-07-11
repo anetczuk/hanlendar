@@ -25,7 +25,7 @@ import logging
 
 from enum import Enum, unique, auto
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 
@@ -81,7 +81,7 @@ class Recurrent():
         self.mode = RepeatType.MONTHLY
         self.every = every
 
-    def getDateOffset( self ):
+    def getDateOffset( self ) -> relativedelta:
         if self.every < 1:
             return None
 
@@ -119,5 +119,73 @@ class Recurrent():
             return None
         return nextDate
 
+    def hasEntryExact( self, referenceDate: date, entryDate: date ):
+        if self.endDate is not None and self.endDate < entryDate:
+            return False
+
+        recurrentOffset: relativedelta = self.getDateOffset()
+        if recurrentOffset is None:
+            return False
+
+        multiplicator = findMultiplication( referenceDate, entryDate, recurrentOffset )
+        if multiplicator < 1:
+            return None
+
+        referenceDate += recurrentOffset * (multiplicator - 1)
+        while( referenceDate < entryDate ):
+            referenceDate += recurrentOffset
+            if entryDate == referenceDate:
+                return True
+            multiplicator += 1
+
+        return False
+
+    def hasEntryInMonth( self, referenceDate: date, monthDate: date ):
+        if self.endDate is not None and self.endDate < monthDate:
+            return False
+
+        recurrentOffset: relativedelta = self.getDateOffset()
+        if recurrentOffset is None:
+            return False
+
+        multiplicator = findMultiplication( referenceDate, monthDate, recurrentOffset )
+        if multiplicator < 1:
+            return False
+
+        intYear  = monthDate.year
+        intMonth = monthDate.month
+
+        nextMonthDate = monthDate + timedelta( days=31 )
+        referenceDate += recurrentOffset * (multiplicator - 1)
+        while( referenceDate < nextMonthDate ):
+            referenceDate += recurrentOffset
+            if referenceDate.year == intYear and referenceDate.month == intMonth:
+                return True
+            multiplicator += 1
+
+        return False
+
     def __repr__(self):
         return "[m:%s e:%s ed:%s]" % ( self.mode, self.every, self.endDate )
+
+
+def findMultiplication( startDate: date, endDate: date, offset: relativedelta ) -> int:
+    dateTD = endDate - startDate
+    diffDays = dateTD.days
+
+    ## calculate max possible offset in days
+    ## 'maxDaysOffset' is always greater than 'offset' for all possible dates
+    maxDaysOffset = offset.years * 366 + offset.months * 31 + offset.weeks * 7 + offset.days + 1
+
+    ret = int(diffDays / maxDaysOffset)
+    mul = int(ret / 2)
+
+    startDate += offset * ret
+    while( mul > 0 ):
+        startDate += offset * mul
+        if startDate < endDate:
+            ret += mul
+        else:
+            mul = int(mul / 2)
+
+    return ret

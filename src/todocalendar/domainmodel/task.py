@@ -31,9 +31,49 @@ from .reminder import Reminder, Notification
 from typing import List
 from todocalendar.domainmodel.recurrent import RepeatType
 from todocalendar import persist
+import math
+from todocalendar.domainmodel import recurrent
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class DateRange():
+
+    def __init__(self, start=None, end=None ):
+        self.start: date = start
+        self.end:   date = end
+
+    ## [] (array) operator
+    def __getitem__(self, arg):
+        if arg == 0:
+            return self.start
+        if arg == 1:
+            return self.end
+        raise IndexError( "bad index: 0 or 1 allowed" )
+
+    ## + (plus) operator
+    def __add__(self, dateOffset):
+        return DateRange( self.start + dateOffset, self.end + dateOffset )
+
+    ## in keyword
+    def __contains__(self, entryDate: date):
+        if entryDate < self.start:
+            return False
+        if entryDate > self.end:
+            return False
+        return True
+
+    def isNormalized(self):
+        if self.start is None:
+            return False
+        if self.end is None:
+            return False
+        return True
+
+    def normalize(self):
+        if self.start is None:
+            self.start = self.end
 
 
 class Task( persist.Versionable ):
@@ -134,6 +174,22 @@ class Task( persist.Versionable ):
             minDate = remindDate
         return minDate
 
+    def getDateRange(self) -> DateRange:
+        startDate = None
+        endDate   = None
+        if self.startDate is not None:
+            startDate = self.startDate.date()
+        if self.dueDate is not None:
+            endDate = self.dueDate.date()
+        return DateRange(startDate, endDate)
+
+    def getDateRangeNormalized(self) -> DateRange:
+        dateRange: DateRange = self.getDateRange()
+        dateRange.normalize()
+        if dateRange[1] is None:
+            return None
+        return dateRange
+
     def setDefaultDateTime(self, start: datetime ):
         self.startDate = start
         self.dueDate = self.startDate + timedelta( hours=1 )
@@ -153,50 +209,57 @@ class Task( persist.Versionable ):
         due = datetime.combine( dueDate, time(10, 0, 0) )
         self.setDeadlineDateTime( due )
 
-    def hasEntry( self, entriesDate: date ):
+    def hasEntryExact( self, entryDate: date ):
         refDate = self.getReferenceDateTime()
         if refDate is None:
             return False
         currDate = refDate.date()
-        if currDate == entriesDate:
+        if currDate == entryDate:
             return True
+
         if self._recurrence is None:
             return False
 
-        while( currDate < entriesDate ):
-            currDate = self._recurrence.nextDate( currDate )
-            if currDate is None:
-                ## recurrence end date reached
-                return False
-            if currDate == entriesDate:
-                return True
-
-        return False
+        return self.recurrence.hasEntryExact( currDate, entryDate )
 
     def hasEntryInMonth( self, month: date ):
         refDate = self.getReferenceDateTime()
         if refDate is None:
             return False
-
-        intYear  = month.year
-        intMonth = month.month
-
-        nextMonthDate = month + timedelta( days=31)
         currDate = refDate.date()
-        if currDate.year == intYear and currDate.month == intMonth:
+        if currDate.year == month.year and currDate.month == month.month:
             return True
         if self._recurrence is None:
             return False
+        return self._recurrence.hasEntryInMonth( currDate, month )
 
-        while( currDate < nextMonthDate ):
-            currDate = self._recurrence.nextDate( currDate )
-            if currDate is None:
-                ## recurrence end date reached
-                return False
-            if currDate.year == intYear and currDate.year == intMonth:
-                return True
+    def getEntryForDate(self, entryDate: date):
+        dateRange: DateRange = self.getDateRangeNormalized()
+        if dateRange is None:
+            return None
+        if entryDate in dateRange:
+            return Entry( self )
+        if self.recurrence is None:
+            return None
 
-        return False
+        if self.recurrence.endDate is not None and self.recurrence.endDate < entryDate:
+            return None
+        recurrentOffset: relativedelta = self.recurrence.getDateOffset()
+        if recurrentOffset is None:
+            return None
+
+        multiplicator = recurrent.findMultiplication( dateRange.end, entryDate, recurrentOffset )
+        if multiplicator < 1:
+            return None
+
+        dateRange += recurrentOffset * (multiplicator - 1)
+        while( dateRange.end < entryDate ):
+            dateRange += recurrentOffset
+            if entryDate in dateRange:
+                return Entry( self, multiplicator )
+            multiplicator += 1
+
+        return None
 
     def addReminder( self, reminder=None ):
         if self.reminderList is None:
@@ -295,3 +358,36 @@ class Task( persist.Versionable ):
         self._recurrentDueDate = nextDue
         self._recurrentStartDate = self._recurrence.nextDateTime( self._recurrentStartDate )
         return True
+
+
+class Entry:
+
+    def __init__(self, task, offset=0):
+        self.task                 = task
+        self.offset               = offset
+        self.dateRange: DateRange = self.getRange()
+
+    def isValid(self):
+        if self.task is None:
+            return False
+        if self.dateRange is None:
+            return False
+        return True
+
+    def getTitle(self):
+        return self.task.title
+
+    def getRange(self):
+        if self.task is None:
+            return [None, None]
+        dateRange: DateRange = self.task.getDateRangeNormalized()
+        if dateRange is None:
+            return [None, None]
+        if self.offset != 0:
+            recurrenceOffset = self.task.recurrence.getDateOffset()
+            dateRange += recurrenceOffset * self.offset
+        return dateRange
+
+    @staticmethod
+    def sortByDates( entry ):
+        return ( entry.dateRange[1], entry.dateRange[0] )

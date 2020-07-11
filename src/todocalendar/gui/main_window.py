@@ -80,6 +80,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.ui.navcalendar.highlightModel = DataHighlightModel( self.data.getManager() )
 
+        self.ui.monthCalendar.data = self.data
+
         ## === connecting signals ===
 
         self.data.taskChanged.connect( self._handleTasksChange )
@@ -96,6 +98,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.todosTable.convertToDoToTask.connect( self.data.convertToDoToTask )
         self.ui.todosTable.markCompleted.connect( self.data.markToDoCompleted )
 
+        self.ui.navcalendar.currentPageChanged.connect( self.ui.monthCalendar.setCurrentPage )
         # self.ui.navcalendar.selectionChanged.connect( self.updateTasksView )
 
         self.ui.tasksTable.selectedTask.connect( self.tasksTableSelectionChanged )

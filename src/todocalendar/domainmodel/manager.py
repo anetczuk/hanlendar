@@ -92,20 +92,20 @@ class Manager():
 
     def hasEntries( self, entriesDate: date ):
         for task in self.tasks:
-            if task.hasEntry( entriesDate ):
+            if task.hasEntryExact( entriesDate ):
                 return True
         return False
 
-#     def getEntries( self, entriesDate: date ):
-#         retList = list()
-#         for entry in self.tasks:
-#             currDate = entry.getReferenceDateTime().date()
-#             if currDate == entriesDate:
-#                 retList.append( entry )
-#         return retList
-
     def getTasks( self ):
         return list( self.tasks )       ## shallow copy of list
+
+    def getEntriesForDate(self, taskDate: date):
+        retList = list()
+        for entry in self.tasks:
+            entry = entry.getEntryForDate( taskDate )
+            if entry is not None:
+                retList.append( entry )
+        return retList
 
     def getNextDeadline(self) -> Task:
         tSize = len(self.tasks)

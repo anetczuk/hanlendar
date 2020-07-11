@@ -22,6 +22,7 @@
 #
 
 import logging
+from datetime import date
 
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtCore import QDate
@@ -59,6 +60,9 @@ class DataObject( QObject ):
 
     def store( self, inputDir ):
         self.domainModel.store( inputDir )
+
+    def getEntries(self, taskDate: date):
+        return self.domainModel.getEntriesForDate( taskDate )
 
     ## ==============================================================
 
