@@ -88,7 +88,7 @@ def matchTestSuites( suite, rePattern: str ):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test runner')
     parser.add_argument('-la', '--logall', action='store_true', help='Log all messages' )
-    parser.add_argument('-rt', '--runtest', action='store', required=False, default="", help='Module with tests, e.g. test.test_class' )
+    parser.add_argument('-rt', '--runtest', action='store', required=False, default="", help='Module with tests, e.g. module.submodule.test_file.test_class.test_method, wildcard * allowed' )
     parser.add_argument('-r', '--repeat', action='store', type=int, default=0, help='Repeat tests given number of times' )
     parser.add_argument('-ut', '--untilfailure', action="store_true", help='Run tests in loop until failure' )
     parser.add_argument('-cov', '--coverage', action="store_true", help='Measure code coverage' )
