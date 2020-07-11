@@ -61,8 +61,8 @@ class DataObject( QObject ):
     def store( self, inputDir ):
         self.domainModel.store( inputDir )
 
-    def getEntries(self, taskDate: date):
-        return self.domainModel.getEntriesForDate( taskDate )
+    def getEntries(self, taskDate: date, includeCompleted=True):
+        return self.domainModel.getEntriesForDate( taskDate, includeCompleted )
 
     ## ==============================================================
 

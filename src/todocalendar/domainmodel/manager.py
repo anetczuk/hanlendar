@@ -99,9 +99,12 @@ class Manager():
     def getTasks( self ):
         return list( self.tasks )       ## shallow copy of list
 
-    def getEntriesForDate(self, taskDate: date):
+    def getEntriesForDate(self, taskDate: date, includeCompleted=True):
         retList = list()
         for entry in self.tasks:
+            if includeCompleted is False:
+                if entry.isCompleted():
+                    continue
             entry = entry.getEntryForDate( taskDate )
             if entry is not None:
                 retList.append( entry )

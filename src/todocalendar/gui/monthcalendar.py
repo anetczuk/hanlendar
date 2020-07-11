@@ -86,7 +86,7 @@ class MonthCalendar( QCalendarWidget ):
 
         if self.data is not None:
             pyDate = date.toPyDate()
-            entries = self.data.getEntries( pyDate )
+            entries = self.data.getEntries( pyDate, False )
             entries.sort( key=Entry.sortByDates )
             entriesSize = len(entries)
             itemsCapacity = int( rect.height() / 20 )
