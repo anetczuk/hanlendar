@@ -93,6 +93,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.todosTable.addNewToDo.connect( self.data.addNewToDo )
         self.ui.todosTable.editToDo.connect( self.data.editToDo )
         self.ui.todosTable.removeToDo.connect( self.data.removeToDo )
+        self.ui.todosTable.convertToDoToTask.connect( self.data.convertToDoToTask )
         self.ui.todosTable.markCompleted.connect( self.data.markToDoCompleted )
 
         # self.ui.navcalendar.selectionChanged.connect( self.updateTasksView )
