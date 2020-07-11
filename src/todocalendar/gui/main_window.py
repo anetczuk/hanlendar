@@ -194,10 +194,17 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self._updateTasksTrayIndicator()
 
     def updateTrayToolTip(self):
+        toolTip = ""
         deadlineTask = self.data.getManager().getNextDeadline()
-        toolTip = self.toolTip
         if deadlineTask is not None:
             toolTip += "\n" + "Next deadline: " + deadlineTask.title
+        nextToDo = self.data.getManager().getNextToDo()
+        if nextToDo is not None:
+            toolTip += "\n" + "Next ToDo: " + nextToDo.title
+        if len(toolTip) > 0:
+            toolTip = self.toolTip + "\n" + toolTip
+        else:
+            toolTip = self.toolTip
         self.trayIcon.setToolTip( toolTip )
 
     def _handleTasksChange(self):
@@ -219,6 +226,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def _handleToDosChange(self):
         self.updateToDosTable()
+        self.updateTrayToolTip()
 
     def updateToDosTable(self):
         todosList = self.data.getManager().getToDos()

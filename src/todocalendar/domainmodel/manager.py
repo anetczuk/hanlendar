@@ -215,6 +215,12 @@ class Manager():
     def replaceToDo( self, oldToDo: ToDo, newToDo: ToDo ):
         replaceInList( self.todos, oldToDo, newToDo )
 
+    def getNextToDo(self) -> ToDo:
+        tSize = len(self.todos)
+        if tSize < 1:
+            return None
+        return self.todos[0]
+    
     ## ========================================================
 
     def getNotes(self):
