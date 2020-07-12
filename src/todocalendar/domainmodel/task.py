@@ -209,6 +209,19 @@ class Task( persist.Versionable ):
         due = datetime.combine( dueDate, time(10, 0, 0) )
         self.setDeadlineDateTime( due )
 
+    def calculateTimeSpan(self, entryDate: date):
+        startFactor = 0
+        if self.startDate is not None and self.startDate.date() == entryDate:
+            midnight = datetime.combine( entryDate, datetime.min.time() )
+            startDiff = self.startDate - midnight
+            startFactor = startDiff.total_seconds() / timedelta( days=1 ).total_seconds()
+        dueFactor = 1
+        if self.dueDate is not None and self.dueDate.date() == entryDate:
+            midnight = datetime.combine( entryDate, datetime.min.time() )
+            startDiff = self.dueDate - midnight
+            dueFactor = startDiff.total_seconds() / timedelta( days=1 ).total_seconds()
+        return [startFactor, dueFactor]
+
     def hasEntryExact( self, entryDate: date ):
         refDate = self.getReferenceDateTime()
         if refDate is None:

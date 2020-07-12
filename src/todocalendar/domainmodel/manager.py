@@ -223,7 +223,7 @@ class Manager():
         if tSize < 1:
             return None
         return self.todos[0]
-    
+
     ## ========================================================
 
     def getNotes(self):

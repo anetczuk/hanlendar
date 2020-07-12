@@ -119,7 +119,7 @@
         <item>
          <widget class="QTabWidget" name="lists_tabs">
           <property name="currentIndex">
-           <number>2</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tasks_tab">
            <attribute name="title">
@@ -212,6 +212,23 @@
            <attribute name="title">
             <string>Day</string>
            </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_10">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="DayListWidget" name="dayList" native="true"/>
+            </item>
+           </layout>
           </widget>
           <widget class="QWidget" name="month_tab">
            <attribute name="title">
@@ -439,6 +456,12 @@
    <class>MonthCalendar</class>
    <extends>QCalendarWidget</extends>
    <header>todocalendar.gui.monthcalendar</header>
+  </customwidget>
+  <customwidget>
+   <class>DayListWidget</class>
+   <extends>QWidget</extends>
+   <header>todocalendar.gui.daylistwidget</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -99,7 +99,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.todosTable.markCompleted.connect( self.data.markToDoCompleted )
 
         self.ui.navcalendar.currentPageChanged.connect( self.ui.monthCalendar.setCurrentPage )
-        # self.ui.navcalendar.selectionChanged.connect( self.updateTasksView )
+        self.ui.navcalendar.selectionChanged.connect( self.updateDayView )
 
         self.ui.tasksTable.selectedTask.connect( self.tasksTableSelectionChanged )
         self.ui.showCompletedTasksCB.toggled.connect( self.showCompletedTasks )
@@ -130,6 +130,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.updateTrayToolTip()
         self._updateTasksTrayIndicator()
         self.updateToDosTable()
+        self.updateDayView()
         self.updateNotesView()
         self.setDetails( None )
 
@@ -233,6 +234,13 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.todosTable.setToDos( todosList )
 
     ## ====================================================================
+
+    def updateDayView(self):
+        calendarDate = self.ui.navcalendar.selectedDate()
+        currDate = calendarDate.toPyDate()
+        entries = self.data.getEntries(currDate, False)
+        tasks = [x.task for x in entries]
+        self.ui.dayList.setTasks( tasks, currDate )
 
     def updateNotesView(self):
         notesDict = self.data.getManager().getNotes()
