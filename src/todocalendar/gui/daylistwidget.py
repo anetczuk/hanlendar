@@ -176,13 +176,13 @@ class DayListContentWidget( QWidget ):
         sItems = len(self.items)
         if sItems < 1:
             return
-        widgetWidth  = int(self.width() / sItems)
-        widgetHeight = self.height()
+        itemWidth  = max( 0, int( (self.width() - 16) / sItems) )
+        itemHeight = self.height()
         for i in range(0, sItems):
             widget = self.items[i]
-            widget.setFixedWidth( widgetWidth )
-            xPos = widgetWidth * i
-            widget.recalculatePosition( xPos, widgetWidth, widgetHeight )
+            widget.setFixedWidth( itemWidth )
+            xPos = itemWidth * i + 8
+            widget.recalculatePosition( xPos, itemWidth, itemHeight )
 
     def paintEvent(self, event):
         super().paintEvent( event )
