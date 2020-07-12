@@ -57,6 +57,8 @@ class DrawWidget( QWidget ):
 
 class DayTimeline( DrawWidget ):
 
+    itemClicked = pyqtSignal()
+
     def __init__(self, parentWidget=None):
         super().__init__( parentWidget )
         self.setFixedWidth( 30 )
@@ -92,6 +94,9 @@ class DayTimeline( DrawWidget ):
             pen.setColor( QColor("black") )
             painter.setPen(pen)
             painter.drawText( 0, hourHeight, width - 6, hourStep, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, text )
+
+    def mousePressEvent(self, event):
+        self.itemClicked.emit()
 
 
 class DayItem( DrawWidget ):
@@ -179,6 +184,11 @@ class DayListContentWidget( QWidget ):
             w.deleteLater()
         self.items.clear()
 
+    def setCurrentIndex(self, index):
+        self.currentIndex = index
+        self.selectedTask.emit( index )
+        self.update()
+
     def getTask(self, index):
         if index < 0:
             return None
@@ -260,11 +270,6 @@ class DayListContentWidget( QWidget ):
     def mouseDoubleClickEvent(self, event):
         self.taskDoubleClicked.emit( -1 )
 
-    def setCurrentIndex(self, index):
-        self.currentIndex = index
-        self.selectedTask.emit( index )
-        self.update()
-
 
 class DayListWidget( QWidget ):
 
@@ -287,6 +292,7 @@ class DayListWidget( QWidget ):
         self.content = DayListContentWidget( self )
         hlayout.addWidget( self.content )
 
+        self.timeline.itemClicked.connect( self.unselectItem )
         self.content.selectedTask.connect( self.selectedTask )
         self.content.taskDoubleClicked.connect( self.taskDoubleClicked )
 
@@ -295,3 +301,6 @@ class DayListWidget( QWidget ):
 
     def setTasks(self, tasksList, day: date ):
         self.content.setTasks( tasksList, day )
+
+    def unselectItem(self):
+        self.content.setCurrentIndex( -1 )
