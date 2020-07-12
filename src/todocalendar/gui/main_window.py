@@ -84,8 +84,11 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         ## === connecting signals ===
 
-        self.data.taskChanged.connect( self._handleTasksChange )
         self.ui.navcalendar.addTask.connect( self.data.addNewTask )
+        self.ui.navcalendar.currentPageChanged.connect( self.ui.monthCalendar.setCurrentPage )
+        self.ui.navcalendar.selectionChanged.connect( self.updateDayView )
+
+        self.data.taskChanged.connect( self._handleTasksChange )
         self.ui.tasksTable.addNewTask.connect( self.data.addNewTask )
         self.ui.tasksTable.editTask.connect( self.data.editTask )
         self.ui.tasksTable.removeTask.connect( self.data.removeTask )
@@ -98,17 +101,18 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.todosTable.convertToDoToTask.connect( self.data.convertToDoToTask )
         self.ui.todosTable.markCompleted.connect( self.data.markToDoCompleted )
 
-        self.ui.navcalendar.currentPageChanged.connect( self.ui.monthCalendar.setCurrentPage )
-        self.ui.navcalendar.selectionChanged.connect( self.updateDayView )
-
         self.ui.tasksTable.selectedTask.connect( self.tasksTableSelectionChanged )
         self.ui.showCompletedTasksCB.toggled.connect( self.showCompletedTasks )
 
         self.ui.todosTable.selectedToDo.connect( self.todosTableSelectionChanged )
         self.ui.showCompletedToDosCB.toggled.connect( self.showCompletedToDos )
 
+        self.ui.dayList.addNewTask.connect( self.data.addNewTask )
+        self.ui.dayList.editTask.connect( self.data.editTask )
+        self.ui.dayList.removeTask.connect( self.data.removeTask )
+        self.ui.dayList.markCompleted.connect( self.data.markTaskCompleted )
+
         self.ui.dayList.selectedTask.connect( self.handleDayTaskSelect )
-        self.ui.dayList.taskDoubleClicked.connect( self.handleDayTaskEdit )
 
         self.notifsTimer.remindTask.connect( self.showTaskNotification )
 
@@ -214,6 +218,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def _handleTasksChange(self):
         self.updateNotificationTimer()
         self.updateTasksTable()
+        self.updateDayView()
         self.ui.navcalendar.repaint()
         self.updateTrayToolTip()
         self._updateTasksTrayIndicator()
@@ -248,10 +253,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def handleDayTaskSelect(self, taskIndex):
         selectedTask = self.ui.dayList.getTask( taskIndex )
         self.setDetails( selectedTask )
-
-    def handleDayTaskEdit(self, taskIndex):
-        selectedTask = self.ui.dayList.getTask( taskIndex )
-        self.data.editTask( selectedTask )
 
     def updateNotesView(self):
         notesDict = self.data.getManager().getNotes()

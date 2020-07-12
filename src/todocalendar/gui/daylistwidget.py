@@ -31,8 +31,11 @@ from PyQt5.QtCore import QSize, QRect
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QLabel
-from PyQt5.QtWidgets import QHBoxLayout, QLayout
+from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QMenu
 from PyQt5.QtGui import QPainter, QPainterPath, QPen, QColor, QPalette
+
+from todocalendar.gui.monthcalendar import getTaskBackgroundColor
 
 from todocalendar.domainmodel.task import Task
 
@@ -136,8 +139,10 @@ class DayItem( DrawWidget ):
 
         path = QPainterPath()
         path.addRoundedRect( 2, 0, width - 4, height, 5, 5 )
-#         painter.fillPath( path, bgColor )
-        painter.fillPath( path, QColor(0, 255, 0) )
+
+#         taskBgColor = monthcalendar.getTaskBackgroundColor( self.task )
+        taskBgColor = getTaskBackgroundColor( self.task )
+        painter.fillPath( path, taskBgColor )
 
         pathPen = QPen( QColor("black") )
         pathPen.setWidth( 2 )
@@ -188,6 +193,9 @@ class DayListContentWidget( QWidget ):
         self.currentIndex = index
         self.selectedTask.emit( index )
         self.update()
+
+    def getCurrentTask(self):
+        return self.getTask( self.currentIndex )
 
     def getTask(self, index):
         if index < 0:
@@ -273,8 +281,11 @@ class DayListContentWidget( QWidget ):
 
 class DayListWidget( QWidget ):
 
-    selectedTask       = pyqtSignal( int )
-    taskDoubleClicked  = pyqtSignal( int )
+    selectedTask  = pyqtSignal( int )
+    addNewTask    = pyqtSignal()
+    editTask      = pyqtSignal( Task )
+    removeTask    = pyqtSignal( Task )
+    markCompleted = pyqtSignal( Task )
 
     def __init__(self, parentWidget=None):
         super().__init__( parentWidget )
@@ -301,6 +312,41 @@ class DayListWidget( QWidget ):
 
     def setTasks(self, tasksList, day: date ):
         self.content.setTasks( tasksList, day )
+
+    def contextMenuEvent( self, event ):
+        evPos     = event.pos()
+        globalPos = self.mapToGlobal( evPos )
+
+        task: Task = self.content.getCurrentTask()
+
+        contextMenu = QMenu(self)
+        addTaskAction = contextMenu.addAction("New Task")
+        editTaskAction = contextMenu.addAction("Edit Task")
+        removeTaskAction = contextMenu.addAction("Remove Task")
+        markCompletedAction = contextMenu.addAction("Mark completed")
+
+        if task is None:
+            ## context menu on background
+            editTaskAction.setEnabled( False )
+            removeTaskAction.setEnabled( False )
+            markCompletedAction.setEnabled( False )
+
+        action = contextMenu.exec_( globalPos )
+
+        if action == addTaskAction:
+            self.addNewTask.emit()
+        elif action == editTaskAction:
+            self.editTask.emit( task )
+        elif action == removeTaskAction:
+            self.removeTask.emit( task )
+        elif action == markCompletedAction:
+            self.markCompleted.emit( task )
+
+    def taskDoubleClicked(self, index):
+        task = self.content.getTask( index )
+        if task is None:
+            return
+        self.editTask.emit( task )
 
     def unselectItem(self):
         self.content.setCurrentIndex( -1 )
