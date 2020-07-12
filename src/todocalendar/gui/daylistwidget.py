@@ -28,6 +28,7 @@ from datetime import date
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QSize
+from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QLabel
 from PyQt5.QtWidgets import QHBoxLayout, QLayout
@@ -72,7 +73,7 @@ class DayTimeline( DrawWidget ):
         painter.fillRect( 0, 0, width, height, bgColor )
 
         hourStep = height / 24
-        
+
         pen = painter.pen()
         pen.setColor( QColor("black") )
         painter.setPen(pen)
@@ -81,12 +82,12 @@ class DayTimeline( DrawWidget ):
         for h in range(1, 24):
             hourHeight = hourStep * h
             text = str(h)
-            
+
             pen = painter.pen()
             pen.setColor( QColor("gray") )
             painter.setPen(pen)
             painter.drawLine( 0, hourHeight, width, hourHeight )
-            
+
             pen = painter.pen()
             pen.setColor( QColor("black") )
             painter.setPen(pen)
@@ -94,6 +95,9 @@ class DayTimeline( DrawWidget ):
 
 
 class DayItem( DrawWidget ):
+
+    selectedItem       = pyqtSignal( DrawWidget )
+    itemDoubleClicked  = pyqtSignal( DrawWidget )
 
     def __init__(self, task: Task, day: date, parentWidget=None):
         super().__init__( parentWidget )
@@ -138,8 +142,17 @@ class DayItem( DrawWidget ):
         else:
             painter.drawText( 6, 0, width - 12, 32, Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft, self.task.title )
 
+    def mousePressEvent(self, event):
+        self.selectedItem.emit( self )
+
+    def mouseDoubleClickEvent(self, event):
+        self.itemDoubleClicked.emit( self )
+
 
 class DayListContentWidget( QWidget ):
+
+    selectedTask       = pyqtSignal( int )
+    taskDoubleClicked  = pyqtSignal( int )
 
     def __init__(self, parentWidget=None):
         super().__init__( parentWidget )
@@ -160,10 +173,20 @@ class DayListContentWidget( QWidget ):
             w.deleteLater()
         self.items.clear()
 
+    def getTask(self, index):
+        if index < 0:
+            return None
+        if index >= len(self.items):
+            return None
+        widget = self.items[ index ]
+        return widget.task
+
     def setTasks(self, tasksList, day: date ):
         self.clear()
         for task in tasksList:
             item = DayItem(task, day, self)
+            item.selectedItem.connect( self.handleItemSelect )
+            item.itemDoubleClicked.connect( self.handleItemDoubleClick )
             self.items.append( item )
             item.show()
         self.repaintChildren()
@@ -201,8 +224,32 @@ class DayListContentWidget( QWidget ):
             hourHeight = hourStep * h
             painter.drawLine( 0, hourHeight, width, hourHeight )
 
+    def handleItemSelect(self, item: DayItem):
+        itemIndex = self.getItemIndex( item )
+        self.selectedTask.emit( itemIndex )
+
+    def handleItemDoubleClick(self, item: DayItem):
+        itemIndex = self.getItemIndex( item )
+        self.taskDoubleClicked.emit( itemIndex )
+
+    def getItemIndex(self, item: DayItem):
+        try:
+            return self.items.index( item )
+        except ValueError:
+            _LOGGER.exception("item not found")
+            return -1
+
+    def mousePressEvent(self, event):
+        self.selectedTask.emit( -1 )
+
+    def mouseDoubleClickEvent(self, event):
+        self.taskDoubleClicked.emit( -1 )
+
 
 class DayListWidget( QWidget ):
+
+    selectedTask       = pyqtSignal( int )
+    taskDoubleClicked  = pyqtSignal( int )
 
     def __init__(self, parentWidget=None):
         super().__init__( parentWidget )
@@ -219,6 +266,12 @@ class DayListWidget( QWidget ):
 
         self.content = DayListContentWidget( self )
         hlayout.addWidget( self.content )
+
+        self.content.selectedTask.connect( self.selectedTask )
+        self.content.taskDoubleClicked.connect( self.taskDoubleClicked )
+
+    def getTask(self, index):
+        return self.content.getTask( index )
 
     def setTasks(self, tasksList, day: date ):
         self.content.setTasks( tasksList, day )

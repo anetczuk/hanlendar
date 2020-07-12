@@ -84,6 +84,8 @@ class DataObject( QObject ):
         self.taskChanged.emit( task )
 
     def editTask(self, task: Task ):
+        if task is None:
+            return
         taskDialog = TaskDialog( task, self.parentWidget )
         taskDialog.setModal( True )
         dialogCode = taskDialog.exec_()

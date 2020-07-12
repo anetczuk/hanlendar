@@ -107,6 +107,9 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.todosTable.selectedToDo.connect( self.todosTableSelectionChanged )
         self.ui.showCompletedToDosCB.toggled.connect( self.showCompletedToDos )
 
+        self.ui.dayList.selectedTask.connect( self.handleDayTaskSelect )
+        self.ui.dayList.taskDoubleClicked.connect( self.handleDayTaskEdit )
+
         self.notifsTimer.remindTask.connect( self.showTaskNotification )
 
         ## === main menu settings ===
@@ -241,6 +244,14 @@ class MainWindow( QtBaseClass ):           # type: ignore
         entries = self.data.getEntries(currDate, False)
         tasks = [x.task for x in entries]
         self.ui.dayList.setTasks( tasks, currDate )
+
+    def handleDayTaskSelect(self, taskIndex):
+        selectedTask = self.ui.dayList.getTask( taskIndex )
+        self.setDetails( selectedTask )
+
+    def handleDayTaskEdit(self, taskIndex):
+        selectedTask = self.ui.dayList.getTask( taskIndex )
+        self.data.editTask( selectedTask )
 
     def updateNotesView(self):
         notesDict = self.data.getManager().getNotes()
