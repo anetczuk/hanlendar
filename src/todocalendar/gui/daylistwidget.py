@@ -27,12 +27,12 @@ from datetime import date
 # from . import uiloader
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import QSize, QRect
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QLabel
 from PyQt5.QtWidgets import QHBoxLayout, QLayout
-from PyQt5.QtGui import QPainter, QPainterPath, QPen, QColor
+from PyQt5.QtGui import QPainter, QPainterPath, QPen, QColor, QPalette
 
 from todocalendar.domainmodel.task import Task
 
@@ -107,7 +107,11 @@ class DayItem( DrawWidget ):
 
 #         self.setStyleSheet( "background-color: red" )
 
-    def recalculatePosition( self, xOffset, allowedWidth, allowedHeight ):
+    def recalculatePosition( self, lineRect: QRect ):
+        allowedWidth  = lineRect.width()
+        allowedHeight = lineRect.height()
+        xOffset       = lineRect.x()
+
         daySpan = self.task.calculateTimeSpan( self.day )
         yOffset = allowedHeight * daySpan[0]
         self.move(xOffset, yOffset)
@@ -157,7 +161,8 @@ class DayListContentWidget( QWidget ):
     def __init__(self, parentWidget=None):
         super().__init__( parentWidget )
 
-        self.items = []
+        self.items        = []
+        self.currentIndex = -1
 
 #         self.setStyleSheet( "background-color: green" )
 #         self.setStyleSheet( "border: 1px solid black" )
@@ -169,6 +174,7 @@ class DayListContentWidget( QWidget ):
 #         self.setLayout( hlayout )
 
     def clear(self):
+        self.setCurrentIndex( -1 )
         for w in self.items:
             w.deleteLater()
         self.items.clear()
@@ -189,23 +195,7 @@ class DayListContentWidget( QWidget ):
             item.itemDoubleClicked.connect( self.handleItemDoubleClick )
             self.items.append( item )
             item.show()
-        self.repaintChildren()
-
-    def resizeEvent(self, event):
-        super().resizeEvent( event )
-        self.repaintChildren()
-
-    def repaintChildren(self):
-        sItems = len(self.items)
-        if sItems < 1:
-            return
-        itemWidth  = max( 0, int( (self.width() - 16) / sItems) )
-        itemHeight = self.height()
-        for i in range(0, sItems):
-            widget = self.items[i]
-            widget.setFixedWidth( itemWidth )
-            xPos = itemWidth * i + 8
-            widget.recalculatePosition( xPos, itemWidth, itemHeight )
+        self.update()
 
     def paintEvent(self, event):
         super().paintEvent( event )
@@ -224,9 +214,34 @@ class DayListContentWidget( QWidget ):
             hourHeight = hourStep * h
             painter.drawLine( 0, hourHeight, width, hourHeight )
 
+        self._repaintChildren( painter )
+
+    def _repaintChildren(self, painter: QPainter):
+        sItems = len(self.items)
+        if sItems < 1:
+            return
+
+        if self.currentIndex >= 0:
+            ## paint background
+            lineRect = self._lineRect( self.currentIndex )
+            bgColor = self.palette().color( QPalette.Highlight )
+            painter.fillRect( lineRect, bgColor )
+
+        for i in range(0, sItems):
+            widget = self.items[i]
+            lineRect = self._lineRect( i )
+            widget.recalculatePosition( lineRect )
+
+    def _lineRect(self, index) -> QRect:
+        sItems = len(self.items)
+        lineWidth  = max( 0, int( (self.width() - 16) / sItems) )
+        lineHeight = self.height()
+        xPos = lineWidth * index + 8
+        return QRect( xPos, 0, lineWidth, lineHeight)
+
     def handleItemSelect(self, item: DayItem):
         itemIndex = self.getItemIndex( item )
-        self.selectedTask.emit( itemIndex )
+        self.setCurrentIndex( itemIndex )
 
     def handleItemDoubleClick(self, item: DayItem):
         itemIndex = self.getItemIndex( item )
@@ -240,10 +255,15 @@ class DayListContentWidget( QWidget ):
             return -1
 
     def mousePressEvent(self, event):
-        self.selectedTask.emit( -1 )
+        self.setCurrentIndex( -1 )
 
     def mouseDoubleClickEvent(self, event):
         self.taskDoubleClicked.emit( -1 )
+
+    def setCurrentIndex(self, index):
+        self.currentIndex = index
+        self.selectedTask.emit( index )
+        self.update()
 
 
 class DayListWidget( QWidget ):
