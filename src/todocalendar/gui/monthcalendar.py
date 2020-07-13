@@ -126,12 +126,8 @@ class MonthCalendar( QCalendarWidget ):
             entriesSize = min( entriesSize, itemsCapacity )
             for index in range(0, entriesSize):
                 item: Entry = entries[index]
-                bgColor = getTaskBackgroundColor( item.task )
-                if selectedDay and (self.currentTaskIndex == index):
-                    red   = min( 255, bgColor.red()   + 40 )
-                    green = min( 255, bgColor.green() + 40 )
-                    blue  = min( 255, bgColor.blue()  + 40 )
-                    bgColor = QColor( red, green, blue, bgColor.alpha() )
+                selectedTask = selectedDay and (self.currentTaskIndex == index)
+                bgColor = getTaskBackgroundColor( item.task, selectedTask )
                 self.drawItem( painter, rect, index, item.getTitle(), bgColor )
 
         painter.restore()
@@ -219,9 +215,19 @@ class MonthCalendar( QCalendarWidget ):
             self.taskUnselected.emit()
 
 
-def getTaskBackgroundColor( task: Task ) -> QColor:
+def getTaskBackgroundColor( task: Task, isSelected=False ) -> QColor:
+    bgColor = getTaskBgColor( task )
+    if isSelected:
+        red   = min( 255, bgColor.red()   + 40 )
+        green = min( 255, bgColor.green() + 40 )
+        blue  = min( 255, bgColor.blue()  + 40 )
+        bgColor = QColor( red, green, blue, bgColor.alpha() )
+    return bgColor
+
+
+def getTaskBgColor( task: Task ) -> QColor:
     if task.isCompleted():
-        ## completed -- green
+        ## completed -- gray
         return QColor( 160, 160, 160 )
     if task.isTimedout():
         ## timed out -- red

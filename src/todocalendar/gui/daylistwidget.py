@@ -142,7 +142,8 @@ class DayItem( DrawWidget ):
         path.addRoundedRect( 2, 0, width - 4, height, 5, 5 )
 
 #         taskBgColor = monthcalendar.getTaskBackgroundColor( self.task )
-        taskBgColor = getTaskBackgroundColor( self.task )
+        selected = self.isSelected()
+        taskBgColor = getTaskBackgroundColor( self.task, selected )
         painter.fillPath( path, taskBgColor )
 
         pathPen = QPen( QColor("black") )
@@ -162,6 +163,9 @@ class DayItem( DrawWidget ):
 
     def mouseDoubleClickEvent(self, event):
         self.itemDoubleClicked.emit( self )
+
+    def isSelected(self):
+        return self.parent().isSelected(self)
 
 
 class DayListContentWidget( QWidget ):
@@ -269,6 +273,12 @@ class DayListContentWidget( QWidget ):
 
     def mouseDoubleClickEvent(self, event):
         self.taskDoubleClicked.emit( -1 )
+
+    def isSelected(self, item: DayItem):
+        if self.currentIndex < 0:
+            return False
+        itemIndex = self.getItemIndex(item)
+        return itemIndex == self.currentIndex
 
 
 class DayListWidget( QWidget ):
