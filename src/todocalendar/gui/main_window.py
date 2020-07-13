@@ -84,27 +84,28 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         ## === connecting signals ===
 
+        self.data.taskChanged.connect( self._handleTasksChange )
+        self.data.todoChanged.connect( self._handleToDosChange )
+
+        self.notifsTimer.remindTask.connect( self.showTaskNotification )
+
         self.ui.navcalendar.addTask.connect( self.data.addNewTask )
         self.ui.navcalendar.currentPageChanged.connect( self.ui.monthCalendar.setCurrentPage )
         self.ui.navcalendar.selectionChanged.connect( self.updateDayView )
 
-        self.data.taskChanged.connect( self._handleTasksChange )
         self.ui.tasksTable.connectData( self.data )
         self.ui.tasksTable.selectedTask.connect( self.tasksTableSelectionChanged )
         self.ui.showCompletedTasksCB.toggled.connect( self.showCompletedTasks )
 
-        self.data.todoChanged.connect( self._handleToDosChange )
         self.ui.todosTable.connectData( self.data )
         self.ui.todosTable.selectedToDo.connect( self.todosTableSelectionChanged )
         self.ui.showCompletedToDosCB.toggled.connect( self.showCompletedToDos )
 
-        self.ui.monthCalendar.connectData( self.data )
-        self.ui.monthCalendar.selectedTask.connect( self.monthCalendarSelectionChanged )
-
         self.ui.dayList.connectData( self.data )
         self.ui.dayList.selectedTask.connect( self.handleDayTaskSelect )
 
-        self.notifsTimer.remindTask.connect( self.showTaskNotification )
+        self.ui.monthCalendar.connectData( self.data )
+        self.ui.monthCalendar.selectedTask.connect( self.monthCalendarSelectionChanged )
 
         ## === main menu settings ===
 
@@ -129,7 +130,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.updateToDosTable()
         self.updateDayView()
         self.updateNotesView()
-        self.setDetails( None )
+        self.showDetails( None )
 
     ## ===============================================================
 
@@ -162,7 +163,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         tasksList = self.data.getManager().getTasks()
         self.ui.tasksTable.setTasks( tasksList )
 
-    def setDetails(self, entity):
+    def showDetails(self, entity):
         if entity is None:
             self.ui.entityDetailsStack.setCurrentIndex( 0 )
             return
@@ -176,11 +177,14 @@ class MainWindow( QtBaseClass ):           # type: ignore
             return
         # unknown entity
         _LOGGER.warn( "unsupported entity: %s", entity )
+        self.hideDetails()
+
+    def hideDetails(self):
         self.ui.entityDetailsStack.setCurrentIndex( 0 )
 
     def tasksTableSelectionChanged(self, taskIndex):
         selectedTask = self.ui.tasksTable.getTask( taskIndex )
-        self.setDetails( selectedTask )
+        self.showDetails( selectedTask )
 
     def showCompletedTasks(self, checked):
         self.ui.tasksTable.showCompletedTasks( checked )
@@ -221,7 +225,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def todosTableSelectionChanged(self, todoIndex):
         selectedToDo = self.ui.todosTable.getToDo( todoIndex )
-        self.setDetails( selectedToDo )
+        self.showDetails( selectedToDo )
 
     def showCompletedToDos(self, checked):
         self.ui.todosTable.showCompletedToDos( checked )
@@ -236,11 +240,11 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.todosTable.setToDos( todosList )
 
     ## ====================================================================
-    
+
     def monthCalendarSelectionChanged(self, taskIndex):
         task = self.ui.monthCalendar.getTask( taskIndex )
-        self.setDetails( task )
-    
+        self.showDetails( task )
+
     ## ====================================================================
 
     def updateDayView(self):
@@ -252,7 +256,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def handleDayTaskSelect(self, taskIndex):
         selectedTask = self.ui.dayList.getTask( taskIndex )
-        self.setDetails( selectedTask )
+        self.showDetails( selectedTask )
 
     def updateNotesView(self):
         notesDict = self.data.getManager().getNotes()
