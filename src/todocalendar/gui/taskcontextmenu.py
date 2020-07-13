@@ -60,7 +60,11 @@ class TaskContextMenu( QObject ):
             self.editTaskAction.setEnabled( False )
             self.removeTaskAction.setEnabled( False )
             self.markCompletedAction.setEnabled( False )
-
+        else:
+            self.editTaskAction.setEnabled( True )
+            self.removeTaskAction.setEnabled( True )
+            self.markCompletedAction.setEnabled( True )
+            
         globalPos = QCursor.pos()
         action = self.contextMenu.exec_( globalPos )
 
