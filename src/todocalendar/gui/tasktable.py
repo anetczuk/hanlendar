@@ -204,14 +204,14 @@ class TaskTable( QTableWidget ):
 
 def getTaskForegroundColor( task: Task ) -> QBrush:
     if task.isCompleted():
-        ## completed -- black
-        return QBrush( QColor(0, 0, 0) )
+        ## completed -- green
+        return QBrush( QColor(0, 160, 0) )
     if task.isTimedout():
         ## timed out -- red
         return QBrush( QColor(255, 0, 0) )
     if task.isReminded():
         ## already reminded -- orange
-        return QBrush( QColor("brown") )
+        return QBrush( QColor(200, 0, 200) )
 #         return QBrush( QColor(255, 165, 0) )
     taskFirstDate = task.getFirstDateTime()
     if taskFirstDate is not None:
