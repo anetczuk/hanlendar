@@ -35,6 +35,7 @@ from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QMenu
 from PyQt5.QtGui import QPainter, QPainterPath, QPen, QColor, QPalette
 
+from todocalendar.gui.taskcontextmenu import TaskContextMenu
 from todocalendar.gui.monthcalendar import getTaskBackgroundColor
 
 from todocalendar.domainmodel.task import Task
@@ -303,9 +304,14 @@ class DayListWidget( QWidget ):
         self.content = DayListContentWidget( self )
         hlayout.addWidget( self.content )
 
+        self.taskContextMenu = TaskContextMenu( self )
+
         self.timeline.itemClicked.connect( self.unselectItem )
         self.content.selectedTask.connect( self.selectedTask )
         self.content.taskDoubleClicked.connect( self.taskDoubleClicked )
+
+    def connectData(self, dataObject):
+        self.taskContextMenu.connectData( dataObject )
 
     def getTask(self, index):
         return self.content.getTask( index )
@@ -314,33 +320,8 @@ class DayListWidget( QWidget ):
         self.content.setTasks( tasksList, day )
 
     def contextMenuEvent( self, event ):
-        evPos     = event.pos()
-        globalPos = self.mapToGlobal( evPos )
-
         task: Task = self.content.getCurrentTask()
-
-        contextMenu = QMenu(self)
-        addTaskAction = contextMenu.addAction("New Task")
-        editTaskAction = contextMenu.addAction("Edit Task")
-        removeTaskAction = contextMenu.addAction("Remove Task")
-        markCompletedAction = contextMenu.addAction("Mark completed")
-
-        if task is None:
-            ## context menu on background
-            editTaskAction.setEnabled( False )
-            removeTaskAction.setEnabled( False )
-            markCompletedAction.setEnabled( False )
-
-        action = contextMenu.exec_( globalPos )
-
-        if action == addTaskAction:
-            self.addNewTask.emit()
-        elif action == editTaskAction:
-            self.editTask.emit( task )
-        elif action == removeTaskAction:
-            self.removeTask.emit( task )
-        elif action == markCompletedAction:
-            self.markCompleted.emit( task )
+        self.taskContextMenu.show( task )
 
     def taskDoubleClicked(self, index):
         task = self.content.getTask( index )

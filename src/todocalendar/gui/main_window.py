@@ -89,11 +89,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.navcalendar.selectionChanged.connect( self.updateDayView )
 
         self.data.taskChanged.connect( self._handleTasksChange )
-        self.ui.tasksTable.addNewTask.connect( self.data.addNewTask )
-        self.ui.tasksTable.editTask.connect( self.data.editTask )
-        self.ui.tasksTable.removeTask.connect( self.data.removeTask )
-        self.ui.tasksTable.markCompleted.connect( self.data.markTaskCompleted )
-
+        self.ui.tasksTable.connectData( self.data )
         self.ui.tasksTable.selectedTask.connect( self.tasksTableSelectionChanged )
         self.ui.showCompletedTasksCB.toggled.connect( self.showCompletedTasks )
 
@@ -102,11 +98,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.todosTable.selectedToDo.connect( self.todosTableSelectionChanged )
         self.ui.showCompletedToDosCB.toggled.connect( self.showCompletedToDos )
 
-        self.ui.dayList.addNewTask.connect( self.data.addNewTask )
-        self.ui.dayList.editTask.connect( self.data.editTask )
-        self.ui.dayList.removeTask.connect( self.data.removeTask )
-        self.ui.dayList.markCompleted.connect( self.data.markTaskCompleted )
-
+        self.ui.dayList.connectData( self.data )
         self.ui.dayList.selectedTask.connect( self.handleDayTaskSelect )
 
         self.notifsTimer.remindTask.connect( self.showTaskNotification )

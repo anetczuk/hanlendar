@@ -26,10 +26,11 @@ import logging
 from datetime import datetime, date, timedelta
 
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
-from PyQt5.QtWidgets import QMenu
 from PyQt5.QtCore import Qt, QItemSelectionModel
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QColor, QBrush
+
+from todocalendar.gui.taskcontextmenu import TaskContextMenu
 
 from todocalendar.domainmodel.task import Task
 
@@ -74,11 +75,16 @@ class TaskTable( QTableWidget ):
         header.setHighlightSections( False )
         header.setSectionResizeMode( 0, QHeaderView.Stretch )
 
+        self.taskContextMenu = TaskContextMenu( self )
+
         self.itemSelectionChanged.connect( self.taskSelectionChanged )
         self.itemClicked.connect( self.taskClicked )
         self.itemDoubleClicked.connect( self.taskDoubleClicked )
 
         self.setTasks( [] )
+
+    def connectData(self, dataObject):
+        self.taskContextMenu.connectData( dataObject )
 
     def clear(self):
         self.setRowCount( 0 )
@@ -167,37 +173,13 @@ class TaskTable( QTableWidget ):
         # printTree( self )
 
     def contextMenuEvent( self, event ):
-        evPos     = event.pos()
-        globalPos = self.viewport().mapToGlobal( evPos )
-
+        evPos = event.pos()
         task: Task = None
         item = self.itemAt( evPos )
         if item is not None:
             rowIndex = self.row( item )
             task = self.getTask( rowIndex )
-
-        contextMenu = QMenu(self)
-        addTaskAction = contextMenu.addAction("New Task")
-        editTaskAction = contextMenu.addAction("Edit Task")
-        removeTaskAction = contextMenu.addAction("Remove Task")
-        markCompletedAction = contextMenu.addAction("Mark completed")
-
-        if task is None:
-            ## context menu on background
-            editTaskAction.setEnabled( False )
-            removeTaskAction.setEnabled( False )
-            markCompletedAction.setEnabled( False )
-
-        action = contextMenu.exec_( globalPos )
-
-        if action == addTaskAction:
-            self.addNewTask.emit()
-        elif action == editTaskAction:
-            self.editTask.emit( task )
-        elif action == removeTaskAction:
-            self.removeTask.emit( task )
-        elif action == markCompletedAction:
-            self.markCompleted.emit( task )
+        self.taskContextMenu.show( task )
 
     def taskSelectionChanged(self):
         taskIndex = self.currentRow()
