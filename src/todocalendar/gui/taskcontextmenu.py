@@ -41,7 +41,7 @@ class TaskContextMenu( QObject ):
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
-        
+
         self.contextMenu = QMenu(parentWidget)
         self.addTaskAction       = self.contextMenu.addAction("New Task")
         self.editTaskAction      = self.contextMenu.addAction("Edit Task")

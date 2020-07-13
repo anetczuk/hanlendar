@@ -42,7 +42,7 @@ class MonthCalendar( QCalendarWidget ):
     cellItemHeight  = 20
 
     addTask  = pyqtSignal( QDate )
-    
+
     selectedTask  = pyqtSignal( int )
 #     addNewTask    = pyqtSignal()
     editTask      = pyqtSignal( Task )
@@ -71,16 +71,16 @@ class MonthCalendar( QCalendarWidget ):
         header = self.cellsTable.verticalHeader()
         header.setSectionResizeMode( 0, QHeaderView.Fixed )
         self.cellsTable.setRowHeight( 1, self.headerRowHeight )
-        
+
         self.taskContextMenu = TaskContextMenu( self )
-        
+
         self.selectionChanged.connect( self.updateCells )
         self.clicked.connect( self.dateClicked )
         self.activated.connect( self.dateDoubleClicked )
-        
+
     def connectData(self, dataObject):
         self.taskContextMenu.connectData( dataObject )
-        
+
     def setCurrentPage(self, year, month):
         self.dateToCellRect.clear()
         minDate = datetime.date( year=year, month=month, day=1 )
@@ -94,7 +94,7 @@ class MonthCalendar( QCalendarWidget ):
         entries = self.data.getEntries( pyDate, False )
         entries.sort( key=Entry.sortByDates )
         return entries
-    
+
     def getTask(self, taskIndex):
         if taskIndex < 0:
             return None
@@ -182,7 +182,7 @@ class MonthCalendar( QCalendarWidget ):
     def dateDoubleClicked(self, date):
         taskIndex = self.clickedTaskIndex( date )
         self.editTask.emit( taskIndex[1] )
- 
+
     def clickedTaskIndex(self, date):
         entries = self.getEntries(date)
         if len(entries) < 1:
@@ -197,7 +197,7 @@ class MonthCalendar( QCalendarWidget ):
 
     def clickedItemRow(self, date):
         globalPos = QCursor.pos()
-        pos = self.mapFromGlobal( globalPos )         
+        pos = self.mapFromGlobal( globalPos )
         cellRect = self.dateToCellRect[date]
         cellRel  = pos - cellRect.topLeft()
         rowIndex = int( cellRel.y() / self.cellItemHeight )
