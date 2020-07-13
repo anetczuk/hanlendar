@@ -68,6 +68,13 @@ class ToDoTable( QTableWidget ):
 
         self.setToDos( [] )
 
+    def connectData(self, dataObject):
+        self.addNewToDo.connect( dataObject.addNewToDo )
+        self.editToDo.connect( dataObject.editToDo )
+        self.removeToDo.connect( dataObject.removeToDo )
+        self.convertToDoToTask.connect( dataObject.convertToDoToTask )
+        self.markCompleted.connect( dataObject.markToDoCompleted )
+
     def clear(self):
         self.setRowCount( 0 )
         self.selectedToDo.emit( -1 )

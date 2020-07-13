@@ -94,16 +94,11 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.tasksTable.removeTask.connect( self.data.removeTask )
         self.ui.tasksTable.markCompleted.connect( self.data.markTaskCompleted )
 
-        self.data.todoChanged.connect( self._handleToDosChange )
-        self.ui.todosTable.addNewToDo.connect( self.data.addNewToDo )
-        self.ui.todosTable.editToDo.connect( self.data.editToDo )
-        self.ui.todosTable.removeToDo.connect( self.data.removeToDo )
-        self.ui.todosTable.convertToDoToTask.connect( self.data.convertToDoToTask )
-        self.ui.todosTable.markCompleted.connect( self.data.markToDoCompleted )
-
         self.ui.tasksTable.selectedTask.connect( self.tasksTableSelectionChanged )
         self.ui.showCompletedTasksCB.toggled.connect( self.showCompletedTasks )
 
+        self.data.todoChanged.connect( self._handleToDosChange )
+        self.ui.todosTable.connectData( self.data )
         self.ui.todosTable.selectedToDo.connect( self.todosTableSelectionChanged )
         self.ui.showCompletedToDosCB.toggled.connect( self.showCompletedToDos )
 
