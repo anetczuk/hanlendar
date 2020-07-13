@@ -40,11 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 
 class TaskTable( QTableWidget ):
 
-    selectedTask  = pyqtSignal( int )
-    addNewTask    = pyqtSignal()
-    editTask      = pyqtSignal( Task )
-    removeTask    = pyqtSignal( Task )
-    markCompleted = pyqtSignal( Task )
+    selectedTask    = pyqtSignal( Task )
+    taskUnselected  = pyqtSignal()
+    editTask        = pyqtSignal( Task )
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -85,10 +83,11 @@ class TaskTable( QTableWidget ):
 
     def connectData(self, dataObject):
         self.taskContextMenu.connectData( dataObject )
+        self.editTask.connect( dataObject.editTask )
 
     def clear(self):
         self.setRowCount( 0 )
-        self.selectedTask.emit( -1 )
+        self.emitSelectedTask()
 
     def showCompletedTasks(self, show):
         self.showCompleted = show
@@ -183,16 +182,24 @@ class TaskTable( QTableWidget ):
 
     def taskSelectionChanged(self):
         taskIndex = self.currentRow()
-        self.selectedTask.emit( taskIndex )
+        task = self.getTask( taskIndex )
+        self.emitSelectedTask( task )
 
     def taskClicked(self, item):
-        rowIndex = self.row( item )
-        self.selectedTask.emit( rowIndex )
+        taskIndex = self.row( item )
+        task = self.getTask( taskIndex )
+        self.emitSelectedTask( task )
 
     def taskDoubleClicked(self, item):
         rowIndex = self.row( item )
         task = self.getTask( rowIndex )
         self.editTask.emit( task )
+
+    def emitSelectedTask( self, task=None ):
+        if task is not None:
+            self.selectedTask.emit( task )
+        else:
+            self.taskUnselected.emit()
 
 
 def getTaskForegroundColor( task: Task ) -> QBrush:

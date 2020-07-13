@@ -175,15 +175,6 @@ class DayListContentWidget( QWidget ):
         self.items        = []
         self.currentIndex = -1
 
-#         self.setStyleSheet( "background-color: green" )
-#         self.setStyleSheet( "border: 1px solid black" )
-
-#         hlayout = QHBoxLayout()
-#         hlayout.setContentsMargins( 0, 0, 0, 0 )
-#         hlayout.setAlignment( Qt.AlignTop )
-#
-#         self.setLayout( hlayout )
-
     def clear(self):
         self.setCurrentIndex( -1 )
         for w in self.items:
@@ -282,11 +273,9 @@ class DayListContentWidget( QWidget ):
 
 class DayListWidget( QWidget ):
 
-    selectedTask  = pyqtSignal( int )
-    addNewTask    = pyqtSignal()
-    editTask      = pyqtSignal( Task )
-    removeTask    = pyqtSignal( Task )
-    markCompleted = pyqtSignal( Task )
+    selectedTask    = pyqtSignal( Task )
+    taskUnselected  = pyqtSignal()
+    editTask        = pyqtSignal( Task )
 
     def __init__(self, parentWidget=None):
         super().__init__( parentWidget )
@@ -307,11 +296,12 @@ class DayListWidget( QWidget ):
         self.taskContextMenu = TaskContextMenu( self )
 
         self.timeline.itemClicked.connect( self.unselectItem )
-        self.content.selectedTask.connect( self.selectedTask )
+        self.content.selectedTask.connect( self.handleSelectedTask )
         self.content.taskDoubleClicked.connect( self.taskDoubleClicked )
 
     def connectData(self, dataObject):
         self.taskContextMenu.connectData( dataObject )
+        self.editTask.connect( dataObject.editTask )
 
     def getTask(self, index):
         return self.content.getTask( index )
@@ -331,3 +321,13 @@ class DayListWidget( QWidget ):
 
     def unselectItem(self):
         self.content.setCurrentIndex( -1 )
+
+    def handleSelectedTask(self, index):
+        task = self.content.getTask( index )
+        self.emitSelectedTask( task )
+
+    def emitSelectedTask( self, task=None ):
+        if task is not None:
+            self.selectedTask.emit( task )
+        else:
+            self.taskUnselected.emit()

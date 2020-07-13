@@ -94,18 +94,22 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.navcalendar.selectionChanged.connect( self.updateDayView )
 
         self.ui.tasksTable.connectData( self.data )
-        self.ui.tasksTable.selectedTask.connect( self.tasksTableSelectionChanged )
+        self.ui.tasksTable.selectedTask.connect( self.showDetails )
+        self.ui.tasksTable.taskUnselected.connect( self.hideDetails )
         self.ui.showCompletedTasksCB.toggled.connect( self.showCompletedTasks )
 
         self.ui.todosTable.connectData( self.data )
-        self.ui.todosTable.selectedToDo.connect( self.todosTableSelectionChanged )
+        self.ui.todosTable.selectedToDo.connect( self.showDetails )
+        self.ui.todosTable.todoUnselected.connect( self.hideDetails )
         self.ui.showCompletedToDosCB.toggled.connect( self.showCompletedToDos )
 
         self.ui.dayList.connectData( self.data )
-        self.ui.dayList.selectedTask.connect( self.handleDayTaskSelect )
+        self.ui.dayList.selectedTask.connect( self.showDetails )
+        self.ui.dayList.taskUnselected.connect( self.hideDetails )
 
         self.ui.monthCalendar.connectData( self.data )
-        self.ui.monthCalendar.selectedTask.connect( self.monthCalendarSelectionChanged )
+        self.ui.monthCalendar.selectedTask.connect( self.showDetails )
+        self.ui.monthCalendar.taskUnselected.connect( self.hideDetails )
 
         ## === main menu settings ===
 
@@ -165,7 +169,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def showDetails(self, entity):
         if entity is None:
-            self.ui.entityDetailsStack.setCurrentIndex( 0 )
+            self.hideDetails()
             return
         if isinstance(entity, Task):
             self.ui.taskDetails.setTask( entity )
@@ -181,10 +185,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def hideDetails(self):
         self.ui.entityDetailsStack.setCurrentIndex( 0 )
-
-    def tasksTableSelectionChanged(self, taskIndex):
-        selectedTask = self.ui.tasksTable.getTask( taskIndex )
-        self.showDetails( selectedTask )
 
     def showCompletedTasks(self, checked):
         self.ui.tasksTable.showCompletedTasks( checked )
@@ -223,10 +223,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     ## ====================================================================
 
-    def todosTableSelectionChanged(self, todoIndex):
-        selectedToDo = self.ui.todosTable.getToDo( todoIndex )
-        self.showDetails( selectedToDo )
-
     def showCompletedToDos(self, checked):
         self.ui.todosTable.showCompletedToDos( checked )
         self.updateToDosTable()
@@ -241,22 +237,12 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     ## ====================================================================
 
-    def monthCalendarSelectionChanged(self, taskIndex):
-        task = self.ui.monthCalendar.getTask( taskIndex )
-        self.showDetails( task )
-
-    ## ====================================================================
-
     def updateDayView(self):
         calendarDate = self.ui.navcalendar.selectedDate()
         currDate = calendarDate.toPyDate()
         entries = self.data.getEntries(currDate, False)
         tasks = [x.task for x in entries]
         self.ui.dayList.setTasks( tasks, currDate )
-
-    def handleDayTaskSelect(self, taskIndex):
-        selectedTask = self.ui.dayList.getTask( taskIndex )
-        self.showDetails( selectedTask )
 
     def updateNotesView(self):
         notesDict = self.data.getManager().getNotes()

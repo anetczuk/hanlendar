@@ -41,13 +41,9 @@ class MonthCalendar( QCalendarWidget ):
     headerRowHeight = 12
     cellItemHeight  = 20
 
-    addTask  = pyqtSignal( QDate )
-
-    selectedTask  = pyqtSignal( int )
-#     addNewTask    = pyqtSignal()
-    editTask      = pyqtSignal( Task )
-#     removeTask    = pyqtSignal( Task )
-#     markCompleted = pyqtSignal( Task )
+    selectedTask    = pyqtSignal( Task )
+    taskUnselected  = pyqtSignal()
+    editTask        = pyqtSignal( Task )
 
     def __init__( self, parent=None ):
         super().__init__( parent )
@@ -80,6 +76,7 @@ class MonthCalendar( QCalendarWidget ):
 
     def connectData(self, dataObject):
         self.taskContextMenu.connectData( dataObject )
+        self.editTask.connect( dataObject.editTask )
 
     def setCurrentPage(self, year, month):
         self.dateToCellRect.clear()
@@ -177,11 +174,14 @@ class MonthCalendar( QCalendarWidget ):
 
     def dateClicked(self, date):
         taskIndex = self.clickedTaskIndex( date )
-        self.selectedTask.emit( taskIndex[0] )
+        task = taskIndex[1]
+        self.emitSelectedTask( task )
 
     def dateDoubleClicked(self, date):
         taskIndex = self.clickedTaskIndex( date )
-        self.editTask.emit( taskIndex[1] )
+        task = taskIndex[1]
+        if task is not None:
+            self.editTask.emit( task )
 
     def clickedTaskIndex(self, date):
         entries = self.getEntries(date)
@@ -202,6 +202,12 @@ class MonthCalendar( QCalendarWidget ):
         cellRel  = pos - cellRect.topLeft()
         rowIndex = int( cellRel.y() / self.cellItemHeight )
         return rowIndex
+
+    def emitSelectedTask( self, task=None ):
+        if task is not None:
+            self.selectedTask.emit( task )
+        else:
+            self.taskUnselected.emit()
 
 
 def getTaskBackgroundColor( task: Task ) -> QColor:

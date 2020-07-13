@@ -36,7 +36,8 @@ from todocalendar.domainmodel.todo import ToDo
 
 class ToDoTable( QTableWidget ):
 
-    selectedToDo        = pyqtSignal( int )
+    selectedToDo        = pyqtSignal( ToDo )
+    todoUnselected      = pyqtSignal()
     addNewToDo          = pyqtSignal()
     editToDo            = pyqtSignal( ToDo )
     removeToDo          = pyqtSignal( ToDo )
@@ -77,7 +78,7 @@ class ToDoTable( QTableWidget ):
 
     def clear(self):
         self.setRowCount( 0 )
-        self.selectedToDo.emit( -1 )
+        self.emitSelectedToDo()
 
     def showCompletedToDos(self, show):
         self.showCompleted = show
@@ -159,14 +160,22 @@ class ToDoTable( QTableWidget ):
             self.markCompleted.emit( todo )
 
     def todoSelectionChanged(self):
-        rowIndex = self.currentRow()
-        self.selectedToDo.emit( rowIndex )
+        todoIndex = self.currentRow()
+        todo = self.getToDo( todoIndex )
+        self.emitSelectedToDo( todo )
 
     def todoClicked(self, item):
-        rowIndex = self.row( item )
-        self.selectedToDo.emit( rowIndex )
+        todoIndex = self.row( item )
+        todo = self.getToDo( todoIndex )
+        self.emitSelectedToDo( todo )
 
     def todoDoubleClicked(self, item):
         rowIndex = self.row( item )
         todo = self.getToDo( rowIndex )
         self.editToDo.emit( todo )
+
+    def emitSelectedToDo( self, todo=None ):
+        if todo is not None:
+            self.selectedToDo.emit( todo )
+        else:
+            self.todoUnselected.emit()
