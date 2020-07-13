@@ -50,6 +50,7 @@ class MonthCalendar( QCalendarWidget ):
 
         self.data = None
         self.dateToCellRect = {}
+        self.currentTaskIndex = -1
 
         self.setGridVisible( True )
         self.setNavigationBarVisible( False )
@@ -118,6 +119,7 @@ class MonthCalendar( QCalendarWidget ):
             painter.drawText( rect, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, str( date.day() ) )
 
         if self.data is not None:
+            selectedDay = self.selectedDate() == date
             entries = self.getEntries( date )
             entriesSize = len(entries)
             itemsCapacity = int( rect.height() / self.cellItemHeight )
@@ -125,6 +127,11 @@ class MonthCalendar( QCalendarWidget ):
             for index in range(0, entriesSize):
                 item: Entry = entries[index]
                 bgColor = getTaskBackgroundColor( item.task )
+                if selectedDay and (self.currentTaskIndex == index):
+                    red   = min( 255, bgColor.red()   + 40 )
+                    green = min( 255, bgColor.green() + 40 )
+                    blue  = min( 255, bgColor.blue()  + 40 )
+                    bgColor = QColor( red, green, blue, bgColor.alpha() )
                 self.drawItem( painter, rect, index, item.getTitle(), bgColor )
 
         painter.restore()
@@ -145,26 +152,26 @@ class MonthCalendar( QCalendarWidget ):
         painter.setPen(pen)
         painter.drawText( rect.x() + 6, rect.y() + itemOffset, rect.width() - 12, 16, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignLeft, text )
 
-    def dateFromCell( self, cellIndex ):
-        dayIndex = (cellIndex.row() - 1) * 7 + (cellIndex.column())
-        return self.dateAt( dayIndex )
-
-    def dateAt( self, dayIndex ):
-        prevMonthDays = self.daysFromPreviousMonth()
-        dayOffset = dayIndex - prevMonthDays
-        currYear  = self.yearShown()
-        currMonth = self.monthShown()
-        currDate  = QDate( currYear, currMonth, 1 )
-        return currDate.addDays( dayOffset )
-
-    def daysFromPreviousMonth( self ):
-        currYear     = self.yearShown()
-        currMonth    = self.monthShown()
-        firstOfMonth = datetime.date( currYear, currMonth, 1 )
-        days = firstOfMonth.weekday()
-        if days == 0:                       # 0 means Monday
-            days += 7                       # there is always one row
-        return days
+#     def dateFromCell( self, cellIndex ):
+#         dayIndex = (cellIndex.row() - 1) * 7 + (cellIndex.column())
+#         return self.dateAt( dayIndex )
+# 
+#     def dateAt( self, dayIndex ):
+#         prevMonthDays = self.daysFromPreviousMonth()
+#         dayOffset = dayIndex - prevMonthDays
+#         currYear  = self.yearShown()
+#         currMonth = self.monthShown()
+#         currDate  = QDate( currYear, currMonth, 1 )
+#         return currDate.addDays( dayOffset )
+# 
+#     def daysFromPreviousMonth( self ):
+#         currYear     = self.yearShown()
+#         currMonth    = self.monthShown()
+#         firstOfMonth = datetime.date( currYear, currMonth, 1 )
+#         days = firstOfMonth.weekday()
+#         if days == 0:                       # 0 means Monday
+#             days += 7                       # there is always one row
+#         return days
 
     def contextMenuEvent( self, event ):
         date = self.selectedDate()
@@ -174,8 +181,10 @@ class MonthCalendar( QCalendarWidget ):
 
     def dateClicked(self, date):
         taskIndex = self.clickedTaskIndex( date )
+        self.currentTaskIndex = taskIndex[0]
         task = taskIndex[1]
         self.emitSelectedTask( task )
+        self.updateCell( date )
 
     def dateDoubleClicked(self, date):
         taskIndex = self.clickedTaskIndex( date )
@@ -213,19 +222,18 @@ class MonthCalendar( QCalendarWidget ):
 def getTaskBackgroundColor( task: Task ) -> QColor:
     if task.isCompleted():
         ## completed -- green
-        return QColor(0, 255, 0)
+        return QColor( 160, 160, 160 )
     if task.isTimedout():
         ## timed out -- red
-        return QColor(255, 0, 0)
+        return QColor(220, 0, 0)
     if task.isReminded():
         ## already reminded -- orange
-#         return QColor("brown")
-        return QColor(255, 165, 0)    ## orange
-    taskFirstDate = task.getFirstDateTime()
-    if taskFirstDate is not None:
-        diff = taskFirstDate - datetime.datetime.today()
-        if diff > datetime.timedelta( days=90 ):
-            ## far task -- light gray
-            return QColor( 180, 180, 180 )
+        return QColor(220, 135, 0)    ## orange
+#     taskFirstDate = task.getFirstDateTime()
+#     if taskFirstDate is not None:
+#         diff = taskFirstDate - datetime.datetime.today()
+#         if diff > datetime.timedelta( days=90 ):
+#             ## far task -- light gray
+#             return QColor( 160, 160, 160 )
     ## normal
-    return QColor(0, 255, 0)
+    return QColor(0, 220, 0)
