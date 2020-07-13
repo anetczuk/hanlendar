@@ -23,26 +23,37 @@
 
 from PyQt5.QtWidgets import QCalendarWidget
 
-from PyQt5.QtCore import Qt, QDate, QEvent, pyqtSignal
-from PyQt5.QtGui import QColor, QPalette, QPainterPath, QPen
+from PyQt5.QtCore import Qt, QDate, QEvent, pyqtSignal, QPoint
+from PyQt5.QtGui import QColor, QPalette, QPainterPath, QPen, QCursor
 from PyQt5.QtWidgets import QTableView, QHeaderView
-from PyQt5.QtWidgets import QMenu
 
 import abc
 import datetime
 from dateutil.relativedelta import relativedelta
+
+from todocalendar.gui.taskcontextmenu import TaskContextMenu
 
 from todocalendar.domainmodel.task import Entry, Task
 
 
 class MonthCalendar( QCalendarWidget ):
 
+    headerRowHeight = 12
+    cellItemHeight  = 20
+
     addTask  = pyqtSignal( QDate )
+    
+    selectedTask  = pyqtSignal( int )
+#     addNewTask    = pyqtSignal()
+    editTask      = pyqtSignal( Task )
+#     removeTask    = pyqtSignal( Task )
+#     markCompleted = pyqtSignal( Task )
 
     def __init__( self, parent=None ):
         super().__init__( parent )
 
         self.data = None
+        self.dateToCellRect = {}
 
         self.setGridVisible( True )
         self.setNavigationBarVisible( False )
@@ -53,24 +64,49 @@ class MonthCalendar( QCalendarWidget ):
 
         self.taskColor = QColor( self.palette().color( QPalette.Highlight) )
         self.taskColor.setAlpha( 64 )
-        self.highlightModel = None
-        self.selectionChanged.connect( self.updateCells )
 
         self.cellsTable = self.findChild( QTableView )
 
         ## set first row of fixed size
         header = self.cellsTable.verticalHeader()
         header.setSectionResizeMode( 0, QHeaderView.Fixed )
-        self.cellsTable.setRowHeight( 1, 12 )
-
+        self.cellsTable.setRowHeight( 1, self.headerRowHeight )
+        
+        self.taskContextMenu = TaskContextMenu( self )
+        
+        self.selectionChanged.connect( self.updateCells )
+        self.clicked.connect( self.dateClicked )
+        self.activated.connect( self.dateDoubleClicked )
+        
+    def connectData(self, dataObject):
+        self.taskContextMenu.connectData( dataObject )
+        
     def setCurrentPage(self, year, month):
+        self.dateToCellRect.clear()
         minDate = datetime.date( year=year, month=month, day=1 )
         maxDate = minDate + relativedelta( months=1 ) - relativedelta( days=1 )
         self.setMinimumDate( minDate )
         self.setMaximumDate( maxDate )
         super().setCurrentPage( year, month )
 
+    def getEntries(self, date: QDate):
+        pyDate = date.toPyDate()
+        entries = self.data.getEntries( pyDate, False )
+        entries.sort( key=Entry.sortByDates )
+        return entries
+    
+    def getTask(self, taskIndex):
+        if taskIndex < 0:
+            return None
+        date = self.selectedDate()
+        entries = self.getEntries(date)
+        if taskIndex >= len(entries):
+            return None
+        return entries[ taskIndex ].task
+
     def paintCell(self, painter, rect, date: QDate):
+        self.dateToCellRect[date] = rect
+
         painter.save()
 
         ## header
@@ -85,11 +121,9 @@ class MonthCalendar( QCalendarWidget ):
             painter.drawText( rect, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, str( date.day() ) )
 
         if self.data is not None:
-            pyDate = date.toPyDate()
-            entries = self.data.getEntries( pyDate, False )
-            entries.sort( key=Entry.sortByDates )
+            entries = self.getEntries( date )
             entriesSize = len(entries)
-            itemsCapacity = int( rect.height() / 20 )
+            itemsCapacity = int( rect.height() / self.cellItemHeight )
             entriesSize = min( entriesSize, itemsCapacity )
             for index in range(0, entriesSize):
                 item: Entry = entries[index]
@@ -99,7 +133,7 @@ class MonthCalendar( QCalendarWidget ):
         painter.restore()
 
     def drawItem(self, painter, rect, itemIndex, text, bgColor):
-        itemOffset = 20 * ( itemIndex + 1 )
+        itemOffset = self.cellItemHeight * ( itemIndex + 1 )
         path = QPainterPath()
         path.addRoundedRect( rect.x() + 2, rect.y() + itemOffset, rect.width() - 4, 16, 5, 5 )
         painter.fillPath( path, bgColor )
@@ -134,6 +168,40 @@ class MonthCalendar( QCalendarWidget ):
         if days == 0:                       # 0 means Monday
             days += 7                       # there is always one row
         return days
+
+    def contextMenuEvent( self, event ):
+        date = self.selectedDate()
+        taskIndex = self.clickedTaskIndex( date )
+        task: Task = taskIndex[1]
+        self.taskContextMenu.show( task )
+
+    def dateClicked(self, date):
+        taskIndex = self.clickedTaskIndex( date )
+        self.selectedTask.emit( taskIndex[0] )
+
+    def dateDoubleClicked(self, date):
+        taskIndex = self.clickedTaskIndex( date )
+        self.editTask.emit( taskIndex[1] )
+ 
+    def clickedTaskIndex(self, date):
+        entries = self.getEntries(date)
+        if len(entries) < 1:
+            return ( -1, None )
+        rowIndex = self.clickedItemRow( date )
+        taskIndex = rowIndex - 1
+        if taskIndex < 0:
+            return ( -1, None )
+        if taskIndex >= len(entries):
+            return ( -1, None )
+        return ( taskIndex, entries[taskIndex].task )
+
+    def clickedItemRow(self, date):
+        globalPos = QCursor.pos()
+        pos = self.mapFromGlobal( globalPos )         
+        cellRect = self.dateToCellRect[date]
+        cellRel  = pos - cellRect.topLeft()
+        rowIndex = int( cellRel.y() / self.cellItemHeight )
+        return rowIndex
 
 
 def getTaskBackgroundColor( task: Task ) -> QColor:

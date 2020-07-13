@@ -98,6 +98,9 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.todosTable.selectedToDo.connect( self.todosTableSelectionChanged )
         self.ui.showCompletedToDosCB.toggled.connect( self.showCompletedToDos )
 
+        self.ui.monthCalendar.connectData( self.data )
+        self.ui.monthCalendar.selectedTask.connect( self.monthCalendarSelectionChanged )
+
         self.ui.dayList.connectData( self.data )
         self.ui.dayList.selectedTask.connect( self.handleDayTaskSelect )
 
@@ -160,6 +163,9 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.tasksTable.setTasks( tasksList )
 
     def setDetails(self, entity):
+        if entity is None:
+            self.ui.entityDetailsStack.setCurrentIndex( 0 )
+            return
         if isinstance(entity, Task):
             self.ui.taskDetails.setTask( entity )
             self.ui.entityDetailsStack.setCurrentIndex( 1 )
@@ -169,6 +175,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
             self.ui.entityDetailsStack.setCurrentIndex( 2 )
             return
         # unknown entity
+        _LOGGER.warn( "unsupported entity: %s", entity )
         self.ui.entityDetailsStack.setCurrentIndex( 0 )
 
     def tasksTableSelectionChanged(self, taskIndex):
@@ -228,6 +235,12 @@ class MainWindow( QtBaseClass ):           # type: ignore
         todosList = self.data.getManager().getToDos()
         self.ui.todosTable.setToDos( todosList )
 
+    ## ====================================================================
+    
+    def monthCalendarSelectionChanged(self, taskIndex):
+        task = self.ui.monthCalendar.getTask( taskIndex )
+        self.setDetails( task )
+    
     ## ====================================================================
 
     def updateDayView(self):
