@@ -21,7 +21,7 @@
 # SOFTWARE.
 #
 
-import logging
+# import logging
 
 from PyQt5.QtCore import QObject, QDate
 from PyQt5.QtCore import pyqtSignal
@@ -61,7 +61,10 @@ class TaskContextMenu( QObject ):
 
         self.editTaskAction.setEnabled( True )
         self.removeTaskAction.setEnabled( True )
-        self.markCompletedAction.setEnabled( True )
+        if task.isCompleted():
+            self.markCompletedAction.setEnabled( False )
+        else:
+            self.markCompletedAction.setEnabled( True )
 
         globalPos = QCursor.pos()
         action = self.contextMenu.exec_( globalPos )
