@@ -25,13 +25,13 @@ import logging
 
 from datetime import date, time, datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from typing import List
+import math
 
 from .reminder import Reminder, Notification
 
-from typing import List
 from todocalendar.domainmodel.recurrent import RepeatType
 from todocalendar import persist
-import math
 from todocalendar.domainmodel import recurrent
 
 
@@ -58,7 +58,7 @@ class DateRange():
 
     ## in keyword
     def __contains__(self, entryDate: date):
-        if entryDate < self.start:
+        if self.start is not None and entryDate < self.start:
             return False
         if entryDate > self.end:
             return False
@@ -210,17 +210,28 @@ class Task( persist.Versionable ):
         self.setDeadlineDateTime( due )
 
     def calculateTimeSpan(self, entryDate: date):
-        startFactor = 0
-        if self.startDate is not None and self.startDate.date() == entryDate:
-            midnight = datetime.combine( entryDate, datetime.min.time() )
-            startDiff = self.startDate - midnight
-            startFactor = startDiff.total_seconds() / timedelta( days=1 ).total_seconds()
-        dueFactor = 1
-        if self.dueDate is not None and self.dueDate.date() == entryDate:
-            midnight = datetime.combine( entryDate, datetime.min.time() )
-            startDiff = self.dueDate - midnight
-            dueFactor = startDiff.total_seconds() / timedelta( days=1 ).total_seconds()
-        return [startFactor, dueFactor]
+        ret = calcTimeSpan( entryDate, self.startDate, self.dueDate )
+        if ret is not None:
+            return ret
+
+        if self.recurrence is None:
+            return [0, 1]
+        recurrentOffset: relativedelta = self.recurrence.getDateOffset()
+        if recurrentOffset is None:
+            return [0, 1]
+ 
+        endDate = self.dueDate
+        multiplicator = recurrent.findMultiplicationAfter( endDate.date(), entryDate, recurrentOffset )
+        if multiplicator < 0:
+            return [0, 1]
+        endDate += recurrentOffset * multiplicator
+        startDate = self.startDate
+        if startDate is not None:
+            startDate += recurrentOffset * multiplicator
+        ret = calcTimeSpan( entryDate, startDate, endDate )
+        if ret is not None:
+            return ret
+        return [0, 1]
 
     def hasEntryExact( self, entryDate: date ):
         refDate = self.getReferenceDateTime()
@@ -261,18 +272,13 @@ class Task( persist.Versionable ):
         if recurrentOffset is None:
             return None
 
-        multiplicator = recurrent.findMultiplication( dateRange.end, entryDate, recurrentOffset )
+        multiplicator = recurrent.findMultiplicationAfter( dateRange.end, entryDate, recurrentOffset )
         if multiplicator < 1:
             return None
-
-        dateRange += recurrentOffset * (multiplicator - 1)
-        while( dateRange.end < entryDate ):
-            dateRange += recurrentOffset
-            if entryDate in dateRange:
-                return Entry( self, multiplicator )
-            multiplicator += 1
-
-        return None
+        dateRange += recurrentOffset * multiplicator
+        if entryDate in dateRange:
+            return Entry( self, multiplicator )
+        return False
 
     def addReminder( self, reminder=None ):
         if self.reminderList is None:
@@ -408,3 +414,27 @@ class Entry:
     @staticmethod
     def sortByDates( entry ):
         return ( entry.dateRange[1], entry.dateRange[0] )
+
+
+def calcTimeSpan(entryDate: date, start: datetime, end: datetime):
+    startFactor = 0
+    if start is not None:
+        date = start.date()
+        if entryDate < date:
+            return None
+        elif entryDate == date:
+            midnight = datetime.combine( entryDate, datetime.min.time() )
+            startDiff = start - midnight
+            startFactor = startDiff.total_seconds() / timedelta( days=1 ).total_seconds()
+    dueFactor = 1
+    if end is not None:
+        date = end.date()
+        if entryDate > date:
+            return None
+        elif entryDate == date:
+            midnight = datetime.combine( entryDate, datetime.min.time() )
+            startDiff = end - midnight
+            dueFactor = startDiff.total_seconds() / timedelta( days=1 ).total_seconds()
+    ret = [startFactor, dueFactor]
+    return ret
+    

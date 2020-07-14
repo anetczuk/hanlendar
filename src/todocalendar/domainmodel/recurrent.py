@@ -127,17 +127,12 @@ class Recurrent():
         if recurrentOffset is None:
             return False
 
-        multiplicator = findMultiplication( referenceDate, entryDate, recurrentOffset )
+        multiplicator = findMultiplicationAfter( referenceDate, entryDate, recurrentOffset )
         if multiplicator < 0:
             return False
-
-        referenceDate += recurrentOffset * (multiplicator - 1)
-        while( referenceDate < entryDate ):
-            referenceDate += recurrentOffset
-            if entryDate == referenceDate:
-                return True
-            multiplicator += 1
-
+        referenceDate += recurrentOffset * multiplicator
+        if entryDate == referenceDate:
+            return True
         return False
 
     def hasEntryInMonth( self, referenceDate: date, monthDate: date ):
@@ -189,3 +184,17 @@ def findMultiplication( startDate: date, endDate: date, offset: relativedelta ) 
             mul = int(mul / 2)
 
     return ret
+
+
+# returns: startDate + offset * multiplicator >= endDate
+def findMultiplicationAfter( startDate: date, endDate: date, offset: relativedelta ) -> int:
+    multiplicator = findMultiplication( startDate, endDate, offset )
+    if multiplicator < 0:
+        return multiplicator
+
+    startDate += offset * (multiplicator - 1)
+    while( startDate < endDate ):
+        startDate += offset
+        multiplicator += 1
+        
+    return multiplicator - 1
