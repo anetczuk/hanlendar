@@ -51,6 +51,8 @@ class MonthCalendar( QCalendarWidget ):
         self.data = None
         self.dateToCellRect = {}
         self.currentTaskIndex = -1
+        
+        self.showCompleted = False
 
         self.setGridVisible( True )
         self.setNavigationBarVisible( False )
@@ -79,6 +81,10 @@ class MonthCalendar( QCalendarWidget ):
         self.taskContextMenu.connectData( dataObject )
         self.editTask.connect( dataObject.editTask )
 
+    def showCompletedTasks(self, show):
+        self.showCompleted = show
+        self.updateCells()
+
     def setCurrentPage(self, year, month):
         self.dateToCellRect.clear()
         minDate = datetime.date( year=year, month=month, day=1 )
@@ -89,7 +95,7 @@ class MonthCalendar( QCalendarWidget ):
 
     def getEntries(self, date: QDate):
         pyDate = date.toPyDate()
-        entries = self.data.getEntries( pyDate, False )
+        entries = self.data.getEntries( pyDate, self.showCompleted )
         entries.sort( key=Entry.sortByDates )
         return entries
 

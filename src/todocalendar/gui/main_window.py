@@ -96,7 +96,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.tasksTable.connectData( self.data )
         self.ui.tasksTable.selectedTask.connect( self.showDetails )
         self.ui.tasksTable.taskUnselected.connect( self.hideDetails )
-        self.ui.showCompletedTasksCB.toggled.connect( self.showCompletedTasks )
+        self.ui.showCompletedTasksListCB.toggled.connect( self.showCompletedTasksList )
 
         self.ui.todosTable.connectData( self.data )
         self.ui.todosTable.selectedToDo.connect( self.showDetails )
@@ -110,6 +110,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.monthCalendar.connectData( self.data )
         self.ui.monthCalendar.selectedTask.connect( self.showDetails )
         self.ui.monthCalendar.taskUnselected.connect( self.hideDetails )
+        self.ui.showCompletedTasksMonthCB.toggled.connect( self.showCompletedTasksMonth )
 
         ## === main menu settings ===
 
@@ -186,7 +187,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def hideDetails(self):
         self.ui.entityDetailsStack.setCurrentIndex( 0 )
 
-    def showCompletedTasks(self, checked):
+    def showCompletedTasksList(self, checked):
         self.ui.tasksTable.showCompletedTasks( checked )
         self.updateTasksTable()
 
@@ -243,6 +244,9 @@ class MainWindow( QtBaseClass ):           # type: ignore
         entries = self.data.getEntries(currDate, False)
         tasks = [x.task for x in entries]
         self.ui.dayList.setTasks( tasks, currDate )
+
+    def showCompletedTasksMonth(self, checked):
+        self.ui.monthCalendar.showCompletedTasks( checked )
 
     def updateNotesView(self):
         notesDict = self.data.getManager().getNotes()
