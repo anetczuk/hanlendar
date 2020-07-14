@@ -94,20 +94,22 @@ class MonthCalendar( QCalendarWidget ):
         self.setMaximumDate( maxDate )
         super().setCurrentPage( year, month )
 
-    def getEntries(self, date: QDate):
+    def getTasks(self, date: QDate):
         pyDate = date.toPyDate()
-        entries = self.data.getEntries( pyDate, self.showCompleted )
-        entries.sort( key=Entry.sortByDates )
-        return entries
+        tasksList = self.data.getManager().getTasksForDate( pyDate )
+        if self.showCompleted is False:
+            tasksList = [ task for task in tasksList if not task.isCompleted() ]
+        tasksList.sort( key=Task.sortByDates )
+        return tasksList
 
     def getTask(self, taskIndex):
         if taskIndex < 0:
             return None
         date = self.selectedDate()
-        entries = self.getEntries(date)
-        if taskIndex >= len(entries):
+        tasksList = self.getTasks(date)
+        if taskIndex >= len(tasksList):
             return None
-        return entries[ taskIndex ].task
+        return tasksList[ taskIndex ]
 
     def paintCell(self, painter, rect, date: QDate):
         self.dateToCellRect[date] = rect
@@ -127,15 +129,15 @@ class MonthCalendar( QCalendarWidget ):
 
         if self.data is not None:
             selectedDay = self.selectedDate() == date
-            entries = self.getEntries( date )
-            entriesSize = len(entries)
+            tasksList = self.getTasks( date )
+            entriesSize = len(tasksList)
             itemsCapacity = int( rect.height() / self.cellItemHeight )
             entriesSize = min( entriesSize, itemsCapacity )
             for index in range(0, entriesSize):
-                item: Entry = entries[index]
+                item: Task = tasksList[index]
                 selectedTask = selectedDay and (self.currentTaskIndex == index)
-                bgColor = getTaskBackgroundColor( item.task, selectedTask )
-                self.drawItem( painter, rect, index, item.getTitle(), bgColor )
+                bgColor = getTaskBackgroundColor( item, selectedTask )
+                self.drawItem( painter, rect, index, item.title, bgColor )
 
         painter.restore()
 
@@ -209,16 +211,16 @@ class MonthCalendar( QCalendarWidget ):
             self.editTask.emit( task )
 
     def clickedTaskIndex(self, date):
-        entries = self.getEntries(date)
-        if len(entries) < 1:
+        tasksList = self.getTasks(date)
+        if len(tasksList) < 1:
             return ( -1, None )
         rowIndex = self.clickedItemRow( date )
         taskIndex = rowIndex - 1
         if taskIndex < 0:
             return ( -1, None )
-        if taskIndex >= len(entries):
+        if taskIndex >= len(tasksList):
             return ( -1, None )
-        return ( taskIndex, entries[taskIndex].task )
+        return ( taskIndex, tasksList[taskIndex] )
 
     def clickedItemRow(self, date):
         globalPos = QCursor.pos()

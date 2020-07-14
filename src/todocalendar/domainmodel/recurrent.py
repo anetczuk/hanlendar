@@ -128,8 +128,8 @@ class Recurrent():
             return False
 
         multiplicator = findMultiplication( referenceDate, entryDate, recurrentOffset )
-        if multiplicator < 1:
-            return None
+        if multiplicator < 0:
+            return False
 
         referenceDate += recurrentOffset * (multiplicator - 1)
         while( referenceDate < entryDate ):

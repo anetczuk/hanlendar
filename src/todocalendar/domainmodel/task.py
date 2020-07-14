@@ -372,6 +372,10 @@ class Task( persist.Versionable ):
         self._recurrentStartDate = self._recurrence.nextDateTime( self._recurrentStartDate )
         return True
 
+    @staticmethod
+    def sortByDates( task ):
+        return ( task.dueDate, task.startDate )
+
 
 class Entry:
 

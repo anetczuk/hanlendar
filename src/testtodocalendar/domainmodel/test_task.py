@@ -102,9 +102,18 @@ class TaskTest(unittest.TestCase):
         task.setDefaultDate( taskDate )
         task.recurrence = Recurrent()
         task.recurrence.setDaily()
-        task.recurrence.endDate = taskDate + timedelta(days=3)
+        task.recurrence.endDate = taskDate + timedelta( days=2 )
 
-        recurrentDate = taskDate + timedelta(days=5)
+        recurrentDate = taskDate
+        self.assertEqual( task.hasEntryExact(recurrentDate), True )
+         
+        recurrentDate = taskDate + timedelta( days=1 )
+        self.assertEqual( task.hasEntryExact(recurrentDate), True )
+         
+        recurrentDate = taskDate + timedelta( days=2 )
+        self.assertEqual( task.hasEntryExact(recurrentDate), True )
+         
+        recurrentDate = taskDate + timedelta( days=5 )
         self.assertEqual( task.hasEntryExact(recurrentDate), False )
 
     def test_hasEntryInMonth(self):
