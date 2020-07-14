@@ -23,7 +23,7 @@
 
 import logging
 
-from PyQt5.QtCore import QObject
+from PyQt5.QtCore import QObject, QDate
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QMenu
 from PyQt5.QtGui import QCursor
@@ -34,7 +34,7 @@ from todocalendar.gui.dataobject import DataObject
 
 class TaskContextMenu( QObject ):
 
-    addNewTask      = pyqtSignal()
+    addNewTask      = pyqtSignal( QDate )
     editTask        = pyqtSignal( Task )
     removeTask      = pyqtSignal( Task )
     markCompleted   = pyqtSignal( Task )
@@ -54,25 +54,39 @@ class TaskContextMenu( QObject ):
         self.removeTask.connect( dataObject.removeTask )
         self.markCompleted.connect( dataObject.markTaskCompleted )
 
-    def show(self, task):
+    def show(self, task: Task = None, newTaskDate: QDate = None ):
         if task is None:
-            ## context menu on background
-            self.editTaskAction.setEnabled( False )
-            self.removeTaskAction.setEnabled( False )
-            self.markCompletedAction.setEnabled( False )
-        else:
-            self.editTaskAction.setEnabled( True )
-            self.removeTaskAction.setEnabled( True )
-            self.markCompletedAction.setEnabled( True )
+            self.showNewTask( newTaskDate )
+            return
+
+        self.editTaskAction.setEnabled( True )
+        self.removeTaskAction.setEnabled( True )
+        self.markCompletedAction.setEnabled( True )
 
         globalPos = QCursor.pos()
         action = self.contextMenu.exec_( globalPos )
 
         if action == self.addTaskAction:
-            self.addNewTask.emit()
+            if newTaskDate is None:
+                newTaskDate = QDate.currentDate()
+            self.addNewTask.emit( newTaskDate )
         elif action == self.editTaskAction:
             self.editTask.emit( task )
         elif action == self.removeTaskAction:
             self.removeTask.emit( task )
         elif action == self.markCompletedAction:
             self.markCompleted.emit( task )
+
+    def showNewTask(self, newTaskDate: QDate = None ):
+        ## context menu on background
+        self.editTaskAction.setEnabled( False )
+        self.removeTaskAction.setEnabled( False )
+        self.markCompletedAction.setEnabled( False )
+
+        globalPos = QCursor.pos()
+        action = self.contextMenu.exec_( globalPos )
+
+        if action == self.addTaskAction:
+            if newTaskDate is None:
+                newTaskDate = QDate.currentDate()
+            self.addNewTask.emit( newTaskDate )

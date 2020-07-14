@@ -66,10 +66,10 @@ class DataObject( QObject ):
 
     ## ==============================================================
 
-    def addNewTask( self, date: QDate = None ):
+    def addNewTask( self, newTaskDate: QDate = None ):
         task = Task()
-        if date is not None:
-            startDate = date.toPyDate()
+        if newTaskDate is not None:
+            startDate = newTaskDate.toPyDate()
             task.setDefaultDate( startDate )
 
         taskDialog = TaskDialog( task, self.parentWidget )
