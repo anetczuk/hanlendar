@@ -87,7 +87,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.data.taskChanged.connect( self._handleTasksChange )
         self.data.todoChanged.connect( self._handleToDosChange )
 
-        self.notifsTimer.remindTask.connect( self.showTaskNotification )
+        self.notifsTimer.remindTask.connect( self.handleNotification )
 
         self.ui.navcalendar.addTask.connect( self.data.addNewTask )
         self.ui.navcalendar.currentPageChanged.connect( self.ui.monthCalendar.setCurrentPage )
@@ -127,18 +127,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def getManager(self):
         return self.data.getManager()
 
-    def refreshView(self):
-        self.updateNotificationTimer()
-        self.updateTasksView()
-        self.updateTrayToolTip()
-        self._updateTasksTrayIndicator()
-        self.updateToDosTable()
-        self.updateDayView()
-        self.updateNotesView()
-        self.showDetails( None )
-
-    ## ===============================================================
-
     def loadData(self):
         dataPath = self.getDataPath()
         self.data.load( dataPath )
@@ -159,14 +147,16 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     ## ===============================================================
 
-    def updateTasksView(self):
-        selectedDate: QDate = self.ui.navcalendar.selectedDate()
-        _LOGGER.debug( "navcalendar selection changed: %s", selectedDate )
-        self.updateTasksTable()
+    def refreshView(self):
+        self._handleTasksChange()
+        self.updateToDosTable()
+        self.updateNotesView()
+        self.showDetails( None )
 
-    def updateTasksTable(self):
-        tasksList = self.data.getManager().getTasks()
-        self.ui.tasksTable.setTasks( tasksList )
+    def updateTasksView(self):
+        self.updateTasksTable()
+        self.ui.monthCalendar.updateCells()
+        self._updateTrayIndicator()
 
     def showDetails(self, entity):
         if entity is None:
@@ -187,40 +177,46 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def hideDetails(self):
         self.ui.entityDetailsStack.setCurrentIndex( 0 )
 
-    def showCompletedTasksList(self, checked):
-        self.ui.tasksTable.showCompletedTasks( checked )
-        self.updateTasksTable()
+    ## ====================================================================
 
     def updateNotificationTimer(self):
         notifs = self.data.getManager().getNotificationList()
         self.notifsTimer.setNotifications( notifs )
 
-    def showTaskNotification( self, notification: Notification ):
+    def handleNotification( self, notification: Notification ):
         self.trayIcon.displayMessage( notification.message )
-        self.updateTasksTable()
-        self._updateTasksTrayIndicator()
+        self.updateTasksView()
 
-    def updateTrayToolTip(self):
-        toolTip = ""
-        deadlineTask = self.data.getManager().getNextDeadline()
-        if deadlineTask is not None:
-            toolTip += "\n" + "Next deadline: " + deadlineTask.title
-        nextToDo = self.data.getManager().getNextToDo()
-        if nextToDo is not None:
-            toolTip += "\n" + "Next ToDo: " + nextToDo.title
-        if len(toolTip) > 0:
-            toolTip = self.toolTip + "\n" + toolTip
-        else:
-            toolTip = self.toolTip
-        self.trayIcon.setToolTip( toolTip )
+    ## ====================================================================
+
+    def showCompletedTasksList(self, checked):
+        self.ui.tasksTable.showCompletedTasks( checked )
+        self.updateTasksTable()
+
+    def updateTasksTable(self):
+        tasksList = self.data.getManager().getTasks()
+        self.ui.tasksTable.setTasks( tasksList )
 
     def _handleTasksChange(self):
         self.updateNotificationTimer()
-        self.updateTasksTable()
+        self.updateTasksView()
         self.updateDayView()
         self.ui.navcalendar.repaint()
         self.updateTrayToolTip()
-        self._updateTasksTrayIndicator()
+
+    ## ====================================================================
+
+    def showCompletedTasksMonth(self, checked):
+        self.ui.monthCalendar.showCompletedTasks( checked )
+
+    ## ====================================================================
+
+    def updateDayView(self):
+        calendarDate = self.ui.navcalendar.selectedDate()
+        currDate = calendarDate.toPyDate()
+        entries = self.data.getEntries(currDate, False)
+        tasks = [x.task for x in entries]
+        self.ui.dayList.setTasks( tasks, currDate )
 
     ## ====================================================================
 
@@ -238,16 +234,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     ## ====================================================================
 
-    def updateDayView(self):
-        calendarDate = self.ui.navcalendar.selectedDate()
-        currDate = calendarDate.toPyDate()
-        entries = self.data.getEntries(currDate, False)
-        tasks = [x.task for x in entries]
-        self.ui.dayList.setTasks( tasks, currDate )
-
-    def showCompletedTasksMonth(self, checked):
-        self.ui.monthCalendar.showCompletedTasks( checked )
-
     def updateNotesView(self):
         notesDict = self.data.getManager().getNotes()
         self.ui.notesWidget.setNotes( notesDict )
@@ -260,22 +246,28 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     ## ====================================================================
 
-    ## slot
-    def closeApplication(self):
-        ##self.close()
-        qApp.quit()
-
-    ## ====================================================================
+    def updateTrayToolTip(self):
+        toolTip = ""
+        deadlineTask = self.data.getManager().getNextDeadline()
+        if deadlineTask is not None:
+            toolTip += "\n" + "Next deadline: " + deadlineTask.title
+        nextToDo = self.data.getManager().getNextToDo()
+        if nextToDo is not None:
+            toolTip += "\n" + "Next ToDo: " + nextToDo.title
+        if len(toolTip) > 0:
+            toolTip = self.toolTip + "\n" + toolTip
+        else:
+            toolTip = self.toolTip
+        self.trayIcon.setToolTip( toolTip )
 
     def setIconTheme(self, theme: tray_icon.TrayIconTheme):
         _LOGGER.debug("setting tray theme: %r", theme)
-        self._updateIconTheme( theme )
-        self._setTasksTrayIndicator( theme )
+        self._setTrayIndicator( theme )
 
-    def _updateTasksTrayIndicator(self):
-        self._setTasksTrayIndicator( self.appSettings.trayIcon )              ## required to clear old number
+    def _updateTrayIndicator(self):
+        self._setTrayIndicator( self.appSettings.trayIcon )              ## required to clear old number
 
-    def _setTasksTrayIndicator(self, theme: tray_icon.TrayIconTheme):
+    def _setTrayIndicator(self, theme: tray_icon.TrayIconTheme):
         self._updateIconTheme( theme )                                  ## required to clear old number
         deadlinedTasks = self.data.getManager().getDeadlinedTasks()
         num = len(deadlinedTasks)
@@ -309,6 +301,13 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def hideEvent(self, event):
         self.trayIcon.updateLabel()
+
+    ## ====================================================================
+
+    ## slot
+    def closeApplication(self):
+        ##self.close()
+        qApp.quit()
 
     ## ====================================================================
 

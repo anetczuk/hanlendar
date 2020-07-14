@@ -51,7 +51,7 @@ class MonthCalendar( QCalendarWidget ):
         self.data = None
         self.dateToCellRect = {}
         self.currentTaskIndex = -1
-        
+
         self.showCompleted = False
 
         self.setGridVisible( True )

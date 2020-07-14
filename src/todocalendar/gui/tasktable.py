@@ -168,8 +168,7 @@ class TaskTable( QTableWidget ):
             self.setItem( i, 4, dueItem )
 
         self.setSortingEnabled( True )
-
-        # printTree( self )
+        self.update()
 
     def contextMenuEvent( self, event ):
         evPos = event.pos()
