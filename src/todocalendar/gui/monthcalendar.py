@@ -151,7 +151,7 @@ class MonthCalendar( QCalendarWidget ):
 #     def dateFromCell( self, cellIndex ):
 #         dayIndex = (cellIndex.row() - 1) * 7 + (cellIndex.column())
 #         return self.dateAt( dayIndex )
-# 
+#
 #     def dateAt( self, dayIndex ):
 #         prevMonthDays = self.daysFromPreviousMonth()
 #         dayOffset = dayIndex - prevMonthDays
@@ -159,7 +159,7 @@ class MonthCalendar( QCalendarWidget ):
 #         currMonth = self.monthShown()
 #         currDate  = QDate( currYear, currMonth, 1 )
 #         return currDate.addDays( dayOffset )
-# 
+#
 #     def daysFromPreviousMonth( self ):
 #         currYear     = self.yearShown()
 #         currMonth    = self.monthShown()

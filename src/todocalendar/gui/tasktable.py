@@ -207,12 +207,11 @@ def getTaskForegroundColor( task: Task ) -> QBrush:
         ## completed -- green
         return QBrush( QColor(0, 160, 0) )
     if task.isTimedout():
-        ## timed out -- red
-        return QBrush( QColor(255, 0, 0) )
+        ## timed out
+        return QBrush( getTimeoutColor() )
     if task.isReminded():
-        ## already reminded -- orange
-        return QBrush( QColor(200, 0, 200) )
-#         return QBrush( QColor(255, 165, 0) )
+        ## already reminded
+        return QBrush( getRemindedColor() )
     taskFirstDate = task.getFirstDateTime()
     if taskFirstDate is not None:
         diff = taskFirstDate - datetime.today()
@@ -221,3 +220,11 @@ def getTaskForegroundColor( task: Task ) -> QBrush:
             return QBrush( QColor( 180, 180, 180 ) )
     ## normal
     return QBrush( QColor(0, 0, 0) )
+
+
+def getTimeoutColor() -> QColor:
+    return QColor(255, 0, 0)        ## red
+
+
+def getRemindedColor() -> QColor:
+    return QColor(200, 0, 200)      ## magenta

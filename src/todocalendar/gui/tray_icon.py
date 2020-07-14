@@ -89,7 +89,7 @@ class TrayIcon(QSystemTrayIcon):
         ## it cannot be changed back to proper one. Workaround is to use NoIcon parameter
         self.showMessage("ToDo Calendar", message, QSystemTrayIcon.NoIcon, timeout)
 
-    def drawNumber(self, number, numColor="red"):
+    def drawNumber( self, number, numColor=QColor("red") ):
         icon = self.icon()
 
         pixmap = icon.pixmap( 512, 512 )
@@ -115,11 +115,10 @@ class TrayIcon(QSystemTrayIcon):
         pathPen.setWidth( 180 )
         painter.strokePath( path, pathPen )
 
-        fillColor = QColor( numColor )
-        painter.fillPath( path, QBrush(fillColor) )
+        painter.fillPath( path, QBrush(numColor) )
 
         ## make number bolder
-        pathPen = QPen( fillColor )
+        pathPen = QPen( numColor )
         pathPen.setWidth( 20 )
         painter.strokePath( path, pathPen )
 

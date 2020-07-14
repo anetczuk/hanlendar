@@ -35,8 +35,8 @@ from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from .dataobject import DataObject
 from .navcalendar import NavCalendarHighlightModel
-from .settingsdialog import SettingsDialog
-from .settingsdialog import AppSettings
+from .tasktable import getRemindedColor, getTimeoutColor
+from .settingsdialog import SettingsDialog, AppSettings
 from .notifytimer import NotificationTimer
 
 from todocalendar.domainmodel.task import Task
@@ -276,12 +276,14 @@ class MainWindow( QtBaseClass ):           # type: ignore
         deadlinedTasks = self.data.getManager().getDeadlinedTasks()
         num = len(deadlinedTasks)
         if num > 0:
-            self.trayIcon.drawNumber( num, "red" )
+            color = getTimeoutColor()
+            self.trayIcon.drawNumber( num, color )
             return
         remindedTasks = self.data.getManager().getRemindedTasks()
         num = len(remindedTasks)
         if num > 0:
-            self.trayIcon.drawNumber( num, "brown" )
+            color = getRemindedColor()
+            self.trayIcon.drawNumber( num, color )
             return
 
     def _updateIconTheme(self, theme: tray_icon.TrayIconTheme):
