@@ -170,8 +170,17 @@ class MonthCalendar( QCalendarWidget ):
 #         return days
 
     def contextMenuEvent( self, event ):
-        date = self.selectedDate()
+        globalPos = QCursor.pos()
+        pos = self.mapFromGlobal( globalPos )
+        date = self.findDateByPos( pos )
+        if date is None:
+            return
+        self.setSelectedDate( date )
+        currDate = self.selectedDate()
+        if date != currDate:
+            return
         taskIndex = self.clickedTaskIndex( date )
+        self.currentTaskIndex = taskIndex[0]
         task: Task = taskIndex[1]
         self.taskContextMenu.show( task )
 
@@ -207,6 +216,12 @@ class MonthCalendar( QCalendarWidget ):
         cellRel  = pos - cellRect.topLeft()
         rowIndex = int( cellRel.y() / self.cellItemHeight )
         return rowIndex
+
+    def findDateByPos( self, relativePos ):
+        for date, rect in self.dateToCellRect.items():
+            if rect.contains( relativePos ):
+                return date
+        return None
 
     def emitSelectedTask( self, task=None ):
         if task is not None:
