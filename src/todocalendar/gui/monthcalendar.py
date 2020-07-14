@@ -175,13 +175,16 @@ class MonthCalendar( QCalendarWidget ):
         date = self.findDateByPos( pos )
         if date is None:
             return
-        self.setSelectedDate( date )
-        currDate = self.selectedDate()
-        if date != currDate:
+        if date < self.minimumDate():
             return
-        taskIndex = self.clickedTaskIndex( date )
-        self.currentTaskIndex = taskIndex[0]
-        task: Task = taskIndex[1]
+        if date > self.maximumDate():
+            return
+        task: Task = None
+        currDate = self.selectedDate()
+        if date == currDate:
+            taskIndex = self.clickedTaskIndex( date )
+            self.currentTaskIndex = taskIndex[0]
+            task: Task = taskIndex[1]
         self.taskContextMenu.show( task )
 
     def dateClicked(self, date):
