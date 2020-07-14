@@ -47,6 +47,7 @@ class TaskTable( QTableWidget ):
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
 
+        self.data = None
         self.showCompleted = False
 
         self.setSelectionBehavior( QAbstractItemView.SelectRows )
@@ -82,6 +83,7 @@ class TaskTable( QTableWidget ):
         self.setTasks( [] )
 
     def connectData(self, dataObject):
+        self.data = dataObject
         self.taskContextMenu.connectData( dataObject )
         self.editTask.connect( dataObject.editTask )
 
@@ -91,6 +93,11 @@ class TaskTable( QTableWidget ):
 
     def showCompletedTasks(self, show):
         self.showCompleted = show
+        self.updateView()
+
+    def updateView(self):
+        tasksList = self.data.getManager().getTasks()
+        self.setTasks( tasksList )
 
     def getTask(self, taskIndex):
         if taskIndex < 0:

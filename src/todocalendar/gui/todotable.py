@@ -47,6 +47,7 @@ class ToDoTable( QTableWidget ):
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
 
+        self.data = None
         self.showCompleted = False
 
         self.setSelectionBehavior( QAbstractItemView.SelectRows )
@@ -70,6 +71,7 @@ class ToDoTable( QTableWidget ):
         self.setToDos( [] )
 
     def connectData(self, dataObject):
+        self.data = dataObject
         self.addNewToDo.connect( dataObject.addNewToDo )
         self.editToDo.connect( dataObject.editToDo )
         self.removeToDo.connect( dataObject.removeToDo )
@@ -82,6 +84,11 @@ class ToDoTable( QTableWidget ):
 
     def showCompletedToDos(self, show):
         self.showCompleted = show
+        self.updateView()
+
+    def updateView(self):
+        todosList = self.data.getManager().getToDos()
+        self.setToDos( todosList )
 
     def getToDo(self, todoIndex):
         if todoIndex < 0:

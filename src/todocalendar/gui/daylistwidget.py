@@ -27,7 +27,7 @@ from datetime import date
 # from . import uiloader
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtCore import QSize, QRect
+from PyQt5.QtCore import QSize, QRect, QDate
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget, QLabel
@@ -299,6 +299,7 @@ class DayListWidget( QWidget ):
 #         self.setStyleSheet( "background-color: green" )
 
         self.data = None
+        self.currentDate: QDate = QDate.currentDate()
 
         hlayout = QHBoxLayout()
         hlayout.setContentsMargins( 0, 0, 0, 0 )
@@ -324,7 +325,21 @@ class DayListWidget( QWidget ):
 
     def showCompletedTasks(self, show):
         self.content.showCompleted = show
+        self.updateView()
+
+    def updateView(self):
+        if self.currentDate is None:
+            return
+        if self.data is None:
+            return
+        currDate = self.currentDate.toPyDate()
+        tasksList = self.data.getManager().getTasksForDate( currDate )
+        self.setTasks( tasksList, currDate )
         self.update()
+
+    def setCurrentDate(self, date: QDate):
+        self.currentDate = date
+        self.updateView()
 
     def getTask(self, index):
         return self.content.getTask( index )

@@ -80,6 +80,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.ui.navcalendar.highlightModel = DataHighlightModel( self.data.getManager() )
 
+        self.setDayViewDate()
+
         ## === connecting signals ===
 
         self.data.taskChanged.connect( self._handleTasksChange )
@@ -89,27 +91,27 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.ui.navcalendar.addTask.connect( self.data.addNewTask )
         self.ui.navcalendar.currentPageChanged.connect( self.ui.monthCalendar.setCurrentPage )
-        self.ui.navcalendar.selectionChanged.connect( self.updateDayView )
+        self.ui.navcalendar.selectionChanged.connect( self.setDayViewDate )
 
         self.ui.tasksTable.connectData( self.data )
         self.ui.tasksTable.selectedTask.connect( self.showDetails )
         self.ui.tasksTable.taskUnselected.connect( self.hideDetails )
-        self.ui.showCompletedTasksListCB.toggled.connect( self.showCompletedTasksList )
+        self.ui.showCompletedTasksListCB.toggled.connect( self.ui.tasksTable.showCompletedTasks )
 
         self.ui.todosTable.connectData( self.data )
         self.ui.todosTable.selectedToDo.connect( self.showDetails )
         self.ui.todosTable.todoUnselected.connect( self.hideDetails )
-        self.ui.showCompletedToDosCB.toggled.connect( self.showCompletedToDos )
+        self.ui.showCompletedToDosCB.toggled.connect( self.ui.todosTable.showCompletedToDos )
 
         self.ui.dayList.connectData( self.data )
         self.ui.dayList.selectedTask.connect( self.showDetails )
         self.ui.dayList.taskUnselected.connect( self.hideDetails )
-        self.ui.showCompletedTasksDayCB.toggled.connect( self.showCompletedTasksDay )
+        self.ui.showCompletedTasksDayCB.toggled.connect( self.ui.dayList.showCompletedTasks )
 
         self.ui.monthCalendar.connectData( self.data )
         self.ui.monthCalendar.selectedTask.connect( self.showDetails )
         self.ui.monthCalendar.taskUnselected.connect( self.hideDetails )
-        self.ui.showCompletedTasksMonthCB.toggled.connect( self.showCompletedTasksMonth )
+        self.ui.showCompletedTasksMonthCB.toggled.connect( self.ui.monthCalendar.showCompletedTasks )
 
         ## === main menu settings ===
 
@@ -148,12 +150,13 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def refreshView(self):
         self._handleTasksChange()
-        self.updateToDosTable()
+        self.ui.todosTable.updateView()
         self.updateNotesView()
         self.showDetails( None )
 
     def updateTasksView(self):
-        self.updateTasksTable()
+        self.ui.tasksTable.updateView()
+        #self.ui.dayList.updateView()
         self.ui.monthCalendar.updateCells()
         self._updateTrayIndicator()
 
@@ -188,51 +191,24 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     ## ====================================================================
 
-    def showCompletedTasksList(self, checked):
-        self.ui.tasksTable.showCompletedTasks( checked )
-        self.updateTasksTable()
-
-    def updateTasksTable(self):
-        tasksList = self.data.getManager().getTasks()
-        self.ui.tasksTable.setTasks( tasksList )
-
     def _handleTasksChange(self):
         self.updateNotificationTimer()
         self.updateTasksView()
-        self.updateDayView()
+        self.ui.dayList.updateView()
         self.ui.navcalendar.repaint()
         self.updateTrayToolTip()
 
     ## ====================================================================
 
-    def showCompletedTasksMonth(self, checked):
-        self.ui.monthCalendar.showCompletedTasks( checked )
-
-    ## ====================================================================
-
-    def showCompletedTasksDay(self, checked):
-        self.ui.dayList.showCompletedTasks( checked )
-        self.updateDayView()
-
-    def updateDayView(self):
+    def setDayViewDate(self):
         calendarDate = self.ui.navcalendar.selectedDate()
-        currDate = calendarDate.toPyDate()
-        tasksList = self.data.getManager().getTasksForDate( currDate )
-        self.ui.dayList.setTasks( tasksList, currDate )
+        self.ui.dayList.setCurrentDate( calendarDate )
 
     ## ====================================================================
-
-    def showCompletedToDos(self, checked):
-        self.ui.todosTable.showCompletedToDos( checked )
-        self.updateToDosTable()
 
     def _handleToDosChange(self):
-        self.updateToDosTable()
+        self.ui.todosTable.updateView()
         self.updateTrayToolTip()
-
-    def updateToDosTable(self):
-        todosList = self.data.getManager().getToDos()
-        self.ui.todosTable.setToDos( todosList )
 
     ## ====================================================================
 
