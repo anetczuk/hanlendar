@@ -78,6 +78,7 @@ class MonthCalendar( QCalendarWidget ):
         self.activated.connect( self.dateDoubleClicked )
 
     def connectData(self, dataObject):
+        self.data = dataObject
         self.taskContextMenu.connectData( dataObject )
         self.editTask.connect( dataObject.editTask )
 

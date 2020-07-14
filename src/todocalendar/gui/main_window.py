@@ -80,8 +80,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.ui.navcalendar.highlightModel = DataHighlightModel( self.data.getManager() )
 
-        self.ui.monthCalendar.data = self.data
-
         ## === connecting signals ===
 
         self.data.taskChanged.connect( self._handleTasksChange )
@@ -106,6 +104,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.dayList.connectData( self.data )
         self.ui.dayList.selectedTask.connect( self.showDetails )
         self.ui.dayList.taskUnselected.connect( self.hideDetails )
+        self.ui.showCompletedTasksDayCB.toggled.connect( self.showCompletedTasksDay )
 
         self.ui.monthCalendar.connectData( self.data )
         self.ui.monthCalendar.selectedTask.connect( self.showDetails )
@@ -211,12 +210,15 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     ## ====================================================================
 
+    def showCompletedTasksDay(self, checked):
+        self.ui.dayList.showCompletedTasks( checked )
+        self.updateDayView()
+
     def updateDayView(self):
         calendarDate = self.ui.navcalendar.selectedDate()
         currDate = calendarDate.toPyDate()
-        entries = self.data.getEntries(currDate, False)
-        tasks = [x.task for x in entries]
-        self.ui.dayList.setTasks( tasks, currDate )
+        tasksList = self.data.getManager().getTasksForDate( currDate )
+        self.ui.dayList.setTasks( tasksList, currDate )
 
     ## ====================================================================
 

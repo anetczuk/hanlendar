@@ -99,6 +99,13 @@ class Manager():
     def getTasks( self ):
         return list( self.tasks )       ## shallow copy of list
 
+    def getTasksForDate( self, taskDate: date ):
+        retList = list()
+        for task in self.tasks:
+            if task.hasEntryExact( taskDate ):
+                retList.append( task )
+        return retList
+
     def getEntriesForDate(self, taskDate: date, includeCompleted=True):
         retList = list()
         for entry in self.tasks:

@@ -176,8 +176,9 @@ class DayListContentWidget( QWidget ):
     def __init__(self, parentWidget=None):
         super().__init__( parentWidget )
 
-        self.items        = []
-        self.currentIndex = -1
+        self.showCompleted = False
+        self.items         = []
+        self.currentIndex  = -1
 
     def clear(self):
         self.setCurrentIndex( -1 )
@@ -203,12 +204,17 @@ class DayListContentWidget( QWidget ):
 
     def setTasks(self, tasksList, day: date ):
         self.clear()
+        
+        if self.showCompleted is False:
+            tasksList = [ task for task in tasksList if not task.isCompleted() ]
+        
         for task in tasksList:
             item = DayItem(task, day, self)
             item.selectedItem.connect( self.handleItemSelect )
             item.itemDoubleClicked.connect( self.handleItemDoubleClick )
             self.items.append( item )
             item.show()
+            
         self.update()
 
     def paintEvent(self, event):
@@ -292,6 +298,8 @@ class DayListWidget( QWidget ):
 
 #         self.setStyleSheet( "background-color: green" )
 
+        self.data = None
+
         hlayout = QHBoxLayout()
         hlayout.setContentsMargins( 0, 0, 0, 0 )
         hlayout.setSpacing( 0 )
@@ -310,8 +318,13 @@ class DayListWidget( QWidget ):
         self.content.taskDoubleClicked.connect( self.taskDoubleClicked )
 
     def connectData(self, dataObject):
+        self.data = dataObject
         self.taskContextMenu.connectData( dataObject )
         self.editTask.connect( dataObject.editTask )
+
+    def showCompletedTasks(self, show):
+        self.content.showCompleted = show
+        self.update()
 
     def getTask(self, index):
         return self.content.getTask( index )
