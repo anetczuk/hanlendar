@@ -98,11 +98,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.tasksTable.taskUnselected.connect( self.hideDetails )
         self.ui.showCompletedTasksListCB.toggled.connect( self.ui.tasksTable.showCompletedTasks )
 
-        self.ui.todosTable.connectData( self.data )
-        self.ui.todosTable.selectedToDo.connect( self.showDetails )
-        self.ui.todosTable.todoUnselected.connect( self.hideDetails )
-        self.ui.showCompletedToDosCB.toggled.connect( self.ui.todosTable.showCompletedToDos )
-
         self.ui.dayList.connectData( self.data )
         self.ui.dayList.selectedTask.connect( self.showDetails )
         self.ui.dayList.taskUnselected.connect( self.hideDetails )
@@ -113,9 +108,16 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.monthCalendar.taskUnselected.connect( self.hideDetails )
         self.ui.showCompletedTasksMonthCB.toggled.connect( self.ui.monthCalendar.showCompletedTasks )
 
+        self.ui.todosTable.connectData( self.data )
+        self.ui.todosTable.selectedToDo.connect( self.showDetails )
+        self.ui.todosTable.todoUnselected.connect( self.hideDetails )
+        self.ui.showCompletedToDosCB.toggled.connect( self.ui.todosTable.showCompletedToDos )
+        
+        self.ui.notesWidget.notesChanged.connect( self._saveDataSlot )
+
         ## === main menu settings ===
 
-        self.ui.actionSave_data.triggered.connect( self.saveData )
+        self.ui.actionSave_data.triggered.connect( self._saveDataSlot )
         self.ui.actionImportNotes.triggered.connect( self.importXfceNotes )
 
         self.ui.actionOptions.triggered.connect( self.openSettingsDialog )
@@ -134,10 +136,15 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.refreshView()
 
     def saveData(self):
+        _LOGGER.info( "storing data" )
         dataPath = self.getDataPath()
         notes = self.ui.notesWidget.getNotes()
         self.data.getManager().setNotes( notes )
         self.data.store( dataPath )
+
+    def _saveDataSlot(self):
+        ## having separate slot allows to monkey patch / mock "saveData()" method
+        self.saveData()
 
     def getDataPath(self):
         settings = self.getSettings()
@@ -149,16 +156,10 @@ class MainWindow( QtBaseClass ):           # type: ignore
     ## ===============================================================
 
     def refreshView(self):
-        self._handleTasksChange()
+        self.refreshTasksView()
         self.ui.todosTable.updateView()
         self.updateNotesView()
         self.showDetails( None )
-
-    def updateTasksView(self):
-        self.ui.tasksTable.updateView()
-        #self.ui.dayList.updateView()
-        self.ui.monthCalendar.updateCells()
-        self._updateTrayIndicator()
 
     def showDetails(self, entity):
         if entity is None:
@@ -192,11 +193,21 @@ class MainWindow( QtBaseClass ):           # type: ignore
     ## ====================================================================
 
     def _handleTasksChange(self):
+        self.saveData()
+        self.refreshTasksView()
+        
+    def refreshTasksView(self):
         self.updateNotificationTimer()
         self.updateTasksView()
         self.ui.dayList.updateView()
         self.ui.navcalendar.repaint()
         self.updateTrayToolTip()
+
+    def updateTasksView(self):
+        self.ui.tasksTable.updateView()
+        #self.ui.dayList.updateView()
+        self.ui.monthCalendar.updateCells()
+        self._updateTrayIndicator()
 
     ## ====================================================================
 
@@ -207,6 +218,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
     ## ====================================================================
 
     def _handleToDosChange(self):
+        self.saveData()
         self.ui.todosTable.updateView()
         self.updateTrayToolTip()
 
