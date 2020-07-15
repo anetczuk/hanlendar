@@ -32,7 +32,7 @@ import os
 sys.path.append(os.path.abspath( os.path.join(os.path.dirname(__file__), "../..") ))
 
 
-# import logging
+import logging
 
 import todocalendar.logger as logger
 
@@ -107,7 +107,7 @@ logFile = logger.getLoggingOutputFile()
 logger.configure( logFile )
 
 
-# _LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 app = QApplication(sys.argv)
@@ -120,6 +120,11 @@ MainWindow.toolTip = MainWindow.toolTip + " Preview"
 window = MainWindow()
 window.ui.actionSave_data.setEnabled( False )
 window.loadSettings()
+
+def save_data_mock():
+    _LOGGER.info("saving data is disabled on example")
+
+window.saveData = save_data_mock
 
 prepareExampleData( window )
 
