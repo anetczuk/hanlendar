@@ -26,10 +26,10 @@ import logging
 
 from . import uiloader
 
-# from PyQt5.QtCore import QEvent
+from PyQt5.QtCore import QDir
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMenu, QInputDialog
 from PyQt5.QtWidgets import QLineEdit
-from PyQt5.QtCore import QDir
 
 # from todocalendar.domainmodel.task import Task
 # from todocalendar.domainmodel.recurrent import RepeatType, Recurrent
@@ -47,8 +47,13 @@ NOTES_BG_COLOR = "#f7ec9d"
 
 class SinglePageWidget( QWidget ):
 
+    contentChanged = pyqtSignal()
+
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
+
+        self.content = ""
+        self.changeCounter = 0
 
         vlayout = QVBoxLayout()
         vlayout.setContentsMargins( 0, 0, 0, 0 )
@@ -65,12 +70,27 @@ class SinglePageWidget( QWidget ):
         )
 
         vlayout.addWidget( self.textEdit )
+        
+        self.textEdit.textChanged.connect( self.textChanged )
 
     def getText(self):
         return self.textEdit.toPlainText()
+    
+    def textChanged(self):
+        contentText = self.getText()
+        newLength  = len( contentText )
+        currLength = len( self.content )
+        diff = abs( newLength - currLength )
+        self.changeCounter += diff
+        self.content = contentText
+        if self.changeCounter > 24:
+            self.changeCounter = 0
+            self.contentChanged.emit()
 
 
 class NotesWidget( QtBaseClass ):           # type: ignore
+
+    notesChanged = pyqtSignal()
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -109,6 +129,7 @@ class NotesWidget( QtBaseClass ):           # type: ignore
     def addTab(self, title, text=""):
         pageWidget = SinglePageWidget(self)
         pageWidget.textEdit.setText( text )
+        pageWidget.contentChanged.connect( self.notesChanged )
         self.ui.notes_tabs.addTab( pageWidget, title )
 
     def contextMenuEvent( self, event ):
@@ -135,11 +156,14 @@ class NotesWidget( QtBaseClass ):           # type: ignore
             self._renameTabRequest( tabIndex )
         elif action == deleteAction:
             self.ui.notes_tabs.removeTab( tabIndex )
+            self.notesChanged.emit()
 
     def _newTabRequest( self ):
-        newText = self._requestTabName( "notes" )
-        if len(newText) > 0:
-            self.ui.notes_tabs.addTab( SinglePageWidget(self), newText )
+        newTitle = self._requestTabName( "notes" )
+        if len(newTitle) < 1:
+            return
+        self.addTab( newTitle )
+        self.notesChanged.emit()
 
     def _renameTabRequest( self, tabIndex ):
         if tabIndex < 0:
@@ -147,8 +171,10 @@ class NotesWidget( QtBaseClass ):           # type: ignore
 
         tabText = self.ui.notes_tabs.tabText( tabIndex )
         newText = self._requestTabName(tabText)
-        if len(newText) > 0:
-            self.ui.notes_tabs.setTabText( tabIndex, newText )
+        if len(newText) < 1:
+            return
+        self.ui.notes_tabs.setTabText( tabIndex, newText )
+        self.notesChanged.emit()
 
     def _requestTabName( self, currName ):
         newText, ok = QInputDialog.getText( self,
