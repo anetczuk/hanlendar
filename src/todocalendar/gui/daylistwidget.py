@@ -85,7 +85,7 @@ class DayTimeline( DrawWidget ):
         painter.setPen(pen)
         painter.drawText( 0, 0, width - 6, hourStep, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, "0" )
 
-        for h in range(1, 24):
+        for h in range(0, 24):
             hourHeight = hourStep * h
             text = str(h)
 
@@ -230,7 +230,7 @@ class DayListContentWidget( QWidget ):
         painter.setPen(pen)
 
         hourStep = height / 24
-        for h in range(1, 24):
+        for h in range(0, 24):
             hourHeight = hourStep * h
             painter.drawLine( 0, hourHeight, width, hourHeight )
 
