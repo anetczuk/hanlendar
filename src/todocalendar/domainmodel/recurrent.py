@@ -150,7 +150,8 @@ class Recurrent():
         intYear  = monthDate.year
         intMonth = monthDate.month
 
-        nextMonthDate = monthDate + timedelta( days=31 )
+        nextMonthDate = monthDate.replace( day=1 ) + timedelta( days=31 )
+        nextMonthDate = nextMonthDate.replace( day=1 )                      ## ensure first day of month
         referenceDate += recurrentOffset * (multiplicator - 1)
         while( referenceDate < nextMonthDate ):
             referenceDate += recurrentOffset
