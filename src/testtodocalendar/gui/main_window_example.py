@@ -95,7 +95,15 @@ def prepareExampleData( window: MainWindow ):
     reminder = remindedTask.addReminder()
     reminder.setDays( 30 )
 
-    todo1 = dataManager.addNewToDo("ToDo example")
+    todo1 = dataManager.addNewToDo("ToDo example A")
+    todo1.description = "a description"
+    todo1.priority = 3
+    todo1.completed = 33
+    todo1 = dataManager.addNewToDo("ToDo example B")
+    todo1.description = "a description"
+    todo1.priority = 3
+    todo1.completed = 33
+    todo1 = dataManager.addNewToDo("ToDo example C")
     todo1.description = "a description"
     todo1.priority = 3
     todo1.completed = 33
@@ -104,6 +112,11 @@ def prepareExampleData( window: MainWindow ):
     todo2.description = "a description"
     todo2.priority = 5
     todo2.completed = 20
+
+    todo2 = dataManager.addNewToDo("ToDo example 3")
+    todo2.description = "a description"
+    todo2.priority = 1
+    todo2.completed = 0
 
     window.refreshView()
 

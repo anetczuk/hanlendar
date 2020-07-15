@@ -29,6 +29,7 @@ from datetime import timedelta
 from todocalendar.domainmodel.manager import Manager
 from todocalendar.domainmodel.task import Task
 from todocalendar.domainmodel.recurrent import Recurrent
+from todocalendar.domainmodel.todo import ToDo
 
 
 class ManagerTest(unittest.TestCase):
@@ -167,3 +168,119 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual( len(notifications), 2 )
         self.assertEqual( notifications[0].task.title, "task2" )
         self.assertEqual( notifications[1].task.title, "task1" )
+
+    def test_setToDoPriorityLeast(self):
+        manager = Manager()
+        todo1 = ToDo()
+        todo1.priority = 5
+        manager.addToDo(todo1)
+        todo2 = ToDo()
+        todo2.priority = 7
+        manager.addToDo(todo2)
+        
+        manager.setToDoPriorityLeast( todo1 )
+        self.assertEqual( todo1.priority, 5 )
+        
+        manager.setToDoPriorityLeast( todo2 )
+        self.assertEqual( todo2.priority, 4 )
+
+    def test_setToDoPriorityRaise_001(self):
+        manager = Manager()
+        todo1 = ToDo()
+        todo1.priority = 4
+        manager.addToDo(todo1)
+        todo2 = ToDo()
+        todo2.priority = 5
+        manager.addToDo(todo2)
+        todo3 = ToDo()
+        todo3.priority = 6
+        manager.addToDo(todo3)
+        todo4 = ToDo()
+        todo4.priority = 7
+        manager.addToDo(todo4)
+        
+        manager.setToDoPriorityRaise( todo1, 6 )
+        self.assertEqual( todo1.priority, 6 )
+        self.assertEqual( todo2.priority, 5 )
+        self.assertEqual( todo3.priority, 7 )
+        self.assertEqual( todo4.priority, 8 )
+
+    def test_setToDoPriorityRaise_002(self):
+        manager = Manager()
+        todo1 = ToDo()
+        todo1.priority = 4
+        manager.addToDo(todo1)
+        todo2 = ToDo()
+        todo2.priority = 5
+        manager.addToDo(todo2)
+        todo3 = ToDo()
+        todo3.priority = 6
+        manager.addToDo(todo3)
+        todo4 = ToDo()
+        todo4.priority = 9
+        manager.addToDo(todo4)
+        
+        manager.setToDoPriorityRaise( todo1, 6 )
+        self.assertEqual( todo1.priority, 6 )
+        self.assertEqual( todo2.priority, 5 )
+        self.assertEqual( todo3.priority, 7 )
+        self.assertEqual( todo4.priority, 9 )
+
+    def test_setToDoPriorityRaise_003(self):
+        manager = Manager()
+        todo1 = ToDo()
+        todo1.priority = 3
+        manager.addToDo(todo1)
+        todo2 = ToDo()
+        todo2.priority = 4
+        manager.addToDo(todo2)
+        todo3 = ToDo()
+        todo3.priority = 6
+        manager.addToDo(todo3)
+        
+        manager.setToDoPriorityRaise( todo1, 5 )
+        self.assertEqual( todo1.priority, 5 )
+        self.assertEqual( todo2.priority, 4 )
+        self.assertEqual( todo3.priority, 6 )
+
+    def test_setToDoPriorityDecline_001(self):
+        manager = Manager()
+        todo1 = ToDo()
+        todo1.priority = 7
+        manager.addToDo(todo1)
+        todo2 = ToDo()
+        todo2.priority = 6
+        manager.addToDo(todo2)
+        todo3 = ToDo()
+        todo3.priority = 5
+        manager.addToDo(todo3)
+        todo4 = ToDo()
+        todo4.priority = 4
+        manager.addToDo(todo4)
+        
+        manager.setToDoPriorityDecline( todo1, 5 )
+        self.assertEqual( todo1.priority, 5 )
+        self.assertEqual( todo2.priority, 6 )
+        self.assertEqual( todo3.priority, 4 )
+        self.assertEqual( todo4.priority, 3 )
+
+    def test_setToDoPriorityDecline_002(self):
+        manager = Manager()
+        todo1 = ToDo()
+        todo1.priority = 7
+        manager.addToDo(todo1)
+        todo2 = ToDo()
+        todo2.priority = 6
+        manager.addToDo(todo2)
+        todo3 = ToDo()
+        todo3.priority = 5
+        manager.addToDo(todo3)
+        todo4 = ToDo()
+        todo4.priority = 2
+        manager.addToDo(todo4)
+        
+        manager.setToDoPriorityDecline( todo1, 5 )
+        self.assertEqual( todo1.priority, 5 )
+        self.assertEqual( todo2.priority, 6 )
+        self.assertEqual( todo3.priority, 4 )
+        self.assertEqual( todo4.priority, 2 )

@@ -186,3 +186,38 @@ class ToDoTable( QTableWidget ):
             self.selectedToDo.emit( todo )
         else:
             self.todoUnselected.emit()
+
+    def dropEvent(self, event):
+        if event.source() != self:
+            ## do not allow dropping from other elements
+            return
+        ## internal drag & drop
+        sourceRows = set([mi.row() for mi in self.selectedIndexes()])
+        targetRow = self.indexAt(event.pos()).row()
+        sourceRows.discard(targetRow)
+        if len(sourceRows) != 1:
+            return
+        sourceRow = sourceRows.pop()
+        sourceToDo = self.getToDo( sourceRow )
+        targetToDo = self.getToDo( targetRow )
+        #print( "drop event:", sourceRow, targetRow, sourceToDo.title, targetToDo.title )
+        
+        manager: Manager = self.data.getManager()
+        if targetToDo is None:
+            manager.setToDoPriorityLeast( sourceToDo )
+            self.data.todoChanged.emit( sourceToDo )
+            self.updateView()
+            return
+        sourcePriority = sourceToDo.priority
+        targetPriority = targetToDo.priority
+        if targetPriority == sourcePriority:
+            ## no priority to change
+            return
+        if targetPriority > sourcePriority:
+            newPriority = targetPriority + 1
+            manager.setToDoPriorityRaise( sourceToDo, newPriority )
+        else:
+            newPriority = targetPriority - 1
+            manager.setToDoPriorityDecline( sourceToDo, newPriority )
+        self.data.todoChanged.emit( sourceToDo )
+        self.updateView()

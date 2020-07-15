@@ -56,3 +56,7 @@ class ToDo():
 
     def __str__(self):
         return "[t:%s d:%s c:%s p:%s]" % ( self.title, self.description, self._completed, self.priority )
+    
+    @staticmethod
+    def sortByPriority( todo ):
+        return ( todo.priority )

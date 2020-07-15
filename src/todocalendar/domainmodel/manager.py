@@ -207,8 +207,10 @@ class Manager():
 
     ## ========================================================
 
-    def getToDos( self ):
-        return list( self.todos )       ## shallow copy of list
+    def getToDos( self, includeCompleted=True ):
+        if includeCompleted:
+            return list( self.todos )       ## shallow copy of list
+        return [ item for item in self.todos if not item.isCompleted() ]
 
     def addToDo( self, todo: ToDo ):
         self.todos.append( todo )
@@ -227,17 +229,64 @@ class Manager():
 
     def getNextToDo(self) -> ToDo:
         tSize = len(self.todos)
-        next = None
+        nextToDo = None
         for i in range(0, tSize):
             todo = self.todos[i]
             if todo.isCompleted():
                 continue
-            if next is None:
-                next = todo
+            if nextToDo is None:
+                nextToDo = todo
                 continue
-            if next.priority < todo.priority:
-                next = todo
-        return next
+            if nextToDo.priority < todo.priority:
+                nextToDo = todo
+        return nextToDo
+
+    def setToDoPriorityLeast(self, todo: ToDo):
+        if len(self.todos) < 1:
+            return
+        sortedTodos = self.getToDos(False)
+        sortedTodos.remove( todo )
+        sortedTodos.sort( key=ToDo.sortByPriority )         ## ascending
+        smallestPriority = sortedTodos[0].priority
+        if smallestPriority > todo.priority:
+            ## "todo" item has smallest priority and there is no other todos with the same priority
+            return
+        smallestPriority -= 1
+        if smallestPriority < 0:
+            todo.priority = 0
+            priorValue = abs( smallestPriority )
+            for item in sortedTodos:
+                item.priority += priorValue
+        else:
+            todo.priority = smallestPriority
+            
+    def setToDoPriorityRaise(self, todo: ToDo, newPriority):
+        todo.priority = newPriority
+        sortedTodos = self.getToDos(False)
+        sortedTodos.remove( todo )
+        sortedTodos.sort( key=ToDo.sortByPriority )         ## ascending
+        prevPriority = newPriority
+        for item in sortedTodos:
+            if item.priority < newPriority:
+                continue
+            if item.priority > prevPriority:
+                break
+            item.priority += 1
+            prevPriority = item.priority
+
+    def setToDoPriorityDecline(self, todo: ToDo, newPriority):
+        todo.priority = newPriority
+        sortedTodos = self.getToDos(False)
+        sortedTodos.remove( todo )
+        sortedTodos.sort( key=ToDo.sortByPriority, reverse=True )         ## descending
+        prevPriority = newPriority
+        for item in sortedTodos:
+            if item.priority > newPriority:
+                continue
+            if item.priority < prevPriority:
+                break
+            item.priority -= 1
+            prevPriority = item.priority
 
     ## ========================================================
 
