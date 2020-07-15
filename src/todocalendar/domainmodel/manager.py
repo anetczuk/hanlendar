@@ -227,9 +227,17 @@ class Manager():
 
     def getNextToDo(self) -> ToDo:
         tSize = len(self.todos)
-        if tSize < 1:
-            return None
-        return self.todos[0]
+        next = None
+        for i in range(0, tSize):
+            todo = self.todos[i]
+            if todo.isCompleted():
+                continue
+            if next is None:
+                next = todo
+                continue
+            if next.priority < todo.priority:
+                next = todo
+        return next
 
     ## ========================================================
 

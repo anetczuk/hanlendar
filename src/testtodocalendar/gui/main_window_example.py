@@ -100,6 +100,11 @@ def prepareExampleData( window: MainWindow ):
     todo1.priority = 3
     todo1.completed = 33
 
+    todo2 = dataManager.addNewToDo("ToDo example 2")
+    todo2.description = "a description"
+    todo2.priority = 5
+    todo2.completed = 20
+
     window.refreshView()
 
 
