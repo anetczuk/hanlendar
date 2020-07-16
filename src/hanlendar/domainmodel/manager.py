@@ -40,7 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 class Manager():
     """Root class for domain data structure."""
 
-    _class_version = 0
+    ## 1 - renamed modules
+    _class_version = 1
 
     def __init__(self):
         """Constructor."""
@@ -65,23 +66,23 @@ class Manager():
 
     def load( self, inputDir ):
         inputFile = inputDir + "/version.obj"
-        mngrVersion = persist.loadObject( inputFile )
+        mngrVersion = persist.loadObject( inputFile, self._class_version )
         if mngrVersion != self. _class_version:
             _LOGGER.info( "converting object from version %s to %s", mngrVersion, self._class_version )
             ## do nothing for now
 
         inputFile = inputDir + "/tasks.obj"
-        self.tasks = persist.loadObject( inputFile )
+        self.tasks = persist.loadObject( inputFile, self._class_version )
         if self.tasks is None:
             self.tasks = list()
 
         inputFile = inputDir + "/todos.obj"
-        self.todos = persist.loadObject( inputFile )
+        self.todos = persist.loadObject( inputFile, self._class_version )
         if self.todos is None:
             self.todos = list()
 
         inputFile = inputDir + "/notes.obj"
-        self.notes = persist.loadObject( inputFile )
+        self.notes = persist.loadObject( inputFile, self._class_version )
         if self.notes is None:
             self.notes = { "notes": "" }
 

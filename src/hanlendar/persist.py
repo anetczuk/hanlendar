@@ -34,11 +34,26 @@ import abc
 _LOGGER = logging.getLogger(__name__)
 
 
-def loadObject( inputFile, defaultValue=None ):
+class RenamingUnpickler(pickle.Unpickler):
+
+    def __init__(self, codeVersion, file):
+        super().__init__( file )
+        self.codeVersion = codeVersion
+
+    def find_class(self, module, name):
+#         _LOGGER.info( "unpicking module: %s %s", module, name )
+        if self.codeVersion >= 1:
+            ## rename old module name to new one
+            module = module.replace( "todocalendar", "hanlendar" )
+        return super().find_class(module, name)
+
+
+def loadObject( inputFile, codeVersion, defaultValue=None ):
     try:
         _LOGGER.info( "loading data from: %s", inputFile )
         with open( inputFile, 'rb') as fp:
-            return pickle.load(fp)
+            return RenamingUnpickler(codeVersion, fp).load()
+#             return pickle.load(fp)
     except FileNotFoundError:
         _LOGGER.exception("failed to load")
         return defaultValue
