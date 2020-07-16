@@ -136,7 +136,7 @@ app.setOrganizationName("arnet")
 MainWindow.toolTip = MainWindow.toolTip + " Preview"
 
 window = MainWindow()
-window.ui.actionSave_data.setEnabled( False )
+# window.ui.actionSave_data.setEnabled( False )
 window.loadSettings()
 
 def save_data_mock():
