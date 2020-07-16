@@ -177,10 +177,10 @@ class ManagerTest(unittest.TestCase):
         todo2 = ToDo()
         todo2.priority = 7
         manager.addToDo(todo2)
-        
+
         manager.setToDoPriorityLeast( todo1 )
         self.assertEqual( todo1.priority, 5 )
-        
+
         manager.setToDoPriorityLeast( todo2 )
         self.assertEqual( todo2.priority, 4 )
 
@@ -198,7 +198,7 @@ class ManagerTest(unittest.TestCase):
         todo4 = ToDo()
         todo4.priority = 7
         manager.addToDo(todo4)
-        
+
         manager.setToDoPriorityRaise( todo1, 6 )
         self.assertEqual( todo1.priority, 6 )
         self.assertEqual( todo2.priority, 5 )
@@ -219,7 +219,7 @@ class ManagerTest(unittest.TestCase):
         todo4 = ToDo()
         todo4.priority = 9
         manager.addToDo(todo4)
-        
+
         manager.setToDoPriorityRaise( todo1, 6 )
         self.assertEqual( todo1.priority, 6 )
         self.assertEqual( todo2.priority, 5 )
@@ -237,7 +237,7 @@ class ManagerTest(unittest.TestCase):
         todo3 = ToDo()
         todo3.priority = 6
         manager.addToDo(todo3)
-        
+
         manager.setToDoPriorityRaise( todo1, 5 )
         self.assertEqual( todo1.priority, 5 )
         self.assertEqual( todo2.priority, 4 )
@@ -257,7 +257,7 @@ class ManagerTest(unittest.TestCase):
         todo4 = ToDo()
         todo4.priority = 4
         manager.addToDo(todo4)
-        
+
         manager.setToDoPriorityDecline( todo1, 5 )
         self.assertEqual( todo1.priority, 5 )
         self.assertEqual( todo2.priority, 6 )
@@ -278,7 +278,7 @@ class ManagerTest(unittest.TestCase):
         todo4 = ToDo()
         todo4.priority = 2
         manager.addToDo(todo4)
-        
+
         manager.setToDoPriorityDecline( todo1, 5 )
         self.assertEqual( todo1.priority, 5 )
         self.assertEqual( todo2.priority, 6 )

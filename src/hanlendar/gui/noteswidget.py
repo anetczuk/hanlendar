@@ -70,12 +70,12 @@ class SinglePageWidget( QWidget ):
         )
 
         vlayout.addWidget( self.textEdit )
-        
+
         self.textEdit.textChanged.connect( self.textChanged )
 
     def getText(self):
         return self.textEdit.toPlainText()
-    
+
     def textChanged(self):
         contentText = self.getText()
         newLength  = len( contentText )

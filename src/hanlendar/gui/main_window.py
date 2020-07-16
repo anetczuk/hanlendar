@@ -112,7 +112,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.todosTable.selectedToDo.connect( self.showDetails )
         self.ui.todosTable.todoUnselected.connect( self.hideDetails )
         self.ui.showCompletedToDosCB.toggled.connect( self.ui.todosTable.showCompletedToDos )
-        
+
         self.ui.notesWidget.notesChanged.connect( self.saveData )
 
         ## === main menu settings ===
@@ -209,7 +209,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def _handleTasksChange(self):
         self.saveData()
         self.refreshTasksView()
-        
+
     def refreshTasksView(self):
         self.updateNotificationTimer()
         self.updateTasksView()

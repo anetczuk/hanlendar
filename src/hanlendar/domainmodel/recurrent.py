@@ -197,5 +197,5 @@ def findMultiplicationAfter( startDate: date, endDate: date, offset: relativedel
     while( startDate < endDate ):
         startDate += offset
         multiplicator += 1
-        
+
     return multiplicator - 1

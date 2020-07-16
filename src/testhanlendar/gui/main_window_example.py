@@ -139,10 +139,12 @@ window = MainWindow()
 # window.ui.actionSave_data.setEnabled( False )
 window.loadSettings()
 
+
 def save_data_mock():
     _LOGGER.info("saving data is disabled on example")
 
-window._saveData = save_data_mock
+
+window._saveData = save_data_mock           # type: ignore
 
 prepareExampleData( window )
 

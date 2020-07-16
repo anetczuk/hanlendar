@@ -106,13 +106,13 @@ class TaskTest(unittest.TestCase):
 
         recurrentDate = taskDate
         self.assertEqual( task.hasEntryExact(recurrentDate), True )
-         
+
         recurrentDate = taskDate + timedelta( days=1 )
         self.assertEqual( task.hasEntryExact(recurrentDate), True )
-         
+
         recurrentDate = taskDate + timedelta( days=2 )
         self.assertEqual( task.hasEntryExact(recurrentDate), True )
-         
+
         recurrentDate = taskDate + timedelta( days=5 )
         self.assertEqual( task.hasEntryExact(recurrentDate), False )
 

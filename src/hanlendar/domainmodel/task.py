@@ -219,7 +219,7 @@ class Task( persist.Versionable ):
         recurrentOffset: relativedelta = self.recurrence.getDateOffset()
         if recurrentOffset is None:
             return [0, 1]
- 
+
         endDate = self.dueDate
         multiplicator = recurrent.findMultiplicationAfter( endDate.date(), entryDate, recurrentOffset )
         if multiplicator < 0:
@@ -425,7 +425,8 @@ def calcTimeSpan(entryDate: date, start: datetime, end: datetime):
         elif entryDate == date:
             midnight = datetime.combine( entryDate, datetime.min.time() )
             startDiff = start - midnight
-            startFactor = startDiff.total_seconds() / timedelta( days=1 ).total_seconds()
+            daySecs = timedelta( days=1 ).total_seconds()
+            startFactor = int( startDiff.total_seconds() / timedelta( days=1 ).total_seconds() )
     dueFactor = 1
     if end is not None:
         date = end.date()
@@ -434,7 +435,7 @@ def calcTimeSpan(entryDate: date, start: datetime, end: datetime):
         elif entryDate == date:
             midnight = datetime.combine( entryDate, datetime.min.time() )
             startDiff = end - midnight
-            dueFactor = startDiff.total_seconds() / timedelta( days=1 ).total_seconds()
+            daySecs = timedelta( days=1 ).total_seconds()
+            dueFactor = int( startDiff.total_seconds() / daySecs )
     ret = [startFactor, dueFactor]
     return ret
-    

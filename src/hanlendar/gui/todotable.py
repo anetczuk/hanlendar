@@ -28,6 +28,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
 from PyQt5.QtWidgets import QMenu
 
+from hanlendar.domainmodel.maanger import Manager
 from hanlendar.domainmodel.todo import ToDo
 
 
@@ -201,7 +202,7 @@ class ToDoTable( QTableWidget ):
         sourceToDo = self.getToDo( sourceRow )
         targetToDo = self.getToDo( targetRow )
         #print( "drop event:", sourceRow, targetRow, sourceToDo.title, targetToDo.title )
-        
+
         manager: Manager = self.data.getManager()
         if targetToDo is None:
             manager.setToDoPriorityLeast( sourceToDo )

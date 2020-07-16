@@ -259,7 +259,7 @@ class Manager():
                 item.priority += priorValue
         else:
             todo.priority = smallestPriority
-            
+
     def setToDoPriorityRaise(self, todo: ToDo, newPriority):
         todo.priority = newPriority
         sortedTodos = self.getToDos(False)

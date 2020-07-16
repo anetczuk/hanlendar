@@ -204,17 +204,17 @@ class DayListContentWidget( QWidget ):
 
     def setTasks(self, tasksList, day: date ):
         self.clear()
-        
+
         if self.showCompleted is False:
             tasksList = [ task for task in tasksList if not task.isCompleted() ]
-        
+
         for task in tasksList:
             item = DayItem(task, day, self)
             item.selectedItem.connect( self.handleItemSelect )
             item.itemDoubleClicked.connect( self.handleItemDoubleClick )
             self.items.append( item )
             item.show()
-            
+
         self.update()
 
     def paintEvent(self, event):
