@@ -113,11 +113,11 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.todosTable.todoUnselected.connect( self.hideDetails )
         self.ui.showCompletedToDosCB.toggled.connect( self.ui.todosTable.showCompletedToDos )
         
-        self.ui.notesWidget.notesChanged.connect( self._saveDataSlot )
+        self.ui.notesWidget.notesChanged.connect( self.saveData )
 
         ## === main menu settings ===
 
-        self.ui.actionSave_data.triggered.connect( self._saveDataSlot )
+        self.ui.actionSave_data.triggered.connect( self.saveData )
         self.ui.actionImportNotes.triggered.connect( self.importXfceNotes )
 
         self.ui.actionOptions.triggered.connect( self.openSettingsDialog )
@@ -125,7 +125,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.applySettings()
         self.trayIcon.show()
 
-        #self.statusBar().showMessage("Ready")
+        self.statusBar().showMessage("Ready", 10000)
 
     def getManager(self):
         return self.data.getManager()
@@ -136,15 +136,16 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.refreshView()
 
     def saveData(self):
+        self._saveData()
+        self.statusBar().showMessage("Data saved", 6000)
+
+    def _saveData(self):
+        ## having separate slot allows to monkey patch / mock "_saveData()" method
         _LOGGER.info( "storing data" )
         dataPath = self.getDataPath()
         notes = self.ui.notesWidget.getNotes()
         self.data.getManager().setNotes( notes )
         self.data.store( dataPath )
-
-    def _saveDataSlot(self):
-        ## having separate slot allows to monkey patch / mock "saveData()" method
-        self.saveData()
 
     def getDataPath(self):
         settings = self.getSettings()

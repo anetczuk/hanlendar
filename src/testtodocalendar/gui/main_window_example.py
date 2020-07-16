@@ -142,7 +142,7 @@ window.loadSettings()
 def save_data_mock():
     _LOGGER.info("saving data is disabled on example")
 
-window.saveData = save_data_mock
+window._saveData = save_data_mock
 
 prepareExampleData( window )
 
