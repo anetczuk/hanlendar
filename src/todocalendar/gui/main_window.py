@@ -137,7 +137,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def saveData(self):
         self._saveData()
-        self.statusBar().showMessage("Data saved", 6000)
+        self.setStatusMessage( "Data saved", [ "Data saved +", "Data saved =" ], 6000 )
 
     def _saveData(self):
         ## having separate slot allows to monkey patch / mock "_saveData()" method
@@ -180,6 +180,19 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def hideDetails(self):
         self.ui.entityDetailsStack.setCurrentIndex( 0 )
+
+    def setStatusMessage(self, firstStatus, changeStatus: list, timeout):
+        statusBar = self.statusBar()
+        message = statusBar.currentMessage()
+        if message == firstStatus:
+            statusBar.showMessage( changeStatus[0], timeout )
+            return
+        try:
+            currIndex = changeStatus.index( message )
+            nextIndex = ( currIndex + 1 ) % len(changeStatus)
+            statusBar.showMessage( changeStatus[nextIndex], timeout )
+        except ValueError:
+            statusBar.showMessage( firstStatus, timeout )
 
     ## ====================================================================
 
