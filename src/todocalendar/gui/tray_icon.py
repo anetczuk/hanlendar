@@ -87,7 +87,7 @@ class TrayIcon(QSystemTrayIcon):
         timeout = 10000
         ## under xfce4 there is problem with balloon icon -- it changes tray icon, so
         ## it cannot be changed back to proper one. Workaround is to use NoIcon parameter
-        self.showMessage("ToDo Calendar", message, QSystemTrayIcon.NoIcon, timeout)
+        self.showMessage("Hanlendar", message, QSystemTrayIcon.NoIcon, timeout)
 
     def drawNumber( self, number, numColor=QColor("red") ):
         icon = self.icon()

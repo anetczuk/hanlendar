@@ -54,7 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 def runApp(args):
     ## GUI
     app = QApplication(sys.argv)
-    app.setApplicationName("ToDoCalendar")
+    app.setApplicationName("Hanlendar")
     app.setOrganizationName("arnet")
     ### app.setOrganizationDomain("www.my-org.com")
 
@@ -80,7 +80,7 @@ def runApp(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='ToDoCalendar')
+    parser = argparse.ArgumentParser(description='Hanlendar')
     parser.add_argument('--minimized', action='store_const', const=True, default=False, help='Start minimized' )
     parser.add_argument('--profile', action='store_const', const=True, default=False, help='Profile the code' )
     parser.add_argument('--pfile', action='store', default=None, help='Profile the code and output data to file' )

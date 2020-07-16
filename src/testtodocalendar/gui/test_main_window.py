@@ -35,7 +35,7 @@ from todocalendar.gui.main_window import MainWindow as TestWidget
 
 
 app = QApplication(sys.argv)
-app.setApplicationName("ToDoCalendar")
+app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
 
 
@@ -53,5 +53,5 @@ class MainWindowTest(unittest.TestCase):
 
     def test_getDataPath(self):
         dataPath = self.widget.getDataPath()
-        self.assertTrue( "ToDoCalendar-data" in dataPath )
+        self.assertTrue( "Hanlendar-data" in dataPath )
 

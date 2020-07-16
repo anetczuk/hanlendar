@@ -1,6 +1,6 @@
-# ToDo Calendar
+# Hanlendar
 
-Name says everything.
+Handy Calendar -- calendar and todo list in one application.
 
 
 ## Handling custom classes from Qt Designer

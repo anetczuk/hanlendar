@@ -129,7 +129,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 app = QApplication(sys.argv)
-app.setApplicationName("ToDoCalendar")
+app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 

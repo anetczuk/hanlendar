@@ -6,14 +6,14 @@ SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 
 
 ## add udev rule
-AUTOSTART_FILE=~/.config/autostart/ToDoCalendar.desktop
+AUTOSTART_FILE=~/.config/autostart/hanlendar.desktop
 
 
 cat > $AUTOSTART_FILE << EOL
 [Desktop Entry]
-Name=ToDo Calendar
-GenericName=ToDo Calendar
-Comment=Calendar and ToDo list in one application.
+Name=Hanlendar
+GenericName=Hanlendar
+Comment=Calendar and todo list in one application.
 Type=Application
 Categories=Office;
 Exec=$SCRIPT_DIR/startcalendar --minimized

@@ -63,7 +63,7 @@ class DataHighlightModel( NavCalendarHighlightModel ):
 class MainWindow( QtBaseClass ):           # type: ignore
 
     logger: logging.Logger = None
-    toolTip = "ToDo Calendar"
+    toolTip = "Hanlendar"
 
     def __init__(self):
         super().__init__()

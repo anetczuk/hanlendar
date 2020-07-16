@@ -115,11 +115,15 @@ class TaskDialog( QtBaseClass ):           # type: ignore
     def _startChanged(self, newValue):
         self.task.startDate = newValue.toPyDateTime()
         self.task.startDate = self.task.startDate.replace( second=0 )
+        if self.task.startDate > self.task.dueDate:
+            self.ui.dueDateTime.setDateTime( self.task.startDate )
         self.ui.recurrentWidget.refreshWidget()
 
     def _dueChanged(self, newValue):
         self.task.dueDate = newValue.toPyDateTime()
         self.task.dueDate = self.task.dueDate.replace( second=0 )
+        if self.task.dueDate < self.task.startDate:
+            self.ui.startDateTime.setDateTime( self.task.dueDate )
         self.ui.recurrentWidget.refreshWidget()
 
     def _openLocalFile(self):
