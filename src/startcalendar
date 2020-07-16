@@ -13,7 +13,7 @@ cd $SCRIPT_DIR
 echo "starting the app"
 
 exit_code=0
-python3 -m todocalendar "$@" && exit_code=$? || exit_code=$?
+python3 -m hanlendar "$@" && exit_code=$? || exit_code=$?
 
 if [ $exit_code -ne 0 ]; then
     echo "abnormal application exit: $exit_code"

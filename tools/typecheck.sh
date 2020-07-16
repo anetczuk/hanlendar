@@ -13,4 +13,4 @@ CACHE_DIR=$SCRIPT_DIR/../tmp/.mypy_cache
 cd $SCRIPT_DIR/../src
 
 
-mypy --cache-dir $CACHE_DIR --no-strict-optional --ignore-missing-imports -p todocalendar -p testtodocalendar
+mypy --cache-dir $CACHE_DIR --no-strict-optional --ignore-missing-imports -p hanlendar -p testhanlendar
