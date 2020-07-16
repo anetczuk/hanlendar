@@ -28,7 +28,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
 from PyQt5.QtWidgets import QMenu
 
-from hanlendar.domainmodel.maanger import Manager
+from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.todo import ToDo
 
 
