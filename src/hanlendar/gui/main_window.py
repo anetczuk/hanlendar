@@ -57,7 +57,7 @@ class DataHighlightModel( NavCalendarHighlightModel ):
 
     def isHighlighted(self, date: QDate):
         entryDate = date.toPyDate()
-        return self.manager.hasEntries( entryDate )
+        return self.manager.hasTaskOccurrences( entryDate )
 
 
 class MainWindow( QtBaseClass ):           # type: ignore

@@ -123,7 +123,7 @@ class Recurrent():
             return None
         return nextDate
 
-    def hasEntryExact( self, referenceDate: date, entryDate: date ):
+    def hasTaskOccurrenceExact( self, referenceDate: date, entryDate: date ):
         if self.endDate is not None and self.endDate < entryDate:
             return False
 
@@ -139,7 +139,7 @@ class Recurrent():
             return True
         return False
 
-    def hasEntryInMonth( self, referenceDate: date, monthDate: date ):
+    def hasTaskOccurrenceInMonth( self, referenceDate: date, monthDate: date ):
         if self.endDate is not None and self.endDate < monthDate:
             return False
 

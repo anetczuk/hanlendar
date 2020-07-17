@@ -235,7 +235,7 @@ class Task( persist.Versionable ):
             return ret
         return [0, 1]
 
-    def hasEntryExact( self, entryDate: date ):
+    def hasTaskOccurrenceExact( self, entryDate: date ):
         refDate = self.getReferenceDateTime()
         if refDate is None:
             return False
@@ -246,9 +246,9 @@ class Task( persist.Versionable ):
         if self._recurrence is None:
             return False
 
-        return self.recurrence.hasEntryExact( currDate, entryDate )
+        return self.recurrence.hasTaskOccurrenceExact( currDate, entryDate )
 
-    def hasEntryInMonth( self, month: date ):
+    def hasTaskOccurrenceInMonth( self, month: date ):
         refDate = self.getReferenceDateTime()
         if refDate is None:
             return False
@@ -257,14 +257,14 @@ class Task( persist.Versionable ):
             return True
         if self._recurrence is None:
             return False
-        return self._recurrence.hasEntryInMonth( currDate, month )
+        return self._recurrence.hasTaskOccurrenceInMonth( currDate, month )
 
-    def getEntryForDate(self, entryDate: date):
+    def getTaskOccurrenceForDate(self, entryDate: date):
         dateRange: DateRange = self.getDateRangeNormalized()
         if dateRange is None:
             return None
         if entryDate in dateRange:
-            return Entry( self )
+            return TaskOccurrence( self )
         if self.recurrence is None:
             return None
 
@@ -279,7 +279,7 @@ class Task( persist.Versionable ):
             return None
         dateRange += recurrentOffset * multiplicator
         if entryDate in dateRange:
-            return Entry( self, multiplicator )
+            return TaskOccurrence( self, multiplicator )
         return False
 
     def addReminder( self, reminder=None ):
@@ -385,12 +385,17 @@ class Task( persist.Versionable ):
         return ( task.dueDate, task.startDate )
 
 
-class Entry:
+class TaskOccurrence:
+    """Occurrences of task.
+
+    Regular task has only one occurrence.
+    Recurrent tasks has many occurrences.
+    """
 
     def __init__(self, task, offset=0):
-        self.task                 = task
-        self.offset               = offset
-        self.dateRange: DateRange = self.getRange()
+        self.task                  = task
+        self.offset                = offset
+        self._dateRange: DateRange = None           ## cache
 
     def isValid(self):
         if self.task is None:
@@ -402,16 +407,23 @@ class Entry:
     def getTitle(self):
         return self.task.title
 
-    def getRange(self):
+    @property
+    def dateRange(self):
+        if hasattr(self, '_dateRange') and self._dateRange is not None:
+            return self._dateRange
+
         if self.task is None:
-            return [None, None]
+            self.dateRange = [None, None]
+            return self._dateRange
         dateRange: DateRange = self.task.getDateRangeNormalized()
         if dateRange is None:
-            return [None, None]
+            self._dateRange = [None, None]
+            return self._dateRange
         if self.offset != 0:
             recurrenceOffset = self.task.recurrence.getDateOffset()
             dateRange += recurrenceOffset * self.offset
-        return dateRange
+        self._dateRange = dateRange
+        return self._dateRange
 
     @staticmethod
     def sortByDates( entry ):

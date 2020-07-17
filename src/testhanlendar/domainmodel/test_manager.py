@@ -41,18 +41,18 @@ class ManagerTest(unittest.TestCase):
         ## Called after testfunction was executed
         pass
 
-    def test_hasEntries_empty(self):
+    def test_hasTaskOccurrences_empty(self):
         manager = Manager()
         taskDate = datetime.date( 2020, 5, 17 )
-        self.assertEqual( manager.hasEntries(taskDate), False )
+        self.assertEqual( manager.hasTaskOccurrences(taskDate), False )
 
-    def test_hasEntries_entries(self):
+    def test_hasTaskOccurrences_entries(self):
         manager = Manager()
         taskDate = datetime.date( 2020, 5, 17 )
         manager.addNewTask( taskDate, "xxx" )
-        self.assertEqual( manager.hasEntries(taskDate), True )
+        self.assertEqual( manager.hasTaskOccurrences(taskDate), True )
 
-    def test_hasEntries_recurrent(self):
+    def test_hasTaskOccurrences_recurrent(self):
         manager = Manager()
         taskDate = datetime.date( 2020, 5, 17 )
         task = manager.addNewTask( taskDate, "xxx" )
@@ -60,9 +60,9 @@ class ManagerTest(unittest.TestCase):
         task.recurrence.setDaily()
 
         recurrentDate = taskDate + timedelta(days=5)
-        self.assertEqual( manager.hasEntries(recurrentDate), True )
+        self.assertEqual( manager.hasTaskOccurrences(recurrentDate), True )
 
-#     def test_getEntries_entries(self):
+#     def test_getTaskOccurrences_entries(self):
 #         manager = Manager()
 #
 #         taskDate1 = datetime.date( 2020, 5, 17 )
@@ -72,11 +72,11 @@ class ManagerTest(unittest.TestCase):
 #         eventDate1 = datetime.date( 2020, 5, 19 )
 #         manager.addNewTask( eventDate1, "event1" )
 #
-#         entries = manager.getEntries(taskDate2)
+#         entries = manager.getTaskOccurrences(taskDate2)
 #         self.assertEqual( len(entries), 1 )
 #         self.assertEqual( entries[0].title, "task2" )
 #
-#         entries = manager.getEntries(eventDate1)
+#         entries = manager.getTaskOccurrences(eventDate1)
 #         self.assertEqual( len(entries), 1 )
 #         self.assertEqual( entries[0].title, "event1" )
 

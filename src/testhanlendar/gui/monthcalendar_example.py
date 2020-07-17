@@ -99,7 +99,7 @@ recurrentTask.title = "Recurrent task 2"
 recurrentTask.dueDate = refDate.replace( day=1, hour=22 )
 recurrentTask.recurrence = Recurrent()
 recurrentTask.recurrence.setWeekly()
-# recurrentTask.recurrence.endDate = recurrentTask.getReferenceDateTime().date() + timedelta( days=8 )
+recurrentTask.setCompleted()                ## mark first occurrence completed
 
 calendar = MonthCalendar()
 calendar.showCompletedTasks()

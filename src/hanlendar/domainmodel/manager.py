@@ -91,9 +91,9 @@ class Manager():
         storedZipFile = dataDir + "/data.zip"
         persist.backupFiles( objFiles, storedZipFile )
 
-    def hasEntries( self, entriesDate: date ):
+    def hasTaskOccurrences( self, entriesDate: date ):
         for task in self.tasks:
-            if task.hasEntryExact( entriesDate ):
+            if task.hasTaskOccurrenceExact( entriesDate ):
                 return True
         return False
 
@@ -103,17 +103,17 @@ class Manager():
     def getTasksForDate( self, taskDate: date ):
         retList = list()
         for task in self.tasks:
-            if task.hasEntryExact( taskDate ):
+            if task.hasTaskOccurrenceExact( taskDate ):
                 retList.append( task )
         return retList
 
-    def getEntriesForDate(self, taskDate: date, includeCompleted=True):
+    def getTaskOccurrencesForDate(self, taskDate: date, includeCompleted=True):
         retList = list()
-        for entry in self.tasks:
+        for task in self.tasks:
             if includeCompleted is False:
-                if entry.isCompleted():
+                if task.isCompleted():
                     continue
-            entry = entry.getEntryForDate( taskDate )
+            entry = task.getTaskOccurrenceForDate( taskDate )
             if entry is not None:
                 retList.append( entry )
         return retList

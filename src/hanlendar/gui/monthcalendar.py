@@ -33,7 +33,7 @@ from dateutil.relativedelta import relativedelta
 
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
 
-from hanlendar.domainmodel.task import Entry, Task
+from hanlendar.domainmodel.task import Task, TaskOccurrence
 
 
 class MonthCalendar( QCalendarWidget ):

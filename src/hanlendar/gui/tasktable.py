@@ -126,7 +126,7 @@ class TaskTable( QTableWidget ):
 
             fgColor = getTaskForegroundColor( task )
             bgColor = None
-            if task.hasEntryInMonth( nowDate ):
+            if task.hasTaskOccurrenceInMonth( nowDate ):
                 bgColor = QColor( "beige" )
 #                 bgColor = QColor( "#deffde" )
 #                 bgColor = QColor( "#bfffbf" )
