@@ -79,9 +79,12 @@ class DataObject( QObject ):
             return
         self.addTask( taskDialog.task )
 
-    def addTask(self, task: Task ):
+    def addTask(self, task: Task = None ) -> Task:
+        if task is None:
+            task = Task()
         self.domainModel.addTask( task )
         self.taskChanged.emit( task )
+        return task
 
     def editTask(self, task: Task ):
         if task is None:

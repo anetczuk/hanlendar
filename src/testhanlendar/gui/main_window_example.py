@@ -55,43 +55,41 @@ if __name__ != '__main__':
 def prepareExampleData( window: MainWindow ):
     dataManager = window.getManager()
     taskDate = datetime.today() - timedelta( seconds=5 )
-    task1 = dataManager.addNewTaskDateTime( taskDate, "test task 1" )
+    task1 = dataManager.addNewTaskDateTime( datetime.today() + timedelta( days=1 ), "task 1" )
+    task1.completed = 50
     task1.description = "<a href=\"http://www.google.com\">xxx</a> <br> <a href=\"file:///media/E/bluetooth.txt\">yyy</a> <br> <a href=\"file:///media/E/Pani1.jpg\">zzz</a>"
 
-    dataManager.addNewDeadlineDateTime( taskDate, "test deadline 1" )
-
-    if taskDate.day > 15:
-        taskDate = taskDate - timedelta(2)
-    else:
-        taskDate = taskDate + timedelta(2)
-
-    dataManager.addNewTaskDateTime( taskDate, "test task 2" )
-    dataManager.addNewTaskDateTime( taskDate, "test task 3" )
-    dataManager.addNewTaskDateTime( taskDate, "test task 4" )
-
-    completedTask = dataManager.addNewTaskDateTime( taskDate, "test completed task" )
+    completedTask = dataManager.addNewTaskDateTime( taskDate + timedelta( days=7 ), "completed task" )
     completedTask.setCompleted()
 
     ## add far task
     dataManager.addNewTaskDateTime( datetime.today() + timedelta( days=360 ), "far task" )
 
-    recurrentTask = dataManager.addNewTaskDateTime( taskDate.replace( day=20, hour=12 ), "recurrent task with end" )
+    recurrentTask = dataManager.addNewTaskDateTime( taskDate.replace( day=20, hour=12 ), "recurrent task 1" )
     recurrentTask.recurrence = Recurrent()
     recurrentTask.recurrence.setDaily()
     recurrentTask.recurrence.endDate = recurrentTask.getReferenceDateTime().date() + timedelta( days=2 )
+    reminder = recurrentTask.addReminder()
+    reminder.setDays( 1 )
+
+    task2 = dataManager.addNewTaskDateTime( recurrentTask.startDate.replace( hour=11 ), "task 2" )
+    task2.dueDate = task2.dueDate.replace( hour=20 )
+
+    completedTask = dataManager.addNewTaskDateTime( task2.startDate - timedelta(hours=3), "completed task 2" )
+    completedTask.setCompleted()
 
     recurrentDate2 = datetime.today().replace( day=15 ) + timedelta( days=30 )
-    recurrentTask2 = dataManager.addNewTaskDateTime( recurrentDate2, "test recurrent task 2" )
+    recurrentTask2 = dataManager.addNewTaskDateTime( recurrentDate2, "recurrent task 2" )
     recurrentTask2.setDeadline()
     recurrentTask2.recurrence = Recurrent()
     recurrentTask2.recurrence.setMonthly()
 
     deadlineDate = datetime.today() + timedelta( seconds=10 )
-    deadlineTaks = dataManager.addNewDeadlineDateTime( deadlineDate, "test deadline 2" )
+    deadlineTaks = dataManager.addNewDeadlineDateTime( deadlineDate, "expired task 1" )
     reminder = deadlineTaks.addReminder()
     reminder.setMillis( 5000 )
 
-    remindedTask = dataManager.addNewTaskDateTime( taskDate, "reminded task 1" )
+    remindedTask = dataManager.addNewTaskDateTime( datetime.today() + timedelta( hours=2 ), "reminded task 1" )
     reminder = remindedTask.addReminder()
     reminder.setDays( 30 )
 
@@ -117,6 +115,13 @@ def prepareExampleData( window: MainWindow ):
     todo2.description = "a description"
     todo2.priority = 1
     todo2.completed = 0
+
+    todoCompleted = dataManager.addNewToDo("completed ToDo 1")
+    todoCompleted.description = "a description"
+    todoCompleted.priority = 1
+    todoCompleted.completed = 100
+
+    dataManager.addNote("note 2", "note content")
 
     window.refreshView()
 

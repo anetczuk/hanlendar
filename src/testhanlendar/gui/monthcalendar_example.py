@@ -27,6 +27,8 @@
 import sys
 import os
 
+from datetime import datetime, date, timedelta
+
 
 #### append local library
 sys.path.append(os.path.abspath( os.path.join(os.path.dirname(__file__), "../..") ))
@@ -36,8 +38,9 @@ from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.tododialog import ToDoDialog
 from hanlendar.gui.monthcalendar import MonthCalendar
+from hanlendar.gui.dataobject import DataObject
 
-from hanlendar.domainmodel.todo import ToDo
+from hanlendar.domainmodel.recurrent import Recurrent
 
 
 ## ============================= main section ===================================
@@ -52,15 +55,55 @@ app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
-# todo = ToDo()
-# todo.title = "ToDo title"
-# todo.description = "Description"
-# todo.completed = 50
-# todo.priority = 5
-
 setup_interrupt_handling()
 
+dataObject = DataObject( None )
+
+todayDate = datetime.today().replace( hour=6 )
+task1 = dataObject.addTask()
+task1.title = "Task 1"
+task1.startDate = todayDate + timedelta( hours=5 )
+task1.dueDate   = task1.startDate + timedelta( hours=5 )
+
+refDate = todayDate + timedelta( days=1 )
+task1 = dataObject.addTask()
+task1.title = "Task 2"
+task1.startDate = refDate + timedelta( hours=5 )
+task1.dueDate   = task1.startDate + timedelta( hours=5 )
+
+task1 = dataObject.addTask()
+task1.title = "Task 3"
+task1.startDate = refDate + timedelta( hours=8 )
+task1.dueDate   = task1.startDate + timedelta( hours=5 )
+
+task1 = dataObject.addTask()
+task1.title = "Expired task 1"
+task1.startDate = refDate - timedelta( days=2 )
+task1.dueDate   = task1.startDate + timedelta( hours=5 )
+
+task1 = dataObject.addTask()
+task1.title = "Completed task 1"
+task1.startDate = refDate - timedelta( days=2 )
+task1.dueDate   = task1.startDate + timedelta( hours=5 )
+task1.setCompleted()
+
+recurrentTask = dataObject.addTask()
+recurrentTask.title = "Recurrent task 1"
+recurrentTask.dueDate = refDate.replace( day=20 ) + timedelta( hours=2 )
+recurrentTask.recurrence = Recurrent()
+recurrentTask.recurrence.setDaily()
+recurrentTask.recurrence.endDate = recurrentTask.getReferenceDateTime().date() + timedelta( days=3 )
+
+recurrentTask = dataObject.addTask()
+recurrentTask.title = "Recurrent task 2"
+recurrentTask.dueDate = refDate.replace( day=1, hour=22 )
+recurrentTask.recurrence = Recurrent()
+recurrentTask.recurrence.setWeekly()
+# recurrentTask.recurrence.endDate = recurrentTask.getReferenceDateTime().date() + timedelta( days=8 )
+
 calendar = MonthCalendar()
+calendar.showCompletedTasks()
+calendar.connectData( dataObject )
 calendar.resize( 1024, 768 )
 calendar.show()
 # dialogCode = dialog.exec_()

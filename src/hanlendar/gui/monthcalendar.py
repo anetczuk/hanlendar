@@ -82,7 +82,7 @@ class MonthCalendar( QCalendarWidget ):
         self.taskContextMenu.connectData( dataObject )
         self.editTask.connect( dataObject.editTask )
 
-    def showCompletedTasks(self, show):
+    def showCompletedTasks(self, show=True):
         self.showCompleted = show
         self.updateCells()
 

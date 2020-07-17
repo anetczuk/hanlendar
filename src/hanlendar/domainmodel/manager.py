@@ -297,6 +297,9 @@ class Manager():
     def setNotes(self, notesDict):
         self.notes = notesDict
 
+    def addNote(self, title, content):
+        self.notes[title] = content
+
     def importXfceNotes(self):
         newNotes = {}
 

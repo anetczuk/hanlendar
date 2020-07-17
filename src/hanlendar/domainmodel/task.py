@@ -130,6 +130,7 @@ class Task( persist.Versionable ):
 
     @startDate.setter
     def startDate(self, value):
+        value = ensureDateTime( value )
         self._startDate = value
         if self._recurrence is not None:
             self._recurrentStartDate = self._startDate
@@ -142,6 +143,7 @@ class Task( persist.Versionable ):
 
     @dueDate.setter
     def dueDate(self, value):
+        value = ensureDateTime( value )
         self._dueDate = value
         if self._recurrence is not None:
             self._recurrentDueDate = self._dueDate
@@ -417,7 +419,7 @@ class Entry:
 
 
 def calcTimeSpan(entryDate: date, start: datetime, end: datetime):
-    startFactor = 0
+    startFactor = 0.0
     if start is not None:
         date = start.date()
         if entryDate < date:
@@ -426,8 +428,8 @@ def calcTimeSpan(entryDate: date, start: datetime, end: datetime):
             midnight = datetime.combine( entryDate, datetime.min.time() )
             startDiff = start - midnight
             daySecs = timedelta( days=1 ).total_seconds()
-            startFactor = int( startDiff.total_seconds() / timedelta( days=1 ).total_seconds() )
-    dueFactor = 1
+            startFactor = startDiff.total_seconds() / timedelta( days=1 ).total_seconds()
+    dueFactor = 1.0
     if end is not None:
         date = end.date()
         if entryDate > date:
@@ -436,6 +438,17 @@ def calcTimeSpan(entryDate: date, start: datetime, end: datetime):
             midnight = datetime.combine( entryDate, datetime.min.time() )
             startDiff = end - midnight
             daySecs = timedelta( days=1 ).total_seconds()
-            dueFactor = int( startDiff.total_seconds() / daySecs )
+            dueFactor = startDiff.total_seconds() / daySecs
     ret = [startFactor, dueFactor]
     return ret
+
+
+def ensureDateTime( value ):
+    if value is None:
+        return value
+    if isinstance( value, datetime):
+        return value
+    if isinstance( value, date):
+        value = datetime.combine( value, datetime.min.time() )
+    _LOGGER.warn( "unknown type: %s", value )
+    return None

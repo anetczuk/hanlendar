@@ -77,6 +77,10 @@ class Recurrent():
         self.mode = RepeatType.DAILY
         self.every = every
 
+    def setWeekly(self, every=1):
+        self.mode = RepeatType.WEEKLY
+        self.every = every
+
     def setMonthly(self, every=1):
         self.mode = RepeatType.MONTHLY
         self.every = every
