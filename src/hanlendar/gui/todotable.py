@@ -27,6 +27,9 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
 from PyQt5.QtWidgets import QMenu
+from PyQt5.QtGui import QColor, QBrush
+
+from hanlendar.gui.tasktable import getCompletedColor
 
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.todo import ToDo
@@ -114,16 +117,20 @@ class ToDoTable( QTableWidget ):
         for i in range(0, todosSize):
             todo: ToDo = todosList[i]
 
+            fgColor = getToDoForegroundColor( todo )
             titleItem = QTableWidgetItem( todo.title )
             titleItem.setData( Qt.UserRole, todo )
+            titleItem.setForeground( fgColor )
             self.setItem( i, 0, titleItem )
 
             priorityItem = QTableWidgetItem( str(todo.priority) )
             priorityItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
+            priorityItem.setForeground( fgColor )
             self.setItem( i, 1, priorityItem )
 
             completedItem = QTableWidgetItem( str(todo.completed) )
             completedItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
+            completedItem.setForeground( fgColor )
             self.setItem( i, 2, completedItem )
 
         self.setSortingEnabled( True )
@@ -222,3 +229,11 @@ class ToDoTable( QTableWidget ):
             manager.setToDoPriorityDecline( sourceToDo, newPriority )
         self.data.todoChanged.emit( sourceToDo )
         self.updateView()
+
+
+def getToDoForegroundColor( todo: ToDo ) -> QBrush:
+    if todo.isCompleted():
+        ## completed -- green
+        return QBrush( getCompletedColor() )
+    ## normal
+    return QBrush( QColor(0, 0, 0) )

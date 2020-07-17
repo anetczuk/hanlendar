@@ -211,7 +211,7 @@ class TaskTable( QTableWidget ):
 def getTaskForegroundColor( task: Task ) -> QBrush:
     if task.isCompleted():
         ## completed -- green
-        return QBrush( QColor(0, 160, 0) )
+        return QBrush( getCompletedColor() )
     if task.isTimedout():
         ## timed out
         return QBrush( getTimeoutColor() )
@@ -226,6 +226,10 @@ def getTaskForegroundColor( task: Task ) -> QBrush:
             return QBrush( QColor( 180, 180, 180 ) )
     ## normal
     return QBrush( QColor(0, 0, 0) )
+
+
+def getCompletedColor() -> QColor:
+    return QColor(0, 160, 0)        ## green
 
 
 def getTimeoutColor() -> QColor:
