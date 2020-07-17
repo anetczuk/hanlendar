@@ -1,9 +1,62 @@
 # Hanlendar
 
-Handy Calendar -- calendar and todo list in one application.
+Handy Calendar -- calendar and todo list in one application allowing to organize date related tasks, priority todos and simple notes.
+
+Main motivation to create the app was lack of satisfactory yet simple application combining all author's needs.
+
+Application is inspired by:
+- KOrganizer
+- Evolution
 
 
-## Handling custom classes from Qt Designer
+## Features
+
+- adding tasks
+    - start, due date
+    - reminders
+    - recurrence: daily, weekly, monthly, yearly
+- adding todos
+- adding notes
+- month and day view
+- system tray icon with tasks indicator
+- importing data from *Xfce Notes* application
+
+
+## Screens
+
+[![Tasks list](doc/app-tasks-small.png "Tasks list")](doc/app-tasks-big.png)
+[![Day view](doc/app-day-small.png "Day view")](doc/app-day-big.png)
+[![Month view](doc/app-month-small.png "Month view")](doc/app-month-big.png)
+[![ToDos list](doc/app-todos-small.png "ToDos list")](doc/app-todos-big.png)
+[![Notes](doc/app-notes-small.png "Notes")](doc/app-notes-big.png)
+
+
+## Running application
+
+To run application try one of:
+- run `src/startcalendar`
+- run `src/hanlendar/main.py` 
+- execute `cd src; python3 -m hanlendar`
+
+In addition application can be added to system menu and autostart by followings scripts:
+- `src/configure_menu.sh`
+- `src/configure_autostart.sh`
+
+
+## Development
+
+Application requires *PyQt5* library.
+
+Application can be run in profiler mode passing *--profile* as command line parameter. 
+
+To run tests execute `src/runtests.py`. It can be run with code profiling  and code coverage options.
+
+In addition there is demo application. It can be run by `testhanlendar/gui/main_window_example.py`.
+
+Static code analysis can be executed by script `tools/checkall.sh`.
+
+
+### Handling custom classes from Qt Designer
 
 It is possible to promote widgets to custom classes from within Qt Designer. Steps:
 1. from context menu choose *Promote to ...*
@@ -11,3 +64,18 @@ It is possible to promote widgets to custom classes from within Qt Designer. Ste
 3. put *Promoted class name*, e.g. `NavCalendar`
 3. in *Header file* put full path to module, e.g. `hanlendar.gui.navcalendar`
 
+
+### Examples of not obvious Python mechanisms
+
+- painting on empty QWidget (*daylistwidget.py*)
+- painting on QCalendarWidget cells (*monthcalendar.py*)
+- dragging and dropping within QTableWidget (*todostable.py*) 
+- loading of UI files and inheriting from it
+- properly killing (Ctrl+C) PyQt (*sigint.py*)
+- persisting classes (*persist.py*)
+
+
+## References:
+
+- https://kde.org/applications/en/office/org.kde.korganizer
+- https://en.wikipedia.org/wiki/GNOME_Evolution
