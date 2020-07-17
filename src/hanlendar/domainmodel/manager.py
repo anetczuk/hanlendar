@@ -51,18 +51,25 @@ class Manager():
 
     def store( self, outputDir ):
         outputFile = outputDir + "/version.obj"
-        persist.storeObject( self._class_version, outputFile )
+
+        changed = False
+        if persist.storeObject( self._class_version, outputFile ) is True:
+            changed = True
 
         outputFile = outputDir + "/tasks.obj"
-        persist.storeObject( self.tasks, outputFile )
+        if persist.storeObject( self.tasks, outputFile ) is True:
+            changed = True
 
         outputFile = outputDir + "/todos.obj"
-        persist.storeObject( self.todos, outputFile )
+        if persist.storeObject( self.todos, outputFile ) is True:
+            changed = True
 
         outputFile = outputDir + "/notes.obj"
-        persist.storeObject( self.notes, outputFile )
+        if persist.storeObject( self.notes, outputFile ) is True:
+            changed = True
 
         self.backupData( outputDir )
+        return changed
 
     def load( self, inputDir ):
         inputFile = inputDir + "/version.obj"

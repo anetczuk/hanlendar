@@ -136,8 +136,10 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.refreshView()
 
     def saveData(self):
-        self._saveData()
-        self.setStatusMessage( "Data saved", [ "Data saved +", "Data saved =" ], 6000 )
+        if self._saveData():
+            self.setStatusMessage( "Data saved", [ "Data saved +", "Data saved =" ], 6000 )
+        else:
+            self.setStatusMessage( "Nothing to save", [ "Nothing to save +", "Nothing to save =" ], 6000 )
 
     def _saveData(self):
         ## having separate slot allows to monkey patch / mock "_saveData()" method
@@ -145,7 +147,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         dataPath = self.getDataPath()
         notes = self.ui.notesWidget.getNotes()
         self.data.getManager().setNotes( notes )
-        self.data.store( dataPath )
+        return self.data.store( dataPath )
 
     def getDataPath(self):
         settings = self.getSettings()

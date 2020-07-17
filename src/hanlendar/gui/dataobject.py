@@ -59,7 +59,7 @@ class DataObject( QObject ):
         self.domainModel.load( inputDir )
 
     def store( self, inputDir ):
-        self.domainModel.store( inputDir )
+        return self.domainModel.store( inputDir )
 
     def getTaskOccurrences(self, taskDate: date, includeCompleted=True):
         return self.domainModel.getTaskOccurrencesForDate( taskDate, includeCompleted )

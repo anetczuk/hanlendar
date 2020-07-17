@@ -71,17 +71,18 @@ def storeObject( inputObject, outputFile ):
         ## output file does not exist -- rename file
         _LOGGER.info( "saving data to: %s", outputFile )
         os.rename( tmpFile, outputFile )
-        return
+        return True
 
     if filecmp.cmp( tmpFile, outputFile ) is True:
         ## the same files -- remove tmp file
         _LOGGER.info("no new data to store in %s", outputFile)
         os.remove( tmpFile )
-        return
+        return False
 
     _LOGGER.info( "saving data to: %s", outputFile )
     os.remove( outputFile )
     os.rename( tmpFile, outputFile )
+    return True
 
 
 def backupFiles( inputFiles, outputArchive ):
