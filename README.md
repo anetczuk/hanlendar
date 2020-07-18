@@ -31,6 +31,13 @@ Application is inspired by:
 [![Notes](doc/app-notes-small.png "Notes")](doc/app-notes-big.png)
 
 
+## Disclaimer
+
+Entered into application data is stored on disk drive in binary format without any 
+encryption, thus cannot be treated as safe. Take it into account and consider the risk 
+when entering sensitive or confidential data into the application.
+
+
 ## Running application
 
 To run application try one of:
@@ -72,7 +79,7 @@ It is possible to promote widgets to custom classes from within Qt Designer. Ste
 - dragging and dropping within QTableWidget (*todostable.py*) 
 - loading of UI files and inheriting from it
 - properly killing (Ctrl+C) PyQt (*sigint.py*)
-- persisting classes (*persist.py*)
+- persisting and versioning classes (*persist.py*)
 
 
 ## References:
