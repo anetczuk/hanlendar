@@ -30,9 +30,9 @@ import math
 
 from .reminder import Reminder, Notification
 
-from hanlendar.domainmodel.recurrent import RepeatType
 from hanlendar import persist
 from hanlendar.domainmodel import recurrent
+from hanlendar.domainmodel.recurrent import RepeatType, Recurrent
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,6 +75,9 @@ class DateRange():
         if self.start is None:
             self.start = self.end
 
+    def __str__(self):
+        return "[s:%s e:%s]" % ( self.start, self.end )
+
 
 class Task( persist.Versionable ):
     """Task is entity that lasts over time."""
@@ -89,7 +92,7 @@ class Task( persist.Versionable ):
         self._startDate: datetime           = None
         self._dueDate: datetime             = None
         self.reminderList: List[Reminder]   = None
-        self._recurrence                    = None
+        self._recurrence: Recurrent         = None
         self._recurrentStartDate: datetime  = None
         self._recurrentDueDate: datetime    = None
 
@@ -149,7 +152,7 @@ class Task( persist.Versionable ):
             self._recurrentDueDate = self._dueDate
 
     @property
-    def recurrence(self):
+    def recurrence(self) -> Recurrent:
         return self._recurrence
 
     @recurrence.setter
@@ -280,7 +283,7 @@ class Task( persist.Versionable ):
         dateRange += recurrentOffset * multiplicator
         if entryDate in dateRange:
             return TaskOccurrence( self, multiplicator )
-        return False
+        return None
 
     def addReminder( self, reminder=None ):
         if self.reminderList is None:
@@ -404,8 +407,18 @@ class TaskOccurrence:
             return False
         return True
 
-    def getTitle(self):
+    @property
+    def title(self):
         return self.task.title
+
+    def isCompleted(self):
+        return self.task.isCompleted()
+
+    def isTimedout(self):
+        return self.task.isTimedout()
+
+    def isReminded(self):
+        return self.task.isReminded()
 
     @property
     def dateRange(self):
