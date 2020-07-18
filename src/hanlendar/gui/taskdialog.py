@@ -122,7 +122,7 @@ class TaskDialog( QtBaseClass ):           # type: ignore
     def _dueChanged(self, newValue):
         self.task.dueDate = newValue.toPyDateTime()
         self.task.dueDate = self.task.dueDate.replace( second=0 )
-        if self.task.dueDate < self.task.startDate:
+        if self.task.startDate is not None and self.task.dueDate < self.task.startDate:
             self.ui.startDateTime.setDateTime( self.task.dueDate )
         self.ui.recurrentWidget.refreshWidget()
 
