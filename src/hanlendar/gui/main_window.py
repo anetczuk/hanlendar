@@ -57,7 +57,14 @@ class DataHighlightModel( NavCalendarHighlightModel ):
 
     def isHighlighted(self, date: QDate):
         entryDate = date.toPyDate()
-        return self.manager.hasTaskOccurrences( entryDate )
+        occurrencesList = self.manager.getTaskOccurrencesForDate( entryDate, False )
+        return ( len(occurrencesList) > 0 )
+
+    def isOccupied(self, date: QDate):
+        entryDate = date.toPyDate()
+        occurrencesList = self.manager.getTaskOccurrencesForDate( entryDate, True )
+        occurrencesList = [ task for task in occurrencesList if task.isCompleted() ]
+        return ( len(occurrencesList) > 0 )
 
 
 class MainWindow( QtBaseClass ):           # type: ignore

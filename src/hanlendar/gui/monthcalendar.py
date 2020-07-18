@@ -30,6 +30,7 @@ from PyQt5.QtWidgets import QTableView, QHeaderView
 import abc
 import datetime
 from dateutil.relativedelta import relativedelta
+from typing import List, Tuple
 
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
 
@@ -94,22 +95,21 @@ class MonthCalendar( QCalendarWidget ):
         self.setMaximumDate( maxDate )
         super().setCurrentPage( year, month )
 
-    def getTasks(self, date: QDate):
+    def getTasks(self, date: QDate) -> List[TaskOccurrence]:
         pyDate = date.toPyDate()
-        tasksList = self.data.getManager().getTasksForDate( pyDate )
-        if self.showCompleted is False:
-            tasksList = [ task for task in tasksList if not task.isCompleted() ]
-        tasksList.sort( key=Task.sortByDates )
+        tasksList = self.data.getManager().getTaskOccurrencesForDate( pyDate, self.showCompleted )
+        tasksList.sort( key=TaskOccurrence.sortByDates )
         return tasksList
 
-    def getTask(self, taskIndex):
+    def getTask(self, taskIndex) -> Task:
         if taskIndex < 0:
             return None
         date = self.selectedDate()
         tasksList = self.getTasks(date)
         if taskIndex >= len(tasksList):
             return None
-        return tasksList[ taskIndex ]
+        taskOccurrence = tasksList[ taskIndex ]
+        return taskOccurrence.task
 
     def paintCell(self, painter, rect, date: QDate):
         self.dateToCellRect[date] = rect
@@ -134,7 +134,7 @@ class MonthCalendar( QCalendarWidget ):
             itemsCapacity = int( rect.height() / self.cellItemHeight )
             entriesSize = min( entriesSize, itemsCapacity )
             for index in range(0, entriesSize):
-                item: Task = tasksList[index]
+                item: TaskOccurrence = tasksList[index]
                 selectedTask = selectedDay and (self.currentTaskIndex == index)
                 bgColor = getTaskBackgroundColor( item, selectedTask )
                 self.drawItem( painter, rect, index, item.title, bgColor )
@@ -207,10 +207,11 @@ class MonthCalendar( QCalendarWidget ):
     def dateDoubleClicked(self, date):
         taskIndex = self.clickedTaskIndex( date )
         task = taskIndex[1]
-        if task is not None:
-            self.editTask.emit( task )
+        if task is None:
+            return
+        self.editTask.emit( task )
 
-    def clickedTaskIndex(self, date):
+    def clickedTaskIndex(self, date) -> Tuple[int, Task]:
         tasksList = self.getTasks(date)
         if len(tasksList) < 1:
             return ( -1, None )
@@ -220,7 +221,8 @@ class MonthCalendar( QCalendarWidget ):
             return ( -1, None )
         if taskIndex >= len(tasksList):
             return ( -1, None )
-        return ( taskIndex, tasksList[taskIndex] )
+        taskOccurrence = tasksList[taskIndex]
+        return ( taskIndex, taskOccurrence.task )
 
     def clickedItemRow(self, date):
         globalPos = QCursor.pos()
@@ -243,7 +245,7 @@ class MonthCalendar( QCalendarWidget ):
             self.taskUnselected.emit()
 
 
-def getTaskBackgroundColor( task: Task, isSelected=False ) -> QColor:
+def getTaskBackgroundColor( task: TaskOccurrence, isSelected=False ) -> QColor:
     bgColor = getTaskBgColor( task )
     if isSelected:
         red   = min( 255, bgColor.red()   + 40 )
@@ -253,7 +255,7 @@ def getTaskBackgroundColor( task: Task, isSelected=False ) -> QColor:
     return bgColor
 
 
-def getTaskBgColor( task: Task ) -> QColor:
+def getTaskBgColor( task: TaskOccurrence ) -> QColor:
     if task.isCompleted():
         ## completed -- gray
         return QColor( 160, 160, 160 )

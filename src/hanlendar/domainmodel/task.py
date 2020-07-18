@@ -75,8 +75,112 @@ class DateRange():
         if self.start is None:
             self.start = self.end
 
+    def isInMonth( self, monthDate: date ):
+        currDate = self.start
+        if currDate is None:
+            currDate = self.end
+        if currDate.year == monthDate.year and currDate.month == monthDate.month:
+            return True
+        return False
+
     def __str__(self):
         return "[s:%s e:%s]" % ( self.start, self.end )
+
+
+## ========================================================================
+
+
+class TaskOccurrence:
+    """Occurrences of task.
+
+    Regular task has only one occurrence.
+    Recurrent tasks has many occurrences.
+    """
+
+    def __init__(self, task, offset=0):
+        self.task                  = task
+        self.offset                = offset         ## recurrence offset
+        self._dateRange: DateRange = None           ## cache
+
+    def isValid(self):
+        if self.task is None:
+            return False
+        if self.dateRange is None:
+            return False
+        return True
+
+    @property
+    def title(self):
+        return self.task.title
+
+    @property
+    def priority(self):
+        return self.task.priority
+
+    @property
+    def completed(self):
+        return self.task.completed
+
+    @property
+    def startDate(self):
+        return self.dateRange.start
+
+    @property
+    def dueDate(self):
+        return self.dateRange.end
+
+    def isCompleted(self):
+        if self.offset < self.task._recurrentOffset:
+            return True
+        return self.task.isCompleted()
+
+    def isTimedout(self):
+        currTime = date.today()
+        return currTime > self.dateRange.end
+
+    def isReminded(self):
+        return self.task.isReminded()
+
+    @property
+    def dateRange(self):
+        if hasattr(self, '_dateRange') and self._dateRange is not None:
+            return self._dateRange
+
+        if self.task is None:
+            self.dateRange = [None, None]
+            return self._dateRange
+        dateRange: DateRange = self.task.getDateRangeNormalized()
+        if dateRange is None:
+            self._dateRange = [None, None]
+            return self._dateRange
+        if self.offset != 0:
+            recurrenceOffset = self.task.recurrence.getDateOffset()
+            dateRange += recurrenceOffset * self.offset
+        self._dateRange = dateRange
+        return self._dateRange
+
+    def getFirstDateTime(self):
+        if self.task is None:
+            return None
+        return self.task.getFirstDateTime()
+
+    def isInMonth( self, monthDate: date ):
+        if self.task is None:
+            return False
+        return self.dateRange.isInMonth( monthDate )
+
+    def calculateTimeSpan(self, aDate: date):
+        return self.task.calculateTimeSpan( aDate )
+
+    def __str__(self):
+        return "[t:%s %s off:%s range:%s]" % ( self.task.title, self.task.dueDate, self.offset, self.dateRange )
+
+    @staticmethod
+    def sortByDates( entry ):
+        return ( entry.dateRange[1], entry.dateRange[0] )
+
+
+## ========================================================================
 
 
 class Task( persist.Versionable ):
@@ -114,7 +218,7 @@ class Task( persist.Versionable ):
             self.reminderList: List[Reminder]   = dict_["reminderList"]
             self._recurrence: Recurrent         = dict_["_recurrence"]
             self._recurrentOffset               = 0                       ## set default value
-            
+
             if self._recurrence is not None:
                 dueDate = self._dueDate.date()
                 targetDueDate = dict_["_recurrentDueDate"].date()
@@ -143,6 +247,7 @@ class Task( persist.Versionable ):
             self._completed = value
 
     def isCompleted(self):
+        #TODO: return False in case recurrent task when not passed end date
         return self._completed >= 100
 
     @property
@@ -159,6 +264,9 @@ class Task( persist.Versionable ):
         if self._recurrence is not None:
             self._recurrentOffset = 0
 
+    def initStartDate(self):
+        return self._startDate
+
     @property
     def dueDate(self):
         recurrenceDate = self._getRecurrenceDate( self._dueDate )
@@ -172,6 +280,9 @@ class Task( persist.Versionable ):
         self._dueDate = value
         if self._recurrence is not None:
             self._recurrentOffset = 0
+
+    def initDueDate(self):
+        return self._dueDate
 
     @property
     def recurrence(self) -> Recurrent:
@@ -203,10 +314,10 @@ class Task( persist.Versionable ):
     def getDateRange(self) -> DateRange:
         startDate = None
         endDate   = None
-        if self.startDate is not None:
-            startDate = self.startDate.date()
-        if self.dueDate is not None:
-            endDate = self.dueDate.date()
+        if self._startDate is not None:
+            startDate = self._startDate.date()
+        if self._dueDate is not None:
+            endDate = self._dueDate.date()
         return DateRange(startDate, endDate)
 
     def getDateRangeNormalized(self) -> DateRange:
@@ -215,6 +326,9 @@ class Task( persist.Versionable ):
         if dateRange[1] is None:
             return None
         return dateRange
+
+    def currentOccurrence(self) -> TaskOccurrence:
+        return TaskOccurrence( self, self._recurrentOffset )
 
     def setDefaultDateTime(self, start: datetime ):
         self.startDate = start
@@ -414,61 +528,6 @@ class Task( persist.Versionable ):
     @staticmethod
     def sortByDates( task ):
         return ( task.dueDate, task.startDate )
-
-
-class TaskOccurrence:
-    """Occurrences of task.
-
-    Regular task has only one occurrence.
-    Recurrent tasks has many occurrences.
-    """
-
-    def __init__(self, task, offset=0):
-        self.task                  = task
-        self.offset                = offset
-        self._dateRange: DateRange = None           ## cache
-
-    def isValid(self):
-        if self.task is None:
-            return False
-        if self.dateRange is None:
-            return False
-        return True
-
-    @property
-    def title(self):
-        return self.task.title
-
-    def isCompleted(self):
-        return self.task.isCompleted()
-
-    def isTimedout(self):
-        return self.task.isTimedout()
-
-    def isReminded(self):
-        return self.task.isReminded()
-
-    @property
-    def dateRange(self):
-        if hasattr(self, '_dateRange') and self._dateRange is not None:
-            return self._dateRange
-
-        if self.task is None:
-            self.dateRange = [None, None]
-            return self._dateRange
-        dateRange: DateRange = self.task.getDateRangeNormalized()
-        if dateRange is None:
-            self._dateRange = [None, None]
-            return self._dateRange
-        if self.offset != 0:
-            recurrenceOffset = self.task.recurrence.getDateOffset()
-            dateRange += recurrenceOffset * self.offset
-        self._dateRange = dateRange
-        return self._dateRange
-
-    @staticmethod
-    def sortByDates( entry ):
-        return ( entry.dateRange[1], entry.dateRange[0] )
 
 
 def calcTimeSpan(entryDate: date, start: datetime, end: datetime):

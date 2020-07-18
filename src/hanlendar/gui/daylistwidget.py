@@ -38,7 +38,7 @@ from PyQt5.QtGui import QPainter, QPainterPath, QPen, QColor, QPalette
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
 from hanlendar.gui.monthcalendar import getTaskBackgroundColor
 
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.task import Task, TaskOccurrence
 
 
 # UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
@@ -108,11 +108,11 @@ class DayItem( DrawWidget ):
     selectedItem       = pyqtSignal( DrawWidget )
     itemDoubleClicked  = pyqtSignal( DrawWidget )
 
-    def __init__(self, task: Task, day: date, parentWidget=None):
+    def __init__(self, task: TaskOccurrence, day: date, parentWidget=None):
         super().__init__( parentWidget )
 
-        self.day  = day
-        self.task = task
+        self.day                   = day
+        self.task: TaskOccurrence  = task
 
 #         self.setStyleSheet( "background-color: red" )
 
@@ -202,13 +202,13 @@ class DayListContentWidget( QWidget ):
         widget = self.items[ index ]
         return widget.task
 
-    def setTasks(self, tasksList, day: date ):
+    def setTasks(self, occurrencesList, day: date ):
         self.clear()
 
         if self.showCompleted is False:
-            tasksList = [ task for task in tasksList if not task.isCompleted() ]
+            occurrencesList = [ task for task in occurrencesList if not task.isCompleted() ]
 
-        for task in tasksList:
+        for task in occurrencesList:
             item = DayItem(task, day, self)
             item.selectedItem.connect( self.handleItemSelect )
             item.itemDoubleClicked.connect( self.handleItemDoubleClick )
@@ -333,8 +333,8 @@ class DayListWidget( QWidget ):
         if self.data is None:
             return
         currDate = self.currentDate.toPyDate()
-        tasksList = self.data.getManager().getTasksForDate( currDate )
-        self.setTasks( tasksList, currDate )
+        occurrencesList = self.data.getManager().getTaskOccurrencesForDate( currDate )
+        self.setTasks( occurrencesList, currDate )
         self.update()
 
     def setCurrentDate(self, date: QDate):
@@ -344,8 +344,8 @@ class DayListWidget( QWidget ):
     def getTask(self, index):
         return self.content.getTask( index )
 
-    def setTasks(self, tasksList, day: date ):
-        self.content.setTasks( tasksList, day )
+    def setTasks(self, occurrencesList, day: date ):
+        self.content.setTasks( occurrencesList, day )
 
     def contextMenuEvent( self, event ):
         task: Task = self.content.getCurrentTask()

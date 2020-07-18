@@ -32,7 +32,8 @@ from PyQt5.QtGui import QColor, QBrush
 
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
 
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.task import Task, TaskOccurrence
+from typing import List
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,34 +100,35 @@ class TaskTable( QTableWidget ):
         tasksList = self.data.getManager().getTasks()
         self.setTasks( tasksList )
 
-    def getTask(self, taskIndex):
+    def getTask(self, taskIndex) -> TaskOccurrence:
         if taskIndex < 0:
             return None
         if taskIndex >= self.rowCount():
             return None
         tableItem = self.item( taskIndex, 0 )
-        userData = tableItem.data( Qt.UserRole )
+        userData: TaskOccurrence = tableItem.data( Qt.UserRole )
         return userData
 
-    def setTasks( self, tasksList ):
+    def setTasks( self, tasksList: List[Task] ):
         self.clear()
 
         self.setSortingEnabled( False )     ## workaround to fix disappearing cells content
 
+        occurrencesList = [ task.currentOccurrence() for task in tasksList ]
         if self.showCompleted is False:
-            tasksList = [ task for task in tasksList if not task.isCompleted() ]
+            occurrencesList = [ task for task in occurrencesList if not task.isCompleted() ]
 
-        tasksSize = len( tasksList )
-        self.setRowCount( tasksSize )
+        occurSize = len( occurrencesList )
+        self.setRowCount( occurSize )
 
         nowDate = date.today()
 
-        for i in range(0, tasksSize):
-            task: Task = tasksList[i]
+        for i in range(0, occurSize):
+            task: TaskOccurrence = occurrencesList[i]
 
             fgColor = getTaskForegroundColor( task )
             bgColor = None
-            if task.hasTaskOccurrenceInMonth( nowDate ):
+            if task.isInMonth( nowDate ):
                 bgColor = QColor( "beige" )
 #                 bgColor = QColor( "#deffde" )
 #                 bgColor = QColor( "#bfffbf" )
@@ -183,32 +185,33 @@ class TaskTable( QTableWidget ):
         item = self.itemAt( evPos )
         if item is not None:
             rowIndex = self.row( item )
-            task = self.getTask( rowIndex )
+            task: TaskOccurrence = self.getTask( rowIndex )
         self.taskContextMenu.show( task )
 
     def taskSelectionChanged(self):
         taskIndex = self.currentRow()
-        task = self.getTask( taskIndex )
+        task: TaskOccurrence = self.getTask( taskIndex )
         self.emitSelectedTask( task )
 
     def taskClicked(self, item):
         taskIndex = self.row( item )
-        task = self.getTask( taskIndex )
+        task: TaskOccurrence = self.getTask( taskIndex )
         self.emitSelectedTask( task )
 
     def taskDoubleClicked(self, item):
         rowIndex = self.row( item )
-        task = self.getTask( rowIndex )
-        self.editTask.emit( task )
+        task: TaskOccurrence = self.getTask( rowIndex )
+        self.editTask.emit( task.task )
 
-    def emitSelectedTask( self, task=None ):
+    def emitSelectedTask( self, task: TaskOccurrence=None ):
         if task is not None:
+            task = task.task
             self.selectedTask.emit( task )
         else:
             self.taskUnselected.emit()
 
 
-def getTaskForegroundColor( task: Task ) -> QBrush:
+def getTaskForegroundColor( task: TaskOccurrence ) -> QBrush:
     if task.isCompleted():
         ## completed -- green
         return QBrush( getCompletedColor() )

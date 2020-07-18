@@ -114,7 +114,7 @@ class Recurrent():
             return False
         if currDate > self.endDate:
             return True
-            return False
+        return False
 
     def nextDate(self, currDate: date) -> date:
         if currDate is None:

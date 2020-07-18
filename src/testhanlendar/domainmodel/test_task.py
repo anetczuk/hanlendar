@@ -178,6 +178,26 @@ class TaskTest(unittest.TestCase):
         entry = task.getTaskOccurrenceForDate( taskDate.date() + timedelta( days=9 ) )
         self.assertEqual( entry, None )
 
+    def test_getTaskOccurrencesForDate_recurrent_completed(self):
+        task = Task()
+        todayDate = datetime.datetime.today()
+        dueDate = todayDate.replace( day=8, hour=12 )
+        task.dueDate = dueDate
+        task.recurrence = Recurrent()
+        task.recurrence.setWeekly()
+        task.setCompleted()                ## mark first occurrence completed
+
+        occurrence1 = task.getTaskOccurrenceForDate( dueDate.date() - timedelta( days=7 ) )
+        self.assertEqual( occurrence1, None )
+
+        occurrence2 = task.getTaskOccurrenceForDate( dueDate.date() )
+        self.assertNotEqual( occurrence2, None )
+        self.assertEqual( occurrence2.isCompleted(), True )
+
+        occurrence3 = task.getTaskOccurrenceForDate( dueDate.date() + timedelta( days=7 ) )
+        self.assertNotEqual( occurrence3, None )
+        self.assertEqual( occurrence3.isCompleted(), False )
+
     def test_getNotifications_due(self):
         task = Task()
         task.title = "task 1"

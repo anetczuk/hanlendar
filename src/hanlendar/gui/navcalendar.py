@@ -43,6 +43,10 @@ class NavCalendarHighlightModel():
     def isHighlighted(self, date: QDate ):
         raise NotImplementedError('You need to define this method in derived class!')
 
+    @abc.abstractmethod
+    def isOccupied(self, date: QDate ):
+        raise NotImplementedError('You need to define this method in derived class!')
+
 
 class NavCalendar( QCalendarWidget ):
 
@@ -55,16 +59,23 @@ class NavCalendar( QCalendarWidget ):
 
         self.taskColor = QColor( self.palette().color( QPalette.Highlight) )
         self.taskColor.setAlpha( 64 )
+        self.occupiedColor = QColor( QColor(160, 160, 160) )
+        self.occupiedColor.setAlpha( 64 )
+
         self.highlightModel = None
         self.selectionChanged.connect( self.updateCells )
 
     def paintCell(self, painter, rect, date):
         QCalendarWidget.paintCell(self, painter, rect, date)
 
-        if self.isHighlighted( date ) is False:
+        if self.isHighlighted( date ) is True:
+            painter.fillRect( rect, self.taskColor )
             return
 
-        painter.fillRect( rect, self.taskColor )
+        if self.isOccupied( date ) is True:
+            painter.fillRect( rect, self.occupiedColor )
+            return
+
 
 #         first_day = self.firstDayOfWeek()
 #         current_date = self.selectedDate()
@@ -83,6 +94,11 @@ class NavCalendar( QCalendarWidget ):
         if self.highlightModel is None:
             return False
         return self.highlightModel.isHighlighted( date )
+
+    def isOccupied(self, date):
+        if self.highlightModel is None:
+            return False
+        return self.highlightModel.isOccupied( date )
 
     def contextMenuEvent( self, event ):
         evPos     = event.pos()

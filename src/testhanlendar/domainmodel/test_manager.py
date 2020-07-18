@@ -80,6 +80,19 @@ class ManagerTest(unittest.TestCase):
 #         self.assertEqual( len(entries), 1 )
 #         self.assertEqual( entries[0].title, "event1" )
 
+    def test_getTaskOccurrencesForDate_recurrent_completed(self):
+        manager = Manager()
+        task = manager.addTask()
+        todayDate = datetime.datetime.today()
+        dueDate = todayDate.replace( day=1, hour=12 )
+        task.dueDate = dueDate
+        task.recurrence = Recurrent()
+        task.recurrence.setWeekly()
+        task.setCompleted()                ## mark first occurrence completed
+
+        tasksList = manager.getTaskOccurrencesForDate( dueDate.date() )
+        self.assertEqual( len( tasksList ), 1 )
+
     def test_getTasks(self):
         manager = Manager()
         manager.addNewTask( datetime.date.today(), "task1" )

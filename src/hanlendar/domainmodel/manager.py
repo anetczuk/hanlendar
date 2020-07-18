@@ -117,12 +117,13 @@ class Manager():
     def getTaskOccurrencesForDate(self, taskDate: date, includeCompleted=True):
         retList = list()
         for task in self.tasks:
-            if includeCompleted is False:
-                if task.isCompleted():
-                    continue
             entry = task.getTaskOccurrenceForDate( taskDate )
-            if entry is not None:
-                retList.append( entry )
+            if entry is None:
+                continue
+            if includeCompleted is False:
+                if entry.isCompleted():
+                    continue
+            retList.append( entry )
         return retList
 
     def getNextDeadline(self) -> Task:
@@ -168,8 +169,11 @@ class Manager():
                 retTasks.append( task )
         return retTasks
 
-    def addTask( self, task: Task ):
+    def addTask( self, task: Task = None ):
+        if task is None:
+            task = Task()
         self.tasks.append( task )
+        return task
 
     def addNewTask( self, taskdate: date, title ):
         task = Task()
