@@ -85,6 +85,10 @@ class Recurrent():
         self.mode = RepeatType.MONTHLY
         self.every = every
 
+    def setYearly(self, every=1):
+        self.mode = RepeatType.YEARLY
+        self.every = every
+
     def getDateOffset( self ) -> relativedelta:
         if self.every < 1:
             return None
@@ -102,6 +106,15 @@ class Recurrent():
 
         _LOGGER.warn( "unhandled case" )
         return None
+
+    def isEnd(self, currDate: date) -> bool:
+        if currDate is None:
+            return False
+        if self.endDate is None:
+            return False
+        if currDate > self.endDate:
+            return True
+            return False
 
     def nextDate(self, currDate: date) -> date:
         if currDate is None:
@@ -123,7 +136,7 @@ class Recurrent():
             return None
         return nextDate
 
-    def hasTaskOccurrenceExact( self, referenceDate: date, entryDate: date ):
+    def hasTaskOccurrenceExact( self, referenceDate: date, entryDate: date ) -> bool:
         if self.endDate is not None and self.endDate < entryDate:
             return False
 
@@ -139,7 +152,7 @@ class Recurrent():
             return True
         return False
 
-    def hasTaskOccurrenceInMonth( self, referenceDate: date, monthDate: date ):
+    def hasTaskOccurrenceInMonth( self, referenceDate: date, monthDate: date ) -> bool:
         if self.endDate is not None and self.endDate < monthDate:
             return False
 
@@ -165,6 +178,10 @@ class Recurrent():
 
         return False
 
+    def findRecurrentOffset(self, referenceDate: date, targetDate: date) -> int:
+        offset = self.getDateOffset()
+        return findMultiplication( referenceDate, targetDate, offset )
+
     def __repr__(self):
         return "[m:%s e:%s ed:%s]" % ( self.mode, self.every, self.endDate )
 
@@ -179,11 +196,12 @@ def findMultiplication( startDate: date, endDate: date, offset: relativedelta ) 
 
     ret = int(diffDays / maxDaysOffset)
     mul = int(ret / 2)
+    mul = max( mul, 1 )     ## handle case when 'maxDaysOffset' is greater than 'offset'
 
     startDate += offset * ret
     while( mul > 0 ):
         startDate += offset * mul
-        if startDate < endDate:
+        if startDate <= endDate:
             ret += mul
         else:
             mul = int(mul / 2)

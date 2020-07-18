@@ -82,7 +82,8 @@ class DateRange():
 class Task( persist.Versionable ):
     """Task is entity that lasts over time."""
 
-    _class_version = 0
+    ## 1: _recurrentStartDate and _recurrentDueDate replaced with _recurrentOffset
+    _class_version = 1
 
     def __init__(self, title="" ):
         self.title                          = title
@@ -93,14 +94,33 @@ class Task( persist.Versionable ):
         self._dueDate: datetime             = None
         self.reminderList: List[Reminder]   = None
         self._recurrence: Recurrent         = None
-        self._recurrentStartDate: datetime  = None
-        self._recurrentDueDate: datetime    = None
+        self._recurrentOffset               = 0
 
     def _convertstate_(self, dict_, dictVersion_ ):
         _LOGGER.info( "converting object from version %s to %s", dictVersion_, self._class_version )
+
         if dictVersion_ is None:
             self.__dict__ = dict_
             return
+
+        if dictVersion_ < 1:
+            ## replace _recurrentStartDate and _recurrentDueDate with _recurrentOffset
+            self.title                          = dict_["title"]
+            self.description                    = dict_["description"]
+            self._completed                     = dict_["_completed"]
+            self.priority                       = dict_["priority"]
+            self._startDate: datetime           = dict_["_startDate"]
+            self._dueDate: datetime             = dict_["_dueDate"]
+            self.reminderList: List[Reminder]   = dict_["reminderList"]
+            self._recurrence: Recurrent         = dict_["_recurrence"]
+            self._recurrentOffset               = 0                       ## set default value
+            
+            if self._recurrence is not None:
+                dueDate = self._dueDate.date()
+                targetDueDate = dict_["_recurrentDueDate"].date()
+                self._recurrentOffset = self._recurrence.findRecurrentOffset( dueDate, targetDueDate )
+            return
+
         self.__dict__ = dict_
 
     @property
@@ -127,8 +147,9 @@ class Task( persist.Versionable ):
 
     @property
     def startDate(self):
-        if self._recurrence is not None:
-            return self._recurrentStartDate
+        recurrenceDate = self._getRecurrenceDate( self._startDate )
+        if recurrenceDate is not None:
+            return recurrenceDate
         return self._startDate
 
     @startDate.setter
@@ -136,12 +157,13 @@ class Task( persist.Versionable ):
         value = ensureDateTime( value )
         self._startDate = value
         if self._recurrence is not None:
-            self._recurrentStartDate = self._startDate
+            self._recurrentOffset = 0
 
     @property
     def dueDate(self):
-        if self._recurrence is not None:
-            return self._recurrentDueDate
+        recurrenceDate = self._getRecurrenceDate( self._dueDate )
+        if recurrenceDate is not None:
+            return recurrenceDate
         return self._dueDate
 
     @dueDate.setter
@@ -149,7 +171,7 @@ class Task( persist.Versionable ):
         value = ensureDateTime( value )
         self._dueDate = value
         if self._recurrence is not None:
-            self._recurrentDueDate = self._dueDate
+            self._recurrentOffset = 0
 
     @property
     def recurrence(self) -> Recurrent:
@@ -158,8 +180,7 @@ class Task( persist.Versionable ):
     @recurrence.setter
     def recurrence(self, value):
         if self._recurrence is None and value is not None:
-            self._recurrentStartDate = self._startDate
-            self._recurrentDueDate = self._dueDate
+            self._recurrentOffset = 0
         self._recurrence = value
 
     def getReferenceDateTime(self) -> datetime:
@@ -367,21 +388,28 @@ class Task( persist.Versionable ):
         return dateText
 
     def __str__(self):
-        return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s rsd:%s rdd:%s]" % (
+        return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s ro:%s]" % (
                                         self.title, self.description, self._completed, self.priority,
                                         self.startDate, self.dueDate,
                                         self.reminderList, self._recurrence,
-                                        self._recurrentStartDate, self._recurrentDueDate )
+                                        self._recurrentOffset )
 
     def _progressRecurrence(self) -> bool:
         if self._recurrence is None:
             return False
-        nextDue = self._recurrence.nextDateTime( self._recurrentDueDate )
-        if nextDue is None:
+        nextDueDate = self._getRecurrenceDate( self._dueDate, 1 )
+        if self._recurrence.isEnd( nextDueDate ):
             return False
-        self._recurrentDueDate = nextDue
-        self._recurrentStartDate = self._recurrence.nextDateTime( self._recurrentStartDate )
+        self._recurrentOffset += 1
         return True
+
+    def _getRecurrenceDate(self, aDate: date, offset: int = 0):
+        if aDate is None:
+            return None
+        if self._recurrence is None:
+            return None
+        recurrentDate = aDate + self._recurrence.getDateOffset() * (self._recurrentOffset + offset)
+        return recurrentDate
 
     @staticmethod
     def sortByDates( task ):
