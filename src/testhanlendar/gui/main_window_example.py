@@ -33,6 +33,7 @@ sys.path.append(os.path.abspath( os.path.join(os.path.dirname(__file__), "../.."
 
 
 import logging
+import argparse
 
 import hanlendar.logger as logger
 
@@ -43,13 +44,6 @@ from hanlendar.domainmodel.recurrent import Recurrent
 from hanlendar.domainmodel.reminder import Reminder
 
 from datetime import date, datetime, timedelta
-
-
-## ============================= main section ===================================
-
-
-if __name__ != '__main__':
-    sys.exit(0)
 
 
 def prepareExampleData( window: MainWindow ):
@@ -126,9 +120,25 @@ def prepareExampleData( window: MainWindow ):
     window.refreshView()
 
 
+def save_data_mock():
+    _LOGGER.info("saving data is disabled on example")
+
+
+## ============================= main section ===================================
+
+
+if __name__ != '__main__':
+    sys.exit(0)
+
+
+parser = argparse.ArgumentParser(description='Hanlendar Example')
+parser.add_argument('-lud', '--loadUserData', action='store_const', const=True, default=False, help='Load user data' )
+
+args = parser.parse_args()
+
+
 logFile = logger.getLoggingOutputFile()
 logger.configure( logFile )
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,22 +146,18 @@ _LOGGER = logging.getLogger(__name__)
 app = QApplication(sys.argv)
 app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
-### app.setOrganizationDomain("www.my-org.com")
 
 MainWindow.toolTip = MainWindow.toolTip + " Preview"
 
 window = MainWindow()
-# window.ui.actionSave_data.setEnabled( False )
-window.loadSettings()
-
-
-def save_data_mock():
-    _LOGGER.info("saving data is disabled on example")
-
-
 window._saveData = save_data_mock           # type: ignore
+window.setWindowTitle( window.windowTitle() + " Preview" )
 
-prepareExampleData( window )
+window.loadSettings()
+if args.loadUserData:
+    window.loadData()
+else:
+    prepareExampleData( window )
 
 window.show()
 
