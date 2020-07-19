@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 
 ## works both under bash and sh
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
@@ -31,7 +33,7 @@ if [ $exit_code -ne 0 ]; then
     exit $exit_code
 fi
 
-echo "pep8 -- no warnings found"
+echo "pycodestyle -- no warnings found"
 
 
 ## F401 'PyQt5.QtCore' imported but unused
@@ -46,3 +48,11 @@ if [ $exit_code -ne 0 ]; then
 fi
 
 echo "flake8 -- no warnings found"
+
+
+pylint3 --rcfile=$SCRIPT_DIR/pylint3.config $src_dir/hanlendar $src_dir/testhanlendar $src_dir/*.py
+exit_code=$?
+if [ $exit_code -ne 0 ]; then
+    exit $exit_code
+fi
+echo "pylint3 -- no warnings found"
