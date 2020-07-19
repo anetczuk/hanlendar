@@ -169,8 +169,8 @@ class TaskOccurrence:
         return self.dateRange.isInMonth( monthDate )
 
     def calculateTimeSpan(self, entryDate: date):
-        startDate = self.task.startDate
-        endDate   = self.task.dueDate
+        startDate = self.task.startDateTime
+        endDate   = self.task.dueDateTime
         ret = calc_time_span( entryDate, startDate, endDate )
         if ret is not None:
             return ret
@@ -194,7 +194,7 @@ class TaskOccurrence:
         return [0, 1]
 
     def __str__(self):
-        return "[t:%s %s off:%s range:%s]" % ( self.task.title, self.task.dueDate, self.offset, self.dateRange )
+        return "[t:%s %s off:%s range:%s]" % ( self.task.title, self.task.dueDateTime, self.offset, self.dateRange )
 
     @staticmethod
     def sortByDates( entry ):
@@ -274,31 +274,31 @@ class Task( persist.Versionable ):
         return self._completed >= 100
 
     @property
-    def startDate(self):
+    def startDateTime(self):
         recurrenceDate = self._getRecurrenceDate( self._startDate )
         if recurrenceDate is not None:
             return recurrenceDate
         return self._startDate
 
-    @startDate.setter
-    def startDate(self, value):
+    @startDateTime.setter
+    def startDateTime(self, value):
         value = ensure_date_time( value )
         self._startDate = value
         if self._recurrence is not None:
             self._recurrentOffset = 0
 
-    def initStartDate(self):
+    def initStartDateTime(self):
         return self._startDate
 
     @property
-    def dueDate(self):
+    def dueDateTime(self):
         recurrenceDate = self._getRecurrenceDate( self._dueDate )
         if recurrenceDate is not None:
             return recurrenceDate
         return self._dueDate
 
-    @dueDate.setter
-    def dueDate(self, value):
+    @dueDateTime.setter
+    def dueDateTime(self, value):
         value = ensure_date_time( value )
         self._dueDate = value
         if self._recurrence is not None:
@@ -321,18 +321,24 @@ class Task( persist.Versionable ):
     def recurrentOffset(self):
         return self._recurrentOffset
 
+    def getReferenceInitDateTime(self) -> datetime:
+        if self._startDate is not None:
+            return self._startDate
+        ## deadline case
+        return self._dueDate
+
     def getReferenceDateTime(self) -> datetime:
-        if self.startDate is None:
-            ## deadline case
-            return self.dueDate
-        return self.startDate
+        if self.startDateTime is not None:
+            return self.startDateTime
+        ## deadline case
+        return self.dueDateTime
 
     def getFirstDateTime(self) -> datetime:
-        if self.dueDate is None:
+        if self.dueDateTime is None:
             return None
-        minDate = self.dueDate
-        if self.startDate is not None and self.startDate < minDate:
-            minDate = self.startDate
+        minDate = self.dueDateTime
+        if self.startDateTime is not None and self.startDateTime < minDate:
+            minDate = self.startDateTime
         remindDate = self.getReminderFirstDate()
         if remindDate is not None and remindDate < minDate:
             minDate = remindDate
@@ -358,26 +364,26 @@ class Task( persist.Versionable ):
         return TaskOccurrence( self, self._recurrentOffset )
 
     def setDefaultDateTime(self, start: datetime ):
-        self.startDate = start
-        self.dueDate = self.startDate + timedelta( hours=1 )
+        self.startDateTime = start
+        self.dueDateTime = self.startDateTime + timedelta( hours=1 )
 
     def setDefaultDate(self, startDate: date):
         start = datetime.combine( startDate, time(10, 0, 0) )
         self.setDefaultDateTime( start )
 
     def setDeadline(self):
-        self.startDate = None
+        self.startDateTime = None
 
     def setDeadlineDateTime(self, due: datetime ):
-        self.startDate = None
-        self.dueDate = due
+        self.startDateTime = None
+        self.dueDateTime = due
 
     def setDeadlineDate(self, dueDate: date):
         due = datetime.combine( dueDate, time(10, 0, 0) )
         self.setDeadlineDateTime( due )
 
     def hasTaskOccurrenceInMonth( self, month: date ):
-        refDate = self.getReferenceDateTime()
+        refDate = self.getReferenceInitDateTime()
         if refDate is None:
             return False
         currDate = refDate.date()
@@ -419,7 +425,7 @@ class Task( persist.Versionable ):
         return reminder
 
     def getReminderFirstDate(self) -> datetime:
-        if self.dueDate is None:
+        if self.dueDateTime is None:
             return None
         if self.reminderList is None:
             return None
@@ -433,16 +439,16 @@ class Task( persist.Versionable ):
                 retOffset = currOffset
         if retOffset is None:
             return None
-        return self.dueDate - retOffset
+        return self.dueDateTime - retOffset
 
     def getNotifications(self) -> List[Notification]:
-        if self.dueDate is None:
+        if self.dueDateTime is None:
             return list()
         currTime = datetime.today()
         ret: List[Notification] = list()
-        if self.dueDate > currTime:
+        if self.dueDateTime > currTime:
             notif = Notification()
-            notif.notifyTime = self.dueDate
+            notif.notifyTime = self.dueDateTime
             notif.task = self
             notif.message = "task '%s' reached deadline" % self.title
             ret.append( notif )
@@ -451,7 +457,7 @@ class Task( persist.Versionable ):
             return ret
 
         for reminder in self.reminderList:
-            notifTime = self.dueDate - reminder.getOffset()
+            notifTime = self.dueDateTime - reminder.getOffset()
             if notifTime > currTime:
                 notif = Notification()
                 notif.notifyTime = notifTime
@@ -463,25 +469,25 @@ class Task( persist.Versionable ):
         return ret
 
     def isTimedout(self):
-        if self.dueDate is None:
+        if self.dueDateTime is None:
             return False
         currTime = datetime.today()
-        return currTime > self.dueDate
+        return currTime > self.dueDateTime
 
     def isReminded(self):
-        if self.dueDate is None:
+        if self.dueDateTime is None:
             return False
         if self.reminderList is None:
             return False
 
         currTime = datetime.today()
         for reminder in self.reminderList:
-            notifTime = self.dueDate - reminder.getOffset()
+            notifTime = self.dueDateTime - reminder.getOffset()
             if notifTime < currTime:
                 return True
         return False
 
-    def printRecurrent(self) -> str:
+    def printNextRecurrence(self) -> str:
         if self._recurrence is None:
             return "None"
         refDate = self.getReferenceDateTime()
@@ -494,7 +500,7 @@ class Task( persist.Versionable ):
     def __str__(self):
         return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s ro:%s]" % (
             self.title, self.description, self._completed, self.priority,
-            self.startDate, self.dueDate,
+            self.startDateTime, self.dueDateTime,
             self.reminderList, self._recurrence,
             self._recurrentOffset )
 
@@ -517,7 +523,7 @@ class Task( persist.Versionable ):
 
     @staticmethod
     def sortByDates( task ):
-        return ( task.dueDate, task.startDate )
+        return ( task.dueDateTime, task.startDateTime )
 
 
 def calc_time_span(entryDate: date, start: datetime, end: datetime):

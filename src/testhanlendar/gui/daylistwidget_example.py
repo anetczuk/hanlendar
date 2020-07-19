@@ -77,8 +77,8 @@ task3.title = "Full Day Task"
 task3.description = "Description"
 task3.completed = 0
 task3.priority = 3
-task3.startDate = taskDate         - timedelta( days=2 )
-task3.dueDate   = task3.startDate  + timedelta( days=4 )
+task3.startDateTime = taskDate             - timedelta( days=2 )
+task3.dueDateTime   = task3.startDateTime  + timedelta( days=4 )
 
 setup_interrupt_handling()
 

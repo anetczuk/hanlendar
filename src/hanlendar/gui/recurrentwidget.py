@@ -159,5 +159,5 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
         self._updateNextRepeat()
 
     def _updateNextRepeat(self):
-        repeatText = self.task.printRecurrent()
+        repeatText = self.task.printNextRecurrence()
         self.ui.nextRepeatLabel.setText( repeatText )

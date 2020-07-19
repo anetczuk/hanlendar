@@ -57,8 +57,8 @@ class TaskTest(unittest.TestCase):
 
         task.setCompleted()
         self.assertEqual( task.completed, 0 )
-        self.assertEqual( task.startDate.date(), datetime.date( 2020, 5, 18 ) )
-        self.assertEqual( task.dueDate.date(), datetime.date( 2020, 5, 18 ) )
+        self.assertEqual( task.startDateTime.date(), datetime.date( 2020, 5, 18 ) )
+        self.assertEqual( task.dueDateTime.date(), datetime.date( 2020, 5, 18 ) )
 
     def test_hasTaskOccurrenceInMonth(self):
         taskDate = datetime.date( 2020, 5, 17 )
@@ -83,7 +83,7 @@ class TaskTest(unittest.TestCase):
     def test_getTaskOccurrenceForDate(self):
         taskDate = datetime.datetime( 2020, 5, 17 )
         task = Task()
-        task.dueDate = taskDate
+        task.dueDateTime = taskDate
 
         entry = task.getTaskOccurrenceForDate( taskDate.date() )
         self.assertEqual( entry.task, task )
@@ -92,7 +92,7 @@ class TaskTest(unittest.TestCase):
     def test_getTaskOccurrenceForDate_recurrent(self):
         taskDate = datetime.datetime( 2020, 5, 17 )
         task = Task()
-        task.dueDate = taskDate
+        task.dueDateTime = taskDate
         task.recurrence = Recurrent()
         task.recurrence.setDaily(1)
 
@@ -103,7 +103,7 @@ class TaskTest(unittest.TestCase):
     def test_getTaskOccurrenceForDate_recurrent_far(self):
         taskDate = datetime.datetime( 2020, 5, 17 )
         task = Task()
-        task.dueDate = taskDate
+        task.dueDateTime = taskDate
         task.recurrence = Recurrent()
         task.recurrence.setDaily(1)
 
@@ -114,7 +114,7 @@ class TaskTest(unittest.TestCase):
     def test_getTaskOccurrenceForDate_recurrent_endDate(self):
         taskDate = datetime.datetime( 2020, 5, 17 )
         task = Task()
-        task.dueDate = taskDate
+        task.dueDateTime = taskDate
         task.recurrence = Recurrent()
         task.recurrence.setDaily(1)
         task.recurrence.endDate = taskDate.date() + timedelta( days=5 )
@@ -126,7 +126,7 @@ class TaskTest(unittest.TestCase):
         task = Task()
         todayDate = datetime.datetime.today()
         dueDate = todayDate.replace( day=8, hour=12 )
-        task.dueDate = dueDate
+        task.dueDateTime = dueDate
         task.recurrence = Recurrent()
         task.recurrence.setWeekly()
         task.setCompleted()                ## mark first occurrence completed
@@ -145,7 +145,7 @@ class TaskTest(unittest.TestCase):
     def test_getNotifications_due(self):
         task = Task()
         task.title = "task 1"
-        task.dueDate = datetime.datetime.today() + datetime.timedelta( seconds=10 )
+        task.dueDateTime = datetime.datetime.today() + datetime.timedelta( seconds=10 )
 
         notifications = task.getNotifications()
         self.assertEqual( len(notifications), 1 )
@@ -155,7 +155,7 @@ class TaskTest(unittest.TestCase):
     def test_getNotifications_reminder(self):
         task = Task()
         task.title = "task 1"
-        task.dueDate = datetime.datetime.today() + datetime.timedelta( seconds=30 )
+        task.dueDateTime = datetime.datetime.today() + datetime.timedelta( seconds=30 )
 
         reminder = Reminder()
         reminder.setTime( 0, 10 )
@@ -174,12 +174,12 @@ class TaskTest(unittest.TestCase):
 
     def test_isReminded(self):
         task = Task()
-        task.dueDate = datetime.datetime.today() + datetime.timedelta( seconds=30 )
+        task.dueDateTime = datetime.datetime.today() + datetime.timedelta( seconds=30 )
         self.assertEqual( task.isReminded(), False )
 
     def test_isReminded_reminded(self):
         task = Task()
-        task.dueDate = datetime.datetime.today() + datetime.timedelta( seconds=30 )
+        task.dueDateTime = datetime.datetime.today() + datetime.timedelta( seconds=30 )
 
         reminder = Reminder()
         reminder.setTime( 0, 300 )

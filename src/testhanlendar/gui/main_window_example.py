@@ -68,14 +68,14 @@ def prepare_example_data( dataManager: Manager ):
     recurrentTask = dataManager.addNewTaskDateTime( taskDate.replace( day=20, hour=12 ), "recurrent task 1" )
     recurrentTask.recurrence = Recurrent()
     recurrentTask.recurrence.setDaily()
-    recurrentTask.recurrence.endDate = recurrentTask.getReferenceDateTime().date() + timedelta( days=2 )
+    recurrentTask.recurrence.endDate = recurrentTask.getReferenceInitDateTime().date() + timedelta( days=2 )
     reminder = recurrentTask.addReminder()
     reminder.setDays( 1 )
 
-    task2 = dataManager.addNewTaskDateTime( recurrentTask.startDate.replace( hour=11 ), "task 2" )
-    task2.dueDate = task2.dueDate.replace( hour=20 )
+    task2 = dataManager.addNewTaskDateTime( recurrentTask.startDateTime.replace( hour=11 ), "task 2" )
+    task2.dueDateTime = task2.dueDateTime.replace( hour=20 )
 
-    completedTask = dataManager.addNewTaskDateTime( task2.startDate - timedelta(hours=3), "completed task 2" )
+    completedTask = dataManager.addNewTaskDateTime( task2.startDateTime - timedelta(hours=3), "completed task 2" )
     completedTask.setCompleted()
 
     recurrentDate2 = datetime.today().replace( day=15 ) + timedelta( days=30 )
