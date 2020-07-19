@@ -97,13 +97,13 @@ class TaskOccurrence:
     """
 
     def __init__(self, task, offset=0):
+        if task is None:
+            raise TypeError
         self.task                  = task
         self.offset                = offset         ## recurrence offset
         self._dateRange: DateRange = None           ## cache
 
     def isValid(self):
-        if self.task is None:
-            return False
         if self.dateRange is None:
             return False
         return True
@@ -145,9 +145,6 @@ class TaskOccurrence:
         if hasattr(self, '_dateRange') and self._dateRange is not None:
             return self._dateRange
 
-        if self.task is None:
-            self._dateRange = DateRange()
-            return self._dateRange
         dateRange: DateRange = self.task.getDateRangeNormalized()
         if dateRange is None:
             self._dateRange = DateRange()
@@ -159,13 +156,9 @@ class TaskOccurrence:
         return self._dateRange
 
     def getFirstDateTime(self):
-        if self.task is None:
-            return None
         return self.task.getFirstDateTime()
 
     def isInMonth( self, monthDate: date ):
-        if self.task is None:
-            return False
         return self.dateRange.isInMonth( monthDate )
 
     def calculateTimeSpan(self, entryDate: date):
