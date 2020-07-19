@@ -123,11 +123,11 @@ class Manager():
             task = self.tasks[i]
             if task.isCompleted():
                 continue
-            if task.dueDateTime is None:
+            if task.occurrenceDue is None:
                 continue
             if retTask is None:
                 retTask = task
-            elif task.dueDateTime < retTask.dueDateTime:
+            elif task.occurrenceDue < retTask.occurrenceDue:
                 retTask = task
         return retTask
 

@@ -155,9 +155,9 @@ class TaskTable( QTableWidget ):
             self.setItem( i, 2, completedItem )
 
             startDate = "---"
-            if task.startDate is not None:
+            if task.start is not None:
                 ## no start date -- deadline case
-                startDate = task.startDate.strftime( "%Y-%m-%d %H:%M" )
+                startDate = task.start.strftime( "%Y-%m-%d %H:%M" )
             startItem = QTableWidgetItem( str(startDate) )
             startItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             startItem.setForeground( fgColor )
@@ -166,9 +166,9 @@ class TaskTable( QTableWidget ):
             self.setItem( i, 3, startItem )
 
             dueDate = "---"
-            if task.dueDateTime is not None:
-                dueDate = task.dueDateTime.strftime( "%Y-%m-%d %H:%M" )
-            #dueDate = task.dueDateTime.date()
+            if task.due is not None:
+                dueDate = task.due.strftime( "%Y-%m-%d %H:%M" )
+            #dueDate = task.occurrenceDue.date()
             dueItem = QTableWidgetItem( str(dueDate) )
             dueItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             dueItem.setForeground( fgColor )

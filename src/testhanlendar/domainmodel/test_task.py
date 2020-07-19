@@ -57,8 +57,8 @@ class TaskTest(unittest.TestCase):
 
         task.setCompleted()
         self.assertEqual( task.completed, 0 )
-        self.assertEqual( task.startDateTime.date(), datetime.date( 2020, 5, 18 ) )
-        self.assertEqual( task.dueDateTime.date(), datetime.date( 2020, 5, 18 ) )
+        self.assertEqual( task.occurrenceStart.date(), datetime.date( 2020, 5, 18 ) )
+        self.assertEqual( task.occurrenceDue.date(), datetime.date( 2020, 5, 18 ) )
 
     def test_hasTaskOccurrenceInMonth(self):
         taskDate = datetime.date( 2020, 5, 17 )
