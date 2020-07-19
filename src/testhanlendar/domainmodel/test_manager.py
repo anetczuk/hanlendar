@@ -41,27 +41,6 @@ class ManagerTest(unittest.TestCase):
         ## Called after testfunction was executed
         pass
 
-    def test_hasTaskOccurrences_empty(self):
-        manager = Manager()
-        taskDate = datetime.date( 2020, 5, 17 )
-        self.assertEqual( manager.hasTaskOccurrences(taskDate), False )
-
-    def test_hasTaskOccurrences_entries(self):
-        manager = Manager()
-        taskDate = datetime.date( 2020, 5, 17 )
-        manager.addNewTask( taskDate, "xxx" )
-        self.assertEqual( manager.hasTaskOccurrences(taskDate), True )
-
-    def test_hasTaskOccurrences_recurrent(self):
-        manager = Manager()
-        taskDate = datetime.date( 2020, 5, 17 )
-        task = manager.addNewTask( taskDate, "xxx" )
-        task.recurrence = Recurrent()
-        task.recurrence.setDaily()
-
-        recurrentDate = taskDate + timedelta(days=5)
-        self.assertEqual( manager.hasTaskOccurrences(recurrentDate), True )
-
 #     def test_getTaskOccurrences_entries(self):
 #         manager = Manager()
 #

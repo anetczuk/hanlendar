@@ -96,7 +96,7 @@ class MonthCalendar( QCalendarWidget ):
 
     def getTasks(self, date: QDate) -> List[TaskOccurrence]:
         pyDate = date.toPyDate()
-        tasksList = self.data.getManager().getTaskOccurrencesForDate( pyDate, self.showCompleted )
+        tasksList = self.data.getTaskOccurrences( pyDate, self.showCompleted )
         tasksList.sort( key=TaskOccurrence.sortByDates )
         return tasksList
 

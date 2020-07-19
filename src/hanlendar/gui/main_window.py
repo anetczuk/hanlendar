@@ -30,6 +30,7 @@ from PyQt5.QtWidgets import QDialog, QMessageBox
 from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.todo import ToDo
+from hanlendar.domainmodel.manager import import_xfce_notes
 
 from . import uiloader
 from . import resources
@@ -257,7 +258,10 @@ class MainWindow( QtBaseClass ):           # type: ignore
         retButton = QMessageBox.question( self, "Import Notes",
                                           "Do you want to import Xfce Notes (previous notes will be lost)?")
         if retButton == QMessageBox.Yes:
-            self.data.getManager().importXfceNotes()
+            newNotes = import_xfce_notes()
+            if newNotes:
+                # not empty
+                self.data.getManager().setNotes( newNotes )
             self.updateNotesView()
 
     ## ====================================================================

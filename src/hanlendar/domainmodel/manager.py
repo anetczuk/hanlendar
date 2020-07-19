@@ -97,21 +97,10 @@ class Manager():
         if self.notes is None:
             self.notes = { "notes": "" }
 
-    def hasTaskOccurrences( self, entriesDate: date ):
-        for task in self.tasks:
-            if task.hasTaskOccurrenceExact( entriesDate ):
-                return True
-        return False
+    ## ======================================================================
 
     def getTasks( self ):
         return list( self.tasks )       ## shallow copy of list
-
-    def getTasksForDate( self, taskDate: date ):
-        retList = list()
-        for task in self.tasks:
-            if task.hasTaskOccurrenceExact( taskDate ):
-                retList.append( task )
-        return retList
 
     def getTaskOccurrencesForDate(self, taskDate: date, includeCompleted=True):
         retList = list()
@@ -193,12 +182,6 @@ class Manager():
 
     def replaceTask( self, oldTask: Task, newTask: Task ):
         replace_in_list( self.tasks, oldTask, newTask )
-
-    def addNewDeadline( self, eventdate: date, title ):
-        event = Task()
-        event.title = title
-        event.setDeadlineDate( eventdate )
-        self.addTask( event )
 
     def addNewDeadlineDateTime( self, eventdate: datetime, title ):
         eventTask = Task()
@@ -310,26 +293,6 @@ class Manager():
     def addNote(self, title, content):
         self.notes[title] = content
 
-    def importXfceNotes(self):
-        newNotes = {}
-
-        notesDir = os.path.expanduser( "~/.local/share/notes" )
-        for groupName in os.listdir( notesDir ):
-            groupDir = notesDir + "/" + groupName
-            for noteName in os.listdir( groupDir ):
-                notePath = groupDir + "/" + noteName
-                with open( notePath, 'r') as file:
-                    data = file.read()
-                    if noteName in newNotes:
-                        ## the same note name in different groups -- append notes
-                        newNotes[ noteName ] = newNotes[ noteName ] + "\n" + data
-                    else:
-                        newNotes[ noteName ] = data
-
-        if newNotes:
-            # not empty
-            self.notes = newNotes
-
     def printTasks(self):
         retStr = ""
         tSize = len(self.tasks)
@@ -345,3 +308,22 @@ def replace_in_list( aList, oldObject, newObject ):
         if entry == oldObject:
             aList[i] = newObject
             break
+
+
+def import_xfce_notes():
+    newNotes = {}
+
+    notesDir = os.path.expanduser( "~/.local/share/notes" )
+    for groupName in os.listdir( notesDir ):
+        groupDir = notesDir + "/" + groupName
+        for noteName in os.listdir( groupDir ):
+            notePath = groupDir + "/" + noteName
+            with open( notePath, 'r') as file:
+                data = file.read()
+                if noteName in newNotes:
+                    ## the same note name in different groups -- append notes
+                    newNotes[ noteName ] = newNotes[ noteName ] + "\n" + data
+                else:
+                    newNotes[ noteName ] = data
+
+    return newNotes

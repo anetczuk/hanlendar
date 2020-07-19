@@ -168,8 +168,30 @@ class TaskOccurrence:
             return False
         return self.dateRange.isInMonth( monthDate )
 
-    def calculateTimeSpan(self, aDate: date):
-        return self.task.calculateTimeSpan( aDate )
+    def calculateTimeSpan(self, entryDate: date):
+        startDate = self.task.startDate
+        endDate   = self.task.dueDate
+        ret = calc_time_span( entryDate, startDate, endDate )
+        if ret is not None:
+            return ret
+
+        recurrence = self.task.recurrence
+        if recurrence is None:
+            return [0, 1]
+        recurrentOffset: relativedelta = recurrence.getDateOffset()
+        if recurrentOffset is None:
+            return [0, 1]
+
+        multiplicator = recurrent.find_multiplication_after( endDate.date(), entryDate, recurrentOffset )
+        if multiplicator < 0:
+            return [0, 1]
+        endDate += recurrentOffset * multiplicator
+        if startDate is not None:
+            startDate += recurrentOffset * multiplicator
+        ret = calc_time_span( entryDate, startDate, endDate )
+        if ret is not None:
+            return ret
+        return [0, 1]
 
     def __str__(self):
         return "[t:%s %s off:%s range:%s]" % ( self.task.title, self.task.dueDate, self.offset, self.dateRange )
@@ -353,43 +375,6 @@ class Task( persist.Versionable ):
     def setDeadlineDate(self, dueDate: date):
         due = datetime.combine( dueDate, time(10, 0, 0) )
         self.setDeadlineDateTime( due )
-
-    def calculateTimeSpan(self, entryDate: date):
-        ret = calc_time_span( entryDate, self.startDate, self.dueDate )
-        if ret is not None:
-            return ret
-
-        if self.recurrence is None:
-            return [0, 1]
-        recurrentOffset: relativedelta = self.recurrence.getDateOffset()
-        if recurrentOffset is None:
-            return [0, 1]
-
-        endDate = self.dueDate
-        multiplicator = recurrent.find_multiplication_after( endDate.date(), entryDate, recurrentOffset )
-        if multiplicator < 0:
-            return [0, 1]
-        endDate += recurrentOffset * multiplicator
-        startDate = self.startDate
-        if startDate is not None:
-            startDate += recurrentOffset * multiplicator
-        ret = calc_time_span( entryDate, startDate, endDate )
-        if ret is not None:
-            return ret
-        return [0, 1]
-
-    def hasTaskOccurrenceExact( self, entryDate: date ):
-        refDate = self.getReferenceDateTime()
-        if refDate is None:
-            return False
-        currDate = refDate.date()
-        if currDate == entryDate:
-            return True
-
-        if self._recurrence is None:
-            return False
-
-        return self.recurrence.hasTaskOccurrenceExact( currDate, entryDate )
 
     def hasTaskOccurrenceInMonth( self, month: date ):
         refDate = self.getReferenceDateTime()

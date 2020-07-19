@@ -56,7 +56,7 @@ app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
-taskDate = datetime.today()
+taskDate = datetime.today().replace( hour=12 )
 
 task1 = Task()
 task1.title = "Task 1"

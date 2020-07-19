@@ -60,62 +60,6 @@ class TaskTest(unittest.TestCase):
         self.assertEqual( task.startDate.date(), datetime.date( 2020, 5, 18 ) )
         self.assertEqual( task.dueDate.date(), datetime.date( 2020, 5, 18 ) )
 
-    def test_hasTaskOccurrenceExact_None(self):
-        task = Task()
-        task.title = "xxx"
-        taskDate = datetime.date( 2020, 5, 17 )
-        self.assertEqual( task.hasTaskOccurrenceExact(taskDate), False )
-
-    def test_hasTaskOccurrenceExact_entries(self):
-        taskDate = datetime.date( 2020, 5, 17 )
-        task = Task()
-        task.title = "xxx"
-        task.setDefaultDate( taskDate )
-        self.assertEqual( task.hasTaskOccurrenceExact(taskDate), True )
-
-    def test_hasTaskOccurrenceExact_recurrent(self):
-        taskDate = datetime.date( 2020, 5, 17 )
-        task = Task()
-        task.title = "xxx"
-        task.setDefaultDate( taskDate )
-        task.recurrence = Recurrent()
-        task.recurrence.setDaily()
-
-        recurrentDate = taskDate + timedelta(days=5)
-        self.assertEqual( task.hasTaskOccurrenceExact(recurrentDate), True )
-
-    def test_hasTaskOccurrenceExact_recurrent_far(self):
-        taskDate = datetime.date( 2020, 5, 17 )
-        task = Task()
-        task.title = "xxx"
-        task.setDefaultDate( taskDate )
-        task.recurrence = Recurrent()
-        task.recurrence.setDaily()
-
-        recurrentDate = taskDate + timedelta( days=3333 * 366 )
-        self.assertEqual( task.hasTaskOccurrenceExact(recurrentDate), True )
-
-    def test_hasTaskOccurrenceExact_recurrent_endDate(self):
-        taskDate = datetime.date( 2020, 5, 17 )
-        task = Task()
-        task.title = "xxx"
-        task.setDefaultDate( taskDate )
-        task.recurrence = Recurrent()
-        task.recurrence.setDaily()
-        task.recurrence.endDate = taskDate + timedelta( days=2 )
-
-        recurrentDate = taskDate
-        self.assertEqual( task.hasTaskOccurrenceExact(recurrentDate), True )
-
-        recurrentDate = taskDate + timedelta( days=1 )
-        self.assertEqual( task.hasTaskOccurrenceExact(recurrentDate), True )
-
-        recurrentDate = taskDate + timedelta( days=2 )
-        self.assertEqual( task.hasTaskOccurrenceExact(recurrentDate), True )
-
-        recurrentDate = taskDate + timedelta( days=5 )
-        self.assertEqual( task.hasTaskOccurrenceExact(recurrentDate), False )
-
     def test_hasTaskOccurrenceInMonth(self):
         taskDate = datetime.date( 2020, 5, 17 )
         task = Task()
@@ -178,7 +122,7 @@ class TaskTest(unittest.TestCase):
         entry = task.getTaskOccurrenceForDate( taskDate.date() + timedelta( days=9 ) )
         self.assertEqual( entry, None )
 
-    def test_getTaskOccurrencesForDate_recurrent_completed(self):
+    def test_getTaskOccurrenceForDate_recurrent_completed(self):
         task = Task()
         todayDate = datetime.datetime.today()
         dueDate = todayDate.replace( day=8, hour=12 )

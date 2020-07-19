@@ -337,8 +337,8 @@ class DayListWidget( QWidget ):
         if self.data is None:
             return
         currDate = self.currentDate.toPyDate()
-        occurrencesList = self.data.getManager().getTaskOccurrencesForDate( currDate )
-        self.setTasks( occurrencesList, currDate )
+        occurrencesList = self.data.getTaskOccurrences( currDate )
+        self.setTasksOccurrences( occurrencesList, currDate )
         self.update()
 
     def setCurrentDate(self, currDate: QDate):
@@ -348,7 +348,11 @@ class DayListWidget( QWidget ):
     def getTask(self, index):
         return self.content.getTask( index )
 
-    def setTasks(self, occurrencesList, day: date ):
+    def setTasksOccurrences(self, occurrencesList, day: date ):
+        self.content.setTasks( occurrencesList, day )
+
+    def setTasks(self, tasksList, day: date ):
+        occurrencesList = [ task.currentOccurrence() for task in tasksList ]
         self.content.setTasks( occurrencesList, day )
 
     def contextMenuEvent( self, _ ):

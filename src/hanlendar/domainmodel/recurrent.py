@@ -116,16 +116,6 @@ class Recurrent():
             return True
         return False
 
-    def nextDate(self, currDate: date) -> date:
-        if currDate is None:
-            return None
-        nextDate = currDate + self.getDateOffset()
-        if self.endDate is None:
-            return nextDate
-        if nextDate > self.endDate:
-            return None
-        return nextDate
-
     def nextDateTime(self, currDate: datetime) -> datetime:
         if currDate is None:
             return None
@@ -135,22 +125,6 @@ class Recurrent():
         if nextDate.date() > self.endDate:
             return None
         return nextDate
-
-    def hasTaskOccurrenceExact( self, referenceDate: date, entryDate: date ) -> bool:
-        if self.endDate is not None and self.endDate < entryDate:
-            return False
-
-        recurrentOffset: relativedelta = self.getDateOffset()
-        if recurrentOffset is None:
-            return False
-
-        multiplicator = find_multiplication_after( referenceDate, entryDate, recurrentOffset )
-        if multiplicator < 0:
-            return False
-        referenceDate += recurrentOffset * multiplicator
-        if entryDate == referenceDate:
-            return True
-        return False
 
     def hasTaskOccurrenceInMonth( self, referenceDate: date, monthDate: date ) -> bool:
         if self.endDate is not None and self.endDate < monthDate:
