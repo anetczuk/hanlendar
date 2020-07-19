@@ -198,7 +198,7 @@ class TaskOccurrence:
         return self.task.isCompleted()
 
     def isTimedout(self):
-        currTime = date.today()
+        currTime = datetime.today()
         return currTime > self.dateRange.end
 
     def isReminded(self):
