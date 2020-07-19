@@ -37,13 +37,13 @@ except ImportError:
 import hanlendar.defs as defs
 
 
-def generateUIFileNameFromClassName(classFileName):
+def generate_ui_file_name(classFileName):
     baseName = os.path.basename(classFileName)
     nameTuple = os.path.splitext(baseName)
     return nameTuple[0] + ".ui"
 
 
-def loadUi(uiFilename):
+def load_ui(uiFilename):
     try:
         ui_path = os.path.join( defs.ROOT_DIR, "ui", uiFilename )
         return uic.loadUiType( ui_path )
@@ -52,7 +52,6 @@ def loadUi(uiFilename):
         raise
 
 
-def loadUiFromClassName(uiFilename):
-    ui_file = generateUIFileNameFromClassName(uiFilename)
-    return loadUi( ui_file )
-
+def load_ui_from_class_name(uiFilename):
+    ui_file = generate_ui_file_name(uiFilename)
+    return load_ui( ui_file )

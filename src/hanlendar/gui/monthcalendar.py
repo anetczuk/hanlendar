@@ -21,16 +21,15 @@
 # SOFTWARE.
 #
 
+import datetime
+from typing import List, Tuple
+from dateutil.relativedelta import relativedelta
+
 from PyQt5.QtWidgets import QCalendarWidget
 
-from PyQt5.QtCore import Qt, QDate, QEvent, pyqtSignal, QPoint
+from PyQt5.QtCore import Qt, QDate, pyqtSignal
 from PyQt5.QtGui import QColor, QPalette, QPainterPath, QPen, QCursor
 from PyQt5.QtWidgets import QTableView, QHeaderView
-
-import abc
-import datetime
-from dateutil.relativedelta import relativedelta
-from typing import List, Tuple
 
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
 
@@ -136,7 +135,7 @@ class MonthCalendar( QCalendarWidget ):
             for index in range(0, entriesSize):
                 item: TaskOccurrence = tasksList[index]
                 selectedTask = selectedDay and (self.currentTaskIndex == index)
-                bgColor = getTaskBackgroundColor( item, selectedTask )
+                bgColor = get_task_bgcolor( item, selectedTask )
                 self.drawItem( painter, rect, index, item.title, bgColor )
 
         painter.restore()
@@ -155,7 +154,9 @@ class MonthCalendar( QCalendarWidget ):
         pen = painter.pen()
         pen.setColor( QColor("black") )
         painter.setPen(pen)
-        painter.drawText( rect.x() + 6, rect.y() + itemOffset, rect.width() - 12, 16, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignLeft, text )
+        painter.drawText( rect.x() + 6, rect.y() + itemOffset, rect.width() - 12, 16,
+                          Qt.TextSingleLine | Qt.AlignTop | Qt.AlignLeft,
+                          text )
 
 #     def dateFromCell( self, cellIndex ):
 #         dayIndex = (cellIndex.row() - 1) * 7 + (cellIndex.column())
@@ -178,7 +179,7 @@ class MonthCalendar( QCalendarWidget ):
 #             days += 7                       # there is always one row
 #         return days
 
-    def contextMenuEvent( self, event ):
+    def contextMenuEvent( self, _ ):
         globalPos = QCursor.pos()
         pos = self.mapFromGlobal( globalPos )
         contextDate = self.findDateByPos( pos )
@@ -245,8 +246,8 @@ class MonthCalendar( QCalendarWidget ):
             self.taskUnselected.emit()
 
 
-def getTaskBackgroundColor( task: TaskOccurrence, isSelected=False ) -> QColor:
-    bgColor = getTaskBgColor( task )
+def get_task_bgcolor( task: TaskOccurrence, isSelected=False ) -> QColor:
+    bgColor = get_task_base_bgcolor( task )
     if isSelected:
         red   = min( 255, bgColor.red()   + 40 )
         green = min( 255, bgColor.green() + 40 )
@@ -255,7 +256,7 @@ def getTaskBackgroundColor( task: TaskOccurrence, isSelected=False ) -> QColor:
     return bgColor
 
 
-def getTaskBgColor( task: TaskOccurrence ) -> QColor:
+def get_task_base_bgcolor( task: TaskOccurrence ) -> QColor:
     if task.isCompleted():
         ## completed -- gray
         return QColor( 160, 160, 160 )

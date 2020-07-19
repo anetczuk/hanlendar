@@ -48,7 +48,7 @@ class RenamingUnpickler(pickle.Unpickler):
         return super().find_class(module, name)
 
 
-def loadObject( inputFile, codeVersion, defaultValue=None ):
+def load_object( inputFile, codeVersion, defaultValue=None ):
     try:
         _LOGGER.info( "loading data from: %s", inputFile )
         with open( inputFile, 'rb') as fp:
@@ -62,7 +62,7 @@ def loadObject( inputFile, codeVersion, defaultValue=None ):
         raise
 
 
-def storeObject( inputObject, outputFile ):
+def store_object( inputObject, outputFile ):
     tmpFile = outputFile + "_tmp"
     with open(tmpFile, 'wb') as fp:
         pickle.dump( inputObject, fp )
@@ -85,7 +85,7 @@ def storeObject( inputObject, outputFile ):
     return True
 
 
-def backupFiles( inputFiles, outputArchive ):
+def backup_files( inputFiles, outputArchive ):
     ## create zip
     tmpZipFile = outputArchive + "_tmp"
     zipf = zipfile.ZipFile( tmpZipFile, 'w', zipfile.ZIP_STORED )
@@ -131,11 +131,14 @@ class Versionable( metaclass=abc.ABCMeta ):
     def __getstate__(self):
         if not hasattr(self, "_class_version"):
             raise Exception("Your class must define _class_version class variable")
+        # pylint: disable=E1101
         return dict(_class_version=self._class_version, **self.__dict__)
 
     def __setstate__(self, dict_):
         version_present_in_pickle = dict_.pop("_class_version", None)
+        # pylint: disable=E1101
         if version_present_in_pickle == self._class_version:
+            # pylint: disable=W0201
             self.__dict__ = dict_
         else:
             self._convertstate_( dict_, version_present_in_pickle )

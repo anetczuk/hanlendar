@@ -24,13 +24,17 @@
 #
 
 
+try:
+    ## following import success only when file is directly executed from command line
+    ## otherwise will throw exception when executing as parameter for "python -m"
+    # pylint: disable=W0611
+    import __init__
+except ImportError as error:
+    ## when import fails then it means that the script was executed indirectly
+    ## in this case __init__ is already loaded
+    pass
+
 import sys
-import os
-
-
-#### append local library
-sys.path.append(os.path.abspath( os.path.join(os.path.dirname(__file__), "../..") ))
-
 
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling

@@ -25,13 +25,6 @@
 
 
 import sys
-import os
-# import signal
-# from time import sleep
-
-#### append local library
-script_dir = os.path.dirname(__file__)
-sys.path.append(os.path.abspath( os.path.join(script_dir, "..") ))
 
 import time
 import argparse
@@ -51,7 +44,7 @@ logger.configure()
 _LOGGER = logging.getLogger(__name__)
 
 
-def runApp(args):
+def run_app(args):
     ## GUI
     app = QApplication(sys.argv)
     app.setApplicationName("Hanlendar")
@@ -87,8 +80,8 @@ def main():
 
     args = parser.parse_args()
 
-    _LOGGER.debug("Starting the application")
-    _LOGGER.debug("Logger log file: %s" % logger.log_file)
+    _LOGGER.debug( "Starting the application" )
+    _LOGGER.debug( "Logger log file: %s", logger.log_file )
 
     starttime = time.time()
     profiler = None
@@ -103,7 +96,7 @@ def main():
             profiler = cProfile.Profile()
             profiler.enable()
 
-        exitCode = runApp(args)
+        exitCode = run_app(args)
 
     # except BluetoothError as e:
     #     print "Error: ", e, " check if BT is powered on"
@@ -121,9 +114,9 @@ def main():
                 _LOGGER.info( "Generating profiler data" )
                 profiler.print_stats(1)
             else:
-                _LOGGER.info( "Storing profiler data to", profiler_outfile )
+                _LOGGER.info( "Storing profiler data to %s", profiler_outfile )
                 profiler.dump_stats( profiler_outfile )
-                _LOGGER.info( "pyprof2calltree -k -i", profiler_outfile )
+                _LOGGER.info( "pyprof2calltree -k -i: %s", profiler_outfile )
 
         timeDiff = (time.time() - starttime) * 1000.0
         _LOGGER.info( "Calculation time: {:13.8f}ms".format(timeDiff) )

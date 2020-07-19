@@ -21,9 +21,11 @@
 # SOFTWARE.
 #
 
+import abc
+import datetime
+
 from PyQt5.QtWidgets import QCalendarWidget
 
-from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QDate
 from PyQt5.QtGui import QColor
 from PyQt5.QtGui import QPalette
@@ -31,13 +33,8 @@ from PyQt5.QtWidgets import QTableView
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QMenu
 
-import abc
-import datetime
-
 
 class NavCalendarHighlightModel():
-    def __init__( self ):
-        pass
 
     @abc.abstractmethod
     def isHighlighted(self, date: QDate ):
@@ -137,4 +134,3 @@ class NavCalendar( QCalendarWidget ):
         if days == 0:                       # 0 means Monday
             days += 7                       # there is always one row
         return days
-

@@ -23,48 +23,50 @@
 
 import logging
 
+from PyQt5.QtCore import QDate
+from PyQt5.QtWidgets import QTableWidget
+from PyQt5.QtWidgets import QDialog, QMessageBox
+
+from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.reminder import Notification
+from hanlendar.domainmodel.todo import ToDo
+
 from . import uiloader
 from . import resources
 from . import tray_icon
 
 from .qt import qApp, QtCore, QIcon
 from .qt import QWidget, QSplitter, QTabWidget
-from PyQt5.QtCore import QDate
-from PyQt5.QtWidgets import QTableWidget
-from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from .dataobject import DataObject
 from .navcalendar import NavCalendarHighlightModel
-from .tasktable import getRemindedColor, getTimeoutColor
+from .tasktable import get_reminded_color, get_timeout_color
 from .settingsdialog import SettingsDialog, AppSettings
 from .notifytimer import NotificationTimer
-
-from hanlendar.domainmodel.task import Task
-from hanlendar.domainmodel.reminder import Notification
-from hanlendar.domainmodel.todo import ToDo
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
+UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
 
 
 class DataHighlightModel( NavCalendarHighlightModel ):
 
     def __init__(self, manager ):
+        super().__init__()
         self.manager = manager
 
     def isHighlighted(self, date: QDate):
         entryDate = date.toPyDate()
         occurrencesList = self.manager.getTaskOccurrencesForDate( entryDate, False )
-        return ( len(occurrencesList) > 0 )
+        return len(occurrencesList) > 0
 
     def isOccupied(self, date: QDate):
         entryDate = date.toPyDate()
         occurrencesList = self.manager.getTaskOccurrencesForDate( entryDate, True )
         occurrencesList = [ task for task in occurrencesList if task.isCompleted() ]
-        return ( len(occurrencesList) > 0 )
+        return len(occurrencesList) > 0
 
 
 class MainWindow( QtBaseClass ):           # type: ignore
@@ -184,7 +186,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
             self.ui.entityDetailsStack.setCurrentIndex( 2 )
             return
         # unknown entity
-        _LOGGER.warn( "unsupported entity: %s", entity )
+        _LOGGER.warning( "unsupported entity: %s", entity )
         self.hideDetails()
 
     def hideDetails(self):
@@ -252,7 +254,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.notesWidget.setNotes( notesDict )
 
     def importXfceNotes(self):
-        retButton = QMessageBox.question(self, "Import Notes", "Do you want to import Xfce Notes (previous notes will be lost)?")
+        retButton = QMessageBox.question( self, "Import Notes",
+                                          "Do you want to import Xfce Notes (previous notes will be lost)?")
         if retButton == QMessageBox.Yes:
             self.data.getManager().importXfceNotes()
             self.updateNotesView()
@@ -267,7 +270,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
         nextToDo = self.data.getManager().getNextToDo()
         if nextToDo is not None:
             toolTip += "\n" + "Next ToDo: " + nextToDo.title
-        if len(toolTip) > 0:
+        if toolTip:
+            # not empty
             toolTip = self.toolTip + "\n" + toolTip
         else:
             toolTip = self.toolTip
@@ -285,19 +289,19 @@ class MainWindow( QtBaseClass ):           # type: ignore
         deadlinedTasks = self.data.getManager().getDeadlinedTasks()
         num = len(deadlinedTasks)
         if num > 0:
-            color = getTimeoutColor()
+            color = get_timeout_color()
             self.trayIcon.drawNumber( num, color )
             return
         remindedTasks = self.data.getManager().getRemindedTasks()
         num = len(remindedTasks)
         if num > 0:
-            color = getRemindedColor()
+            color = get_reminded_color()
             self.trayIcon.drawNumber( num, color )
             return
 
     def _updateIconTheme(self, theme: tray_icon.TrayIconTheme):
         fileName = theme.value
-        iconPath = resources.getImagePath( fileName )
+        iconPath = resources.get_image_path( fileName )
         appIcon = QIcon( iconPath )
 
         self.setWindowIcon( appIcon )
@@ -309,15 +313,16 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.hide()
         self.trayIcon.show()
 
-    def showEvent(self, event):
+    def showEvent(self, _):
         self.trayIcon.updateLabel()
 
-    def hideEvent(self, event):
+    def hideEvent(self, _):
         self.trayIcon.updateLabel()
 
     ## ====================================================================
 
     ## slot
+    # pylint: disable=R0201
     def closeApplication(self):
         ##self.close()
         qApp.quit()
@@ -358,7 +363,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         ## store geometry of all widgets
         widgets = self.findChildren(QWidget)
         for w in widgets:
-            wKey = getWidgetKey(w)
+            wKey = get_widget_key(w)
             settings.beginGroup( wKey )
             geometry = settings.value("geometry")
             if geometry is not None:
@@ -367,7 +372,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         widgets = self.findChildren(QSplitter)
         for w in widgets:
-            wKey = getWidgetKey(w)
+            wKey = get_widget_key(w)
             settings.beginGroup( wKey )
             state = settings.value("widgetState")
             if state is not None:
@@ -376,7 +381,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         widgets = self.findChildren(QTabWidget)
         for w in widgets:
-            wKey = getWidgetKey(w)
+            wKey = get_widget_key(w)
             settings.beginGroup( wKey )
             state = settings.value("currentIndex")
             if state is not None:
@@ -386,7 +391,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         widgets = self.findChildren( QTableWidget )
         for w in widgets:
-            wKey = getWidgetKey(w)
+            wKey = get_widget_key(w)
             settings.beginGroup( wKey )
             colsNum = w.columnCount()
             for c in range(0, colsNum):
@@ -415,28 +420,28 @@ class MainWindow( QtBaseClass ):           # type: ignore
         ## store geometry of all widgets
         widgets = self.findChildren( QWidget )
         for w in widgets:
-            wKey = getWidgetKey(w)
+            wKey = get_widget_key(w)
             settings.beginGroup( wKey )
             settings.setValue("geometry", w.saveGeometry() )
             settings.endGroup()
 
         widgets = self.findChildren( QSplitter )
         for w in widgets:
-            wKey = getWidgetKey(w)
+            wKey = get_widget_key(w)
             settings.beginGroup( wKey )
             settings.setValue("widgetState", w.saveState() )
             settings.endGroup()
 
         widgets = self.findChildren( QTabWidget )
         for w in widgets:
-            wKey = getWidgetKey(w)
+            wKey = get_widget_key(w)
             settings.beginGroup( wKey )
             settings.setValue("currentIndex", w.currentIndex() )
             settings.endGroup()
 
         widgets = self.findChildren( QTableWidget )
         for w in widgets:
-            wKey = getWidgetKey(w)
+            wKey = get_widget_key(w)
             colsNum = w.columnCount()
             settings.beginGroup( wKey )
             for c in range(0, colsNum):
@@ -469,7 +474,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 MainWindow.logger = _LOGGER.getChild(MainWindow.__name__)
 
 
-def getWidgetKey(widget):
+def get_widget_key(widget):
     if widget is None:
         return None
     retKey = widget.objectName()
@@ -478,4 +483,3 @@ def getWidgetKey(widget):
         retKey = widget.objectName() + "-" + retKey
         widget = widget.parent()
     return retKey
-

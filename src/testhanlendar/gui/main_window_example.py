@@ -24,34 +24,40 @@
 #
 
 
+try:
+    ## following import success only when file is directly executed from command line
+    ## otherwise will throw exception when executing as parameter for "python -m"
+    # pylint: disable=W0611
+    import __init__
+except ImportError as error:
+    ## when import fails then it means that the script was executed indirectly
+    ## in this case __init__ is already loaded
+    pass
+
 import sys
-import os
-
-
-#### append local library
-sys.path.append(os.path.abspath( os.path.join(os.path.dirname(__file__), "../..") ))
-
-
 import logging
 import argparse
+
+from datetime import datetime, timedelta
 
 import hanlendar.logger as logger
 
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.main_window import MainWindow
+
+from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.recurrent import Recurrent
-from hanlendar.domainmodel.reminder import Reminder
-
-from datetime import date, datetime, timedelta
 
 
-def prepareExampleData( window: MainWindow ):
-    dataManager = window.getManager()
+# pylint: disable=R0914, R0915
+def prepare_example_data( dataManager: Manager ):
     taskDate = datetime.today() - timedelta( seconds=5 )
     task1 = dataManager.addNewTaskDateTime( datetime.today() + timedelta( days=1 ), "task 1" )
     task1.completed = 50
-    task1.description = "<a href=\"http://www.google.com\">xxx</a> <br> <a href=\"file:///media/E/bluetooth.txt\">yyy</a> <br> <a href=\"file:///media/E/Pani1.jpg\">zzz</a>"
+    task1.description = ("<a href=\"http://www.google.com\">xxx</a> <br> "
+                         "<a href=\"file:///media/E/bluetooth.txt\">yyy</a> <br> "
+                         "<a href=\"file:///media/E/Pani1.jpg\">zzz</a>")
 
     completedTask = dataManager.addNewTaskDateTime( taskDate + timedelta( days=7 ), "completed task" )
     completedTask.setCompleted()
@@ -117,8 +123,6 @@ def prepareExampleData( window: MainWindow ):
 
     dataManager.addNote("note 2", "note content")
 
-    window.refreshView()
-
 
 def save_data_mock():
     _LOGGER.info("saving data is disabled on example")
@@ -137,7 +141,7 @@ parser.add_argument('-lud', '--loadUserData', action='store_const', const=True, 
 args = parser.parse_args()
 
 
-logFile = logger.getLoggingOutputFile()
+logFile = logger.get_logging_output_file()
 logger.configure( logFile )
 
 _LOGGER = logging.getLogger(__name__)
@@ -150,6 +154,7 @@ app.setOrganizationName("arnet")
 MainWindow.toolTip = MainWindow.toolTip + " Preview"
 
 window = MainWindow()
+# pylint: disable=W0212
 window._saveData = save_data_mock           # type: ignore
 window.setWindowTitle( window.windowTitle() + " Preview" )
 
@@ -157,7 +162,9 @@ window.loadSettings()
 if args.loadUserData:
     window.loadData()
 else:
-    prepareExampleData( window )
+    manager = window.getManager()
+    prepare_example_data( manager )
+    window.refreshView()
 
 window.show()
 

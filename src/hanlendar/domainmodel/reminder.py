@@ -97,14 +97,14 @@ class Reminder():
         offsetTime = self.timeOffset
         if offsetTime is None:
             offsetTime = timedelta()
-        output = printTimedelta( offsetTime ) + " before due time"
+        output = print_timedelta( offsetTime ) + " before due time"
         return output
 
     def __repr__(self):
         return "[t:%s p:%s d:%s]" % ( self.timeOffset, self.timePoint, self.direction )
 
 
-def printTimedelta( value: timedelta ):
+def print_timedelta( value: timedelta ):
     s = ""
     secs = value.seconds
     days = value.days

@@ -35,4 +35,3 @@ class MenuStyle(QtWidgets.QProxyStyle):
             ## disable Alt key switching to application menu
             return 0
         return super().styleHint(stylehint, opt, widget, returnData)
-

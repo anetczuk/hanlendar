@@ -24,19 +24,14 @@
 import logging
 # from datetime import datetime
 
-from . import uiloader
-
-from PyQt5.QtCore import QDir
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMenu, QInputDialog
 from PyQt5.QtWidgets import QLineEdit
 
-# from hanlendar.domainmodel.task import Task
-# from hanlendar.domainmodel.recurrent import RepeatType, Recurrent
-# from datetime import date
+from . import uiloader
 
 
-UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
+UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -171,7 +166,8 @@ class NotesWidget( QtBaseClass ):           # type: ignore
 
         tabText = self.ui.notes_tabs.tabText( tabIndex )
         newText = self._requestTabName(tabText)
-        if len(newText) < 1:
+        if not newText:
+            # empty
             return
         self.ui.notes_tabs.setTabText( tabIndex, newText )
         self.notesChanged.emit()
@@ -182,6 +178,7 @@ class NotesWidget( QtBaseClass ):           # type: ignore
                                             "Note name:",
                                             QLineEdit.Normal,
                                             currName )
-        if ok and len(newText) > 0:
+        if ok and newText:
+            # not empty
             return newText
         return ""

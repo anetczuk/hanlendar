@@ -59,4 +59,4 @@ class ToDo():
 
     @staticmethod
     def sortByPriority( todo ):
-        return ( todo.priority )
+        return todo.priority

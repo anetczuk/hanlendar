@@ -53,50 +53,49 @@ class Manager():
         outputFile = outputDir + "/version.obj"
 
         changed = False
-        if persist.storeObject( self._class_version, outputFile ) is True:
+        if persist.store_object( self._class_version, outputFile ) is True:
             changed = True
 
         outputFile = outputDir + "/tasks.obj"
-        if persist.storeObject( self.tasks, outputFile ) is True:
+        if persist.store_object( self.tasks, outputFile ) is True:
             changed = True
 
         outputFile = outputDir + "/todos.obj"
-        if persist.storeObject( self.todos, outputFile ) is True:
+        if persist.store_object( self.todos, outputFile ) is True:
             changed = True
 
         outputFile = outputDir + "/notes.obj"
-        if persist.storeObject( self.notes, outputFile ) is True:
+        if persist.store_object( self.notes, outputFile ) is True:
             changed = True
 
-        self.backupData( outputDir )
+        ## backup data
+        objFiles = glob.glob( outputDir + "/*.obj" )
+        storedZipFile = outputDir + "/data.zip"
+        persist.backup_files( objFiles, storedZipFile )
+
         return changed
 
     def load( self, inputDir ):
         inputFile = inputDir + "/version.obj"
-        mngrVersion = persist.loadObject( inputFile, self._class_version )
+        mngrVersion = persist.load_object( inputFile, self._class_version )
         if mngrVersion != self. _class_version:
             _LOGGER.info( "converting object from version %s to %s", mngrVersion, self._class_version )
             ## do nothing for now
 
         inputFile = inputDir + "/tasks.obj"
-        self.tasks = persist.loadObject( inputFile, self._class_version )
+        self.tasks = persist.load_object( inputFile, self._class_version )
         if self.tasks is None:
             self.tasks = list()
 
         inputFile = inputDir + "/todos.obj"
-        self.todos = persist.loadObject( inputFile, self._class_version )
+        self.todos = persist.load_object( inputFile, self._class_version )
         if self.todos is None:
             self.todos = list()
 
         inputFile = inputDir + "/notes.obj"
-        self.notes = persist.loadObject( inputFile, self._class_version )
+        self.notes = persist.load_object( inputFile, self._class_version )
         if self.notes is None:
             self.notes = { "notes": "" }
-
-    def backupData(self, dataDir):
-        objFiles = glob.glob( dataDir + "/*.obj" )
-        storedZipFile = dataDir + "/data.zip"
-        persist.backupFiles( objFiles, storedZipFile )
 
     def hasTaskOccurrences( self, entriesDate: date ):
         for task in self.tasks:
@@ -193,7 +192,7 @@ class Manager():
         self.tasks.remove( task )
 
     def replaceTask( self, oldTask: Task, newTask: Task ):
-        replaceInList( self.tasks, oldTask, newTask )
+        replace_in_list( self.tasks, oldTask, newTask )
 
     def addNewDeadline( self, eventdate: date, title ):
         event = Task()
@@ -237,7 +236,7 @@ class Manager():
         self.todos.remove( todo )
 
     def replaceToDo( self, oldToDo: ToDo, newToDo: ToDo ):
-        replaceInList( self.todos, oldToDo, newToDo )
+        replace_in_list( self.todos, oldToDo, newToDo )
 
     def getNextToDo(self) -> ToDo:
         tSize = len(self.todos)
@@ -314,12 +313,12 @@ class Manager():
     def importXfceNotes(self):
         newNotes = {}
 
-        notes_dir = os.path.expanduser( "~/.local/share/notes" )
-        for groupName in os.listdir( notes_dir ):
-            group_dir = notes_dir + "/" + groupName
-            for noteName in os.listdir( group_dir ):
-                note_path = group_dir + "/" + noteName
-                with open( note_path, 'r') as file:
+        notesDir = os.path.expanduser( "~/.local/share/notes" )
+        for groupName in os.listdir( notesDir ):
+            groupDir = notesDir + "/" + groupName
+            for noteName in os.listdir( groupDir ):
+                notePath = groupDir + "/" + noteName
+                with open( notePath, 'r') as file:
                     data = file.read()
                     if noteName in newNotes:
                         ## the same note name in different groups -- append notes
@@ -327,7 +326,8 @@ class Manager():
                     else:
                         newNotes[ noteName ] = data
 
-        if len(newNotes) > 0:
+        if newNotes:
+            # not empty
             self.notes = newNotes
 
     def printTasks(self):
@@ -339,8 +339,8 @@ class Manager():
         return retStr
 
 
-def replaceInList( aList, oldObject, newObject ):
-    for i in range(0, len(aList)):
+def replace_in_list( aList, oldObject, newObject ):
+    for i, _ in enumerate(aList):
         entry = aList[i]
         if entry == oldObject:
             aList[i] = newObject

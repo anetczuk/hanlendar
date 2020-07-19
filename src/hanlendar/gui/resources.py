@@ -24,14 +24,13 @@
 import os
 
 
-def getImagePath(imageName):
-    imgDir = getImagesPath()
+def get_image_path(imageName):
+    imgDir = get_images_path()
     path = imgDir + os.path.sep + imageName
     return path
 
 
-def getImagesPath():
+def get_images_path():
     scriptDir = os.path.dirname(os.path.realpath(__file__))
     imgDir = scriptDir + os.path.sep + 'img'
     return imgDir
-

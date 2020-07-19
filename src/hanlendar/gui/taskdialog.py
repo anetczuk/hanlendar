@@ -25,16 +25,16 @@ import logging
 from datetime import datetime, timedelta
 import copy
 
-from . import uiloader
-
 from PyQt5.QtWidgets import QDialog, QFileDialog
 from PyQt5.QtCore import QUrl
 from PyQt5.QtGui import QDesktopServices
 
 from hanlendar.domainmodel.task import Task
 
+from . import uiloader
 
-UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
+
+UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,7 +104,7 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.task.priority = newValue
 
     ## deadline checkbox
-    def _deadlineChanged(self, newValue):
+    def _deadlineChanged(self, _):
         if self.ui.deadlineBox.isChecked():
             self.task.setDeadline()
         else:
@@ -160,5 +160,5 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.ui.urlEdit.setText( link.toLocalFile() )
         QDesktopServices.openUrl( link )
 
-    def _finished(self, result):
+    def _finished(self, _):
         self.task.completed = self.completed

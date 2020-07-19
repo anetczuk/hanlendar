@@ -23,17 +23,17 @@
 
 import logging
 
+from typing import List
 from datetime import datetime, date, timedelta
 
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
-from PyQt5.QtCore import Qt, QItemSelectionModel
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QColor, QBrush
 
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
 
 from hanlendar.domainmodel.task import Task, TaskOccurrence
-from typing import List
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,7 +126,7 @@ class TaskTable( QTableWidget ):
         for i in range(0, occurSize):
             task: TaskOccurrence = occurrencesList[i]
 
-            fgColor = getTaskForegroundColor( task )
+            fgColor = get_task_fgcolor( task )
             bgColor = None
             if task.isInMonth( nowDate ):
                 bgColor = QColor( "beige" )
@@ -211,16 +211,16 @@ class TaskTable( QTableWidget ):
             self.taskUnselected.emit()
 
 
-def getTaskForegroundColor( task: TaskOccurrence ) -> QBrush:
+def get_task_fgcolor( task: TaskOccurrence ) -> QBrush:
     if task.isCompleted():
         ## completed -- green
-        return QBrush( getCompletedColor() )
+        return QBrush( get_completed_color() )
     if task.isTimedout():
         ## timed out
-        return QBrush( getTimeoutColor() )
+        return QBrush( get_timeout_color() )
     if task.isReminded():
         ## already reminded
-        return QBrush( getRemindedColor() )
+        return QBrush( get_reminded_color() )
     taskFirstDate = task.getFirstDateTime()
     if taskFirstDate is not None:
         diff = taskFirstDate - datetime.today()
@@ -231,13 +231,13 @@ def getTaskForegroundColor( task: TaskOccurrence ) -> QBrush:
     return QBrush( QColor(0, 0, 0) )
 
 
-def getCompletedColor() -> QColor:
+def get_completed_color() -> QColor:
     return QColor(0, 160, 0)        ## green
 
 
-def getTimeoutColor() -> QColor:
+def get_timeout_color() -> QColor:
     return QColor(255, 0, 0)        ## red
 
 
-def getRemindedColor() -> QColor:
+def get_reminded_color() -> QColor:
     return QColor(200, 0, 200)      ## magenta

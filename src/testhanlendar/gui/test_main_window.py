@@ -48,10 +48,6 @@ class MainWindowTest(unittest.TestCase):
         ## Called after testfunction was executed
         self.widget = None
 
-    def test_test(self):
-        self.assertTrue(True)
-
     def test_getDataPath(self):
         dataPath = self.widget.getDataPath()
         self.assertTrue( "Hanlendar-data" in dataPath )
-

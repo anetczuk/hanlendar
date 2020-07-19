@@ -20,7 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # Define this as a global function to make sure it is not garbage
 # collected when going out of scope:
-def _interrupt_handler(signum, frame):
+# def _interrupt_handler(signum, frame):
+def _interrupt_handler(signum, _):
     """Handle KeyboardInterrupt: quit application."""
     _LOGGER.debug("Interrupt received: %s", signum)
     QApplication.exit(2)

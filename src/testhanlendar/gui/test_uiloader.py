@@ -36,11 +36,10 @@ class UiLoaderTest(unittest.TestCase):
         ## Called after testfunction was executed
         pass
 
-    def test_generateUIFileNameFromClassName_ext(self):
-        ui_file = uiloader.generateUIFileNameFromClassName("aaa.py")
-        self.assertEqual("aaa.ui", ui_file)
+    def test_generate_ui_file_name_ext(self):
+        uiFile = uiloader.generate_ui_file_name("aaa.py")
+        self.assertEqual("aaa.ui", uiFile)
 
-    def test_generateUIFileNameFromClassName_file(self):
-        ui_file = uiloader.generateUIFileNameFromClassName( __file__ )
-        self.assertEqual("test_uiloader.ui", ui_file)
-
+    def test_generate_ui_file_name_file(self):
+        uiFile = uiloader.generate_ui_file_name( __file__ )
+        self.assertEqual("test_uiloader.ui", uiFile)

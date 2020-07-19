@@ -64,4 +64,3 @@ class NotificationTimer( QObject ):
     def handleTimeout(self):
         self.remindTask.emit( self.nextNotif )
         self.processNotifs()
-

@@ -21,7 +21,7 @@
 # SOFTWARE.
 #
 
-import logging
+# import logging
 
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import Qt
@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, Q
 from PyQt5.QtWidgets import QMenu
 from PyQt5.QtGui import QColor, QBrush
 
-from hanlendar.gui.tasktable import getCompletedColor
+from hanlendar.gui.tasktable import get_completed_color
 
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.todo import ToDo
@@ -117,7 +117,7 @@ class ToDoTable( QTableWidget ):
         for i in range(0, todosSize):
             todo: ToDo = todosList[i]
 
-            fgColor = getToDoForegroundColor( todo )
+            fgColor = get_todo_fgcolor( todo )
             titleItem = QTableWidgetItem( todo.title )
             titleItem.setData( Qt.UserRole, todo )
             titleItem.setForeground( fgColor )
@@ -231,9 +231,9 @@ class ToDoTable( QTableWidget ):
         self.updateView()
 
 
-def getToDoForegroundColor( todo: ToDo ) -> QBrush:
+def get_todo_fgcolor( todo: ToDo ) -> QBrush:
     if todo.isCompleted():
         ## completed -- green
-        return QBrush( getCompletedColor() )
+        return QBrush( get_completed_color() )
     ## normal
     return QBrush( QColor(0, 0, 0) )

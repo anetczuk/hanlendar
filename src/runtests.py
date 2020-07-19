@@ -27,12 +27,6 @@
 import sys
 import os
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-
-## do not have to add 'src' dir to path until script is in separate directory
-# src_dir = os.path.abspath(os.path.join(script_dir, "../src"))
-# sys.path.insert(0, src_dir)
-
 import logging
 import unittest
 import re
@@ -43,42 +37,52 @@ import subprocess
 import tempfile
 
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+## do not have to add 'src' dir to path until script is in separate directory
+# src_dir = os.path.abspath(os.path.join(script_dir, "../src"))
+# sys.path.insert(0, src_dir)
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
-def matchTests( pattern: str ):
+def match_tests( pattern: str ):
     if pattern.find("*") < 0:
         ## regular module
-        testsLoader = unittest.TestLoader()
-        return testsLoader.loadTestsFromName( pattern )
+        loader = unittest.TestLoader()
+        return loader.loadTestsFromName( pattern )
 
     ## wildcarded
     rePattern = pattern
+    # pylint: disable=W1401
     rePattern = rePattern.replace(".", "\.")
     rePattern = rePattern.replace("*", ".*")
     ## rePattern = "^" + rePattern + "$"
     _LOGGER.info( "searching test cases with pattern: %s", rePattern )
-    testsLoader = unittest.TestLoader()
-    suite = testsLoader.discover( script_dir )
-    return matchTestSuites(suite, rePattern)
+    loader = unittest.TestLoader()
+    testsSuite = loader.discover( script_dir )
+    return match_test_suites(testsSuite, rePattern)
 
 
-def matchTestSuites( suite, rePattern: str ):
+def match_test_suites( testsList, rePattern: str ):
     retSuite = unittest.TestSuite()
-    for testObject in suite:
+    for testObject in testsList:
         if isinstance(testObject, unittest.TestSuite):
-            subTests = matchTestSuites( testObject, rePattern )
+            subTests = match_test_suites( testObject, rePattern )
             retSuite.addTest( subTests )
             continue
         if isinstance(testObject, unittest.TestCase):
             classobj         = testObject.__class__
-            testCaseFullName = ".".join([classobj.__module__, classobj.__name__, testObject._testMethodName])
+            # pylint: disable=W0212,
+            testCaseFullName = ".".join([ classobj.__module__, classobj.__name__,
+                                          testObject._testMethodName ] )
             matched = re.search(rePattern, testCaseFullName)
             if matched is not None:
                 ## _LOGGER.info("test case matched: %s", testCaseFullName )
                 retSuite.addTest( testObject )
             continue
-        _LOGGER.warn("unknown type: %s", type( testObject ))
+        _LOGGER.warning("unknown type: %s", type( testObject ))
     return retSuite
 
 
@@ -88,7 +92,9 @@ def matchTestSuites( suite, rePattern: str ):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test runner')
     parser.add_argument('-la', '--logall', action='store_true', help='Log all messages' )
-    parser.add_argument('-rt', '--runtest', action='store', required=False, default="", help='Module with tests, e.g. module.submodule.test_file.test_class.test_method, wildcard * allowed' )
+    # pylint: disable=C0301
+    parser.add_argument('-rt', '--runtest', action='store', required=False, default="",
+                        help='Module with tests, e.g. module.submodule.test_file.test_class.test_method, wildcard * allowed' )
     parser.add_argument('-r', '--repeat', action='store', type=int, default=0, help='Repeat tests given number of times' )
     parser.add_argument('-ut', '--untilfailure', action="store_true", help='Run tests in loop until failure' )
     parser.add_argument('-cov', '--coverage', action="store_true", help='Measure code coverage' )
@@ -116,8 +122,9 @@ if __name__ == '__main__':
         ##coverageData.load()
         coverageData.start()
 
-    if len(args.runtest) > 0:
-        suite = matchTests( args.runtest )
+    if args.runtest:
+        ## not empty
+        suite = match_tests( args.runtest )
     else:
         testsLoader = unittest.TestLoader()
         suite = testsLoader.discover( script_dir )
@@ -183,4 +190,3 @@ if __name__ == '__main__':
             coverageData.save()
             coverageData.html_report(directory=htmlcovdir)
             print( "\nCoverage HTML output:", (htmlcovdir + "/index.html") )
-

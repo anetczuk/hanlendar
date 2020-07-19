@@ -27,16 +27,14 @@ from datetime import date
 # from . import uiloader
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtCore import QSize, QRect, QDate
+from PyQt5.QtCore import QRect, QDate
 from PyQt5.QtCore import pyqtSignal
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget, QLabel
+from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QHBoxLayout
-from PyQt5.QtWidgets import QMenu
 from PyQt5.QtGui import QPainter, QPainterPath, QPen, QColor, QPalette
 
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
-from hanlendar.gui.monthcalendar import getTaskBackgroundColor
+from hanlendar.gui.monthcalendar import get_task_bgcolor
 
 from hanlendar.domainmodel.task import Task, TaskOccurrence
 
@@ -97,9 +95,11 @@ class DayTimeline( DrawWidget ):
             pen = painter.pen()
             pen.setColor( QColor("black") )
             painter.setPen(pen)
-            painter.drawText( 0, hourHeight, width - 6, hourStep, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, text )
+            painter.drawText( 0, hourHeight, width - 6, hourStep,
+                              Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight,
+                              text )
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, _):
         self.itemClicked.emit()
 
 
@@ -141,9 +141,9 @@ class DayItem( DrawWidget ):
         path = QPainterPath()
         path.addRoundedRect( 2, 0, width - 4, height, 5, 5 )
 
-#         taskBgColor = monthcalendar.getTaskBackgroundColor( self.task )
+#         taskBgColor = monthcalendar.get_task_bgcolor( self.task )
         selected = self.isSelected()
-        taskBgColor = getTaskBackgroundColor( self.task, selected )
+        taskBgColor = get_task_bgcolor( self.task, selected )
         painter.fillPath( path, taskBgColor )
 
         pathPen = QPen( QColor("black") )
@@ -154,14 +154,18 @@ class DayItem( DrawWidget ):
         pen.setColor( QColor("black") )
         painter.setPen(pen)
         if height < 32:
-            painter.drawText( 6, 0, width - 12, height, Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft, self.task.title )
+            painter.drawText( 6, 0, width - 12, height,
+                              Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft,
+                              self.task.title )
         else:
-            painter.drawText( 6, 0, width - 12, 32, Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft, self.task.title )
+            painter.drawText( 6, 0, width - 12, 32,
+                              Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft,
+                              self.task.title )
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, _):
         self.selectedItem.emit( self )
 
-    def mouseDoubleClickEvent(self, event):
+    def mouseDoubleClickEvent(self, _):
         self.itemDoubleClicked.emit( self )
 
     def isSelected(self):
@@ -274,10 +278,10 @@ class DayListContentWidget( QWidget ):
             _LOGGER.exception("item not found")
             return -1
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, _):
         self.setCurrentIndex( -1 )
 
-    def mouseDoubleClickEvent(self, event):
+    def mouseDoubleClickEvent(self, _):
         self.taskDoubleClicked.emit( -1 )
 
     def isSelected(self, item: DayItem):
@@ -337,8 +341,8 @@ class DayListWidget( QWidget ):
         self.setTasks( occurrencesList, currDate )
         self.update()
 
-    def setCurrentDate(self, date: QDate):
-        self.currentDate = date
+    def setCurrentDate(self, currDate: QDate):
+        self.currentDate = currDate
         self.updateView()
 
     def getTask(self, index):
@@ -347,7 +351,7 @@ class DayListWidget( QWidget ):
     def setTasks(self, occurrencesList, day: date ):
         self.content.setTasks( occurrencesList, day )
 
-    def contextMenuEvent( self, event ):
+    def contextMenuEvent( self, _ ):
         task: Task = self.content.getCurrentTask()
         self.taskContextMenu.show( task )
 

@@ -21,13 +21,13 @@
 # SOFTWARE.
 #
 
-import logging
+# import logging
 from datetime import date
 
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QWidget
-from PyQt5.QtWidgets import QDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog
 
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.task import Task
@@ -134,7 +134,7 @@ class DataObject( QObject ):
         task = Task()
         task.title       = todo.title
         task.description = todo.description
-        task._completed  = todo._completed
+        task.completed   = todo.completed
         task.priority    = todo.priority
 
         taskDialog = TaskDialog( task, self.parentWidget )

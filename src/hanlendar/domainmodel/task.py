@@ -23,16 +23,15 @@
 
 import logging
 
+from typing import List
 from datetime import date, time, datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from typing import List
-import math
-
-from .reminder import Reminder, Notification
 
 from hanlendar import persist
 from hanlendar.domainmodel import recurrent
-from hanlendar.domainmodel.recurrent import RepeatType, Recurrent
+from hanlendar.domainmodel.recurrent import Recurrent
+
+from .reminder import Reminder, Notification
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -130,7 +129,7 @@ class TaskOccurrence:
         return self.dateRange.end
 
     def isCompleted(self):
-        if self.offset < self.task._recurrentOffset:
+        if self.offset < self.task.recurrentOffset:
             return True
         return self.task.isCompleted()
 
@@ -147,11 +146,11 @@ class TaskOccurrence:
             return self._dateRange
 
         if self.task is None:
-            self.dateRange = [None, None]
+            self._dateRange = DateRange()
             return self._dateRange
         dateRange: DateRange = self.task.getDateRangeNormalized()
         if dateRange is None:
-            self._dateRange = [None, None]
+            self._dateRange = DateRange()
             return self._dateRange
         if self.offset != 0:
             recurrenceOffset = self.task.recurrence.getDateOffset()
@@ -204,6 +203,7 @@ class Task( persist.Versionable ):
         _LOGGER.info( "converting object from version %s to %s", dictVersion_, self._class_version )
 
         if dictVersion_ is None:
+            # pylint: disable=W0201
             self.__dict__ = dict_
             return
 
@@ -225,6 +225,7 @@ class Task( persist.Versionable ):
                 self._recurrentOffset = self._recurrence.findRecurrentOffset( dueDate, targetDueDate )
             return
 
+        # pylint: disable=W0201
         self.__dict__ = dict_
 
     @property
@@ -259,7 +260,7 @@ class Task( persist.Versionable ):
 
     @startDate.setter
     def startDate(self, value):
-        value = ensureDateTime( value )
+        value = ensure_date_time( value )
         self._startDate = value
         if self._recurrence is not None:
             self._recurrentOffset = 0
@@ -276,7 +277,7 @@ class Task( persist.Versionable ):
 
     @dueDate.setter
     def dueDate(self, value):
-        value = ensureDateTime( value )
+        value = ensure_date_time( value )
         self._dueDate = value
         if self._recurrence is not None:
             self._recurrentOffset = 0
@@ -293,6 +294,10 @@ class Task( persist.Versionable ):
         if self._recurrence is None and value is not None:
             self._recurrentOffset = 0
         self._recurrence = value
+
+    @property
+    def recurrentOffset(self):
+        return self._recurrentOffset
 
     def getReferenceDateTime(self) -> datetime:
         if self.startDate is None:
@@ -350,7 +355,7 @@ class Task( persist.Versionable ):
         self.setDeadlineDateTime( due )
 
     def calculateTimeSpan(self, entryDate: date):
-        ret = calcTimeSpan( entryDate, self.startDate, self.dueDate )
+        ret = calc_time_span( entryDate, self.startDate, self.dueDate )
         if ret is not None:
             return ret
 
@@ -361,14 +366,14 @@ class Task( persist.Versionable ):
             return [0, 1]
 
         endDate = self.dueDate
-        multiplicator = recurrent.findMultiplicationAfter( endDate.date(), entryDate, recurrentOffset )
+        multiplicator = recurrent.find_multiplication_after( endDate.date(), entryDate, recurrentOffset )
         if multiplicator < 0:
             return [0, 1]
         endDate += recurrentOffset * multiplicator
         startDate = self.startDate
         if startDate is not None:
             startDate += recurrentOffset * multiplicator
-        ret = calcTimeSpan( entryDate, startDate, endDate )
+        ret = calc_time_span( entryDate, startDate, endDate )
         if ret is not None:
             return ret
         return [0, 1]
@@ -412,7 +417,7 @@ class Task( persist.Versionable ):
         if recurrentOffset is None:
             return None
 
-        multiplicator = recurrent.findMultiplicationAfter( dateRange.end, entryDate, recurrentOffset )
+        multiplicator = recurrent.find_multiplication_after( dateRange.end, entryDate, recurrentOffset )
         if multiplicator < 1:
             return None
         dateRange += recurrentOffset * multiplicator
@@ -503,10 +508,10 @@ class Task( persist.Versionable ):
 
     def __str__(self):
         return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s ro:%s]" % (
-                                        self.title, self.description, self._completed, self.priority,
-                                        self.startDate, self.dueDate,
-                                        self.reminderList, self._recurrence,
-                                        self._recurrentOffset )
+            self.title, self.description, self._completed, self.priority,
+            self.startDate, self.dueDate,
+            self.reminderList, self._recurrence,
+            self._recurrentOffset )
 
     def _progressRecurrence(self) -> bool:
         if self._recurrence is None:
@@ -530,23 +535,23 @@ class Task( persist.Versionable ):
         return ( task.dueDate, task.startDate )
 
 
-def calcTimeSpan(entryDate: date, start: datetime, end: datetime):
+def calc_time_span(entryDate: date, start: datetime, end: datetime):
     startFactor = 0.0
     if start is not None:
-        date = start.date()
-        if entryDate < date:
+        startDate = start.date()
+        if entryDate < startDate:
             return None
-        elif entryDate == date:
+        elif entryDate == startDate:
             midnight = datetime.combine( entryDate, datetime.min.time() )
             startDiff = start - midnight
             daySecs = timedelta( days=1 ).total_seconds()
             startFactor = startDiff.total_seconds() / timedelta( days=1 ).total_seconds()
     dueFactor = 1.0
     if end is not None:
-        date = end.date()
-        if entryDate > date:
+        endDate = end.date()
+        if entryDate > endDate:
             return None
-        elif entryDate == date:
+        elif entryDate == endDate:
             midnight = datetime.combine( entryDate, datetime.min.time() )
             startDiff = end - midnight
             daySecs = timedelta( days=1 ).total_seconds()
@@ -555,12 +560,12 @@ def calcTimeSpan(entryDate: date, start: datetime, end: datetime):
     return ret
 
 
-def ensureDateTime( value ):
+def ensure_date_time( value ):
     if value is None:
         return value
     if isinstance( value, datetime):
         return value
     if isinstance( value, date):
         value = datetime.combine( value, datetime.min.time() )
-    _LOGGER.warn( "unknown type: %s", value )
+    _LOGGER.warning( "unknown type: %s", value )
     return None

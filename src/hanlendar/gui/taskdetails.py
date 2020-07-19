@@ -24,15 +24,15 @@
 import logging
 from datetime import datetime
 
-from . import uiloader
-
 from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtGui import QDesktopServices
 
 from hanlendar.domainmodel.task import Task
 
+from . import uiloader
 
-UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
+
+UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,5 +95,6 @@ class TaskDetails( QtBaseClass ):           # type: ignore
         else:
             self.ui.recurrentWidget.setEnabled( True )
 
+    # pylint: disable=R0201
     def _openLink( self, link ):
         QDesktopServices.openUrl( link )

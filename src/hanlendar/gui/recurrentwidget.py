@@ -24,17 +24,15 @@
 import logging
 # from datetime import datetime
 
-from . import uiloader
-
-from PyQt5.QtCore import QEvent
-from PyQt5.QtWidgets import QWidget
+from datetime import date
 
 from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.recurrent import RepeatType, Recurrent
-from datetime import date
+
+from . import uiloader
 
 
-UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
+UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
 
 
 _LOGGER = logging.getLogger(__name__)

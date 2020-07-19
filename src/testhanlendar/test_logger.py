@@ -24,10 +24,10 @@
 
 import unittest
 
-import hanlendar.logger as logger
-
 import logging
 import io
+
+import hanlendar.logger as logger
 
 
 class LoggerTest(unittest.TestCase):
@@ -38,7 +38,7 @@ class LoggerTest(unittest.TestCase):
         self.logger.setLevel( logging.DEBUG )
         self.buffer = io.StringIO()
         handler = logging.StreamHandler( self.buffer )
-        formatter = logger.createFormatter()
+        formatter = logger.create_formatter()
         handler.setFormatter( formatter )
         self.logger.addHandler( handler )
 

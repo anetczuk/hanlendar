@@ -49,7 +49,7 @@ class AppSettings():
         settings.endGroup()
 
 
-UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
+UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,11 +96,11 @@ class SettingsDialog(QtBaseClass):           # type: ignore
         self.ui.trayThemeCB.setCurrentIndex( themeIndex )
 
 
-def loadKeysToDict(settings):
+def load_keys_to_dict(settings):
     state = dict()
     for key in settings.childKeys():
         value = settings.value(key, "", type=str)
-        if len(value) > 0:
+        if value:
+            # not empty
             state[ key ] = value
     return state
-

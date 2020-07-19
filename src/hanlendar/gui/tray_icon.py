@@ -25,12 +25,9 @@
 import logging
 from enum import Enum, unique
 
-from .qt import qApp, QSystemTrayIcon, QMenu, QAction
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QImage, QPainterPath, QBrush, QColor, QPen, QFontMetrics, QTransform
+from PyQt5.QtGui import QIcon, QPainter, QPainterPath, QBrush, QColor, QPen
 from PyQt5.QtWidgets import QApplication
-
-from . import resources
+from .qt import qApp, QSystemTrayIcon, QMenu, QAction
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,14 +62,12 @@ class TrayIcon(QSystemTrayIcon):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.activated.connect( self._icon_activated )
+        self.activated.connect( self._iconActivated )
 
-        '''
-            Define and add steps to work with the system tray icon
-            show - show window
-            hide - hide window
-            exit - exit from application
-        '''
+#         Define and add steps to work with the system tray icon
+#         show - show window
+#         hide - hide window
+#         exit - exit from application
         self.toggle_window_action = QAction("Show", self)
         quit_action = QAction("Exit", self)
         self.toggle_window_action.triggered.connect( self._toggleParent )
@@ -126,7 +121,7 @@ class TrayIcon(QSystemTrayIcon):
 
         self.setIcon( QIcon( pixmap ) )
 
-    def _icon_activated(self, reason):
+    def _iconActivated(self, reason):
 #         print("tray clicked, reason:", reason)
         if reason == 3:
             ## clicked

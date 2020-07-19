@@ -2,6 +2,9 @@
 ##
 ##
 
+#TODO: remove skip
+# pylint: skip-file
+
 import logging
 
 

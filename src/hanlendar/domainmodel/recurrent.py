@@ -104,7 +104,7 @@ class Recurrent():
         if self.mode is RepeatType.YEARLY:
             return relativedelta( years=1 * self.every )
 
-        _LOGGER.warn( "unhandled case" )
+        _LOGGER.warning( "unhandled case" )
         return None
 
     def isEnd(self, currDate: date) -> bool:
@@ -144,7 +144,7 @@ class Recurrent():
         if recurrentOffset is None:
             return False
 
-        multiplicator = findMultiplicationAfter( referenceDate, entryDate, recurrentOffset )
+        multiplicator = find_multiplication_after( referenceDate, entryDate, recurrentOffset )
         if multiplicator < 0:
             return False
         referenceDate += recurrentOffset * multiplicator
@@ -160,7 +160,7 @@ class Recurrent():
         if recurrentOffset is None:
             return False
 
-        multiplicator = findMultiplication( referenceDate, monthDate, recurrentOffset )
+        multiplicator = find_multiplication( referenceDate, monthDate, recurrentOffset )
         if multiplicator < 1:
             return False
 
@@ -170,7 +170,7 @@ class Recurrent():
         nextMonthDate = monthDate.replace( day=1 ) + timedelta( days=31 )
         nextMonthDate = nextMonthDate.replace( day=1 )                      ## ensure first day of month
         referenceDate += recurrentOffset * (multiplicator - 1)
-        while( referenceDate < nextMonthDate ):
+        while referenceDate < nextMonthDate:
             referenceDate += recurrentOffset
             if referenceDate.year == intYear and referenceDate.month == intMonth:
                 return True
@@ -180,13 +180,13 @@ class Recurrent():
 
     def findRecurrentOffset(self, referenceDate: date, targetDate: date) -> int:
         offset = self.getDateOffset()
-        return findMultiplication( referenceDate, targetDate, offset )
+        return find_multiplication( referenceDate, targetDate, offset )
 
     def __repr__(self):
         return "[m:%s e:%s ed:%s]" % ( self.mode, self.every, self.endDate )
 
 
-def findMultiplication( startDate: date, endDate: date, offset: relativedelta ) -> int:
+def find_multiplication( startDate: date, endDate: date, offset: relativedelta ) -> int:
     dateTD = endDate - startDate
     diffDays = dateTD.days
 
@@ -199,7 +199,7 @@ def findMultiplication( startDate: date, endDate: date, offset: relativedelta ) 
     mul = max( mul, 1 )     ## handle case when 'maxDaysOffset' is greater than 'offset'
 
     startDate += offset * ret
-    while( mul > 0 ):
+    while mul > 0:
         startDate += offset * mul
         if startDate <= endDate:
             ret += mul
@@ -210,13 +210,13 @@ def findMultiplication( startDate: date, endDate: date, offset: relativedelta ) 
 
 
 # returns: startDate + offset * multiplicator >= endDate
-def findMultiplicationAfter( startDate: date, endDate: date, offset: relativedelta ) -> int:
-    multiplicator = findMultiplication( startDate, endDate, offset )
+def find_multiplication_after( startDate: date, endDate: date, offset: relativedelta ) -> int:
+    multiplicator = find_multiplication( startDate, endDate, offset )
     if multiplicator < 0:
         return multiplicator
 
     startDate += offset * (multiplicator - 1)
-    while( startDate < endDate ):
+    while startDate < endDate:
         startDate += offset
         multiplicator += 1
 

@@ -24,16 +24,16 @@
 import logging
 import copy
 
-from . import uiloader
-
 from PyQt5.QtWidgets import QDialog, QFileDialog
 from PyQt5.QtCore import QUrl
 from PyQt5.QtGui import QDesktopServices
 
 from hanlendar.domainmodel.todo import ToDo
 
+from . import uiloader
 
-UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )
+
+UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,5 +116,5 @@ class ToDoDialog( QtBaseClass ):           # type: ignore
         self.ui.urlEdit.setText( link.toLocalFile() )
         QDesktopServices.openUrl( link )
 
-    def _finished(self, result):
+    def _finished(self, _):
         self.todo.completed = self.completed
