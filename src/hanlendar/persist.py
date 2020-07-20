@@ -88,9 +88,10 @@ def store_object( inputObject, outputFile ):
 def backup_files( inputFiles, outputArchive ):
     ## create zip
     tmpZipFile = outputArchive + "_tmp"
-    zipf = zipfile.ZipFile( tmpZipFile, 'w', zipfile.ZIP_STORED )
+    zipf = zipfile.ZipFile( tmpZipFile, 'w', zipfile.ZIP_DEFLATED )
     for file in inputFiles:
-        zipf.write( file )
+        zipEntry = os.path.basename( file )
+        zipf.write( file, zipEntry )
     zipf.close()
 
     ## compare content
