@@ -25,9 +25,9 @@ import logging
 from datetime import datetime, timedelta
 import copy
 
-from PyQt5.QtWidgets import QDialog, QFileDialog
-from PyQt5.QtCore import QUrl
-from PyQt5.QtGui import QDesktopServices
+from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtWidgets import QDialog, QFileDialog, QMenu, QAction
+from PyQt5.QtGui import QDesktopServices, QClipboard, QGuiApplication, QKeySequence
 
 from hanlendar.domainmodel.task import Task
 
@@ -68,6 +68,8 @@ class TaskDialog( QtBaseClass ):           # type: ignore
             if self.task.occurrenceDue is None:
                 self.task.dueDateTime = self.task.occurrenceStart + timedelta(hours=1)
 
+        self.ui.descriptionEdit.setContextMenuPolicy( Qt.CustomContextMenu )
+
         self.ui.titleEdit.setText( self.task.title )
         self.ui.descriptionEdit.setText( self.task.description )
         self.ui.completionSlider.setValue( self.task.completed )
@@ -77,6 +79,7 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.ui.titleEdit.textChanged.connect( self._titleChanged )
         self.ui.descriptionEdit.textChanged.connect( self._descriptionChanged )
         self.ui.descriptionEdit.anchorClicked.connect( self._openLink )
+        self.ui.descriptionEdit.customContextMenuRequested.connect( self.textEditContextMenuRequest )
         self.ui.completionSlider.valueChanged.connect( self._completedChanged )
         self.ui.priorityBox.valueChanged.connect( self._priorityChanged )
         self.ui.deadlineBox.stateChanged.connect( self._deadlineChanged )
@@ -160,5 +163,33 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.ui.urlEdit.setText( link.toLocalFile() )
         QDesktopServices.openUrl( link )
 
+    def textEditContextMenuRequest(self, point):
+        menu = self.ui.descriptionEdit.createStandardContextMenu()
+        deleteAction = find_action( menu, "Delete" )
+        pastePlainAction = QAction( menu )
+        menu.insertAction( deleteAction, pastePlainAction )
+        pastePlainAction.setText( "Paste unformatted" )
+        # pastePlainAction.setShortcut( QKeySequence("Ctrl+Shift+V") )
+        pastePlainAction.triggered.connect( self._pasteUnformattedToDescription )
+        if self.ui.descriptionEdit.canPaste() is False:
+            pastePlainAction.setEnabled( False )
+        globalPos = self.ui.descriptionEdit.mapToGlobal( point )
+        menu.exec_( globalPos )
+
     def _finished(self, _):
         self.task.completed = self.completed
+        
+    def _pasteUnformattedToDescription(self):
+        richTextState = self.ui.descriptionEdit.acceptRichText()
+        self.ui.descriptionEdit.setAcceptRichText( False )
+        self.ui.descriptionEdit.paste()
+        self.ui.descriptionEdit.setAcceptRichText( richTextState )
+
+
+def find_action( menu: QMenu, actionText ):
+    actions = menu.actions()
+    for act in actions:
+        currText = act.text()
+        if actionText in currText:
+            return act
+    return None
