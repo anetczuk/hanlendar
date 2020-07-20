@@ -107,8 +107,10 @@ class DataObject( QObject ):
 
     ## ==============================================================
 
-    def addNewToDo( self ):
+    def addNewToDo( self, content=None ):
         todo = ToDo()
+        if content is not None:
+            todo.description = content
         todoDialog = ToDoDialog( todo, self.parentWidget )
         todoDialog.setModal( True )
         dialogCode = todoDialog.exec_()

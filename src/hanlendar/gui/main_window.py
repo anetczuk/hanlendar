@@ -124,6 +124,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.showCompletedToDosCB.toggled.connect( self.ui.todosTable.showCompletedToDos )
 
         self.ui.notesWidget.notesChanged.connect( self.saveData )
+        self.ui.notesWidget.createToDo.connect( self.data.addNewToDo )
 
         ## === main menu settings ===
 

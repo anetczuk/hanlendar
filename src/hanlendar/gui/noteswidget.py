@@ -24,6 +24,7 @@
 import logging
 # from datetime import datetime
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMenu, QInputDialog
 from PyQt5.QtWidgets import QLineEdit
@@ -43,6 +44,7 @@ NOTES_BG_COLOR = "#f7ec9d"
 class SinglePageWidget( QWidget ):
 
     contentChanged = pyqtSignal()
+    createToDo     = pyqtSignal( str )
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -54,6 +56,7 @@ class SinglePageWidget( QWidget ):
         vlayout.setContentsMargins( 0, 0, 0, 0 )
         self.setLayout( vlayout )
         self.textEdit = QTextEdit(self)
+        self.textEdit.setContextMenuPolicy( Qt.CustomContextMenu )
 
 #         self.textEdit.setStyleSheet( "background-color: #f7ec9d;" )
         self.setStyleSheet(
@@ -67,6 +70,7 @@ class SinglePageWidget( QWidget ):
         vlayout.addWidget( self.textEdit )
 
         self.textEdit.textChanged.connect( self.textChanged )
+        self.textEdit.customContextMenuRequested.connect( self.textEditContextMenuRequest )
 
     def getText(self):
         return self.textEdit.toPlainText()
@@ -82,10 +86,27 @@ class SinglePageWidget( QWidget ):
             self.changeCounter = 0
             self.contentChanged.emit()
 
+    def textEditContextMenuRequest(self, point):
+        menu = self.textEdit.createStandardContextMenu()
+        convertAction = menu.addAction("Convert to ToDo")
+        convertAction.triggered.connect( self._convertToToDo )
+        selectedText = self.textEdit.textCursor().selectedText()
+        if not selectedText:
+            convertAction.setEnabled( False )
+        globalPos = self.mapToGlobal( point )
+        menu.exec_( globalPos )
+
+    def _convertToToDo(self):
+        selectedText = self.textEdit.textCursor().selectedText()
+        if not selectedText:
+            return
+        self.createToDo.emit( selectedText )
+
 
 class NotesWidget( QtBaseClass ):           # type: ignore
 
     notesChanged = pyqtSignal()
+    createToDo   = pyqtSignal( str )
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -125,6 +146,7 @@ class NotesWidget( QtBaseClass ):           # type: ignore
         pageWidget = SinglePageWidget(self)
         pageWidget.textEdit.setText( text )
         pageWidget.contentChanged.connect( self.notesChanged )
+        pageWidget.createToDo.connect( self.createToDo )
         self.ui.notes_tabs.addTab( pageWidget, title )
 
     def contextMenuEvent( self, event ):
