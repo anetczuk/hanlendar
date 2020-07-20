@@ -140,14 +140,16 @@ class TaskTable( QTableWidget ):
                 titleItem.setBackground( bgColor )
             self.setItem( i, 0, titleItem )
 
-            priorityItem = QTableWidgetItem( str(task.priority) )
+            priorityItem = QTableWidgetItem()
+            priorityItem.setData( Qt.EditRole, task.priority )                      ## handles int type properly
             priorityItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             priorityItem.setForeground( fgColor )
             if bgColor is not None:
                 priorityItem.setBackground( bgColor )
             self.setItem( i, 1, priorityItem )
 
-            completedItem = QTableWidgetItem( str(task.completed) )
+            completedItem = QTableWidgetItem()
+            completedItem.setData( Qt.EditRole, task.completed )                    ## handles int type properly
             completedItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             completedItem.setForeground( fgColor )
             if bgColor is not None:

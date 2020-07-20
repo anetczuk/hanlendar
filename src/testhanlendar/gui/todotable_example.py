@@ -55,22 +55,40 @@ app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
+todosList = []
 todo1 = ToDo()
 todo1.title = "ToDo 1"
 todo1.description = "Description"
 todo1.completed = 50
 todo1.priority = 5
+todosList.append( todo1 )
 
 todo2 = ToDo()
 todo2.title = "ToDo 2"
 todo2.description = "Description"
 todo2.completed = 0
 todo2.priority = 3
+todosList.append( todo2 )
+
+todo = ToDo()
+todo.title = "ToDo 3"
+todo.description = "Description"
+todo.completed = 0
+todo.priority = 11
+todosList.append( todo )
+
+todo = ToDo()
+todo.title = "ToDo 4"
+todo.description = "Description"
+todo.completed = 0
+todo.priority = 12
+todosList.append( todo )
 
 setup_interrupt_handling()
 
 widget = ToDoTable()
-widget.setToDos( [todo1, todo2] )
+widget.resize( 1024, 768 )
+widget.setToDos( todosList )
 widget.show()
 
 # print( "Dialog return:", dialogCode )

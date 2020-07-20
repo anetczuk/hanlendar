@@ -123,12 +123,14 @@ class ToDoTable( QTableWidget ):
             titleItem.setForeground( fgColor )
             self.setItem( i, 0, titleItem )
 
-            priorityItem = QTableWidgetItem( str(todo.priority) )
+            priorityItem = QTableWidgetItem()
+            priorityItem.setData( Qt.EditRole, todo.priority )                      ## handles int type properly
             priorityItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             priorityItem.setForeground( fgColor )
             self.setItem( i, 1, priorityItem )
 
-            completedItem = QTableWidgetItem( str(todo.completed) )
+            completedItem = QTableWidgetItem()
+            completedItem.setData( Qt.EditRole, todo.completed )                    ## handles int type properly
             completedItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
             completedItem.setForeground( fgColor )
             self.setItem( i, 2, completedItem )
