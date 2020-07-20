@@ -27,7 +27,7 @@ import copy
 
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMenu, QAction
-from PyQt5.QtGui import QDesktopServices, QClipboard, QGuiApplication, QKeySequence
+from PyQt5.QtGui import QDesktopServices
 
 from hanlendar.domainmodel.task import Task
 
@@ -178,7 +178,7 @@ class TaskDialog( QtBaseClass ):           # type: ignore
 
     def _finished(self, _):
         self.task.completed = self.completed
-        
+
     def _pasteUnformattedToDescription(self):
         richTextState = self.ui.descriptionEdit.acceptRichText()
         self.ui.descriptionEdit.setAcceptRichText( False )
