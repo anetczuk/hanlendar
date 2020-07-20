@@ -195,16 +195,17 @@ class DayListContentWidget( QWidget ):
         self.selectedTask.emit( index )
         self.update()
 
-    def getCurrentTask(self):
+    def getCurrentTask(self) -> Task:
         return self.getTask( self.currentIndex )
 
-    def getTask(self, index):
+    def getTask(self, index) -> Task:
         if index < 0:
             return None
         if index >= len(self.items):
             return None
-        widget = self.items[ index ]
-        return widget.task
+        widget: DayItem = self.items[ index ]
+        taskOccurrence: TaskOccurrence = widget.task
+        return taskOccurrence.task
 
     def setTasks(self, occurrencesList, day: date ):
         self.clear()
