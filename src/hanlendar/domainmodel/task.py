@@ -348,6 +348,13 @@ class Task( persist.Versionable ):
             return recurrenceDate
         return self._startDate
 
+    @occurrenceStart.setter
+    def occurrenceStart(self, value):
+        if self._recurrence is None:
+            self._startDate = value
+            return
+        self._startDate = value - self._recurrence.getDateOffset() * self._recurrentOffset
+
     @property
     def dueDateTime(self):
         return self._dueDate
@@ -365,6 +372,13 @@ class Task( persist.Versionable ):
         if recurrenceDate is not None:
             return recurrenceDate
         return self._dueDate
+
+    @occurrenceDue.setter
+    def occurrenceDue(self, value):
+        if self._recurrence is None:
+            self._dueDate = value
+            return
+        self._dueDate = value - self._recurrence.getDateOffset() * self._recurrentOffset
 
     def currentOccurrence(self) -> TaskOccurrence:
         return TaskOccurrence( self, self._recurrentOffset )

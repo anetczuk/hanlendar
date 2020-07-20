@@ -109,19 +109,19 @@ class TaskDialog( QtBaseClass ):           # type: ignore
             self.task.setDeadline()
         else:
             startDateTime = self.ui.startDateTime.dateTime()
-            self.task.startDateTime = startDateTime.toPyDateTime()
+            self.task.occurrenceStart = startDateTime.toPyDateTime()
         self.ui.recurrentWidget.refreshWidget()
 
     def _startChanged(self, newValue):
-        self.task.startDateTime = newValue.toPyDateTime()
-        self.task.startDateTime = self.task.occurrenceStart.replace( second=0 )
+        startDateTime = newValue.toPyDateTime()
+        self.task.occurrenceStart = startDateTime.replace( second=0 )
         if self.task.occurrenceStart > self.task.occurrenceDue:
             self.ui.dueDateTime.setDateTime( self.task.occurrenceStart )
         self.ui.recurrentWidget.refreshWidget()
 
     def _dueChanged(self, newValue):
-        self.task.dueDateTime = newValue.toPyDateTime()
-        self.task.dueDateTime = self.task.dueDateTime.replace( second=0 )
+        dueDateTime = newValue.toPyDateTime()
+        self.task.occurrenceDue = dueDateTime.replace( second=0 )
         if self.task.occurrenceStart is not None and self.task.occurrenceDue < self.task.occurrenceStart:
             self.ui.startDateTime.setDateTime( self.task.occurrenceDue )
         self.ui.recurrentWidget.refreshWidget()
