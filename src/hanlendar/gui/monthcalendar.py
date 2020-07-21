@@ -60,6 +60,7 @@ class MonthCalendar( QCalendarWidget ):
 
         todayDate = datetime.date.today()
         self.setCurrentPage( todayDate.year, todayDate.month )
+        self.setSelectedDate( todayDate )
 
         self.taskColor = QColor( self.palette().color( QPalette.Highlight) )
         self.taskColor.setAlpha( 64 )

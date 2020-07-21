@@ -35,9 +35,13 @@ except ImportError as error:
     pass
 
 import sys
+import logging
 
-from datetime import datetime, timedelta
+import datetime
+from datetime import timedelta
 
+import hanlendar
+import hanlendar.logger as logger
 from hanlendar.gui.qt import QApplication, renderToPixmap
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.monthcalendar import MonthCalendar
@@ -46,12 +50,27 @@ from hanlendar.gui.resources import get_root_path
 
 from hanlendar.domainmodel.recurrent import Recurrent
 
+from testhanlendar.mock_datetime import mock_datetime, mock_date
+
 
 ## ============================= main section ===================================
 
 
 if __name__ != '__main__':
     sys.exit(0)
+
+
+targetDate     = datetime.date(2020, 7, 16)
+targetDatetime = datetime.datetime(2020, 7, 16)
+mock_date( targetDate )
+mock_datetime( targetDatetime )
+mock_datetime( targetDatetime, hanlendar.domainmodel.task )
+
+
+logFile = logger.get_logging_output_file()
+logger.configure( logFile )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 app = QApplication(sys.argv)
@@ -64,7 +83,7 @@ setup_interrupt_handling()
 
 dataObject = DataObject( None )
 
-todayDate = datetime.today().replace( hour=6 )
+todayDate = datetime.datetime.today().replace( hour=6 )
 task1 = dataObject.addTask()
 task1.title = "Task 1"
 task1.startDateTime = todayDate + timedelta( hours=5 )

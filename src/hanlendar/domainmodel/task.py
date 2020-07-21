@@ -647,5 +647,5 @@ def ensure_date_time( value ):
         return value
     if isinstance( value, date):
         value = datetime.combine( value, datetime.min.time() )
-    _LOGGER.warning( "unknown type: %s", value )
+    _LOGGER.warning( "unknown type: %s %s", value, type(value) )
     return None
