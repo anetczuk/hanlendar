@@ -14,7 +14,7 @@ for filename in $SCRIPT_DIR/*.png; do
         continue
     fi
     small_name=${filename/$big_suffix/$small_suffix}
-    echo "xxx: $filename -> $small_name"
+    echo "converting: $filename -> $small_name"
     convert $filename -resize 450 $small_name
     #convert $filename -resize 200x100 $small_name
 done
