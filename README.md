@@ -30,6 +30,10 @@ Application is inspired by:
 [![ToDos list](doc/app-todos-small.png "ToDos list")](doc/app-todos-big.png)
 [![Notes](doc/app-notes-small.png "Notes")](doc/app-notes-big.png)
 
+[![New task dialog](doc/taskdialog-small.png "New task dialog")](doc/taskdialog-big.png)
+[![Day list](doc/daylistwidget-small.png "Day list")](doc/daylistwidget-big.png)
+[![Month calendar](doc/monthcalendar-small.png "Month calendar")](doc/monthcalendar-big.png)
+
 
 ## Disclaimer
 
@@ -79,6 +83,7 @@ It is possible to promote widgets to custom classes from within Qt Designer. Ste
 - dragging and dropping within QTableWidget (*todostable.py*) 
 - loading of UI files and inheriting from it
 - properly killing (Ctrl+C) PyQt (*sigint.py*)
+- mocking *datetime.today()* and *datetime.now()* (*mock_datetime.py*)
 - persisting and versioning classes (*persist.py*)
 
 
