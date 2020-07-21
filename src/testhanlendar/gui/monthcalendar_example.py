@@ -38,10 +38,11 @@ import sys
 
 from datetime import datetime, timedelta
 
-from hanlendar.gui.qt import QApplication
+from hanlendar.gui.qt import QApplication, renderToPixmap
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.monthcalendar import MonthCalendar
 from hanlendar.gui.dataobject import DataObject
+from hanlendar.gui.resources import get_root_path
 
 from hanlendar.domainmodel.recurrent import Recurrent
 
@@ -59,6 +60,7 @@ app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
 setup_interrupt_handling()
+
 
 dataObject = DataObject( None )
 
@@ -110,6 +112,9 @@ calendar.connectData( dataObject )
 calendar.resize( 1024, 768 )
 calendar.show()
 # dialogCode = dialog.exec_()
+
+root_path = get_root_path()
+renderToPixmap( calendar, root_path + "/tmp/monthcalendar-big.png" )
 
 # print( "Dialog return:", dialogCode )
 # print( "Created todo:", dialog.todo )

@@ -12,7 +12,7 @@ try:
     from PyQt5 import QtCore
     from PyQt5.QtCore import Qt
     from PyQt5.QtCore import QObject, pyqtSignal
-    from PyQt5.QtCore import QEvent
+    from PyQt5.QtCore import QEvent, QPoint
 
     from PyQt5 import QtWidgets
     from PyQt5.QtWidgets import QApplication, qApp
@@ -30,7 +30,7 @@ try:
     from PyQt5.QtWidgets import QMainWindow
 
     from PyQt5 import QtGui
-    from PyQt5.QtGui import QIcon
+    from PyQt5.QtGui import QIcon, QPixmap, QRegion
 
 except ImportError:
     ### No module named <name>
@@ -55,3 +55,12 @@ def printTree( qtObject: QObject, indent=0 ):
     childList = qtObject.children()
     for child in childList:
         printTree( child, indent + 4 )
+
+
+def renderToPixmap( widget: QWidget, outputPath=None ):
+    rectangle = widget.geometry()
+    pixmap = QPixmap( rectangle.size() )
+    widget.render( pixmap, QPoint(), QRegion(rectangle) )
+    if outputPath is not None:
+        pixmap.save( outputPath )
+    return pixmap
