@@ -328,7 +328,7 @@ class DayListWidget( QWidget ):
         self.taskContextMenu.connectData( dataObject )
         self.editTask.connect( dataObject.editTask )
 
-    def showCompletedTasks(self, show):
+    def showCompletedTasks(self, show=True):
         self.content.showCompleted = show
         self.updateView()
 

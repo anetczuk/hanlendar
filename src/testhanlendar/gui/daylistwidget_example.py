@@ -37,9 +37,10 @@ except ImportError as error:
 import sys
 from datetime import datetime, timedelta
 
-from hanlendar.gui.qt import QApplication
+from hanlendar.gui.qt import QApplication, renderToPixmap
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.daylistwidget import DayListWidget
+from hanlendar.gui.resources import get_root_path
 
 from hanlendar.domainmodel.task import Task
 
@@ -56,21 +57,22 @@ app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
-taskDate = datetime.today().replace( hour=12 )
+taskDate = datetime.today().replace( hour=8 )
 
 task1 = Task()
-task1.title = "Task 1"
+task1.title = "Completed Task"
 task1.description = "Description"
-task1.completed = 50
+task1.completed = 100
 task1.priority = 5
-task1.setDefaultDateTime( taskDate )
+task1.startDateTime = taskDate
+task1.dueDateTime = task1.startDateTime + timedelta( hours=4 )
 
 task2 = Task()
-task2.title = "Task 2"
+task2.title = "Task 1"
 task2.description = "Description"
 task2.completed = 0
 task2.priority = 3
-task2.setDefaultDateTime( taskDate + timedelta( hours=2 ) )
+task2.setDefaultDateTime( taskDate + timedelta( hours=6 ) )
 
 task3 = Task()
 task3.title = "Full Day Task"
@@ -83,9 +85,13 @@ task3.dueDateTime   = task3.startDateTime  + timedelta( days=4 )
 setup_interrupt_handling()
 
 widget = DayListWidget()
+widget.showCompletedTasks()
 widget.resize( 800, 600 )
 widget.setTasks( [task1, task2, task3], taskDate.date() )
 widget.show()
+
+root_path = get_root_path()
+renderToPixmap( widget, root_path + "/tmp/daylistwidget-big.png" )
 
 # print( "Dialog return:", dialogCode )
 # print( "Created task:", dialog.task )

@@ -37,9 +37,10 @@ except ImportError as error:
 import sys
 from datetime import datetime
 
-from hanlendar.gui.qt import QApplication
+from hanlendar.gui.qt import QApplication, renderToPixmap
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.taskdialog import TaskDialog
+from hanlendar.gui.resources import get_root_path
 
 from hanlendar.domainmodel.task import Task
 
@@ -57,15 +58,30 @@ app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
 task = Task()
-task.title = "Task title"
-task.description = "Description"
+task.title = "Task 1"
+task.description = ('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">'
+'<html><head><meta name="qrichtext" content="1" /><style type="text/css">'
+'p, li { white-space: pre-wrap; }'
+'</style></head><body style=" font-family:\'Noto Sans\'; font-size:9pt; font-weight:400; font-style:normal;">'
+'<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">A description</p>'
+'<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>'
+'<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="www.google.pl"><span style=" text-decoration: underline; color:#0000ff;">www.google.pl</span></a> </p>'
+'<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>'
+'<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="file:///var/log/kern.log"><span style=" text-decoration: underline; color:#0000ff;">file:///var/log/kern.log</span></a> </p>'
+'<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>')
+
 task.completed = 50
 task.priority = 5
-task.setDefaultDateTime( datetime.today() )
+task.setDefaultDateTime( datetime.today().replace( hour=12, minute=0, second=0 ) )
 
 setup_interrupt_handling()
 
 dialog = TaskDialog( task )
+dialog.resize(400, 600)
+
+root_path = get_root_path()
+renderToPixmap( dialog, root_path + "/tmp/taskdialog-big.png" )
+
 dialogCode = dialog.exec_()
 
 print( "Dialog return:", dialogCode )
