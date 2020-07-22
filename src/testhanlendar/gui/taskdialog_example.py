@@ -78,7 +78,7 @@ task.setDefaultDateTime( datetime.today().replace( hour=12, minute=0, second=0 )
 setup_interrupt_handling()
 
 dialog = TaskDialog( task )
-dialog.resize(400, 600)
+dialog.resize(400, 450)
 
 root_path = get_root_path()
 renderToPixmap( dialog, root_path + "/tmp/taskdialog-big.png" )
