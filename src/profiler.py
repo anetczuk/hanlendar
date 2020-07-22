@@ -24,106 +24,6 @@
 #
 
 
-# import sys
-#
-# import time
-# import argparse
-# import logging
-# import cProfile
-#
-# import hanlendar.logger as logger
-#
-# from hanlendar.gui.main_window import MainWindow
-#
-# from hanlendar.gui.qt import QApplication
-# from hanlendar.gui.sigint import setup_interrupt_handling
-# from hanlendar.gui.menustyle import MenuStyle
-#
-#
-# logger.configure()
-# _LOGGER = logging.getLogger(__name__)
-#
-#
-# def run_app(args):
-#     ## GUI
-#     app = QApplication(sys.argv)
-#     app.setApplicationName("Hanlendar")
-#     app.setOrganizationName("arnet")
-#     ### app.setOrganizationDomain("www.my-org.com")
-#
-#     ## disable Alt key switching to application menu
-#     app.setStyle( MenuStyle() )
-#
-#     window = MainWindow()
-#     window.loadSettings()
-#     window.loadData()
-#
-#     if args.minimized is False:
-#         window.show()
-#
-#     setup_interrupt_handling()
-#
-#     exitCode = app.exec_()
-#
-#     if exitCode == 0:
-#         window.saveSettings()
-#         window.saveData()
-#
-#     return exitCode
-#
-#
-# def main():
-#     parser = argparse.ArgumentParser(description='Hanlendar')
-#     parser.add_argument('--minimized', action='store_const', const=True, default=False, help='Start minimized' )
-#     parser.add_argument('--profile', action='store_const', const=True, default=False, help='Profile the code' )
-#     parser.add_argument('--pfile', action='store', default=None, help='Profile the code and output data to file' )
-#
-#     args = parser.parse_args()
-#
-#     _LOGGER.debug( "Starting the application" )
-#     _LOGGER.debug( "Logger log file: %s", logger.log_file )
-#
-#     starttime = time.time()
-#     profiler = None
-#
-#     exitCode = 0
-#
-#     try:
-#
-#         profiler_outfile = args.pfile
-#         if args.profile is True or profiler_outfile is not None:
-#             print( "Starting profiler" )
-#             profiler = cProfile.Profile()
-#             profiler.enable()
-#
-#         exitCode = run_app(args)
-#
-#     # except BluetoothError as e:
-#     #     print "Error: ", e, " check if BT is powered on"
-#
-#     except BaseException:
-#         exitCode = 1
-#         _LOGGER.exception("Exception occurred")
-#         raise
-#
-#     finally:
-#         _LOGGER.info( "" )                    ## print new line
-#         if profiler is not None:
-#             profiler.disable()
-#             if profiler_outfile is None:
-#                 _LOGGER.info( "Generating profiler data" )
-#                 profiler.print_stats(1)
-#             else:
-#                 _LOGGER.info( "Storing profiler data to %s", profiler_outfile )
-#                 profiler.dump_stats( profiler_outfile )
-#                 _LOGGER.info( "pyprof2calltree -k -i: %s", profiler_outfile )
-#
-#         timeDiff = (time.time() - starttime) * 1000.0
-#         _LOGGER.info( "Calculation time: {:13.8f}ms".format(timeDiff) )
-#
-#         sys.exit(exitCode)
-
-
 import sys
 import time
 import argparse
@@ -144,10 +44,9 @@ args = parser.parse_args()
 starttime = time.time()
 profiler = None
 
-exitCode = 0
+exitCode = 1
 
 try:
-
     profiler_outfile = args.pfile
 
     print( "Starting profiler" )
@@ -155,9 +54,6 @@ try:
     profiler.enable()
 
     exitCode = main( args )
-
-# except BluetoothError as e:
-#     print "Error: ", e, " check if BT is powered on"
 
 except BaseException:
     exitCode = 1
