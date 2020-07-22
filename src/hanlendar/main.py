@@ -26,10 +26,8 @@
 
 import sys
 
-import time
 import argparse
 import logging
-import cProfile
 
 import hanlendar.logger as logger
 
@@ -55,6 +53,8 @@ def run_app(args):
     app.setStyle( MenuStyle() )
 
     window = MainWindow()
+    if args.blocksave is True:
+        window.disableSaving()
     window.loadSettings()
     window.loadData()
 
@@ -72,56 +72,35 @@ def run_app(args):
     return exitCode
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Hanlendar')
+def create_parser( parser: argparse.ArgumentParser = None ):
+    if parser is None:
+        parser = argparse.ArgumentParser(description='Hanlendar')
     parser.add_argument('--minimized', action='store_const', const=True, default=False, help='Start minimized' )
-    parser.add_argument('--profile', action='store_const', const=True, default=False, help='Profile the code' )
-    parser.add_argument('--pfile', action='store', default=None, help='Profile the code and output data to file' )
+    parser.add_argument('--blocksave', '-bs', action='store_const', const=True, default=False, help='Block save data' )
+    return parser
 
-    args = parser.parse_args()
+
+def main( args=None ):
+    if args is None:
+        parser = create_parser()
+        args = parser.parse_args()
 
     _LOGGER.debug( "Starting the application" )
     _LOGGER.debug( "Logger log file: %s", logger.log_file )
 
-    starttime = time.time()
-    profiler = None
-
-    exitCode = 0
+    exitCode = 1
 
     try:
-
-        profiler_outfile = args.pfile
-        if args.profile is True or profiler_outfile is not None:
-            print( "Starting profiler" )
-            profiler = cProfile.Profile()
-            profiler.enable()
-
         exitCode = run_app(args)
 
-    # except BluetoothError as e:
-    #     print "Error: ", e, " check if BT is powered on"
-
     except BaseException:
-        exitCode = 1
         _LOGGER.exception("Exception occurred")
         raise
 
     finally:
-        _LOGGER.info( "" )                    ## print new line
-        if profiler is not None:
-            profiler.disable()
-            if profiler_outfile is None:
-                _LOGGER.info( "Generating profiler data" )
-                profiler.print_stats(1)
-            else:
-                _LOGGER.info( "Storing profiler data to %s", profiler_outfile )
-                profiler.dump_stats( profiler_outfile )
-                _LOGGER.info( "pyprof2calltree -k -i: %s", profiler_outfile )
-
-        timeDiff = (time.time() - starttime) * 1000.0
-        _LOGGER.info( "Calculation time: {:13.8f}ms".format(timeDiff) )
-
         sys.exit(exitCode)
+
+    return exitCode
 
 
 if __name__ == '__main__':

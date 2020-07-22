@@ -124,10 +124,6 @@ def prepare_example_data( dataManager: Manager ):
     dataManager.addNote("note 2", "note content")
 
 
-def save_data_mock():
-    _LOGGER.info("saving data is disabled on example")
-
-
 ## ============================= main section ===================================
 
 
@@ -154,8 +150,7 @@ app.setOrganizationName("arnet")
 MainWindow.toolTip = MainWindow.toolTip + " Preview"
 
 window = MainWindow()
-# pylint: disable=W0212
-window._saveData = save_data_mock           # type: ignore
+window.disableSaving()
 window.setWindowTitle( window.windowTitle() + " Preview" )
 
 window.loadSettings()

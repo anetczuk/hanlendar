@@ -152,6 +152,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         else:
             self.setStatusMessage( "Nothing to save", [ "Nothing to save +", "Nothing to save =" ], 6000 )
 
+    # pylint: disable=E0202
     def _saveData(self):
         ## having separate slot allows to monkey patch / mock "_saveData()" method
         _LOGGER.info( "storing data" )
@@ -159,6 +160,12 @@ class MainWindow( QtBaseClass ):           # type: ignore
         notes = self.ui.notesWidget.getNotes()
         self.data.getManager().setNotes( notes )
         return self.data.store( dataPath )
+
+    def disableSaving(self):
+        def save_data_mock():
+            _LOGGER.info("saving data is disabled")
+        _LOGGER.info("disabling saving data")
+        self._saveData = save_data_mock           # type: ignore
 
     def getDataPath(self):
         settings = self.getSettings()
