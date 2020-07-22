@@ -17,7 +17,10 @@ Application is inspired by:
     - recurrence: daily, weekly, monthly, yearly
 - adding todos
 - adding notes
-- month and day view
+- tasks list
+- day and month view
+- todos list
+- notes tabs
 - system tray icon with tasks indicator
 - importing data from *Xfce Notes* application
 
