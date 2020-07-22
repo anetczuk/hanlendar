@@ -65,7 +65,7 @@ Application can be run in profiler mode passing. Just execute `tools/profiler.py
 
 To run tests execute `src/testhanlendar/runtests.py`. It can be run with code profiling and code coverage options.
 
-In addition there is demo application. It can be run by `testhanlendar/gui/main_window_example.py`.
+In addition there is demo application. It can be run by `src/testhanlendar/gui/main_window_example.py`.
 
 Static code analysis can be executed by script `tools/checkall.sh`.
 
