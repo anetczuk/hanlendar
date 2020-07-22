@@ -26,10 +26,21 @@
 
 import sys
 import time
+import logging
 import argparse
 import cProfile
 
-from hanlendar.main import _LOGGER, create_parser, main
+import sys
+import os
+
+#### append source root
+sys.path.append(os.path.abspath( os.path.join(os.path.dirname(__file__), "../src") ))
+
+
+from hanlendar.main import create_parser, main
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 parser = argparse.ArgumentParser(description='Hanlendar Profiler')
@@ -41,6 +52,10 @@ create_parser( parser )
 args = parser.parse_args()
 
 
+if args.blocksave is None:
+    args.blocksave = True
+
+
 starttime = time.time()
 profiler = None
 
@@ -49,7 +64,7 @@ exitCode = 1
 try:
     profiler_outfile = args.pfile
 
-    print( "Starting profiler" )
+    _LOGGER.info( "Starting profiler" )
     profiler = cProfile.Profile()
     profiler.enable()
 

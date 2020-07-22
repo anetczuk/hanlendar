@@ -76,7 +76,7 @@ def create_parser( parser: argparse.ArgumentParser = None ):
     if parser is None:
         parser = argparse.ArgumentParser(description='Hanlendar')
     parser.add_argument('--minimized', action='store_const', const=True, default=False, help='Start minimized' )
-    parser.add_argument('--blocksave', '-bs', action='store_const', const=True, default=False, help='Block save data' )
+    parser.add_argument('--blocksave', '-bs', action='store_const', const=True, default=None, help='Block save data' )
     return parser
 
 
