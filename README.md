@@ -61,9 +61,9 @@ In addition application can be added to system menu and autostart by followings 
 
 Application requires *PyQt5* library.
 
-Application can be run in profiler mode passing *--profile* as command line parameter. 
+Application can be run in profiler mode passing. Just execute `tools/profiler.py`.
 
-To run tests execute `src/runtests.py`. It can be run with code profiling  and code coverage options.
+To run tests execute `src/testhanlendar/runtests.py`. It can be run with code profiling and code coverage options.
 
 In addition there is demo application. It can be run by `testhanlendar/gui/main_window_example.py`.
 
