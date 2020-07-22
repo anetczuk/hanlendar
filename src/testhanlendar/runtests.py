@@ -39,9 +39,8 @@ import tempfile
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-## do not have to add 'src' dir to path until script is in separate directory
-# src_dir = os.path.abspath(os.path.join(script_dir, "../src"))
-# sys.path.insert(0, src_dir)
+src_dir = os.path.abspath(os.path.join(script_dir, ".."))
+sys.path.insert(0, src_dir)
 
 
 _LOGGER = logging.getLogger(__name__)

@@ -27,7 +27,7 @@ import datetime
 
 from testhanlendar.datetimetoday import get_today
 
-from .mock_datetime import get_mock_date, get_mock_datetime
+from testhanlendar.mock_datetime import get_mock_date, get_mock_datetime
 
 
 class DateTest(unittest.TestCase):
