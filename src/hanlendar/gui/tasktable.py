@@ -190,6 +190,8 @@ class TaskTable( QTableWidget ):
             taskOccurrence: TaskOccurrence = self.getTask( rowIndex )
         if taskOccurrence is not None:
             self.taskContextMenu.show( taskOccurrence.task )
+        else:
+            self.taskContextMenu.show( None )
 
     def taskSelectionChanged(self):
         taskIndex = self.currentRow()
