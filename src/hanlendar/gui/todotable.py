@@ -21,7 +21,7 @@
 # SOFTWARE.
 #
 
-# import logging
+import logging
 
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import Qt
@@ -35,10 +35,64 @@ from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.todo import ToDo
 
 
-# _LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
-class ToDoTable( QTableWidget ):
+class TodosModel(QtCore.QAbstractTableModel):
+    
+    headerLabels = [ "Summary", "Priority", "Complete" ]
+    attrList     = [ "title", "priority", "completed" ]
+    
+    def __init__(self, parent, todos=None, *args):
+        super().__init__(parent, *args)
+        if todos is not None:
+            self.todosList = todos
+        else:
+            self.todosList = []
+
+    def rowCount(self, parent=QtCore.QModelIndex()):
+        return len(self.todosList)
+
+    def columnCount(self, parent=QtCore.QModelIndex()):
+        return len(self.headerLabels)
+
+    def data(self, index, role):
+        if not index.isValid():
+            return None
+        elif role != QtCore.Qt.DisplayRole:
+            return None
+        attrIndex = index.column()
+        attrName = self._getAttrName(attrIndex)
+        if attrName is None:
+            return None
+        todo: ToDo = self.todosList[ index.row() ]
+        return getattr( todo, attrName )
+
+    def headerData(self, col, orientation, role):
+        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+            return self.headerLabels[col]
+        return None
+
+    def sort(self, column, order = Qt.AscendingOrder):
+        attrName = self._getAttrName( column )
+        if attrName is None:
+            _LOGGER.warning("invalid attribute index: %s", column)
+            return
+        reverseOrder = False
+        if order == Qt.AscendingOrder:
+            reverseOrder = True
+        self.todosList.sort( key=lambda x: getattr(x, attrName), reverse=reverseOrder )
+        self.layoutChanged.emit()
+
+    def _getAttrName(self, attrIndex):
+        if attrIndex < 0:
+            return None
+        if attrIndex >= len(self.attrList):
+            return None
+        return self.attrList[attrIndex]
+
+
+class ToDoTable( QtWidgets.QTableView ):
 
     selectedToDo        = pyqtSignal( ToDo )
     todoUnselected      = pyqtSignal()
@@ -60,17 +114,14 @@ class ToDoTable( QTableWidget ):
         self.setAlternatingRowColors( True )
         self.setShowGrid( False )
 
-        headerLabels = [ "Summary", "Priority", "Complete" ]
-        self.setColumnCount( len(headerLabels) )
-        self.setHorizontalHeaderLabels( headerLabels )
+        model = TodosModel(self)
+        self.setModel(model)
 
         header = self.horizontalHeader()
         header.setHighlightSections( False )
         header.setSectionResizeMode( 0, QHeaderView.Stretch )
 
-        self.itemSelectionChanged.connect( self.todoSelectionChanged )
-        self.itemClicked.connect( self.todoClicked )
-        self.itemDoubleClicked.connect( self.todoDoubleClicked )
+        self.doubleClicked.connect( self.todoDoubleClicked )
 
         self.setToDos( [] )
 
@@ -93,60 +144,28 @@ class ToDoTable( QTableWidget ):
     def updateView(self):
         todosList = self.data.getManager().getToDos()
         self.setToDos( todosList )
+        self.setCurrentIndex( QtCore.QModelIndex() )        ## unselect
 
     def getToDo(self, todoIndex):
         if todoIndex < 0:
             return None
-        if todoIndex >= self.rowCount():
+        todos = self.model().todosList
+        if todoIndex >= len(todos):
             return None
-        tableItem = self.item( todoIndex, 0 )
-        userData = tableItem.data( Qt.UserRole )
-        return userData
+        return todos[ todoIndex ]
 
     def setToDos( self, todosList ):
-        self.clear()
-
-        self.setSortingEnabled( False )     ## workaround to fix disappearing cells content
-
-        if self.showCompleted is False:
-            todosList = [ todo for todo in todosList if not todo.isCompleted() ]
-
-        todosSize = len( todosList )
-        self.setRowCount( todosSize )
-
-        for i in range(0, todosSize):
-            todo: ToDo = todosList[i]
-
-            fgColor = get_todo_fgcolor( todo )
-            titleItem = QTableWidgetItem( todo.title )
-            titleItem.setData( Qt.UserRole, todo )
-            titleItem.setForeground( fgColor )
-            self.setItem( i, 0, titleItem )
-
-            priorityItem = QTableWidgetItem()
-            priorityItem.setData( Qt.EditRole, todo.priority )                      ## handles int type properly
-            priorityItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
-            priorityItem.setForeground( fgColor )
-            self.setItem( i, 1, priorityItem )
-
-            completedItem = QTableWidgetItem()
-            completedItem.setData( Qt.EditRole, todo.completed )                    ## handles int type properly
-            completedItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
-            completedItem.setForeground( fgColor )
-            self.setItem( i, 2, completedItem )
-
-        self.setSortingEnabled( True )
-
-        # printTree( self )
+        self.model().todosList = todosList
+        self.model().layoutChanged.emit()
 
     def contextMenuEvent( self, event ):
         evPos     = event.pos()
         globalPos = self.viewport().mapToGlobal( evPos )
 
         todo: ToDo = None
-        item = self.itemAt( evPos )
-        if item is not None:
-            rowIndex = self.row( item )
+        mIndex = self.indexAt( evPos )
+        if mIndex is not None:
+            rowIndex = mIndex.row()
             todo = self.getToDo( rowIndex )
 
         contextMenu = QMenu(self)
@@ -176,18 +195,20 @@ class ToDoTable( QTableWidget ):
         elif action == markCompletedAction:
             self.markCompleted.emit( todo )
 
-    def todoSelectionChanged(self):
-        todoIndex = self.currentRow()
-        todo = self.getToDo( todoIndex )
+#     def todoSelectionChanged(self):
+#         todoIndex = self.currentRow()
+#         todo = self.getToDo( todoIndex )
+#         self.emitSelectedToDo( todo )
+
+    def selectionChanged(self, fromSelection, toSelection):
+        super().selectionChanged( fromSelection, toSelection )
+        modelIndex = self.currentIndex()
+        rowIndex = modelIndex.row()
+        todo = self.getToDo( rowIndex )
         self.emitSelectedToDo( todo )
 
-    def todoClicked(self, item):
-        todoIndex = self.row( item )
-        todo = self.getToDo( todoIndex )
-        self.emitSelectedToDo( todo )
-
-    def todoDoubleClicked(self, item):
-        rowIndex = self.row( item )
+    def todoDoubleClicked(self, modelIndex):
+        rowIndex = modelIndex.row()
         todo = self.getToDo( rowIndex )
         self.editToDo.emit( todo )
 
@@ -197,40 +218,40 @@ class ToDoTable( QTableWidget ):
         else:
             self.todoUnselected.emit()
 
-    def dropEvent(self, event):
-        if event.source() != self:
-            ## do not allow dropping from other elements
-            return
-        ## internal drag & drop
-        sourceRows = set([mi.row() for mi in self.selectedIndexes()])
-        targetRow = self.indexAt(event.pos()).row()
-        sourceRows.discard(targetRow)
-        if len(sourceRows) != 1:
-            return
-        sourceRow = sourceRows.pop()
-        sourceToDo = self.getToDo( sourceRow )
-        targetToDo = self.getToDo( targetRow )
-        #print( "drop event:", sourceRow, targetRow, sourceToDo.title, targetToDo.title )
-
-        manager: Manager = self.data.getManager()
-        if targetToDo is None:
-            manager.setToDoPriorityLeast( sourceToDo )
-            self.data.todoChanged.emit( sourceToDo )
-            self.updateView()
-            return
-        sourcePriority = sourceToDo.priority
-        targetPriority = targetToDo.priority
-        if targetPriority == sourcePriority:
-            ## no priority to change
-            return
-        if targetPriority > sourcePriority:
-            newPriority = targetPriority + 1
-            manager.setToDoPriorityRaise( sourceToDo, newPriority )
-        else:
-            newPriority = targetPriority - 1
-            manager.setToDoPriorityDecline( sourceToDo, newPriority )
-        self.data.todoChanged.emit( sourceToDo )
-        self.updateView()
+#     def dropEvent(self, event):
+#         if event.source() != self:
+#             ## do not allow dropping from other elements
+#             return
+#         ## internal drag & drop
+#         sourceRows = set([mi.row() for mi in self.selectedIndexes()])
+#         targetRow = self.indexAt(event.pos()).row()
+#         sourceRows.discard(targetRow)
+#         if len(sourceRows) != 1:
+#             return
+#         sourceRow = sourceRows.pop()
+#         sourceToDo = self.getToDo( sourceRow )
+#         targetToDo = self.getToDo( targetRow )
+#         #print( "drop event:", sourceRow, targetRow, sourceToDo.title, targetToDo.title )
+# 
+#         manager: Manager = self.data.getManager()
+#         if targetToDo is None:
+#             manager.setToDoPriorityLeast( sourceToDo )
+#             self.data.todoChanged.emit( sourceToDo )
+#             self.updateView()
+#             return
+#         sourcePriority = sourceToDo.priority
+#         targetPriority = targetToDo.priority
+#         if targetPriority == sourcePriority:
+#             ## no priority to change
+#             return
+#         if targetPriority > sourcePriority:
+#             newPriority = targetPriority + 1
+#             manager.setToDoPriorityRaise( sourceToDo, newPriority )
+#         else:
+#             newPriority = targetPriority - 1
+#             manager.setToDoPriorityDecline( sourceToDo, newPriority )
+#         self.data.todoChanged.emit( sourceToDo )
+#         self.updateView()
 
 
 def get_todo_fgcolor( todo: ToDo ) -> QBrush:

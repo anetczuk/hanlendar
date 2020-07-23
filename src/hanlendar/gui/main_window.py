@@ -223,6 +223,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def handleNotification( self, notification: Notification ):
         self.trayIcon.displayMessage( notification.message )
         self.updateTasksView()
+        self.ui.todosTable.updateView()
 
     ## ====================================================================
 

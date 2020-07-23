@@ -119,7 +119,7 @@
         <item>
          <widget class="QTabWidget" name="lists_tabs">
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="tasks_tab">
            <attribute name="title">
@@ -371,21 +371,6 @@
               <property name="dragDropMode">
                <enum>QAbstractItemView::DragDrop</enum>
               </property>
-              <column>
-               <property name="text">
-                <string>Summary</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Priority</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Completed</string>
-               </property>
-              </column>
              </widget>
             </item>
            </layout>
@@ -505,11 +490,6 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ToDoTable</class>
-   <extends>QTableWidget</extends>
-   <header>hanlendar.gui.todotable</header>
-  </customwidget>
-  <customwidget>
    <class>ToDoDetails</class>
    <extends>QWidget</extends>
    <header>hanlendar.gui.tododetails</header>
@@ -525,6 +505,11 @@
    <extends>QWidget</extends>
    <header>hanlendar.gui.daylistwidget</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ToDoTable</class>
+   <extends>QTableView</extends>
+   <header>hanlendar.gui.todotable</header>
   </customwidget>
  </customwidgets>
  <resources/>
