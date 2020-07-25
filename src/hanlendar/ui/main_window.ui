@@ -326,7 +326,7 @@
            <attribute name="title">
             <string>ToDos</string>
            </attribute>
-           <layout class="QVBoxLayout" name="verticalLayout_9">
+           <layout class="QVBoxLayout" name="verticalLayout_9" stretch="0,0">
             <property name="leftMargin">
              <number>0</number>
             </property>
@@ -367,11 +367,7 @@
              </layout>
             </item>
             <item>
-             <widget class="ToDoTable" name="todosTable">
-              <property name="dragDropMode">
-               <enum>QAbstractItemView::DragDrop</enum>
-              </property>
-             </widget>
+             <widget class="ToDoTable" name="todosTable"/>
             </item>
            </layout>
           </widget>
@@ -508,7 +504,7 @@
   </customwidget>
   <customwidget>
    <class>ToDoTable</class>
-   <extends>QTableView</extends>
+   <extends>QTreeView</extends>
    <header>hanlendar.gui.todotable</header>
   </customwidget>
  </customwidgets>

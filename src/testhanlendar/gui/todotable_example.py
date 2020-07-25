@@ -73,7 +73,7 @@ todosList.append( todo2 )
 todo = ToDo()
 todo.title = "ToDo 3"
 todo.description = "Description"
-todo.completed = 0
+todo.completed = 30
 todo.priority = 11
 todosList.append( todo )
 
@@ -83,6 +83,36 @@ todo.description = "Description"
 todo.completed = 0
 todo.priority = 12
 todosList.append( todo )
+
+todo = ToDo()
+todo.title = "Completed ToDo"
+todo.description = "Description"
+todo.completed = 100
+todo.priority = 14
+todosList.append( todo )
+
+todo = ToDo()
+todo.title = "ToDo Tree"
+todo.description = "Description"
+todo.completed = 0
+todo.priority = 14
+todosList.append( todo )
+
+todoLeaf = ToDo()
+todoLeaf.title = "ToDo Leaf 1"
+todoLeaf.description = "Description"
+todoLeaf.completed = 0
+todoLeaf.priority = 16
+todo.addSubtodo( todoLeaf )
+
+todoLeaf = ToDo()
+todoLeaf.title = "ToDo Leaf 2"
+todoLeaf.description = "Description"
+todoLeaf.completed = 0
+todoLeaf.priority = 15
+todoLeaf.addSubtodo( ToDo() ).title = "xxx"
+todo.addSubtodo( todoLeaf )
+# todo.subtodos.append( todoLeaf )
 
 setup_interrupt_handling()
 

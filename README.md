@@ -83,7 +83,7 @@ It is possible to promote widgets to custom classes from within Qt Designer. Ste
 
 - painting on empty QWidget (*daylistwidget.py*)
 - painting on QCalendarWidget cells (*monthcalendar.py*)
-- dragging and dropping within QTableWidget (*todostable.py*) 
+- dragging and dropping within *QTreeView* and *QAbstractItemModel* (*todotable.py*) 
 - loading of UI files and inheriting from it
 - properly killing (Ctrl+C) PyQt (*sigint.py*)
 - mocking *datetime.today()* and *datetime.now()* (*mock_datetime.py*)

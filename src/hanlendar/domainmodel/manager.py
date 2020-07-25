@@ -206,8 +206,11 @@ class Manager():
             return list( self.todos )       ## shallow copy of list
         return [ item for item in self.todos if not item.isCompleted() ]
 
-    def addToDo( self, todo: ToDo ):
+    def addToDo( self, todo: ToDo = None ):
+        if todo is None:
+            todo = ToDo()
         self.todos.append( todo )
+        return todo
 
     def addNewToDo( self, title ):
         todo = ToDo()

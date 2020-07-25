@@ -44,7 +44,7 @@ class DataObject( QObject ):
     ## added, modified or removed
     taskChanged = pyqtSignal( Task )
     ## added, modified or removed
-    todoChanged = pyqtSignal( ToDo )
+    todoChanged = pyqtSignal()
 
     def __init__(self, parent: QWidget):
         super().__init__( parent )
@@ -108,16 +108,21 @@ class DataObject( QObject ):
     ## ==============================================================
 
     def addNewToDo( self, content=None ):
-        todo = ToDo()
-        if content is not None:
-            todo.description = content
-        todoDialog = ToDoDialog( todo, self.parentWidget )
-        todoDialog.setModal( True )
-        dialogCode = todoDialog.exec_()
-        if dialogCode == QDialog.Rejected:
+        todo = self._createToDo( content )
+        if todo is None:
             return
-        self.domainModel.addToDo( todoDialog.todo )
-        self.todoChanged.emit( todoDialog.todo )
+        self.domainModel.addToDo( todo )
+        self.todoChanged.emit()
+
+    def addNewSubToDo( self, parent: ToDo ):
+        if parent is None:
+            self.addNewToDo()
+            return
+        todo = self._createToDo()
+        if todo is None:
+            return
+        parent.addSubtodo( todo )
+        self.todoChanged.emit()
 
     def editToDo(self, todo: ToDo ):
         todoDialog = ToDoDialog( todo, self.parentWidget )
@@ -126,11 +131,11 @@ class DataObject( QObject ):
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.replaceToDo( todo, todoDialog.todo )
-        self.todoChanged.emit( todoDialog.todo )
+        self.todoChanged.emit()
 
     def removeToDo(self, todo: ToDo ):
         self.domainModel.removeToDo( todo )
-        self.todoChanged.emit( todo )
+        self.todoChanged.emit()
 
     def convertToDoToTask(self, todo: ToDo ):
         task = Task()
@@ -149,4 +154,15 @@ class DataObject( QObject ):
 
     def markToDoCompleted(self, todo: ToDo ):
         todo.setCompleted()
-        self.todoChanged.emit( todo )
+        self.todoChanged.emit()
+
+    def _createToDo( self, content=None ):
+        todo = ToDo()
+        if content is not None:
+            todo.description = content
+        todoDialog = ToDoDialog( todo, self.parentWidget )
+        todoDialog.setModal( True )
+        dialogCode = todoDialog.exec_()
+        if dialogCode == QDialog.Rejected:
+            return None
+        return todoDialog.todo

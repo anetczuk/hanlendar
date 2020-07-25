@@ -161,6 +161,17 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual( notifications[0].task.title, "task2" )
         self.assertEqual( notifications[1].task.title, "task1" )
 
+    def test_getToDos(self):
+        manager = Manager()
+        manager.addToDo()
+        manager.addToDo()
+
+        self.assertEqual( len( manager.getToDos() ), 2 )
+
+        tasksList = manager.getToDos()
+        tasksList.clear()
+        self.assertEqual( len( manager.getToDos() ), 2 )
+
     def test_setToDoPriorityLeast(self):
         manager = Manager()
         todo1 = ToDo()
