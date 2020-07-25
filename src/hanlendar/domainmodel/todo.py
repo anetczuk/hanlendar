@@ -77,14 +77,16 @@ class ToDo( persist.Versionable ):
                 return False
         return True
 
-    def addSubtodo(self, subitem, index=-1):
+    def addSubtodo(self, todo=None, index=-1):
         if self.subtodos is None:
             self.subtodos = list()
+        if todo is None:
+            todo = ToDo()
         if index < 0:
-            self.subtodos.append( subitem )
+            self.subtodos.append( todo )
         else:
-            self.subtodos.insert( index, subitem )
-        return subitem
+            self.subtodos.insert( index, todo )
+        return todo
 
     def findParent(self, child):
         if self.subtodos is None:
@@ -103,7 +105,7 @@ class ToDo( persist.Versionable ):
     def getChildFromCoords(self, coords):
         return ToDo.getToDoFromCoords( self.subtodos, coords )
 
-    def detachChildByoords(self, coords):
+    def detachChildByCoords(self, coords):
         return ToDo.detachToDoByCoords( self.subtodos, coords )
 
     def __str__(self):
@@ -162,7 +164,7 @@ class ToDo( persist.Versionable ):
         if not todoCoords:
             todosList.pop( elemIndex )
             return todo
-        return todo.getChildFromCoords( todoCoords )
+        return todo.detachChildByCoords( todoCoords )
 
     @staticmethod
     def sortByPriority( todo ):

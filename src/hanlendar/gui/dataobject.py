@@ -21,7 +21,7 @@
 # SOFTWARE.
 #
 
-# import logging
+import logging
 from datetime import date
 
 from PyQt5.QtCore import QObject, pyqtSignal
@@ -36,7 +36,7 @@ from hanlendar.domainmodel.todo import ToDo
 from hanlendar.gui.tododialog import ToDoDialog
 
 
-# _LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class DataObject( QObject ):
@@ -46,7 +46,7 @@ class DataObject( QObject ):
     ## added, modified or removed
     todoChanged = pyqtSignal()
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget=None):
         super().__init__( parent )
 
         self.parentWidget = parent
@@ -107,6 +107,10 @@ class DataObject( QObject ):
 
     ## ==============================================================
 
+    def setTodosList(self, newList):
+        self.getManager().todos = newList
+        self.todoChanged.emit()
+
     def addNewToDo( self, content=None ):
         todo = self._createToDo( content )
         if todo is None:
@@ -134,7 +138,11 @@ class DataObject( QObject ):
         self.todoChanged.emit()
 
     def removeToDo(self, todo: ToDo ):
-        self.domainModel.removeToDo( todo )
+        todosList = self.domainModel.todos
+        coords = ToDo.getToDoCoords(todosList, todo)
+        removed = ToDo.detachToDoByCoords(todosList, coords)
+        if removed is None:
+            _LOGGER.warning( "unable to remove todo: %s", coords )
         self.todoChanged.emit()
 
     def convertToDoToTask(self, todo: ToDo ):

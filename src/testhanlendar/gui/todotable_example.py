@@ -39,6 +39,7 @@ import sys
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.todotable import ToDoTable
+from hanlendar.gui.dataobject import DataObject
 
 from hanlendar.domainmodel.todo import ToDo
 
@@ -114,11 +115,15 @@ todoLeaf.addSubtodo( ToDo() ).title = "xxx"
 todo.addSubtodo( todoLeaf )
 # todo.subtodos.append( todoLeaf )
 
+dataObject = DataObject()
+manager = dataObject.getManager()
+manager.todos = todosList
+
 setup_interrupt_handling()
 
 widget = ToDoTable()
 widget.resize( 1024, 768 )
-widget.setToDos( todosList )
+widget.connectData( dataObject )
 widget.show()
 
 # print( "Dialog return:", dialogCode )

@@ -184,17 +184,12 @@ class TodosTreeModel( CustomTreeModel ):
 
     def __init__(self, parent, *args):
         super().__init__(parent, *args)
-        self.todosList = None
-#         self.dataObject = None
-        self.setList( None )
+        self.dataObject = None
 
-    def setList(self, todos):
+    def setDataObject(self, dataObject):
         self.beginResetModel()
-        self.todosList = todos
+        self.dataObject = dataObject
         self.endResetModel()
-
-#     def setDataObject(self, dataObject):
-#         self.dataObject = dataObject
 
     def headerLabels(self):
         return [ "Summary", "Priority", "Complete" ]
@@ -226,14 +221,13 @@ class TodosTreeModel( CustomTreeModel ):
         return None
 
     def getChildren(self, parent):
-        if parent is None:
-            return self.todosList
-        return parent.subtodos
+        if parent is not None:
+            return parent.subtodos
+        return self.getRootList()
 
     def getParent(self, item):
-        if self.todosList is None:
-            return None
-        for currItem in self.todosList:
+        todosList = self.getRootList()
+        for currItem in todosList:
             if currItem == item:
                 return None
             ret = currItem.findParent( item )
@@ -243,17 +237,26 @@ class TodosTreeModel( CustomTreeModel ):
 
     @abc.abstractmethod
     def getItemCoords(self, item):
-        return ToDo.getToDoCoords( self.todosList, item )
+        todosList = self.getRootList()
+        return ToDo.getToDoCoords( todosList, item )
 
     @abc.abstractmethod
     def moveItem(self, itemCoords, targetItem, targetIndex):
-        todo = ToDo.detachToDoByCoords( self.todosList, itemCoords )
+        todosList = self.getRootList()
+        todo = ToDo.detachToDoByCoords( todosList, itemCoords )
         if targetItem is not None:
             targetItem.addSubtodo( todo, targetIndex )
         elif targetIndex < 0:
-            self.todosList.append( todo )
+            todosList.append( todo )
         else:
-            self.todosList.insert( targetIndex, todo )
+            todosList.insert( targetIndex, todo )
+        self.dataObject.setTodosList( todosList )
+
+    def getRootList(self):
+        if self.dataObject is None:
+            return None
+        manager = self.dataObject.getManager()
+        return manager.getToDos()
 
     def _getAttrName(self, attrIndex):
         if attrIndex < 0:
@@ -332,11 +335,9 @@ class ToDoTable( QtWidgets.QTreeView ):
 
         self.doubleClicked.connect( self.todoDoubleClicked )
 
-        self.setToDos( [] )
-
     def connectData(self, dataObject):
         self.data = dataObject
-#         self.todosModel.setDataObject( dataObject )
+        self.todosModel.setDataObject( dataObject )
         self.addNewToDo.connect( dataObject.addNewToDo )
         self.addNewSubToDo.connect( dataObject.addNewSubToDo )
         self.editToDo.connect( dataObject.editToDo )
@@ -351,19 +352,11 @@ class ToDoTable( QtWidgets.QTreeView ):
     def updateView(self):
         if self.data is None:
             return
-        todosList = self.data.getManager().getToDos()
-        self.setToDos( todosList )
+        self.todosModel.setDataObject( self.data )
 
     def getToDo(self, todoIndex: QModelIndex ):
         sourceIndex = self.proxyModel.mapToSource( todoIndex )
         return self.todosModel.getItem( sourceIndex )
-
-    def setToDos( self, todosList ):
-        self.setCurrentIndex( QtCore.QModelIndex() )        ## unselect
-        ## disabling and enabling sorting fixes keeps sort order after data change
-        self.setSortingEnabled( False )
-        self.todosModel.setList( todosList )
-        self.setSortingEnabled( True )
 
     def contextMenuEvent( self, event ):
         evPos     = event.pos()
