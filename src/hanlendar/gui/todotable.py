@@ -22,6 +22,7 @@
 #
 
 import logging
+import abc
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal, QModelIndex
@@ -37,28 +38,32 @@ from hanlendar.domainmodel.todo import ToDo
 _LOGGER = logging.getLogger(__name__)
 
 
-class TodosTreeModel( QtCore.QAbstractItemModel ):
+class CustomTreeModel( QtCore.QAbstractItemModel ):
 
-    headerLabels = [ "Summary", "Priority", "Complete" ]
-    attrList     = [ "title", "priority", "completed" ]
+    ## for invalid parent returns number of elements in root list
+    def rowCount(self, parent: QModelIndex):
+        parentItem = self.getItem( parent )
+        children = self.getChildren( parentItem )
+        if children is None:
+            return 0
+        return len( children )
 
-    mimeType     = "TodosTreeNode"
+    def columnCount(self, _):
+        labels = self.headerLabels()
+        return len(labels)
 
-    def __init__(self, parent, *args):
-        super().__init__(parent, *args)
-        self.setList( None )
-
-    def setList(self, todos):
-        self.beginResetModel()
-        self.todosList = todos
-        self.endResetModel()
+    def headerData(self, col, orientation, role):
+        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+            labels = self.headerLabels()
+            return labels[col]
+        return None
 
     ## for invalid parent return elements form root list
     def index(self, row, column, parent: QModelIndex):
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
-        parentItem: ToDo = self._getToDo( parent )
-        children = self._getChildren( parentItem )
+        parentItem = self.getItem( parent )         ## None allowed
+        children = self.getChildren( parentItem )
         if children is None:
             return QModelIndex()
         childItem = children[ row ]
@@ -69,29 +74,136 @@ class TodosTreeModel( QtCore.QAbstractItemModel ):
     def parent(self, index: QModelIndex):
         if not index.isValid():
             return QModelIndex()
-        indexItem = self._getToDo( index )
-        parentItem = self._findParent( indexItem )
+        indexItem = self.getItem( index )
+        if indexItem is None:
+            return QModelIndex()
+        parentItem = self.getParent( indexItem )
         if parentItem is None:
             return QModelIndex()
-        parentRow = self._findRow( parentItem )
+        grandParentItem = self.getParent( parentItem )
+        children = self.getChildren( grandParentItem )
+        parentRow = children.index( parentItem )
         return self.createIndex( parentRow, 0, parentItem )
 
-    ## for invalid parent returns number of elements in root list
-    def rowCount(self, parent: QModelIndex):
-        todo: ToDo = self._getToDo( parent )
-        children = self._getChildren( todo )
-        if children is None:
-            return 0
-        return len( children )
+    def flags(self, index: QModelIndex):
+        if not index.isValid():
+            return super().flags(index) | Qt.ItemIsDropEnabled
+        return super().flags(index) | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
 
-    def columnCount(self, _):
-        return len(self.headerLabels)
+    # pylint: disable=R0201
+    def supportedDropActions(self):
+        return Qt.MoveAction
+
+    # pylint: disable=R0201
+    def supportedDragActions(self):
+        return Qt.MoveAction
+
+    def canDropMimeData(self, data, action, row, column, parent):
+        if row != -1:
+            ## disable dropping between elements (it conflicts with sorting)
+            return False
+        return super().canDropMimeData(data, action, row, column, parent)
+
+    def mimeTypes(self):
+        return [ self.internalMoveMimeType() ]
+
+    def mimeData(self, indexes):
+        encodedData = QtCore.QByteArray()
+        stream = QtCore.QDataStream(encodedData, QtCore.QIODevice.WriteOnly)
+        for ind in indexes:
+            if ind.column() != 0:
+                continue
+            item = ind.internalPointer()
+            coords = self.getItemCoords( item )
+            # pylint: disable=W0106
+            stream << QtCore.QVariant(coords)
+        mimeObject = QtCore.QMimeData()
+        mimeObject.setData( self.internalMoveMimeType(), encodedData )
+        return mimeObject
+
+    def dropMimeData(self, data, action, row, _, parent):
+        if action == Qt.IgnoreAction:
+            return True
+        if not data.hasFormat( self.internalMoveMimeType() ):
+            return False
+
+        if action != Qt.MoveAction:
+            _LOGGER.warning("unhandled action: %s", action)
+            return False
+
+        self.beginResetModel()
+
+        ## adding child to parent
+        targetParent = parent.internalPointer()
+        encodedData = data.data( self.internalMoveMimeType() )
+        stream = QtCore.QDataStream(encodedData, QtCore.QIODevice.ReadOnly)
+        while not stream.atEnd():
+            value = QtCore.QVariant()
+            # pylint: disable=W0104
+            stream >> value
+            itemCoords = value.value()
+            self.moveItem( itemCoords, targetParent, row )
+
+        self.endResetModel()
+        return True
+
+    @abc.abstractmethod
+    def headerLabels(self):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def internalMoveMimeType(self):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    ## ==================================================================
+
+    @abc.abstractmethod
+    def getItem(self, item: QModelIndex):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def getChildren(self, parent: object):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def getParent(self, item: object):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def getItemCoords(self, item: object):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def moveItem(self, itemCoords, targetItem: object, targetIndex):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+
+class TodosTreeModel( CustomTreeModel ):
+
+    attrList = [ "title", "priority", "completed" ]
+
+    def __init__(self, parent, *args):
+        super().__init__(parent, *args)
+        self.todosList = None
+#         self.dataObject = None
+        self.setList( None )
+
+    def setList(self, todos):
+        self.beginResetModel()
+        self.todosList = todos
+        self.endResetModel()
+
+#     def setDataObject(self, dataObject):
+#         self.dataObject = dataObject
+
+    def headerLabels(self):
+        return [ "Summary", "Priority", "Complete" ]
 
     def data(self, index: QModelIndex, role):
         if role == QtCore.Qt.SizeHintRole:
             return QtCore.QSize(10, 30)
 
-        todo: ToDo = self._getToDo( index )
+        todo: ToDo = self.getItem( index )
         if todo is None:
             return None
         if role == Qt.ForegroundRole:
@@ -104,111 +216,44 @@ class TodosTreeModel( QtCore.QAbstractItemModel ):
             return getattr( todo, attrName )
         return None
 
-    def flags(self, index: QModelIndex):
-        if not index.isValid():
-            return super().flags(index) | Qt.ItemIsDropEnabled
-        return super().flags(index) | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+    def internalMoveMimeType(self):
+        return "TodosTreeNode"
 
-    def headerData(self, col, orientation, role):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-            return self.headerLabels[col]
+    # pylint: disable=R0201
+    def getItem(self, item: QModelIndex):
+        if item.isValid():
+            return item.internalPointer()
         return None
 
-    # pylint: disable=R0201
-    def supportedDropActions(self):
-        return Qt.MoveAction
+    def getChildren(self, parent):
+        if parent is None:
+            return self.todosList
+        return parent.subtodos
 
-    # pylint: disable=R0201
-    def supportedDragActions(self):
-        return Qt.MoveAction
-
-    def mimeTypes(self):
-        ret = []
-        ret.append( self.mimeType )
-        return ret
-
-    def canDropMimeData(self, data, action, row, column, parent):
-        if row != -1:
-            ## disable dropping between elements (it conflicts with sorting)
-            return False
-        return super().canDropMimeData(data, action, row, column, parent)
-
-    def mimeData(self, indexes):
-        encodedData = QtCore.QByteArray()
-        stream = QtCore.QDataStream(encodedData, QtCore.QIODevice.WriteOnly)
-        for ind in indexes:
-            if ind.column() != 0:
-                continue
-            todo = ind.internalPointer()
-            coords = ToDo.getToDoCoords( self.todosList, todo )
-            # pylint: disable=W0106
-            stream << QtCore.QVariant(coords)
-        mimeObject = QtCore.QMimeData()
-        mimeObject.setData( self.mimeType, encodedData )
-        return mimeObject
-
-    def dropMimeData(self, data, action, row, _, parent):
-        if action == Qt.IgnoreAction:
-            return True
-        if not data.hasFormat( self.mimeType ):
-            return False
-
-        if action != Qt.MoveAction:
-            _LOGGER.warning("unhandled action: %s", action)
-            return False
-
-        self.beginResetModel()
-
-        ## adding child to parent
-#         print( "target:", row, column, parent.internalPointer() )
-
-        targetParent = parent.internalPointer()
-        encodedData = data.data( self.mimeType )
-        stream = QtCore.QDataStream(encodedData, QtCore.QIODevice.ReadOnly)
-        while not stream.atEnd():
-            value = QtCore.QVariant()
-            # pylint: disable=W0104
-            stream >> value
-            todoCoords = value.value()
-            todo = ToDo.detachToDoByCoords( self.todosList, todoCoords )
-            if targetParent is not None:
-                targetParent.addSubtodo( todo, row )
-            elif row < 0:
-                self.todosList.append( todo )
-            else:
-                self.todosList.insert( row, todo )
-
-        self.endResetModel()
-        return True
-
-    ## =====================================================
-
-    def _findRow(self, todo: ToDo):
-        parent = self._findParent( todo )
-        children = self._getChildren( parent )
-        return children.index( todo )
-
-    def _findParent(self, child: ToDo):
+    def getParent(self, item):
         if self.todosList is None:
             return None
-        for item in self.todosList:
-            if item == child:
+        for currItem in self.todosList:
+            if currItem == item:
                 return None
-            ret = item.findParent( child )
+            ret = currItem.findParent( item )
             if ret is not None:
                 return ret
         return None
 
-    def _getChildren(self, todo: ToDo):
-        if todo is None:
-            return self.todosList
-        return todo.subtodos
+    @abc.abstractmethod
+    def getItemCoords(self, item):
+        return ToDo.getToDoCoords( self.todosList, item )
 
-    # pylint: disable=R0201
-    def _getToDo(self, modelIndex: QModelIndex):
-        if modelIndex.isValid():
-            return modelIndex.internalPointer()
-        return None
+    @abc.abstractmethod
+    def moveItem(self, itemCoords, targetItem, targetIndex):
+        todo = ToDo.detachToDoByCoords( self.todosList, itemCoords )
+        if targetItem is not None:
+            targetItem.addSubtodo( todo, targetIndex )
+        elif targetIndex < 0:
+            self.todosList.append( todo )
+        else:
+            self.todosList.insert( targetIndex, todo )
 
     def _getAttrName(self, attrIndex):
         if attrIndex < 0:
@@ -291,6 +336,7 @@ class ToDoTable( QtWidgets.QTreeView ):
 
     def connectData(self, dataObject):
         self.data = dataObject
+#         self.todosModel.setDataObject( dataObject )
         self.addNewToDo.connect( dataObject.addNewToDo )
         self.addNewSubToDo.connect( dataObject.addNewSubToDo )
         self.editToDo.connect( dataObject.editToDo )
@@ -310,8 +356,7 @@ class ToDoTable( QtWidgets.QTreeView ):
 
     def getToDo(self, todoIndex: QModelIndex ):
         sourceIndex = self.proxyModel.mapToSource( todoIndex )
-        # pylint: disable=W0212
-        return self.todosModel._getToDo( sourceIndex )
+        return self.todosModel.getItem( sourceIndex )
 
     def setToDos( self, todosList ):
         self.setCurrentIndex( QtCore.QModelIndex() )        ## unselect
