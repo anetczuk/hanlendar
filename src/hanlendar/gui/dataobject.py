@@ -73,17 +73,20 @@ class DataObject( QObject ):
         self.taskChanged.emit()
 
     def addNewTask( self, newTaskDate: QDate = None ):
-        task = Task()
-        if newTaskDate is not None:
-            startDate = newTaskDate.toPyDate()
-            task.setDefaultDate( startDate )
-
-        taskDialog = TaskDialog( task, self.parentWidget )
-        taskDialog.setModal( True )
-        dialogCode = taskDialog.exec_()
-        if dialogCode == QDialog.Rejected:
+        task = self._createTask( newTaskDate )
+        if task is None:
             return
-        self.addTask( taskDialog.task )
+        self.addTask( task )
+
+    def addNewSubTask( self, parent: Task ):
+        if parent is None:
+            self.addNewTask()
+            return
+        task = self._createTask()
+        if task is None:
+            return
+        parent.addSubItem( task )
+        self.taskChanged.emit()
 
     def addTask(self, task: Task = None ) -> Task:
         if task is None:
@@ -135,7 +138,7 @@ class DataObject( QObject ):
         todo = self._createToDo()
         if todo is None:
             return
-        parent.addSubtodo( todo )
+        parent.addSubItem( todo )
         self.todoChanged.emit()
 
     def editToDo(self, todo: ToDo ):
@@ -173,6 +176,19 @@ class DataObject( QObject ):
     def markToDoCompleted(self, todo: ToDo ):
         todo.setCompleted()
         self.todoChanged.emit()
+
+    def _createTask( self, newTaskDate: QDate = None ):   
+        task = Task()
+        if newTaskDate is not None:
+            startDate = newTaskDate.toPyDate()
+            task.setDefaultDate( startDate )
+
+        taskDialog = TaskDialog( task, self.parentWidget )
+        taskDialog.setModal( True )
+        dialogCode = taskDialog.exec_()
+        if dialogCode == QDialog.Rejected:
+            return None
+        return taskDialog.task
 
     def _createToDo( self, content=None ):
         todo = ToDo()

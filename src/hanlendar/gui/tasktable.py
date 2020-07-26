@@ -234,7 +234,7 @@ class TaskTable( QtWidgets.QTreeView ):
 
     def itemDoubleClicked(self, modelIndex):
         item = self.getTask( modelIndex )
-        self.editTask.emit( item )
+        self.taskContextMenu.editTask.emit( item )
         
     def drawBranches(self, painter, rect, index):
         bgcolor = index.data( Qt.BackgroundRole )
