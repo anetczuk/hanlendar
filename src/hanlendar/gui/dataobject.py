@@ -139,8 +139,8 @@ class DataObject( QObject ):
 
     def removeToDo(self, todo: ToDo ):
         todosList = self.domainModel.todos
-        coords = ToDo.getToDoCoords(todosList, todo)
-        removed = ToDo.detachToDoByCoords(todosList, coords)
+        coords = Item.getItemCoords(todosList, todo)
+        removed = Item.detachItemByCoords(todosList, coords)
         if removed is None:
             _LOGGER.warning( "unable to remove todo: %s", coords )
         self.todoChanged.emit()

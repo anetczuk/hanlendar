@@ -41,7 +41,7 @@ class DataObjectTest(unittest.TestCase):
         manager.addNewToDo("Todo 1")
         todo2 = manager.addNewToDo("Todo 2")
         subToDo = todo2.addSubtodo()
-        self.assertEqual( len(todo2.subtodos), 1 )
+        self.assertEqual( len(todo2.subitems), 1 )
 
         dataobject.removeToDo( subToDo )
-        self.assertEqual( len(todo2.subtodos), 0 )
+        self.assertEqual( len(todo2.subitems), 0 )
