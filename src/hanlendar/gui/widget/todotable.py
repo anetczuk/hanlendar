@@ -233,8 +233,8 @@ class ToDoTable( QtWidgets.QTreeView ):
         elif action == markCompletedAction:
             self.markCompleted.emit( todo )
 
-    def selectionChanged(self, fromSelection, toSelection):
-        super().selectionChanged( fromSelection, toSelection )
+    def selectionChanged(self, toSelection, fromSelection):
+        super().selectionChanged( toSelection, fromSelection )
         modelIndex = self.currentIndex()
         todo = self.getToDo( modelIndex )
         if todo is not None:
@@ -245,6 +245,14 @@ class ToDoTable( QtWidgets.QTreeView ):
     def itemDoubleClicked(self, modelIndex):
         todo = self.getToDo( modelIndex )
         self.editToDo.emit( todo )
+        
+    def mousePressEvent(self, event):
+        pos = event.pos()
+        itemIndex = self.indexAt(pos)
+        if itemIndex.isValid() is False:
+            self.setCurrentIndex(itemIndex)
+            self.clearSelection()
+        super().mousePressEvent( event )
 
 
 def get_todo_fgcolor( todo: ToDo ) -> QBrush:

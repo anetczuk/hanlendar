@@ -223,8 +223,8 @@ class TaskTable( QtWidgets.QTreeView ):
             task = self.getTask( mIndex )
         self.taskContextMenu.show( task)
 
-    def selectionChanged(self, fromSelection, toSelection):
-        super().selectionChanged( fromSelection, toSelection )
+    def selectionChanged(self, toSelection, fromSelection):
+        super().selectionChanged( toSelection, fromSelection )
         modelIndex = self.currentIndex()
         item = self.getTask( modelIndex )
         if item is not None:
@@ -235,6 +235,14 @@ class TaskTable( QtWidgets.QTreeView ):
     def itemDoubleClicked(self, modelIndex):
         item = self.getTask( modelIndex )
         self.taskContextMenu.editTask.emit( item )
+
+    def mousePressEvent(self, event):
+        pos = event.pos()
+        itemIndex = self.indexAt(pos)
+        if itemIndex.isValid() is False:
+            self.setCurrentIndex(itemIndex)
+            self.clearSelection()
+        super().mousePressEvent( event )
 
     def drawBranches(self, painter, rect, index):
         bgcolor = index.data( Qt.BackgroundRole )
