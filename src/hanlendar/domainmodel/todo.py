@@ -49,8 +49,8 @@ class ToDo( Item, persist.Versionable ):
             ## initialize subtodos field
             dict_["subtodos"] = None
             dictVersion_ = 0
-            
-        if dictVersion_ < 1:
+
+        if dictVersion_ == 0:
             ## base class extracted, "subtodos" renamed to "subitems"
             dict_["subitems"] = dict_["subtodos"]
             dict_.pop('subtodos', None)
@@ -62,7 +62,9 @@ class ToDo( Item, persist.Versionable ):
     def addSubtodo(self, todo=None, index=-1):
         if todo is None:
             todo = ToDo()
-        return self._addSubItem(todo, index)
+        return self.addSubItem(todo, index)
 
     def __str__(self):
-        return "[t:%s d:%s c:%s p:%s subs: %s]" % ( self.title, self.description, self._completed, self.priority, len(self.subitems) )
+        return "[t:%s d:%s c:%s p:%s subs: %s]" % (
+            self.title, self.description,
+            self._completed, self.priority, len(self.subitems) )

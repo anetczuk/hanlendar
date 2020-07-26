@@ -82,7 +82,7 @@ class Item():
     def detachChildByCoords(self, coords):
         return Item.detachItemByCoords( self.subitems, coords )
 
-    def _addSubItem(self, item, index=-1):
+    def addSubItem(self, item, index=-1):
         if self.subitems is None:
             self.subitems = list()
         if index < 0:
