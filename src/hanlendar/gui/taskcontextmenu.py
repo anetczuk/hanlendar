@@ -62,6 +62,7 @@ class TaskContextMenu( QObject ):
             self.showNewTask( newTaskDate )
             return
 
+        self.addSubTaskAction.setEnabled( True )
         self.editTaskAction.setEnabled( True )
         self.removeTaskAction.setEnabled( True )
         if task.isCompleted():
@@ -87,6 +88,7 @@ class TaskContextMenu( QObject ):
 
     def showNewTask(self, newTaskDate: QDate = None ):
         ## context menu on background
+        self.addSubTaskAction.setEnabled( False )
         self.editTaskAction.setEnabled( False )
         self.removeTaskAction.setEnabled( False )
         self.markCompletedAction.setEnabled( False )
