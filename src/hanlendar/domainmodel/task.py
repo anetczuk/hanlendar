@@ -30,6 +30,7 @@ from dateutil.relativedelta import relativedelta
 from hanlendar import persist
 from hanlendar.domainmodel import recurrent
 from hanlendar.domainmodel.recurrent import Recurrent
+from hanlendar.domainmodel.item import Item
 
 from .reminder import Reminder, Notification
 
@@ -261,17 +262,15 @@ class TaskOccurrence:
 ## ========================================================================
 
 
-class Task( persist.Versionable ):
+class Task( Item, persist.Versionable ):
     """Task is entity that lasts over time."""
 
     ## 1: _recurrentStartDate and _recurrentDueDate replaced with _recurrentOffset
-    _class_version = 1
+    ## 2: add base class Item
+    _class_version = 2
 
     def __init__(self, title="" ):
-        self.title                          = title
-        self.description                    = ""
-        self._completed                     = 0        ## in range [0..100]
-        self.priority                       = 10       ## lower number, greater priority
+        super(Task, self).__init__( title )
         self._startDate: datetime           = None
         self._dueDate: datetime             = None
         self.reminderList: List[Reminder]   = None
@@ -282,27 +281,29 @@ class Task( persist.Versionable ):
         _LOGGER.info( "converting object from version %s to %s", dictVersion_, self._class_version )
 
         if dictVersion_ is None:
-            # pylint: disable=W0201
-            self.__dict__ = dict_
-            return
+            dictVersion_ = -1
 
-        if dictVersion_ < 1:
+        if dictVersion_ < 0:
+            ## do nothing
+            dictVersion_ = 0
+
+        if dictVersion_ == 0:
             ## replace _recurrentStartDate and _recurrentDueDate with _recurrentOffset
-            self.title                          = dict_["title"]
-            self.description                    = dict_["description"]
-            self._completed                     = dict_["_completed"]
-            self.priority                       = dict_["priority"]
-            self._startDate: datetime           = dict_["_startDate"]
-            self._dueDate: datetime             = dict_["_dueDate"]
-            self.reminderList: List[Reminder]   = dict_["reminderList"]
-            self._recurrence: Recurrent         = dict_["_recurrence"]
-            self._recurrentOffset               = 0                       ## set default value
-
-            if self._recurrence is not None:
-                dueDate = self._dueDate.date()
+            recurrence = dict_["_recurrence"]
+            if recurrence is not None:
+                dueDate = dict_["_dueDate"].date()
                 targetDueDate = dict_["_recurrentDueDate"].date()
-                self._recurrentOffset = self._recurrence.findRecurrentOffset( dueDate, targetDueDate )
-            return
+                recurrentOffset = recurrence.findRecurrentOffset( dueDate, targetDueDate )
+                dict_["_recurrentOffset"] = recurrentOffset
+            else:
+                ## set default value
+                dict_["_recurrentOffset"] = 0
+            dictVersion_ = 1
+
+        if dictVersion_ == 1:
+            ## add field
+            dict_["subitems"] = None
+            dictVersion_ = 2
 
         # pylint: disable=W0201
         self.__dict__ = dict_
@@ -597,12 +598,13 @@ class Task( persist.Versionable ):
         if self._recurrence is None:
             return False
         nextDueDate = self._getRecurrenceDate( self._dueDate, 1 )
-        if self._recurrence.isEnd( nextDueDate ):
+        nextDate = nextDueDate.date()
+        if self._recurrence.isEnd( nextDate ):
             return False
         self._recurrentOffset += 1
         return True
 
-    def _getRecurrenceDate(self, aDate: date, offset: int = 0):
+    def _getRecurrenceDate(self, aDate: datetime, offset: int = 0) -> datetime:
         if aDate is None:
             return None
         if self._recurrence is None:

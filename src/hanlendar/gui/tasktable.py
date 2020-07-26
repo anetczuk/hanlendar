@@ -23,14 +23,15 @@
 
 import logging
 
-from typing import List
 from datetime import datetime, date, timedelta
 
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
-from PyQt5.QtCore import Qt
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import Qt, QModelIndex
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QAbstractItemView, QHeaderView
 from PyQt5.QtGui import QColor, QBrush
 
+from hanlendar.gui.customtreemodel import ItemTreeModel
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
 
 from hanlendar.domainmodel.task import Task, TaskOccurrence
@@ -39,7 +40,110 @@ from hanlendar.domainmodel.task import Task, TaskOccurrence
 _LOGGER = logging.getLogger(__name__)
 
 
-class TaskTable( QTableWidget ):
+class TaskTreeModel( ItemTreeModel ):
+
+    attrList = [ "title", "priority", "completed", "start", "due" ]
+
+    def __init__(self, parent, *args):
+        super().__init__(parent, *args)
+        self.dataObject = None
+
+    def setDataObject(self, dataObject):
+        self.beginResetModel()
+        self.dataObject = dataObject
+        self.endResetModel()
+
+    def data(self, index: QModelIndex, role):
+        if role == QtCore.Qt.SizeHintRole:
+            return QtCore.QSize(10, 30)
+
+        task = self.getItem( index )
+        item = task.currentOccurrence()
+        if item is None:
+            return None
+
+        if role == Qt.TextAlignmentRole:
+            attrIndex = index.column()
+            if attrIndex > 0:
+                return Qt.AlignHCenter | Qt.AlignVCenter
+
+        if role == Qt.ForegroundRole:
+            return get_task_fgcolor( item )
+
+        if role == Qt.BackgroundRole:
+            nowDate = date.today()
+            if item.isInMonth( nowDate ):
+                return QColor( "beige" )
+
+        if role == QtCore.Qt.DisplayRole:
+            attrIndex = index.column()
+            if attrIndex == 0:
+                return item.title
+            elif attrIndex == 1:
+                return item.priority
+            elif attrIndex == 2:
+                return item.completed
+            elif attrIndex == 3:
+                dateString = "---"
+                if item.start is not None:
+                    dateString = item.start.strftime( "%Y-%m-%d %H:%M" )
+                return dateString
+            elif attrIndex == 4:
+                dateString = "---"
+                if item.due is not None:
+                    dateString = item.due.strftime( "%Y-%m-%d %H:%M" )
+                return dateString
+
+        return None
+
+    def headerLabels(self):
+        return [ "Summary", "Priority", "Complete", "Start Date", "Due Date" ]
+
+    def internalMoveMimeType(self):
+        return "TasksTreeNode"
+
+    def getRootList(self):
+        if self.dataObject is None:
+            return None
+        manager = self.dataObject.getManager()
+        return manager.getTasks()
+
+    def setRootList(self, newList):
+        if self.dataObject is None:
+            return
+        self.dataObject.setTasksList( newList )
+
+
+## ===========================================================
+
+
+class TaskSortFilterProxyModel( QtCore.QSortFilterProxyModel ):
+
+    def __init__(self, parentObject=None):
+        super().__init__(parentObject)
+        self._showCompleted = False
+
+    def showCompleted(self, show=True):
+        self._showCompleted = show
+        self.invalidateFilter()
+
+    def filterAcceptsRow(self, sourceRow, sourceParent: QModelIndex):
+        if self._showCompleted is True:
+            return True
+        dataIndex = self.sourceModel().index( sourceRow, 2, sourceParent )
+        item = dataIndex.internalPointer()
+        return item.isCompleted() is False
+
+    def lessThan(self, left: QModelIndex, right: QModelIndex):
+        leftData  = self.sourceModel().data(left, QtCore.Qt.DisplayRole)
+        rightData = self.sourceModel().data(right, QtCore.Qt.DisplayRole)
+        return leftData < rightData
+
+
+## ===========================================================
+
+
+class TaskTable( QtWidgets.QTreeView ):
 
     selectedTask    = pyqtSignal( Task )
     taskUnselected  = pyqtSignal()
@@ -49,11 +153,12 @@ class TaskTable( QTableWidget ):
         super().__init__(parentWidget)
 
         self.data = None
-        self.showCompleted = False
 
         self.setSelectionBehavior( QAbstractItemView.SelectRows )
         self.setSelectionMode( QAbstractItemView.SingleSelection )
         self.setEditTriggers( QAbstractItemView.NoEditTriggers )
+#         self.setAlternatingRowColors( True )
+        self.setSortingEnabled( True )
 
 #         self.setAlternatingRowColors( True )
 #         self.setStyleSheet("""
@@ -65,23 +170,25 @@ class TaskTable( QTableWidget ):
 #         }
 #         """);
 
-        self.setShowGrid( False )
+        self.setDragEnabled( True )
+        self.setDropIndicatorShown( True )
+        self.setDragDropMode( QAbstractItemView.InternalMove )
+        self.setDragDropOverwriteMode(False)
 
-        headerLabels = [ "Summary", "Priority", "Complete", "Start Date", "Due Date" ]
-        self.setColumnCount( len(headerLabels) )
-        self.setHorizontalHeaderLabels( headerLabels )
+        self.itemsModel = TaskTreeModel(self)
+        self.proxyModel = TaskSortFilterProxyModel(self)
+        self.proxyModel.setSourceModel( self.itemsModel )
+        self.setModel( self.proxyModel )
 
-        header = self.horizontalHeader()
+        header = self.header()
+        header.setDefaultAlignment( Qt.AlignCenter )
         header.setHighlightSections( False )
+        header.setStretchLastSection( False )
         header.setSectionResizeMode( 0, QHeaderView.Stretch )
 
         self.taskContextMenu = TaskContextMenu( self )
 
-        self.itemSelectionChanged.connect( self.taskSelectionChanged )
-        self.itemClicked.connect( self.taskClicked )
-        self.itemDoubleClicked.connect( self.taskDoubleClicked )
-
-        self.setTasks( [] )
+        self.doubleClicked.connect( self.itemDoubleClicked )
 
     def connectData(self, dataObject):
         self.data = dataObject
@@ -92,128 +199,39 @@ class TaskTable( QTableWidget ):
         self.setRowCount( 0 )
         self.emitSelectedTask()
 
-    def showCompletedTasks(self, show):
-        self.showCompleted = show
+    def showCompletedItems(self, show):
+        self.proxyModel.showCompleted( show )
         self.updateView()
 
     def updateView(self):
-        tasksList = self.data.getManager().getTasks()
-        self.setTasks( tasksList )
+        if self.data is None:
+            return
+        self.itemsModel.setDataObject( self.data )
 
-    def getTask(self, taskIndex) -> TaskOccurrence:
-        if taskIndex < 0:
-            return None
-        if taskIndex >= self.rowCount():
-            return None
-        tableItem = self.item( taskIndex, 0 )
-        userData: TaskOccurrence = tableItem.data( Qt.UserRole )
-        return userData
-
-    def setTasks( self, tasksList: List[Task] ):
-        self.clear()
-
-        self.setSortingEnabled( False )     ## workaround to fix disappearing cells content
-
-        occurrencesList = [ task.currentOccurrence() for task in tasksList ]
-        if self.showCompleted is False:
-            occurrencesList = [ task for task in occurrencesList if not task.isCompleted() ]
-
-        occurSize = len( occurrencesList )
-        self.setRowCount( occurSize )
-
-        nowDate = date.today()
-
-        for i in range(0, occurSize):
-            task: TaskOccurrence = occurrencesList[i]
-
-            fgColor = get_task_fgcolor( task )
-            bgColor = None
-            if task.isInMonth( nowDate ):
-                bgColor = QColor( "beige" )
-#                 bgColor = QColor( "#deffde" )
-#                 bgColor = QColor( "#bfffbf" )
-
-            titleItem = QTableWidgetItem( task.title )
-            titleItem.setData( Qt.UserRole, task )
-            titleItem.setForeground( fgColor )
-            if bgColor is not None:
-                titleItem.setBackground( bgColor )
-            self.setItem( i, 0, titleItem )
-
-            priorityItem = QTableWidgetItem()
-            priorityItem.setData( Qt.EditRole, task.priority )                      ## handles int type properly
-            priorityItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
-            priorityItem.setForeground( fgColor )
-            if bgColor is not None:
-                priorityItem.setBackground( bgColor )
-            self.setItem( i, 1, priorityItem )
-
-            completedItem = QTableWidgetItem()
-            completedItem.setData( Qt.EditRole, task.completed )                    ## handles int type properly
-            completedItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
-            completedItem.setForeground( fgColor )
-            if bgColor is not None:
-                completedItem.setBackground( bgColor )
-            self.setItem( i, 2, completedItem )
-
-            startDate = "---"
-            if task.start is not None:
-                ## no start date -- deadline case
-                startDate = task.start.strftime( "%Y-%m-%d %H:%M" )
-            startItem = QTableWidgetItem( str(startDate) )
-            startItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
-            startItem.setForeground( fgColor )
-            if bgColor is not None:
-                startItem.setBackground( bgColor )
-            self.setItem( i, 3, startItem )
-
-            dueDate = "---"
-            if task.due is not None:
-                dueDate = task.due.strftime( "%Y-%m-%d %H:%M" )
-            #dueDate = task.occurrenceDue.date()
-            dueItem = QTableWidgetItem( str(dueDate) )
-            dueItem.setTextAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
-            dueItem.setForeground( fgColor )
-            if bgColor is not None:
-                dueItem.setBackground( bgColor )
-            self.setItem( i, 4, dueItem )
-
-        self.setSortingEnabled( True )
-        self.update()
+    def getTask(self, itemIndex: QModelIndex ) -> TaskOccurrence:
+        sourceIndex = self.proxyModel.mapToSource( itemIndex )
+        return self.itemsModel.getItem( sourceIndex )
 
     def contextMenuEvent( self, event ):
-        evPos = event.pos()
-        taskOccurrence: TaskOccurrence = None
-        item = self.itemAt( evPos )
+        evPos      = event.pos()
+        task: Task = None
+        mIndex = self.indexAt( evPos )
+        if mIndex is not None:
+            task = self.getTask( mIndex )
+        self.taskContextMenu.show( task)
+
+    def selectionChanged(self, fromSelection, toSelection):
+        super().selectionChanged( fromSelection, toSelection )
+        modelIndex = self.currentIndex()
+        item = self.getTask( modelIndex )
         if item is not None:
-            rowIndex = self.row( item )
-            taskOccurrence: TaskOccurrence = self.getTask( rowIndex )
-        if taskOccurrence is not None:
-            self.taskContextMenu.show( taskOccurrence.task )
-        else:
-            self.taskContextMenu.show( None )
-
-    def taskSelectionChanged(self):
-        taskIndex = self.currentRow()
-        task: TaskOccurrence = self.getTask( taskIndex )
-        self.emitSelectedTask( task )
-
-    def taskClicked(self, item):
-        taskIndex = self.row( item )
-        task: TaskOccurrence = self.getTask( taskIndex )
-        self.emitSelectedTask( task )
-
-    def taskDoubleClicked(self, item):
-        rowIndex = self.row( item )
-        task: TaskOccurrence = self.getTask( rowIndex )
-        self.editTask.emit( task.task )
-
-    def emitSelectedTask( self, task: TaskOccurrence=None ):
-        if task is not None:
-            task = task.task
-            self.selectedTask.emit( task )
+            self.selectedTask.emit( item )
         else:
             self.taskUnselected.emit()
+
+    def itemDoubleClicked(self, modelIndex):
+        item = self.getTask( modelIndex )
+        self.editTask.emit( item )
 
 
 def get_task_fgcolor( task: TaskOccurrence ) -> QBrush:

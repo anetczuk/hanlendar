@@ -119,7 +119,7 @@
         <item>
          <widget class="QTabWidget" name="lists_tabs">
           <property name="currentIndex">
-           <number>3</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tasks_tab">
            <attribute name="title">
@@ -166,45 +166,7 @@
              </layout>
             </item>
             <item>
-             <widget class="TaskTable" name="tasksTable">
-              <property name="editTriggers">
-               <set>QAbstractItemView::NoEditTriggers</set>
-              </property>
-              <property name="selectionMode">
-               <enum>QAbstractItemView::SingleSelection</enum>
-              </property>
-              <property name="selectionBehavior">
-               <enum>QAbstractItemView::SelectRows</enum>
-              </property>
-              <property name="sortingEnabled">
-               <bool>false</bool>
-              </property>
-              <column>
-               <property name="text">
-                <string>Summary</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Priority</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Complete</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Start Date</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>Due Date</string>
-               </property>
-              </column>
-             </widget>
+             <widget class="TaskTable" name="tasksTable"/>
             </item>
            </layout>
           </widget>
@@ -469,11 +431,6 @@
    <header>hanlendar.gui.navcalendar</header>
   </customwidget>
   <customwidget>
-   <class>TaskTable</class>
-   <extends>QTableWidget</extends>
-   <header>hanlendar.gui.tasktable</header>
-  </customwidget>
-  <customwidget>
    <class>TaskDetails</class>
    <extends>QWidget</extends>
    <header>hanlendar.gui.taskdetails</header>
@@ -506,6 +463,11 @@
    <class>ToDoTable</class>
    <extends>QTreeView</extends>
    <header>hanlendar.gui.todotable</header>
+  </customwidget>
+  <customwidget>
+   <class>TaskTable</class>
+   <extends>QTreeView</extends>
+   <header>hanlendar.gui.tasktable</header>
   </customwidget>
  </customwidgets>
  <resources/>

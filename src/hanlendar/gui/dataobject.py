@@ -31,8 +31,10 @@ from PyQt5.QtWidgets import QDialog
 
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.task import Task
-from hanlendar.gui.taskdialog import TaskDialog
 from hanlendar.domainmodel.todo import ToDo
+from hanlendar.domainmodel.item import Item
+
+from hanlendar.gui.taskdialog import TaskDialog
 from hanlendar.gui.tododialog import ToDoDialog
 
 
@@ -42,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 class DataObject( QObject ):
 
     ## added, modified or removed
-    taskChanged = pyqtSignal( Task )
+    taskChanged = pyqtSignal()
     ## added, modified or removed
     todoChanged = pyqtSignal()
 
@@ -66,6 +68,10 @@ class DataObject( QObject ):
 
     ## ==============================================================
 
+    def setTasksList(self, newList):
+        self.getManager().tasks = newList
+        self.taskChanged.emit()
+
     def addNewTask( self, newTaskDate: QDate = None ):
         task = Task()
         if newTaskDate is not None:
@@ -83,7 +89,7 @@ class DataObject( QObject ):
         if task is None:
             task = Task()
         self.domainModel.addTask( task )
-        self.taskChanged.emit( task )
+        self.taskChanged.emit()
         return task
 
     def editTask(self, task: Task ):
@@ -95,15 +101,19 @@ class DataObject( QObject ):
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.replaceTask( task, taskDialog.task )
-        self.taskChanged.emit( taskDialog.task )
+        self.taskChanged.emit()
 
     def removeTask(self, task: Task ):
-        self.domainModel.removeTask( task )
-        self.taskChanged.emit( task )
+        tasksList = self.domainModel.tasks
+        coords = Item.getItemCoords(tasksList, task)
+        removed = Item.detachItemByCoords(tasksList, coords)
+        if removed is None:
+            _LOGGER.warning( "unable to remove task: %s", coords )
+        self.taskChanged.emit()
 
     def markTaskCompleted(self, task: Task ):
         task.setCompleted()
-        self.taskChanged.emit( task )
+        self.taskChanged.emit()
 
     ## ==============================================================
 
