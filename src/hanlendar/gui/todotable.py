@@ -34,6 +34,7 @@ from hanlendar.gui.tasktable import get_completed_color
 from hanlendar.gui.customtreemodel import CustomTreeModel
 
 from hanlendar.domainmodel.todo import ToDo
+from hanlendar.domainmodel.item import Item
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,7 +84,7 @@ class TodosTreeModel( CustomTreeModel ):
 
     def getChildren(self, parent):
         if parent is not None:
-            return parent.subtodos
+            return parent.subitems
         return self.getRootList()
 
     def getParent(self, item):
@@ -99,12 +100,12 @@ class TodosTreeModel( CustomTreeModel ):
     @abc.abstractmethod
     def getItemId(self, item):
         todosList = self.getRootList()
-        return ToDo.getToDoCoords( todosList, item )
+        return Item.getItemCoords( todosList, item )
 
     @abc.abstractmethod
     def moveItem(self, itemId, targetItem, targetIndex):
         todosList = self.getRootList()
-        todo = ToDo.detachToDoByCoords( todosList, itemId )
+        todo = Item.detachItemByCoords( todosList, itemId )
         if targetItem is not None:
             targetItem.addSubtodo( todo, targetIndex )
         elif targetIndex < 0:

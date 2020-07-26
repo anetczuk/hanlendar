@@ -25,155 +25,44 @@ import logging
 
 from hanlendar import persist
 
+from hanlendar.domainmodel.item import Item
+
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ToDo( persist.Versionable ):
+class ToDo( Item, persist.Versionable ):
     """ToDo is entity without placement in time."""
 
     ## 0: add subtodos
-    _class_version = 0
-
-    def __init__(self, title=""):
-        self.title                          = title
-        self.description                    = ""
-        self._completed                     = 0        ## in range [0..100]
-        self.priority                       = 10       ## lower number, greater priority
-        self.subtodos: list                 = None
+    ## 1: add base class Item
+    _class_version = 1
 
     def _convertstate_(self, dict_, dictVersion_ ):
         _LOGGER.info( "converting object from version %s to %s", dictVersion_, self._class_version )
 
         if dictVersion_ is None:
+            dictVersion_ = -1
+
+        ## set of conditions converting dict_ to recent version
+        if dictVersion_ < 0:
             ## initialize subtodos field
-            # pylint: disable=W0201
-            self.__dict__ = dict_
-            self.subtodos = None
-            return
+            dict_["subtodos"] = None
+            dictVersion_ = 0
+            
+        if dictVersion_ < 1:
+            ## base class extracted, "subtodos" renamed to "subitems"
+            dict_["subitems"] = dict_["subtodos"]
+            dict_.pop('subtodos', None)
+            dictVersion_ = 1
 
-    @property
-    def completed(self):
-        return self._completed
-
-    @completed.setter
-    def completed(self, value):
-        self.setCompleted( value )
-
-    def setCompleted(self, value=100):
-        if value < 0:
-            value = 0
-        elif value > 100:
-            value = 100
-        self._completed = value
-
-    def isCompleted(self):
-        if self._completed < 100:
-            return False
-        if not self.subtodos:
-            return True
-        for sub in self.subtodos:
-            if sub.isCompleted() is False:
-                return False
-        return True
+        # pylint: disable=W0201
+        self.__dict__ = dict_
 
     def addSubtodo(self, todo=None, index=-1):
-        if self.subtodos is None:
-            self.subtodos = list()
         if todo is None:
             todo = ToDo()
-        if index < 0:
-            self.subtodos.append( todo )
-        else:
-            self.subtodos.insert( index, todo )
-        return todo
-
-    def findParent(self, child):
-        if self.subtodos is None:
-            return None
-        for item in self.subtodos:
-            if item == child:
-                return self
-            ret = item.findParent( child )
-            if ret is not None:
-                return ret
-        return None
-
-    def getChildCoords(self, todo):
-        return ToDo.getToDoCoords( self.subtodos, todo )
-
-    def getChildFromCoords(self, coords):
-        return ToDo.getToDoFromCoords( self.subtodos, coords )
-
-    def detachChildByCoords(self, coords):
-        return ToDo.detachToDoByCoords( self.subtodos, coords )
+        return self._addSubItem(todo, index)
 
     def __str__(self):
-        return "[t:%s d:%s c:%s p:%s]" % ( self.title, self.description, self._completed, self.priority )
-
-    @staticmethod
-    def getToDoCoords( todosList, todo ):
-        if todosList is None:
-            return None
-        if not todosList:
-            return None
-        lSize = len(todosList)
-        for i in range( lSize ):
-            item = todosList[i]
-            if item == todo:
-                return [i]
-            ret = item.getChildCoords( todo )
-            if ret is not None:
-                return [i] + ret
-        return None
-
-    @staticmethod
-    def getToDoFromCoords( todosList, coords ):
-        if todosList is None:
-            return None
-        if not todosList:
-            return None
-        if coords is None:
-            return None
-        if not coords:
-            return None
-        todoCoords = list( coords )
-        elemIndex = todoCoords.pop(0)
-        if elemIndex >= len(todosList):
-            return None
-        todo = todosList[ elemIndex ]
-        if not todoCoords:
-            return todo
-        return todo.getChildFromCoords( todoCoords )
-
-    @staticmethod
-    def detachToDoByCoords( todosList, coords ):
-        if todosList is None:
-            return None
-        if not todosList:
-            return None
-        if coords is None:
-            return None
-        if not coords:
-            return None
-        todoCoords = list( coords )
-        elemIndex = todoCoords.pop(0)
-        if elemIndex >= len(todosList):
-            return None
-        todo = todosList[ elemIndex ]
-        if not todoCoords:
-            todosList.pop( elemIndex )
-            return todo
-        return todo.detachChildByCoords( todoCoords )
-
-    @staticmethod
-    def sortByPriority( todo ):
-        return todo.priority
-
-    @staticmethod
-    def sortTree( todoList, attrName: str, reverseOrder: bool ):
-        if todoList is None:
-            return
-        todoList.sort( key=lambda x: getattr(x, attrName), reverse=reverseOrder )
-        for todo in todoList:
-            ToDo.sortTree( todo.subtodos, attrName, reverseOrder )
+        return "[t:%s d:%s c:%s p:%s subs: %s]" % ( self.title, self.description, self._completed, self.priority, len(self.subitems) )
