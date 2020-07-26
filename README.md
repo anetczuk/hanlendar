@@ -11,11 +11,11 @@ Application is inspired by:
 
 ## Features
 
-- adding tasks
+- adding tasks and sub tasks
     - start, due date
     - reminders
     - recurrence: daily, weekly, monthly, yearly
-- adding todos
+- adding todos and sub todos
 - adding notes
 - tasks list
 - day and month view
