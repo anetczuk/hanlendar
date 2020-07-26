@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>ToDo edit</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0">
    <item>
     <layout class="QFormLayout" name="formLayout">
      <item row="1" column="0">
@@ -116,89 +116,96 @@
        </item>
       </layout>
      </item>
-     <item row="4" column="1">
-      <layout class="QVBoxLayout" name="verticalLayout_5">
+    </layout>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="descriptionTab">
+      <attribute name="title">
+       <string>Description</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QTextBrowser" name="descriptionEdit">
-         <property name="readOnly">
-          <bool>false</bool>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextEditable|Qt::TextEditorInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-         </property>
-         <property name="openLinks">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_5">
-         <property name="topMargin">
-          <number>0</number>
-         </property>
+        <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,0,0">
          <item>
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>Url:</string>
+          <widget class="QTextBrowser" name="descriptionEdit">
+           <property name="readOnly">
+            <bool>false</bool>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextEditable|Qt::TextEditorInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+           </property>
+           <property name="openLinks">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="urlEdit"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_6">
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <spacer name="horizontalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <property name="topMargin">
+            <number>0</number>
            </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
+           <item>
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>Url:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="urlEdit"/>
+           </item>
+          </layout>
          </item>
          <item>
-          <widget class="QPushButton" name="openLocalFilePB">
-           <property name="text">
-            <string>Open File</string>
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <property name="topMargin">
+            <number>0</number>
            </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="openLocalDirPB">
-           <property name="text">
-            <string>Open Dir</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="addUrlPB">
-           <property name="text">
-            <string>Add Url</string>
-           </property>
-          </widget>
+           <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="openLocalFilePB">
+             <property name="text">
+              <string>Open File</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="openLocalDirPB">
+             <property name="text">
+              <string>Open Dir</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="addUrlPB">
+             <property name="text">
+              <string>Add Url</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </item>
       </layout>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Description:</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+     </widget>
+    </widget>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
