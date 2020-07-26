@@ -272,7 +272,7 @@ class Task( Item, persist.Versionable ):
     def __init__(self, title="" ):
         super(Task, self).__init__( title )
         self._startDate: datetime           = None
-        self._dueDate: datetime             = None
+        self._dueDate: datetime             = datetime.today()          ## set default value
         self.reminderList: List[Reminder]   = None
         self._recurrence: Recurrent         = None
         self._recurrentOffset               = 0
