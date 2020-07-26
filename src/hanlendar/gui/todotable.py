@@ -22,7 +22,6 @@
 #
 
 import logging
-import abc
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal, QModelIndex
@@ -31,16 +30,15 @@ from PyQt5.QtWidgets import QMenu
 from PyQt5.QtGui import QColor, QBrush
 
 from hanlendar.gui.tasktable import get_completed_color
-from hanlendar.gui.customtreemodel import CustomTreeModel
+from hanlendar.gui.customtreemodel import ItemTreeModel
 
 from hanlendar.domainmodel.todo import ToDo
-from hanlendar.domainmodel.item import Item
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class TodosTreeModel( CustomTreeModel ):
+class ToDoTreeModel( ItemTreeModel ):
 
     attrList = [ "title", "priority", "completed" ]
 
@@ -53,72 +51,47 @@ class TodosTreeModel( CustomTreeModel ):
         self.dataObject = dataObject
         self.endResetModel()
 
-    def headerLabels(self):
-        return [ "Summary", "Priority", "Complete" ]
-
     def data(self, index: QModelIndex, role):
         if role == QtCore.Qt.SizeHintRole:
             return QtCore.QSize(10, 30)
 
-        todo: ToDo = self.getItem( index )
-        if todo is None:
+        item: ToDo = self.getItem( index )
+        if item is None:
             return None
+
+        if role == Qt.TextAlignmentRole:
+            attrIndex = index.column()
+            if attrIndex > 0:
+                return Qt.AlignHCenter | Qt.AlignVCenter
+
         if role == Qt.ForegroundRole:
-            return get_todo_fgcolor( todo )
+            return get_todo_fgcolor( item )
+
         if role == QtCore.Qt.DisplayRole:
             attrIndex = index.column()
             attrName = self._getAttrName(attrIndex)
             if attrName is None:
                 return None
-            return getattr( todo, attrName )
+            return getattr( item, attrName )
+
         return None
+
+    def headerLabels(self):
+        return [ "Summary", "Priority", "Complete" ]
 
     def internalMoveMimeType(self):
         return "TodosTreeNode"
-
-    # pylint: disable=R0201
-    def getItem(self, item: QModelIndex):
-        if item.isValid():
-            return item.internalPointer()
-        return None
-
-    def getChildren(self, parent):
-        if parent is not None:
-            return parent.subitems
-        return self.getRootList()
-
-    def getParent(self, item):
-        todosList = self.getRootList()
-        for currItem in todosList:
-            if currItem == item:
-                return None
-            ret = currItem.findParent( item )
-            if ret is not None:
-                return ret
-        return None
-
-    @abc.abstractmethod
-    def getItemId(self, item):
-        todosList = self.getRootList()
-        return Item.getItemCoords( todosList, item )
-
-    @abc.abstractmethod
-    def moveItem(self, itemId, targetItem, targetIndex):
-        todosList = self.getRootList()
-        todo = Item.detachItemByCoords( todosList, itemId )
-        if targetItem is not None:
-            targetItem.addSubtodo( todo, targetIndex )
-        elif targetIndex < 0:
-            todosList.append( todo )
-        else:
-            todosList.insert( targetIndex, todo )
-        self.dataObject.setTodosList( todosList )
 
     def getRootList(self):
         if self.dataObject is None:
             return None
         manager = self.dataObject.getManager()
         return manager.getToDos()
+
+    def setRootList(self, newList):
+        if self.dataObject is None:
+            return
+        self.dataObject.setTodosList( newList )
 
     def _getAttrName(self, attrIndex):
         if attrIndex < 0:
@@ -135,18 +108,18 @@ class ToDoSortFilterProxyModel( QtCore.QSortFilterProxyModel ):
 
     def __init__(self, parentObject=None):
         super().__init__(parentObject)
-        self._showCompletedTasks = False
+        self._showCompleted = False
 
     def showCompleted(self, show=True):
-        self._showCompletedTasks = show
+        self._showCompleted = show
         self.invalidateFilter()
 
     def filterAcceptsRow(self, sourceRow, sourceParent: QModelIndex):
-        if self._showCompletedTasks is True:
+        if self._showCompleted is True:
             return True
         dataIndex = self.sourceModel().index( sourceRow, 2, sourceParent )
-        todo: ToDo = dataIndex.internalPointer()
-        return todo.isCompleted() is False
+        item: ToDo = dataIndex.internalPointer()
+        return item.isCompleted() is False
 
     def lessThan(self, left: QModelIndex, right: QModelIndex):
         leftData  = self.sourceModel().data(left, QtCore.Qt.DisplayRole)
@@ -184,9 +157,9 @@ class ToDoTable( QtWidgets.QTreeView ):
         self.setDragDropMode( QAbstractItemView.InternalMove )
         self.setDragDropOverwriteMode(False)
 
-        self.todosModel = TodosTreeModel(self)
+        self.itemsModel = ToDoTreeModel(self)
         self.proxyModel = ToDoSortFilterProxyModel(self)
-        self.proxyModel.setSourceModel( self.todosModel )
+        self.proxyModel.setSourceModel( self.itemsModel )
         self.setModel( self.proxyModel )
 
         header = self.header()
@@ -195,11 +168,11 @@ class ToDoTable( QtWidgets.QTreeView ):
         header.setStretchLastSection( False )
         header.setSectionResizeMode( 0, QHeaderView.Stretch )
 
-        self.doubleClicked.connect( self.todoDoubleClicked )
+        self.doubleClicked.connect( self.itemDoubleClicked )
 
     def connectData(self, dataObject):
         self.data = dataObject
-        self.todosModel.setDataObject( dataObject )
+        self.itemsModel.setDataObject( dataObject )
         self.addNewToDo.connect( dataObject.addNewToDo )
         self.addNewSubToDo.connect( dataObject.addNewSubToDo )
         self.editToDo.connect( dataObject.editToDo )
@@ -207,18 +180,18 @@ class ToDoTable( QtWidgets.QTreeView ):
         self.convertToDoToTask.connect( dataObject.convertToDoToTask )
         self.markCompleted.connect( dataObject.markToDoCompleted )
 
-    def showCompletedToDos(self, show):
+    def showCompletedItems(self, show):
         self.proxyModel.showCompleted( show )
         self.updateView()
 
     def updateView(self):
         if self.data is None:
             return
-        self.todosModel.setDataObject( self.data )
+        self.itemsModel.setDataObject( self.data )
 
-    def getToDo(self, todoIndex: QModelIndex ):
-        sourceIndex = self.proxyModel.mapToSource( todoIndex )
-        return self.todosModel.getItem( sourceIndex )
+    def getToDo(self, itemIndex: QModelIndex ):
+        sourceIndex = self.proxyModel.mapToSource( itemIndex )
+        return self.itemsModel.getItem( sourceIndex )
 
     def contextMenuEvent( self, event ):
         evPos     = event.pos()
@@ -269,7 +242,7 @@ class ToDoTable( QtWidgets.QTreeView ):
         else:
             self.todoUnselected.emit()
 
-    def todoDoubleClicked(self, modelIndex):
+    def itemDoubleClicked(self, modelIndex):
         todo = self.getToDo( modelIndex )
         self.editToDo.emit( todo )
 

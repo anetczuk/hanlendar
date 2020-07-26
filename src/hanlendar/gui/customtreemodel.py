@@ -28,6 +28,8 @@ from typing import List
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QModelIndex
 
+from hanlendar.domainmodel.item import Item
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,18 +143,20 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
         self.endResetModel()
         return True
 
+    # pylint: disable=R0201
+    def getItem(self, itemIndex: QModelIndex):
+        if itemIndex.isValid():
+            return itemIndex.internalPointer()
+        return None
+
+    ## ==================================================================
+
     @abc.abstractmethod
     def headerLabels(self) -> List[str]:
         raise NotImplementedError('You need to define this method in derived class!')
 
     @abc.abstractmethod
     def internalMoveMimeType(self) -> str:
-        raise NotImplementedError('You need to define this method in derived class!')
-
-    ## ==================================================================
-
-    @abc.abstractmethod
-    def getItem(self, item: QModelIndex):
         raise NotImplementedError('You need to define this method in derived class!')
 
     @abc.abstractmethod
@@ -173,4 +177,51 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
 
     @abc.abstractmethod
     def moveItem(self, itemId, targetItem: object, targetIndex):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+
+## ====================================================================
+
+
+class ItemTreeModel( CustomTreeModel ):
+
+    def moveItem(self, itemId, targetItem, targetIndex):
+        itemsList = self.getRootList()
+        sourceItem = Item.detachItemByCoords( itemsList, itemId )
+        if targetItem is not None:
+            targetItem.addSubItem( sourceItem, targetIndex )
+        elif targetIndex < 0:
+            itemsList.append( sourceItem )
+        else:
+            itemsList.insert( targetIndex, sourceItem )
+        ## triggers change event
+        self.setRootList( itemsList )
+
+    def getChildren(self, parent):
+        if parent is not None:
+            return parent.subitems
+        return self.getRootList()
+
+    def getParent(self, item):
+        itemsList = self.getRootList()
+        for currItem in itemsList:
+            if currItem == item:
+                return None
+            ret = currItem.findParent( item )
+            if ret is not None:
+                return ret
+        return None
+
+    def getItemId(self, item: object):
+        itemsList = self.getRootList()
+        return Item.getItemCoords( itemsList, item )
+
+    ## ================================================================
+
+    @abc.abstractmethod
+    def getRootList(self):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def setRootList(self, newList):
         raise NotImplementedError('You need to define this method in derived class!')

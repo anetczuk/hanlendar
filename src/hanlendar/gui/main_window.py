@@ -121,7 +121,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.todosTable.connectData( self.data )
         self.ui.todosTable.selectedToDo.connect( self.showDetails )
         self.ui.todosTable.todoUnselected.connect( self.hideDetails )
-        self.ui.showCompletedToDosCB.toggled.connect( self.ui.todosTable.showCompletedToDos )
+        self.ui.showCompletedToDosCB.toggled.connect( self.ui.todosTable.showCompletedItems )
 
         self.ui.notesWidget.notesChanged.connect( self.saveData )
         self.ui.notesWidget.createToDo.connect( self.data.addNewToDo )
