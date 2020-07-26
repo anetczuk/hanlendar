@@ -23,6 +23,7 @@
 
 import logging
 import abc
+from typing import List
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QModelIndex
@@ -107,9 +108,9 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
             if ind.column() != 0:
                 continue
             item = ind.internalPointer()
-            coords = self.getItemCoords( item )
+            itemId = self.getItemId( item )
             # pylint: disable=W0106
-            stream << QtCore.QVariant(coords)
+            stream << QtCore.QVariant(itemId)
         mimeObject = QtCore.QMimeData()
         mimeObject.setData( self.internalMoveMimeType(), encodedData )
         return mimeObject
@@ -141,11 +142,11 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
         return True
 
     @abc.abstractmethod
-    def headerLabels(self):
+    def headerLabels(self) -> List[str]:
         raise NotImplementedError('You need to define this method in derived class!')
 
     @abc.abstractmethod
-    def internalMoveMimeType(self):
+    def internalMoveMimeType(self) -> str:
         raise NotImplementedError('You need to define this method in derived class!')
 
     ## ==================================================================
@@ -163,9 +164,13 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
         raise NotImplementedError('You need to define this method in derived class!')
 
     @abc.abstractmethod
-    def getItemCoords(self, item: object):
+    def getItemId(self, item: object):
+        """Return object's identifier.
+
+        It could be unique number or item's coordinates in objects tree.
+        """
         raise NotImplementedError('You need to define this method in derived class!')
 
     @abc.abstractmethod
-    def moveItem(self, itemCoords, targetItem: object, targetIndex):
+    def moveItem(self, itemId, targetItem: object, targetIndex):
         raise NotImplementedError('You need to define this method in derived class!')

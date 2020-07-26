@@ -97,14 +97,14 @@ class TodosTreeModel( CustomTreeModel ):
         return None
 
     @abc.abstractmethod
-    def getItemCoords(self, item):
+    def getItemId(self, item):
         todosList = self.getRootList()
         return ToDo.getToDoCoords( todosList, item )
 
     @abc.abstractmethod
-    def moveItem(self, itemCoords, targetItem, targetIndex):
+    def moveItem(self, itemId, targetItem, targetIndex):
         todosList = self.getRootList()
-        todo = ToDo.detachToDoByCoords( todosList, itemCoords )
+        todo = ToDo.detachToDoByCoords( todosList, itemId )
         if targetItem is not None:
             targetItem.addSubtodo( todo, targetIndex )
         elif targetIndex < 0:
