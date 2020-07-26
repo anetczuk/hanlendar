@@ -24,8 +24,6 @@
 import logging
 from datetime import date
 
-# from . import uiloader
-
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QRect, QDate
 from PyQt5.QtCore import pyqtSignal
@@ -34,7 +32,7 @@ from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtGui import QPainter, QPainterPath, QPen, QColor, QPalette
 
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
-from hanlendar.gui.monthcalendar import get_task_bgcolor
+from hanlendar.gui.widget.monthcalendar import get_task_bgcolor
 
 from hanlendar.domainmodel.task import Task, TaskOccurrence
 

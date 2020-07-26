@@ -35,7 +35,7 @@ from hanlendar.gui.main_window import MainWindow
 
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
-from hanlendar.gui.menustyle import MenuStyle
+from hanlendar.gui.widget.menustyle import MenuStyle
 
 
 logger.configure()

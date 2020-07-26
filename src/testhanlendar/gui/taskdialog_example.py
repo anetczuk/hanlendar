@@ -39,8 +39,8 @@ from datetime import datetime
 
 from hanlendar.gui.qt import QApplication, renderToPixmap
 from hanlendar.gui.sigint import setup_interrupt_handling
-from hanlendar.gui.taskdialog import TaskDialog
 from hanlendar.gui.resources import get_root_path
+from hanlendar.gui.widget.taskdialog import TaskDialog
 
 from hanlendar.domainmodel.task import Task
 

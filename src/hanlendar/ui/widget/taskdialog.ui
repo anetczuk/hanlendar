@@ -305,13 +305,13 @@
   <customwidget>
    <class>RecurrentWidget</class>
    <extends>QWidget</extends>
-   <header>hanlendar.gui.recurrentwidget</header>
+   <header>hanlendar.gui.widget.recurrentwidget</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ReminderWidget</class>
    <extends>QWidget</extends>
-   <header>hanlendar.gui.reminderwidget</header>
+   <header>hanlendar.gui.widget.reminderwidget</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

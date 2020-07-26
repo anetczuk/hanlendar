@@ -39,8 +39,8 @@ from datetime import datetime, timedelta
 
 from hanlendar.gui.qt import QApplication, renderToPixmap
 from hanlendar.gui.sigint import setup_interrupt_handling
-from hanlendar.gui.daylistwidget import DayListWidget
 from hanlendar.gui.resources import get_root_path
+from hanlendar.gui.widget.daylistwidget import DayListWidget
 
 from hanlendar.domainmodel.task import Task
 

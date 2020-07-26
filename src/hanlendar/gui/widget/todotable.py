@@ -29,8 +29,8 @@ from PyQt5.QtWidgets import QAbstractItemView, QHeaderView
 from PyQt5.QtWidgets import QMenu
 from PyQt5.QtGui import QColor, QBrush
 
-from hanlendar.gui.tasktable import get_completed_color
 from hanlendar.gui.customtreemodel import ItemTreeModel
+from hanlendar.gui.widget.tasktable import get_completed_color
 
 from hanlendar.domainmodel.todo import ToDo
 

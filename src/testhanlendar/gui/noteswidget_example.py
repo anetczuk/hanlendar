@@ -38,7 +38,7 @@ import sys
 
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
-from hanlendar.gui.noteswidget import NotesWidget
+from hanlendar.gui.widget.noteswidget import NotesWidget
 
 # from hanlendar.domainmodel.task import Task
 

@@ -30,7 +30,7 @@ from PyQt5.QtWidgets import QListWidgetItem
 from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.reminder import Reminder
 
-from . import uiloader
+from .. import uiloader
 
 
 UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )

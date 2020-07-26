@@ -29,7 +29,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMenu, QInputDialog
 from PyQt5.QtWidgets import QLineEdit
 
-from . import uiloader
+from .. import uiloader
 
 
 UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )

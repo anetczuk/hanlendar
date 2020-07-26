@@ -37,9 +37,13 @@ except ImportError:
 import hanlendar.defs as defs
 
 
+base_dir = os.path.dirname( __file__ )
+
+
 def generate_ui_file_name(classFileName):
-    baseName = os.path.basename(classFileName)
-    nameTuple = os.path.splitext(baseName)
+    commonPrefix = os.path.commonprefix( [classFileName, base_dir] )
+    relativePath = os.path.relpath(classFileName, commonPrefix)
+    nameTuple = os.path.splitext(relativePath)
     return nameTuple[0] + ".ui"
 
 

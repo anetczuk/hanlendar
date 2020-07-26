@@ -38,8 +38,8 @@ import sys
 
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
-from hanlendar.gui.todotable import ToDoTable
 from hanlendar.gui.dataobject import DataObject
+from hanlendar.gui.widget.todotable import ToDoTable
 
 from hanlendar.domainmodel.todo import ToDo
 

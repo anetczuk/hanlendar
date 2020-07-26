@@ -29,7 +29,7 @@ from datetime import date
 from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.recurrent import RepeatType, Recurrent
 
-from . import uiloader
+from .. import uiloader
 
 
 UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )

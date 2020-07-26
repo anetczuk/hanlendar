@@ -44,9 +44,9 @@ import hanlendar
 import hanlendar.logger as logger
 from hanlendar.gui.qt import QApplication, renderToPixmap
 from hanlendar.gui.sigint import setup_interrupt_handling
-from hanlendar.gui.monthcalendar import MonthCalendar
 from hanlendar.gui.dataobject import DataObject
 from hanlendar.gui.resources import get_root_path
+from hanlendar.gui.widget.monthcalendar import MonthCalendar
 
 from hanlendar.domainmodel.recurrent import Recurrent
 

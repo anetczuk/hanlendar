@@ -20,9 +20,9 @@
 import logging
 import copy
 
-from . import uiloader
-from .qt import pyqtSignal
-from . import tray_icon
+from ..qt import pyqtSignal
+from .. import uiloader
+from .. import tray_icon
 
 
 class AppSettings():

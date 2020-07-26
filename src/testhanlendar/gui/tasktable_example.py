@@ -39,8 +39,8 @@ from datetime import datetime, timedelta
 
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
-from hanlendar.gui.tasktable import TaskTable
 from hanlendar.gui.dataobject import DataObject
+from hanlendar.gui.widget.tasktable import TaskTable
 
 from hanlendar.domainmodel.task import Task
 

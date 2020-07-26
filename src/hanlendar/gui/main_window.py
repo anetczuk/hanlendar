@@ -40,10 +40,10 @@ from .qt import qApp, QtCore, QIcon
 from .qt import QWidget, QSplitter, QTabWidget
 
 from .dataobject import DataObject
-from .navcalendar import NavCalendarHighlightModel
-from .tasktable import get_reminded_color, get_timeout_color
-from .settingsdialog import SettingsDialog, AppSettings
 from .notifytimer import NotificationTimer
+from .widget.settingsdialog import SettingsDialog, AppSettings
+from .widget.navcalendar import NavCalendarHighlightModel
+from .widget.tasktable import get_reminded_color, get_timeout_color
 
 
 _LOGGER = logging.getLogger(__name__)

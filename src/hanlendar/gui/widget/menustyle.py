@@ -22,7 +22,7 @@
 #
 
 import logging
-from .qt import QtWidgets
+from ..qt import QtWidgets
 
 
 _LOGGER = logging.getLogger(__name__)

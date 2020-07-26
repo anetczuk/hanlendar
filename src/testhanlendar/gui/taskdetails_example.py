@@ -39,7 +39,7 @@ from datetime import datetime
 
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
-from hanlendar.gui.taskdetails import TaskDetails
+from hanlendar.gui.widget.taskdetails import TaskDetails
 
 from hanlendar.domainmodel.task import Task
 

@@ -428,46 +428,46 @@
   <customwidget>
    <class>NavCalendar</class>
    <extends>QCalendarWidget</extends>
-   <header>hanlendar.gui.navcalendar</header>
+   <header>hanlendar.gui.widget.navcalendar</header>
   </customwidget>
   <customwidget>
    <class>TaskDetails</class>
    <extends>QWidget</extends>
-   <header>hanlendar.gui.taskdetails</header>
+   <header>hanlendar.gui.widget.taskdetails</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>NotesWidget</class>
    <extends>QWidget</extends>
-   <header>hanlendar.gui.noteswidget</header>
+   <header>hanlendar.gui.widget.noteswidget</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ToDoDetails</class>
    <extends>QWidget</extends>
-   <header>hanlendar.gui.tododetails</header>
+   <header>hanlendar.gui.widget.tododetails</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>MonthCalendar</class>
    <extends>QCalendarWidget</extends>
-   <header>hanlendar.gui.monthcalendar</header>
+   <header>hanlendar.gui.widget.monthcalendar</header>
   </customwidget>
   <customwidget>
    <class>DayListWidget</class>
    <extends>QWidget</extends>
-   <header>hanlendar.gui.daylistwidget</header>
+   <header>hanlendar.gui.widget.daylistwidget</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ToDoTable</class>
    <extends>QTreeView</extends>
-   <header>hanlendar.gui.todotable</header>
+   <header>hanlendar.gui.widget.todotable</header>
   </customwidget>
   <customwidget>
    <class>TaskTable</class>
    <extends>QTreeView</extends>
-   <header>hanlendar.gui.tasktable</header>
+   <header>hanlendar.gui.widget.tasktable</header>
   </customwidget>
  </customwidgets>
  <resources/>

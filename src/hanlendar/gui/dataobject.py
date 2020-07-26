@@ -29,12 +29,12 @@ from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QDialog
 
+from hanlendar.gui.widget.taskdialog import TaskDialog
+from hanlendar.gui.widget.tododialog import ToDoDialog
+
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.todo import ToDo
-
-from hanlendar.gui.taskdialog import TaskDialog
-from hanlendar.gui.tododialog import ToDoDialog
 
 
 _LOGGER = logging.getLogger(__name__)
