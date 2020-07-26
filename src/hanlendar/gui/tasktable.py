@@ -235,12 +235,12 @@ class TaskTable( QtWidgets.QTreeView ):
     def itemDoubleClicked(self, modelIndex):
         item = self.getTask( modelIndex )
         self.taskContextMenu.editTask.emit( item )
-        
+
     def drawBranches(self, painter, rect, index):
         bgcolor = index.data( Qt.BackgroundRole )
         if bgcolor is not None:
             painter.fillRect(rect, bgcolor)
-        super().drawBranches(painter, rect, index);
+        super().drawBranches(painter, rect, index)
 
 
 def get_task_fgcolor( task: TaskOccurrence ) -> QBrush:

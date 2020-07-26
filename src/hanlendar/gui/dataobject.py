@@ -177,7 +177,7 @@ class DataObject( QObject ):
         todo.setCompleted()
         self.todoChanged.emit()
 
-    def _createTask( self, newTaskDate: QDate = None ):   
+    def _createTask( self, newTaskDate: QDate = None ):
         task = Task()
         if newTaskDate is not None:
             startDate = newTaskDate.toPyDate()
