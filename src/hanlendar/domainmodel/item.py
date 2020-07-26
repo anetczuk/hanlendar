@@ -62,6 +62,12 @@ class Item():
                 return False
         return True
 
+    def getAllSubItems(self):
+        """Return all sub items from tree."""
+        if self.subitems is None:
+            return list()
+        return Item.getAllSubItemsFromList( self.subitems )
+
     def findParent(self, child):
         if self.subitems is None:
             return None
@@ -91,8 +97,55 @@ class Item():
             self.subitems.insert( index, item )
         return item
 
+    def removeSubItem(self, item):
+        if self.subitems is None:
+            return None
+        return Item.removeSubItemFromList( self.subitems, item )
+
+    def replaceSubItem( self, oldItem, newItem ):
+        if self.subitems is None:
+            return False
+        return Item.replaceSubItemInList( self.subitems, oldItem, newItem )
+
 #     def __str__(self):
 #         return "[t:%s d:%s c:%s p:%s]" % ( self.title, self.description, self._completed, self.priority )
+
+    @staticmethod
+    def getAllSubItemsFromList( itemList ):
+        """Return all sub items from tree."""
+        if itemList is None:
+            return list()
+        retList = list()
+        for item in itemList:
+            retList.append( item )
+            retList += item.getAllSubItems()
+        return retList
+
+    @staticmethod
+    def removeSubItemFromList( itemList, item ):
+        if itemList is None:
+            return None
+        for i, _ in enumerate(itemList):
+            currItem = itemList[i]
+            if currItem == item:
+                return itemList.pop( i )
+            removed = currItem.removeSubItem( item )
+            if removed is not None:
+                return removed
+        return None
+
+    @staticmethod
+    def replaceSubItemInList( itemList, oldItem, newItem ):
+        if itemList is None:
+            return None
+        for i, _ in enumerate(itemList):
+            currItem = itemList[i]
+            if currItem == oldItem:
+                itemList[i] = newItem
+                return True
+            if currItem.replaceSubItem( oldItem, newItem ) is True:
+                return True
+        return False
 
     @staticmethod
     def getItemCoords( itemsList, item ):

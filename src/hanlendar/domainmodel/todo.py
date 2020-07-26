@@ -65,6 +65,9 @@ class ToDo( Item, persist.Versionable ):
         return self.addSubItem(todo, index)
 
     def __str__(self):
+        subLen = 0
+        if self.subitems is not None:
+            subLen = len(self.subitems)
         return "[t:%s d:%s c:%s p:%s subs: %s]" % (
             self.title, self.description,
-            self._completed, self.priority, len(self.subitems) )
+            self._completed, self.priority, subLen )

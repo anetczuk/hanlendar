@@ -312,14 +312,6 @@ class Task( Item, persist.Versionable ):
         # pylint: disable=W0201
         self.__dict__ = dict_
 
-    @property
-    def completed(self):
-        return self._completed
-
-    @completed.setter
-    def completed(self, value):
-        self.setCompleted( value )
-
     def setCompleted(self, value=100):
         if value < 0:
             value = 0
@@ -330,10 +322,6 @@ class Task( Item, persist.Versionable ):
             self._completed = 0
         else:
             self._completed = value
-
-    def isCompleted(self):
-        #TODO: return False in case recurrent task when not passed end date
-        return self._completed >= 100
 
     @property
     def startDateTime(self):

@@ -32,7 +32,6 @@ from PyQt5.QtWidgets import QDialog
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.todo import ToDo
-from hanlendar.domainmodel.item import Item
 
 from hanlendar.gui.taskdialog import TaskDialog
 from hanlendar.gui.tododialog import ToDoDialog
@@ -107,11 +106,9 @@ class DataObject( QObject ):
         self.taskChanged.emit()
 
     def removeTask(self, task: Task ):
-        tasksList = self.domainModel.tasks
-        coords = Item.getItemCoords(tasksList, task)
-        removed = Item.detachItemByCoords(tasksList, coords)
+        removed = self.domainModel.removeTask( task )
         if removed is None:
-            _LOGGER.warning( "unable to remove task: %s", coords )
+            _LOGGER.warning( "unable to remove task: %s", task )
         self.taskChanged.emit()
 
     def markTaskCompleted(self, task: Task ):
@@ -151,11 +148,9 @@ class DataObject( QObject ):
         self.todoChanged.emit()
 
     def removeToDo(self, todo: ToDo ):
-        todosList = self.domainModel.todos
-        coords = Item.getItemCoords(todosList, todo)
-        removed = Item.detachItemByCoords(todosList, coords)
+        removed = self.domainModel.removeToDo( todo )
         if removed is None:
-            _LOGGER.warning( "unable to remove todo: %s", coords )
+            _LOGGER.warning( "unable to remove todo: %s", todo )
         self.todoChanged.emit()
 
     def convertToDoToTask(self, todo: ToDo ):

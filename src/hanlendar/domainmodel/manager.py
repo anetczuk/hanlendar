@@ -29,9 +29,10 @@ import logging
 import glob
 
 from hanlendar import persist
-from .task import Task
-from .todo import ToDo
-from .reminder import Notification
+from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.todo import ToDo
+from hanlendar.domainmodel.reminder import Notification
+from hanlendar.domainmodel.item import Item
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,11 +101,16 @@ class Manager():
     ## ======================================================================
 
     def getTasks( self ):
-        return list( self.tasks )       ## shallow copy of list
+        return list( self.tasks )                   ## shallow copy of list
+
+    def getTasksAll(self):
+        """Return tasks and all subtasks from tree."""
+        return Item.getAllSubItemsFromList( self.tasks )
 
     def getTaskOccurrencesForDate(self, taskDate: date, includeCompleted=True):
         retList = list()
-        for task in self.tasks:
+        allTasks = self.getTasksAll()
+        for task in allTasks:
             entry = task.getTaskOccurrenceForDate( taskDate )
             if entry is None:
                 continue
@@ -115,12 +121,9 @@ class Manager():
         return retList
 
     def getNextDeadline(self) -> Task:
-        tSize = len(self.tasks)
-        if tSize < 1:
-            return None
         retTask: Task = None
-        for i in range(0, tSize):
-            task = self.tasks[i]
+        allTasks = self.getTasksAll()
+        for task in allTasks:
             if task.isCompleted():
                 continue
             if task.occurrenceDue is None:
@@ -132,12 +135,9 @@ class Manager():
         return retTask
 
     def getDeadlinedTasks(self):
-        tSize = len(self.tasks)
-        if tSize < 1:
-            return list()
         retTasks = list()
-        for i in range(0, tSize):
-            task = self.tasks[i]
+        allTasks = self.getTasksAll()
+        for task in allTasks:
             if task.isCompleted():
                 continue
             if task.isTimedout():
@@ -145,12 +145,9 @@ class Manager():
         return retTasks
 
     def getRemindedTasks(self):
-        tSize = len(self.tasks)
-        if tSize < 1:
-            return list()
         retTasks = list()
-        for i in range(0, tSize):
-            task = self.tasks[i]
+        allTasks = self.getTasksAll()
+        for task in allTasks:
             if task.isCompleted():
                 continue
             if task.isReminded():
@@ -178,10 +175,10 @@ class Manager():
         return task
 
     def removeTask( self, task: Task ):
-        self.tasks.remove( task )
+        return Item.removeSubItemFromList(self.tasks, task)
 
     def replaceTask( self, oldTask: Task, newTask: Task ):
-        replace_in_list( self.tasks, oldTask, newTask )
+        return Item.replaceSubItemInList(self.tasks, oldTask, newTask)
 
     def addNewDeadlineDateTime( self, eventdate: datetime, title ):
         eventTask = Task()
@@ -206,6 +203,10 @@ class Manager():
             return list( self.todos )       ## shallow copy of list
         return [ item for item in self.todos if not item.isCompleted() ]
 
+    def getTodosAll(self):
+        """Return todos and all subtodos from tree."""
+        return Item.getAllSubItemsFromList( self.todos )
+
     def addToDo( self, todo: ToDo = None ):
         if todo is None:
             todo = ToDo()
@@ -219,71 +220,23 @@ class Manager():
         return todo
 
     def removeToDo( self, todo: ToDo ):
-        self.todos.remove( todo )
+        return Item.removeSubItemFromList(self.todos, todo)
 
     def replaceToDo( self, oldToDo: ToDo, newToDo: ToDo ):
-        replace_in_list( self.todos, oldToDo, newToDo )
+        return Item.replaceSubItemInList(self.todos, oldToDo, newToDo)
 
     def getNextToDo(self) -> ToDo:
-        tSize = len(self.todos)
         nextToDo = None
-        for i in range(0, tSize):
-            todo = self.todos[i]
-            if todo.isCompleted():
+        allItems = self.getTodosAll()
+        for item in allItems:
+            if item.isCompleted():
                 continue
             if nextToDo is None:
-                nextToDo = todo
+                nextToDo = item
                 continue
-            if nextToDo.priority < todo.priority:
-                nextToDo = todo
+            if nextToDo.priority < item.priority:
+                nextToDo = item
         return nextToDo
-
-    def setToDoPriorityLeast(self, todo: ToDo):
-        if len(self.todos) < 1:
-            return
-        sortedTodos = self.getToDos(False)
-        sortedTodos.remove( todo )
-        sortedTodos.sort( key=ToDo.sortByPriority )         ## ascending
-        smallestPriority = sortedTodos[0].priority
-        if smallestPriority > todo.priority:
-            ## "todo" item has smallest priority and there is no other todos with the same priority
-            return
-        smallestPriority -= 1
-        if smallestPriority < 0:
-            todo.priority = 0
-            priorValue = abs( smallestPriority )
-            for item in sortedTodos:
-                item.priority += priorValue
-        else:
-            todo.priority = smallestPriority
-
-    def setToDoPriorityRaise(self, todo: ToDo, newPriority):
-        todo.priority = newPriority
-        sortedTodos = self.getToDos(False)
-        sortedTodos.remove( todo )
-        sortedTodos.sort( key=ToDo.sortByPriority )         ## ascending
-        prevPriority = newPriority
-        for item in sortedTodos:
-            if item.priority < newPriority:
-                continue
-            if item.priority > prevPriority:
-                break
-            item.priority += 1
-            prevPriority = item.priority
-
-    def setToDoPriorityDecline(self, todo: ToDo, newPriority):
-        todo.priority = newPriority
-        sortedTodos = self.getToDos(False)
-        sortedTodos.remove( todo )
-        sortedTodos.sort( key=ToDo.sortByPriority, reverse=True )         ## descending
-        prevPriority = newPriority
-        for item in sortedTodos:
-            if item.priority > newPriority:
-                continue
-            if item.priority < prevPriority:
-                break
-            item.priority -= 1
-            prevPriority = item.priority
 
     ## ========================================================
 
