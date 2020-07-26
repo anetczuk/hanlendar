@@ -24,7 +24,7 @@
 import logging
 
 from PyQt5.QtCore import QDate
-from PyQt5.QtWidgets import QTableWidget
+from PyQt5.QtWidgets import QTableWidget, QTreeView
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from hanlendar.domainmodel.task import Task
@@ -418,6 +418,22 @@ class MainWindow( QtBaseClass ):           # type: ignore
                 w.sortByColumn( int(sortColumn), int(sortOrder) )
             settings.endGroup()
 
+        widgets = self.findChildren( QTreeView )
+        for w in widgets:
+            wKey = get_widget_key(w)
+            settings.beginGroup( wKey )
+            colsNum = w.header().count()
+            for c in range(0, colsNum):
+                state = settings.value( "column" + str(c) )
+                if state is not None:
+                    currWidth = int(state)
+                    w.setColumnWidth( c, currWidth )
+            sortColumn = settings.value( "sortColumn" )
+            sortOrder = settings.value( "sortOrder" )
+            if sortColumn is not None and sortOrder is not None:
+                w.sortByColumn( int(sortColumn), int(sortOrder) )
+            settings.endGroup()
+
     def saveSettings(self):
         settings = self.getSettings()
         self.logger.debug( "saving app state to %s", settings.fileName() )
@@ -460,6 +476,20 @@ class MainWindow( QtBaseClass ):           # type: ignore
             for c in range(0, colsNum):
                 settings.setValue( "column" + str(c), w.columnWidth(c) )
             header = w.horizontalHeader()
+            sortColumn = header.sortIndicatorSection()
+            settings.setValue( "sortColumn", sortColumn )
+            sortOrder = header.sortIndicatorOrder()
+            settings.setValue( "sortOrder", sortOrder )
+            settings.endGroup()
+
+        widgets = self.findChildren( QTreeView )
+        for w in widgets:
+            wKey = get_widget_key(w)
+            header = w.header()
+            colsNum = header.count()
+            settings.beginGroup( wKey )
+            for c in range(0, colsNum):
+                settings.setValue( "column" + str(c), w.columnWidth(c) )
             sortColumn = header.sortIndicatorSection()
             settings.setValue( "sortColumn", sortColumn )
             sortOrder = header.sortIndicatorOrder()
