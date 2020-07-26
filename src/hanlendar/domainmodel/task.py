@@ -143,6 +143,8 @@ class DateTimeRange():
         currDate = self.start
         if currDate is None:
             currDate = self.end
+        if currDate is None:
+            return False
         if currDate.year == monthDate.year and currDate.month == monthDate.month:
             return True
         return False
@@ -199,6 +201,8 @@ class TaskOccurrence:
         return self.task.isCompleted()
 
     def isTimedout(self):
+        if self.dateRange.end is None:
+            return False
         currTime = datetime.today()
         return currTime > self.dateRange.end
 
@@ -272,7 +276,7 @@ class Task( Item, persist.Versionable ):
     def __init__(self, title="" ):
         super(Task, self).__init__( title )
         self._startDate: datetime           = None
-        self._dueDate: datetime             = datetime.today()          ## set default value
+        self._dueDate: datetime             = None
         self.reminderList: List[Reminder]   = None
         self._recurrence: Recurrent         = None
         self._recurrentOffset               = 0

@@ -40,6 +40,7 @@ from datetime import datetime, timedelta
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.tasktable import TaskTable
+from hanlendar.gui.dataobject import DataObject
 
 from hanlendar.domainmodel.task import Task
 
@@ -56,12 +57,15 @@ app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
+tasksList = []
+
 task1 = Task()
 task1.title = "Task 1"
 task1.description = "Description"
 task1.completed = 50
 task1.priority = 5
 task1.setDefaultDateTime( datetime.today() )
+tasksList.append( task1 )
 
 task2 = Task()
 task2.title = "Task 2"
@@ -69,11 +73,21 @@ task2.description = "Description"
 task2.completed = 0
 task2.priority = 3
 task2.setDefaultDateTime( datetime.today() + timedelta( hours=2 ) )
+tasksList.append( task2 )
+
+task = Task()
+task.title = "Default constructed task"
+tasksList.append( task )
+
+dataObject = DataObject()
+manager = dataObject.getManager()
+manager.tasks = tasksList
 
 setup_interrupt_handling()
 
 widget = TaskTable()
-widget.setTasks( [task1, task2] )
+widget.resize( 1024, 768 )
+widget.connectData( dataObject )
 widget.show()
 
 # print( "Dialog return:", dialogCode )
