@@ -299,17 +299,19 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def _setTrayIndicator(self, theme: tray_icon.TrayIconTheme):
         self._updateIconTheme( theme )                                  ## required to clear old number
-        deadlinedTasks = self.data.getManager().getDeadlinedTasks()
+        deadlinedTasks  = self.data.getManager().getDeadlinedTasks()
+        remindedTasks   = self.data.getManager().getRemindedTasks()
+        indicationTasks = set( deadlinedTasks + remindedTasks )
+        indicationSum = len(indicationTasks)
         num = len(deadlinedTasks)
         if num > 0:
             color = get_timeout_color()
-            self.trayIcon.drawNumber( num, color )
+            self.trayIcon.drawNumber( indicationSum, color )
             return
-        remindedTasks = self.data.getManager().getRemindedTasks()
         num = len(remindedTasks)
         if num > 0:
             color = get_reminded_color()
-            self.trayIcon.drawNumber( num, color )
+            self.trayIcon.drawNumber( indicationSum, color )
             return
 
     def _updateIconTheme(self, theme: tray_icon.TrayIconTheme):
