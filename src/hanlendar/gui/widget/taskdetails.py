@@ -75,6 +75,7 @@ class TaskDetails( QtBaseClass ):           # type: ignore
             self.ui.deadlineBox.setChecked( False )
             self.ui.startDateTime.setDateTime( task.occurrenceStart )
         if task.occurrenceDue is not None:
+            self.ui.dueDateTime.setEnabled( True )
             self.ui.dueDateTime.setDateTime( task.occurrenceDue )
         else:
             self.ui.dueDateTime.setEnabled( False )
