@@ -14,3 +14,5 @@ cd $SCRIPT_DIR/../src
 
 
 mypy --cache-dir $CACHE_DIR --no-strict-optional --ignore-missing-imports -p hanlendar -p testhanlendar
+
+echo "mypy finished"

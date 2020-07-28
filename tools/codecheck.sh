@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -eu
+#set -eu
+set -u
 
 
 ## works both under bash and sh
@@ -44,6 +45,7 @@ flake8 --show-source --statistics --count --ignore=$ignore_errors $src_dir
 exit_code=$?
 
 if [ $exit_code -ne 0 ]; then
+    echo -e "\nflake8 errors found"
     exit $exit_code
 fi
 
