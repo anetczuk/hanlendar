@@ -245,7 +245,7 @@ class ToDoTable( QtWidgets.QTreeView ):
     def itemDoubleClicked(self, modelIndex):
         todo = self.getToDo( modelIndex )
         self.editToDo.emit( todo )
-        
+
     def mousePressEvent(self, event):
         pos = event.pos()
         itemIndex = self.indexAt(pos)

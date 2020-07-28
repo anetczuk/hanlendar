@@ -219,7 +219,7 @@ class TaskOccurrence:
             self._dateRange = DateTimeRange()
             return self._dateRange
         if self.offset != 0:
-            recurrenceOffset = self.task.recurrence.getDateOffset()
+            recurrenceOffset = self.task.getAppliedRecurrence().getDateOffset()
             dateRange += recurrenceOffset * self.offset
         self._dateRange = dateRange
         return self._dateRange
@@ -237,7 +237,7 @@ class TaskOccurrence:
         if ret is not None:
             return ret
 
-        recurrence = self.task.recurrence
+        recurrence = self.task.getAppliedRecurrence()
         if recurrence is None:
             return [0, 1]
         recurrentOffset: relativedelta = recurrence.getDateOffset()
@@ -331,8 +331,7 @@ class Task( Item, persist.Versionable ):
     def startDateTime(self, value):
         value = ensure_date_time( value )
         self._startDate = value
-        if self._recurrence is not None:
-            self._recurrentOffset = 0
+        self._recurrentOffset = 0
 
     @property
     def occurrenceStart(self):
@@ -343,10 +342,11 @@ class Task( Item, persist.Versionable ):
 
     @occurrenceStart.setter
     def occurrenceStart(self, value):
-        if self._recurrence is None:
+        relativeDate = self._getRecurrenceRelative()
+        if relativeDate is None:
             self._startDate = value
             return
-        self._startDate = value - self._recurrence.getDateOffset() * self._recurrentOffset
+        self._startDate = value - relativeDate
 
     @property
     def dueDateTime(self):
@@ -356,8 +356,7 @@ class Task( Item, persist.Versionable ):
     def dueDateTime(self, value):
         value = ensure_date_time( value )
         self._dueDate = value
-        if self._recurrence is not None:
-            self._recurrentOffset = 0
+        self._recurrentOffset = 0
 
     @property
     def occurrenceDue(self):
@@ -368,13 +367,16 @@ class Task( Item, persist.Versionable ):
 
     @occurrenceDue.setter
     def occurrenceDue(self, value):
-        if self._recurrence is None:
+        relativeDate = self._getRecurrenceRelative()
+        if relativeDate is None:
             self._dueDate = value
             return
-        self._dueDate = value - self._recurrence.getDateOffset() * self._recurrentOffset
+        self._dueDate = value - relativeDate
 
     def currentOccurrence(self) -> TaskOccurrence:
         return TaskOccurrence( self, self._recurrentOffset )
+
+    ## =====================================================================
 
     @property
     def recurrence(self) -> Recurrent:
@@ -385,6 +387,15 @@ class Task( Item, persist.Versionable ):
         if self._recurrence is None and value is not None:
             self._recurrentOffset = 0
         self._recurrence = value
+
+    def getAppliedRecurrence(self) -> Recurrent:
+        if self._recurrence is None:
+            return None
+        if self._recurrence.isAsParent() is False:
+            return self._recurrence
+        if self.parent is None:
+            return None
+        return self.parent.getAppliedRecurrence()
 
     @property
     def recurrentOffset(self):
@@ -471,9 +482,10 @@ class Task( Item, persist.Versionable ):
         currDate = refDate.date()
         if currDate.year == month.year and currDate.month == month.month:
             return True
-        if self._recurrence is None:
+        recurr = self.getAppliedRecurrence()
+        if recurr is None:
             return False
-        return self._recurrence.hasTaskOccurrenceInMonth( currDate, month )
+        return recurr.hasTaskOccurrenceInMonth( currDate, month )
 
     def getTaskOccurrenceForDate(self, entryDate: date):
         dateRange: DateRange = self.getDateRangeNormalized()
@@ -481,12 +493,14 @@ class Task( Item, persist.Versionable ):
             return None
         if entryDate in dateRange:
             return TaskOccurrence( self )
-        if self.recurrence is None:
+
+        recurr = self.getAppliedRecurrence()
+        if recurr is None:
             return None
 
-        if self.recurrence.endDate is not None and self.recurrence.endDate < entryDate:
+        if recurr.endDate is not None and recurr.endDate < entryDate:
             return None
-        recurrentOffset: relativedelta = self.recurrence.getDateOffset()
+        recurrentOffset: relativedelta = recurr.getDateOffset()
         if recurrentOffset is None:
             return None
 
@@ -570,10 +584,11 @@ class Task( Item, persist.Versionable ):
         return False
 
     def printNextRecurrence(self) -> str:
-        if self._recurrence is None:
+        recurr = self.getAppliedRecurrence()
+        if recurr is None:
             return "None"
         refDate = self.getReferenceDateTime()
-        nextRepeat = self._recurrence.nextDateTime( refDate )
+        nextRepeat = recurr.nextDateTime( refDate )
         if nextRepeat is None:
             return "None"
         dateText = nextRepeat.strftime( "%Y-%m-%d %H:%M" )
@@ -587,11 +602,12 @@ class Task( Item, persist.Versionable ):
             self._recurrentOffset )
 
     def _progressRecurrence(self) -> bool:
-        if self._recurrence is None:
+        recurr = self.getAppliedRecurrence()
+        if recurr is None:
             return False
         nextDueDate = self._getRecurrenceDate( self._dueDate, 1 )
         nextDate = nextDueDate.date()
-        if self._recurrence.isEnd( nextDate ):
+        if recurr.isEnd( nextDate ):
             return False
         self._recurrentOffset += 1
         return True
@@ -599,10 +615,17 @@ class Task( Item, persist.Versionable ):
     def _getRecurrenceDate(self, aDate: datetime, offset: int = 0) -> datetime:
         if aDate is None:
             return None
-        if self._recurrence is None:
+        relativeDate = self._getRecurrenceRelative( offset )
+        if relativeDate is None:
             return None
-        recurrentDate = aDate + self._recurrence.getDateOffset() * (self._recurrentOffset + offset)
+        recurrentDate = aDate + relativeDate
         return recurrentDate
+
+    def _getRecurrenceRelative(self, offset: int = 0) -> relativedelta:
+        recurr = self.getAppliedRecurrence()
+        if recurr is None:
+            return None
+        return recurr.getDateOffset() * (self._recurrentOffset + offset)
 
     @staticmethod
     def sortByDates( task ):

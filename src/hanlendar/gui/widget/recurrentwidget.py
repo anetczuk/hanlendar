@@ -119,6 +119,11 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
 
         self.task.recurrence.mode = repeatMode
         self._activateWidget()
+        if repeatMode is RepeatType.ASPARENT:
+            self.ui.everySB.setEnabled( False )
+            self.ui.endDateEdit.setEnabled( False )
+            self.ui.endDateCB.setEnabled( False )
+            self.ui.endDateCB.setChecked( False )
 
     def _everyValueChanged(self, newValue):
         self.task.recurrence.every = newValue

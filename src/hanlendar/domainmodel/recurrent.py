@@ -34,11 +34,12 @@ _LOGGER = logging.getLogger(__name__)
 
 @unique
 class RepeatType(Enum):
-    NEVER    = auto()
-    DAILY    = auto()
-    WEEKLY   = auto()
-    MONTHLY  = auto()
-    YEARLY   = auto()
+    NEVER     = auto()
+    DAILY     = auto()
+    WEEKLY    = auto()
+    MONTHLY   = auto()
+    YEARLY    = auto()
+    ASPARENT  = auto()
 
     @classmethod
     def findByName(cls, name):
@@ -73,6 +74,9 @@ class Recurrent():
         self.every            = every
         self.endDate: date    = None
 
+    def isAsParent(self):
+        return self.mode == RepeatType.ASPARENT
+
     def setDaily(self, every=1):
         self.mode = RepeatType.DAILY
         self.every = every
@@ -94,6 +98,8 @@ class Recurrent():
             return None
 
         if self.mode is RepeatType.NEVER:
+            return None
+        if self.mode is RepeatType.ASPARENT:
             return None
         if self.mode is RepeatType.DAILY:
             return relativedelta( days=1 * self.every )

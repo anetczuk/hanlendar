@@ -46,8 +46,8 @@ class Manager():
 
     def __init__(self):
         """Constructor."""
-        self.tasks = list()
-        self.todos = list()
+        self._tasks = list()
+        self._todos = list()
         self.notes = { "notes": "" }        ## default notes
 
     def store( self, outputDir ):
@@ -99,6 +99,14 @@ class Manager():
             self.notes = { "notes": "" }
 
     ## ======================================================================
+
+    @property
+    def tasks(self):
+        return self._tasks
+
+    @tasks.setter
+    def tasks(self, newList):
+        self._tasks = newList
 
     def getTasks( self ):
         return list( self.tasks )                   ## shallow copy of list
@@ -158,6 +166,7 @@ class Manager():
         if task is None:
             task = Task()
         self.tasks.append( task )
+        task.setParent( None )
         return task
 
     def addNewTask( self, taskdate: date, title ):
@@ -198,6 +207,14 @@ class Manager():
 
     ## ========================================================
 
+    @property
+    def todos(self):
+        return self._todos
+
+    @todos.setter
+    def todos(self, newList):
+        self._todos = newList
+
     def getToDos( self, includeCompleted=True ):
         if includeCompleted:
             return list( self.todos )       ## shallow copy of list
@@ -211,6 +228,7 @@ class Manager():
         if todo is None:
             todo = ToDo()
         self.todos.append( todo )
+        todo.setParent( None )
         return todo
 
     def addNewToDo( self, title ):

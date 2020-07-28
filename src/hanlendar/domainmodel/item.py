@@ -36,6 +36,7 @@ class Item():
         self._completed                     = 0        ## in range [0..100]
         self.priority                       = 10       ## lower number, greater priority
         self.subitems: list                 = None
+        self._parent                        = None
 
     @property
     def completed(self):
@@ -68,16 +69,12 @@ class Item():
             return list()
         return Item.getAllSubItemsFromList( self.subitems )
 
-    def findParent(self, child):
-        if self.subitems is None:
-            return None
-        for item in self.subitems:
-            if item == child:
-                return self
-            ret = item.findParent( child )
-            if ret is not None:
-                return ret
-        return None
+    @property
+    def parent(self):
+        return self._parent
+
+    def setParent(self, parentItem=None):
+        self._parent = parentItem
 
     def getChildCoords(self, item):
         return Item.getItemCoords( self.subitems, item )
@@ -88,13 +85,15 @@ class Item():
     def detachChildByCoords(self, coords):
         return Item.detachItemByCoords( self.subitems, coords )
 
-    def addSubItem(self, item, index=-1):
+    def addSubItem(self, item: 'Item', index=-1):
         if self.subitems is None:
             self.subitems = list()
         if index < 0:
             self.subitems.append( item )
+            item.setParent( self )
         else:
             self.subitems.insert( index, item )
+            item.setParent( self )
         return item
 
     def removeSubItem(self, item):
@@ -109,6 +108,8 @@ class Item():
 
 #     def __str__(self):
 #         return "[t:%s d:%s c:%s p:%s]" % ( self.title, self.description, self._completed, self.priority )
+
+    ## ==============================================================
 
     @staticmethod
     def getAllSubItemsFromList( itemList ):
@@ -128,7 +129,9 @@ class Item():
         for i, _ in enumerate(itemList):
             currItem = itemList[i]
             if currItem == item:
-                return itemList.pop( i )
+                popped = itemList.pop( i )
+                popped.setParent( None )
+                return popped
             removed = currItem.removeSubItem( item )
             if removed is not None:
                 return removed
@@ -141,6 +144,7 @@ class Item():
         for i, _ in enumerate(itemList):
             currItem = itemList[i]
             if currItem == oldItem:
+                newItem.setParent( oldItem.parent )
                 itemList[i] = newItem
                 return True
             if currItem.replaceSubItem( oldItem, newItem ) is True:

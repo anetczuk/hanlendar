@@ -203,14 +203,7 @@ class ItemTreeModel( CustomTreeModel ):
         return self.getRootList()
 
     def getParent(self, item):
-        itemsList = self.getRootList()
-        for currItem in itemsList:
-            if currItem == item:
-                return None
-            ret = currItem.findParent( item )
-            if ret is not None:
-                return ret
-        return None
+        return item.parent
 
     def getItemId(self, item: object):
         itemsList = self.getRootList()
