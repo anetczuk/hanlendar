@@ -87,13 +87,13 @@ class TaskTreeModel( ItemTreeModel ):
                 return item.completed
             elif attrIndex == 3:
                 dateString = "---"
-                if item.start is not None:
-                    dateString = item.start.strftime( "%Y-%m-%d %H:%M" )
+                if item.startCurrent is not None:
+                    dateString = item.startCurrent.strftime( "%Y-%m-%d %H:%M" )
                 return dateString
             elif attrIndex == 4:
                 dateString = "---"
-                if item.due is not None:
-                    dateString = item.due.strftime( "%Y-%m-%d %H:%M" )
+                if item.dueCurrent is not None:
+                    dateString = item.dueCurrent.strftime( "%Y-%m-%d %H:%M" )
                 return dateString
 
         return None

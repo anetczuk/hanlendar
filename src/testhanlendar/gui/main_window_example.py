@@ -77,6 +77,16 @@ def prepare_example_data( dataManager: Manager ):
     task2 = dataManager.addNewTaskDateTime( recurrentTask.occurrenceStart.replace( hour=11 ), "task 2" )
     task2.dueDateTime = task2.occurrenceDue.replace( hour=20 )
 
+    task3 = dataManager.addTask()
+    task3.title = "task 3"
+    task3.dueDateTime = taskDate.replace( hour=20 ) + timedelta( days=90 )
+    task3.startDateTime = task3.dueDateTime - timedelta( days=1 )
+
+    subtask1 = task3.addSubTask()
+    subtask1.title = "subtask 1"
+    subtask1.startDateTime = task3.startDateTime - timedelta( days=50 )
+    subtask1.dueDateTime   = task3.dueDateTime - timedelta( days=40 )
+
     completedTask = dataManager.addNewTaskDateTime( task2.occurrenceStart - timedelta(hours=3), "completed task 2" )
     completedTask.setCompleted()
 
@@ -85,6 +95,13 @@ def prepare_example_data( dataManager: Manager ):
     recurrentTask2.setDeadline()
     recurrentTask2.recurrence = Recurrent()
     recurrentTask2.recurrence.setMonthly()
+
+    recurrentSub = recurrentTask2.addSubTask()
+    recurrentSub.title = "recurrent subtask 1"
+    recurrentSub.setDeadline()
+    recurrentSub.dueDateTime = recurrentTask2.dueDateTime - timedelta( days=1 )
+    recurrentSub.recurrence = Recurrent()
+    recurrentSub.recurrence.setMonthly()
 
     deadlineDate = datetime.today() + timedelta( seconds=10 )
     deadlineTaks = dataManager.addNewDeadlineDateTime( deadlineDate, "expired task 1" )

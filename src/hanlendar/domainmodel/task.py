@@ -192,8 +192,34 @@ class TaskOccurrence:
         return self.dateRange.start
 
     @property
+    def startCurrent(self):
+        subOccurrences = self.task.subOccurences()
+        retDate = self.start
+        for currItem in subOccurrences:
+            if currItem.start is None:
+                continue
+            if retDate is None:
+                retDate = currItem.start
+            else:
+                retDate = min( currItem.start, retDate )
+        return retDate
+
+    @property
     def due(self):
         return self.dateRange.end
+
+    @property
+    def dueCurrent(self):
+        subOccurrences = self.task.subOccurences()
+        retDate = self.due
+        for currItem in subOccurrences:
+            if currItem.due is None:
+                continue
+            if retDate is None:
+                retDate = currItem.due
+            else:
+                retDate = min( currItem.due, retDate )
+        return retDate
 
     def isCompleted(self):
         if self.offset < self.task.recurrentOffset:
@@ -376,6 +402,15 @@ class Task( Item, persist.Versionable ):
     def currentOccurrence(self) -> TaskOccurrence:
         return TaskOccurrence( self, self._recurrentOffset )
 
+    def subOccurences(self) -> List[TaskOccurrence]:
+        if self.subitems is None:
+            return list()
+        ret = list()
+        for currItem in self.subitems:
+            currOccurrence = currItem.currentOccurrence()
+            ret.append( currOccurrence )
+        return ret
+
     ## =====================================================================
 
     @property
@@ -448,13 +483,6 @@ class Task( Item, persist.Versionable ):
         if self._dueDate is not None:
             endDate = self._dueDate
         return DateTimeRange(startDate, endDate)
-
-    def getDateTimeRangeNormalized(self) -> DateTimeRange:
-        dateRange: DateTimeRange = self.getDateTimeRange()
-        dateRange.normalize()
-        if dateRange[1] is None:
-            return None
-        return dateRange
 
     def setDefaultDateTime(self, start: datetime ):
         self.startDateTime = start
@@ -582,6 +610,9 @@ class Task( Item, persist.Versionable ):
             if notifTime < currTime:
                 return True
         return False
+
+    def addSubTask(self):
+        return self.addSubItem( Task() )
 
     def printNextRecurrence(self) -> str:
         recurr = self.getAppliedRecurrence()

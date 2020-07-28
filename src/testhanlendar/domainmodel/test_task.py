@@ -186,3 +186,27 @@ class TaskTest(unittest.TestCase):
         task.addReminder( reminder )
 
         self.assertEqual( task.isReminded(), True )
+
+
+class TaskOccurrenceTest(unittest.TestCase):
+    def setUp(self):
+        ## Called before testfunction is executed
+        pass
+
+    def tearDown(self):
+        ## Called after testfunction was executed
+        pass
+
+    def test_date_current_subtask(self):
+        task = Task()
+        task.startDateTime = datetime.datetime( 2020, 10, 10 )
+        task.dueDateTime   = task.startDateTime + timedelta( days=1 )
+
+        subtask = task.addSubTask()
+        subtask.setDeadline()
+#         subtask.startDateTime = task.startDateTime - timedelta( days=5 )
+        subtask.dueDateTime   = task.dueDateTime   - timedelta( days=7 )
+
+        occurrence = task.currentOccurrence()
+        self.assertEqual( occurrence.startCurrent, task.startDateTime )
+        self.assertEqual( occurrence.dueCurrent, subtask.dueDateTime )
