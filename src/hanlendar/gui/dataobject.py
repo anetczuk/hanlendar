@@ -43,9 +43,9 @@ _LOGGER = logging.getLogger(__name__)
 class DataObject( QObject ):
 
     ## added, modified or removed
-    taskChanged = pyqtSignal()
+    tasksChanged = pyqtSignal()
     ## added, modified or removed
-    todoChanged = pyqtSignal()
+    todosChanged = pyqtSignal()
 
     def __init__(self, parent: QWidget=None):
         super().__init__( parent )
@@ -69,7 +69,7 @@ class DataObject( QObject ):
 
     def setTasksList(self, newList):
         self.getManager().tasks = newList
-        self.taskChanged.emit()
+        self.tasksChanged.emit()
 
     def addNewTask( self, newTaskDate: QDate = None ):
         task = self._createTask( newTaskDate )
@@ -85,13 +85,13 @@ class DataObject( QObject ):
         if task is None:
             return
         parent.addSubItem( task )
-        self.taskChanged.emit()
+        self.tasksChanged.emit()
 
     def addTask(self, task: Task = None ) -> Task:
         if task is None:
             task = Task()
         self.domainModel.addTask( task )
-        self.taskChanged.emit()
+        self.tasksChanged.emit()
         return task
 
     def editTask(self, task: Task ):
@@ -103,30 +103,30 @@ class DataObject( QObject ):
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.replaceTask( task, taskDialog.task )
-        self.taskChanged.emit()
+        self.tasksChanged.emit()
 
     def removeTask(self, task: Task ):
         removed = self.domainModel.removeTask( task )
         if removed is None:
             _LOGGER.warning( "unable to remove task: %s", task )
-        self.taskChanged.emit()
+        self.tasksChanged.emit()
 
     def markTaskCompleted(self, task: Task ):
         task.setCompleted()
-        self.taskChanged.emit()
+        self.tasksChanged.emit()
 
     ## ==============================================================
 
     def setTodosList(self, newList):
         self.getManager().todos = newList
-        self.todoChanged.emit()
+        self.todosChanged.emit()
 
     def addNewToDo( self, content=None ):
         todo = self._createToDo( content )
         if todo is None:
             return
         self.domainModel.addToDo( todo )
-        self.todoChanged.emit()
+        self.todosChanged.emit()
 
     def addNewSubToDo( self, parent: ToDo ):
         if parent is None:
@@ -136,7 +136,7 @@ class DataObject( QObject ):
         if todo is None:
             return
         parent.addSubItem( todo )
-        self.todoChanged.emit()
+        self.todosChanged.emit()
 
     def editToDo(self, todo: ToDo ):
         todoDialog = ToDoDialog( todo, self.parentWidget )
@@ -145,13 +145,13 @@ class DataObject( QObject ):
         if dialogCode == QDialog.Rejected:
             return
         self.domainModel.replaceToDo( todo, todoDialog.todo )
-        self.todoChanged.emit()
+        self.todosChanged.emit()
 
     def removeToDo(self, todo: ToDo ):
         removed = self.domainModel.removeToDo( todo )
         if removed is None:
             _LOGGER.warning( "unable to remove todo: %s", todo )
-        self.todoChanged.emit()
+        self.todosChanged.emit()
 
     def convertToDoToTask(self, todo: ToDo ):
         task = Task()
@@ -170,7 +170,7 @@ class DataObject( QObject ):
 
     def markToDoCompleted(self, todo: ToDo ):
         todo.setCompleted()
-        self.todoChanged.emit()
+        self.todosChanged.emit()
 
     def _createTask( self, newTaskDate: QDate = None ):
         task = Task()

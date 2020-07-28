@@ -94,8 +94,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         ## === connecting signals ===
 
-        self.data.taskChanged.connect( self._handleTasksChange )
-        self.data.todoChanged.connect( self._handleToDosChange )
+        self.data.tasksChanged.connect( self._handleTasksChange )
+        self.data.todosChanged.connect( self._handleToDosChange )
 
         self.notifsTimer.remindTask.connect( self.handleNotification )
 
