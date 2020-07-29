@@ -45,7 +45,9 @@ class DataObject( QObject ):
     ## added, modified or removed
     tasksChanged = pyqtSignal()
     ## added, modified or removed
-    todosChanged = pyqtSignal()
+    todosChanged = pyqtSignal()    
+    ## added, modified or removed
+    notesChanged = pyqtSignal()
 
     def __init__(self, parent: QWidget=None):
         super().__init__( parent )
@@ -195,3 +197,9 @@ class DataObject( QObject ):
         if dialogCode == QDialog.Rejected:
             return None
         return todoDialog.todo
+
+    ## ==============================================================
+    
+    def setNotes(self, newNotes):
+        self.getManager().setNotes( newNotes )
+        self.notesChanged.emit()
