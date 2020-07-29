@@ -149,6 +149,22 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
             return itemIndex.internalPointer()
         return None
 
+    def getIndex(self, item, parentIndex: QModelIndex=None):
+        if parentIndex is None:
+            parentIndex = QModelIndex()
+        if parentIndex.isValid():
+            # dataTask = parentIndex.data( Qt.UserRole )
+            dataTask = parentIndex.internalPointer()
+            if dataTask == item:
+                return parentIndex
+        elems = self.rowCount( parentIndex )
+        for i in range(elems):
+            index = self.index( i, 0, parentIndex )
+            subIndex = self.getIndex(item, index)
+            if subIndex is not None:
+                return subIndex
+        return None
+
     ## ==================================================================
 
     @abc.abstractmethod

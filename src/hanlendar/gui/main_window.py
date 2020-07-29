@@ -222,7 +222,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def handleNotification( self, notification: Notification ):
         self.trayIcon.displayMessage( notification.message )
-        self.updateTasksView()
+        self.updateTasksView( notification.task )
         self.ui.todosTable.updateView()
 
     ## ====================================================================
@@ -238,8 +238,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.navcalendar.repaint()
         self.updateTrayToolTip()
 
-    def updateTasksView(self):
-        self.ui.tasksTable.updateView()
+    def updateTasksView(self, updatedTask: Task=None ):
+        self.ui.tasksTable.updateView( updatedTask )
         #self.ui.dayList.updateView()
         self.ui.monthCalendar.updateCells()
         self._updateTrayIndicator()

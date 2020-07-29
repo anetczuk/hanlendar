@@ -64,6 +64,9 @@ class TaskTreeModel( ItemTreeModel ):
         if item is None:
             return None
 
+        if role == Qt.UserRole:
+            return task
+
         if role == Qt.TextAlignmentRole:
             attrIndex = index.column()
             if attrIndex > 0:
@@ -206,10 +209,20 @@ class TaskTable( QtWidgets.QTreeView ):
         self.proxyModel.showCompleted( show )
         self.updateView()
 
-    def updateView(self):
-        if self.data is None:
-            return
+    def updateView(self, updatedTask: Task=None):
+        if updatedTask is not None:
+            taskIndex = self.getIndex( updatedTask )
+            if taskIndex is not None:
+                self.proxyModel.dataChanged.emit( taskIndex, taskIndex )
+                return
         self.itemsModel.setDataObject( self.data )
+
+    def getIndex(self, task: Task):
+        modelIndex = self.itemsModel.getIndex( task )
+        if modelIndex is None:
+            return None
+        proxyIndex = self.proxyModel.mapFromSource( modelIndex )
+        return proxyIndex
 
     def getTask(self, itemIndex: QModelIndex ) -> TaskOccurrence:
         sourceIndex = self.proxyModel.mapToSource( itemIndex )
@@ -221,7 +234,7 @@ class TaskTable( QtWidgets.QTreeView ):
         mIndex = self.indexAt( evPos )
         if mIndex is not None:
             task = self.getTask( mIndex )
-        self.taskContextMenu.show( task)
+        self.taskContextMenu.show( task )
 
     def selectionChanged(self, toSelection, fromSelection):
         super().selectionChanged( toSelection, fromSelection )
