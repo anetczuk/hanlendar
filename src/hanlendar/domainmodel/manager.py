@@ -169,7 +169,7 @@ class Manager():
 
     def insertTask( self, task: Task, taskCoords ):
         if taskCoords is None:
-            self._tasks.append( task )
+            self.tasks.append( task )
             return
         taskCoords = list( taskCoords )     ## make copy
         listPos = taskCoords.pop()
@@ -240,6 +240,21 @@ class Manager():
     def getTodosAll(self):
         """Return todos and all subtodos from tree."""
         return Item.getAllSubItemsFromList( self.todos )
+
+    def getToDoByCoords(self, todo):
+        return Item.getItemFromCoords( self.todos, todo )
+
+    def insertToDo( self, todo: ToDo, todoCoords ):
+        if todoCoords is None:
+            self.todos.append( todo )
+            return
+        todoCoords = list( todoCoords )     ## make copy
+        listPos = todoCoords.pop()
+        parentToDo = self.getToDoByCoords( todoCoords )
+        if parentToDo is not None:
+            parentToDo.addSubItem( todo, listPos )
+        else:
+            self.todos.insert( listPos, todo )
 
     def addToDo( self, todo: ToDo = None ):
         if todo is None:

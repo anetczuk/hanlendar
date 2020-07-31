@@ -82,6 +82,12 @@ class ToDoTreeModel( ItemTreeModel ):
     def internalMoveMimeType(self):
         return "TodosTreeNode"
 
+    ## overrided
+    def moveItem(self, itemId, targetItem, targetIndex):
+        if self.dataObject is None:
+            return
+        self.dataObject.moveToDo( itemId, targetItem, targetIndex )
+
     def getRootList(self):
         if self.dataObject is None:
             return None

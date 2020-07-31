@@ -39,6 +39,9 @@ from hanlendar.gui.command.addsubtaskcommand import AddSubTaskCommand
 from hanlendar.gui.command.edittaskcommand import EditTaskCommand
 from hanlendar.gui.command.removetaskcommand import RemoveTaskCommand
 from hanlendar.gui.command.marktaskcompletedcommand import MarkTaskCompletedCommand
+from hanlendar.gui.command.movetaskcommand import MoveTaskCommand
+
+from hanlendar.gui.command.movetodocommand import MoveToDoCommand
 
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.task import Task
@@ -120,6 +123,9 @@ class DataObject( QObject ):
     def markTaskCompleted(self, task: Task ):
         self.undoStack.push( MarkTaskCompletedCommand( self, task ) )
 
+    def moveTask(self, taskCoords, parentTask, targetIndex):
+        self.undoStack.push( MoveTaskCommand( self, taskCoords, parentTask, targetIndex ) )
+
     ## ==============================================================
 
     def setTodosList(self, newList):
@@ -176,6 +182,9 @@ class DataObject( QObject ):
     def markToDoCompleted(self, todo: ToDo ):
         todo.setCompleted()
         self.todosChanged.emit()
+
+    def moveToDo(self, todoCoords, parentToDo, targetIndex):
+        self.undoStack.push( MoveToDoCommand( self, todoCoords, parentToDo, targetIndex ) )
 
     def _createTask( self, newTaskDate: QDate = None ):
         task = Task()

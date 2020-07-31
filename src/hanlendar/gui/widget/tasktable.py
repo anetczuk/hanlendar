@@ -107,6 +107,12 @@ class TaskTreeModel( ItemTreeModel ):
     def internalMoveMimeType(self):
         return "TasksTreeNode"
 
+    ## overrided
+    def moveItem(self, itemId, targetItem, targetIndex):
+        if self.dataObject is None:
+            return
+        self.dataObject.moveTask( itemId, targetItem, targetIndex )
+
     def getRootList(self):
         if self.dataObject is None:
             return None
