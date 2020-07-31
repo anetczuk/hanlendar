@@ -24,13 +24,12 @@
 import logging
 
 from PyQt5.QtCore import QDate
-from PyQt5.QtWidgets import QTableWidget, QTreeView, QUndoStack
+from PyQt5.QtWidgets import QTableWidget, QTreeView
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.todo import ToDo
-from hanlendar.domainmodel.manager import import_xfce_notes
 
 from . import uiloader
 from . import resources
@@ -44,7 +43,6 @@ from .notifytimer import NotificationTimer
 from .widget.settingsdialog import SettingsDialog, AppSettings
 from .widget.navcalendar import NavCalendarHighlightModel
 from .widget.tasktable import get_reminded_color, get_timeout_color
-from hanlendar.gui.command.importxfcenotescommand import ImportXfceNotesCommand
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,16 +81,16 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.data = DataObject( self )
         self.appSettings = AppSettings()
-        
+
         ## =============================
-        
-        self.undoStack = QUndoStack(self)
-        
-        undoAction = self.undoStack.createUndoAction( self, "&Undo" )
+
+        undoStack = self.data.undoStack
+
+        undoAction = undoStack.createUndoAction( self, "&Undo" )
         undoAction.setShortcuts( QtGui.QKeySequence.Undo )
-        redoAction = self.undoStack.createRedoAction( self, "&Redo" )
+        redoAction = undoStack.createRedoAction( self, "&Redo" )
         redoAction.setShortcuts( QtGui.QKeySequence.Redo )
-        
+
         self.ui.menuEdit.insertAction( self.ui.actionUndo, undoAction )
         self.ui.menuEdit.removeAction( self.ui.actionUndo )
         self.ui.menuEdit.insertAction( self.ui.actionRedo, redoAction )
@@ -285,11 +283,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         retButton = QMessageBox.question( self, "Import Notes",
                                           "Do you want to import Xfce Notes (previous notes will be lost)?")
         if retButton == QMessageBox.Yes:
-            newNotes = import_xfce_notes()
-            if newNotes:
-                # not empty
-                #self.data.setNotes( newNotes )
-                self.undoStack.push( ImportXfceNotesCommand( self.data, newNotes ) )
+            self.data.importXfceNotes()
 
     ## ====================================================================
 

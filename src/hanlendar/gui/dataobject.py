@@ -21,16 +21,24 @@
 # SOFTWARE.
 #
 
+import os
 import logging
 from datetime import date
 
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtCore import QDate
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QUndoStack
 from PyQt5.QtWidgets import QDialog
 
 from hanlendar.gui.widget.taskdialog import TaskDialog
 from hanlendar.gui.widget.tododialog import ToDoDialog
+
+from hanlendar.gui.command.importxfcenotescommand import ImportXfceNotesCommand
+from hanlendar.gui.command.addtaskcommand import AddTaskCommand
+from hanlendar.gui.command.addsubtaskcommand import AddSubTaskCommand
+from hanlendar.gui.command.edittaskcommand import EditTaskCommand
+from hanlendar.gui.command.removetaskcommand import RemoveTaskCommand
+from hanlendar.gui.command.marktaskcompletedcommand import MarkTaskCompletedCommand
 
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.task import Task
@@ -45,7 +53,7 @@ class DataObject( QObject ):
     ## added, modified or removed
     tasksChanged = pyqtSignal()
     ## added, modified or removed
-    todosChanged = pyqtSignal()    
+    todosChanged = pyqtSignal()
     ## added, modified or removed
     notesChanged = pyqtSignal()
 
@@ -54,6 +62,8 @@ class DataObject( QObject ):
 
         self.parentWidget = parent
         self.domainModel = Manager()
+
+        self.undoStack = QUndoStack(self)
 
     def getManager(self):
         return self.domainModel
@@ -86,14 +96,12 @@ class DataObject( QObject ):
         task = self._createTask()
         if task is None:
             return
-        parent.addSubItem( task )
-        self.tasksChanged.emit()
+        self.undoStack.push( AddSubTaskCommand( self, parent, task ) )
 
     def addTask(self, task: Task = None ) -> Task:
         if task is None:
             task = Task()
-        self.domainModel.addTask( task )
-        self.tasksChanged.emit()
+        self.undoStack.push( AddTaskCommand( self, task ) )
         return task
 
     def editTask(self, task: Task ):
@@ -104,18 +112,13 @@ class DataObject( QObject ):
         dialogCode = taskDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return
-        self.domainModel.replaceTask( task, taskDialog.task )
-        self.tasksChanged.emit()
+        self.undoStack.push( EditTaskCommand( self, task, taskDialog.task ) )
 
     def removeTask(self, task: Task ):
-        removed = self.domainModel.removeTask( task )
-        if removed is None:
-            _LOGGER.warning( "unable to remove task: %s", task )
-        self.tasksChanged.emit()
+        self.undoStack.push( RemoveTaskCommand( self, task ) )
 
     def markTaskCompleted(self, task: Task ):
-        task.setCompleted()
-        self.tasksChanged.emit()
+        self.undoStack.push( MarkTaskCompletedCommand( self, task ) )
 
     ## ==============================================================
 
@@ -199,7 +202,33 @@ class DataObject( QObject ):
         return todoDialog.todo
 
     ## ==============================================================
-    
+
     def setNotes(self, newNotes):
         self.getManager().setNotes( newNotes )
         self.notesChanged.emit()
+
+    def importXfceNotes(self):
+        newNotes = import_xfce_notes()
+        if newNotes:
+            # not empty
+            #self.data.setNotes( newNotes )
+            self.undoStack.push( ImportXfceNotesCommand( self, newNotes ) )
+
+
+def import_xfce_notes():
+    newNotes = {}
+
+    notesDir = os.path.expanduser( "~/.local/share/notes" )
+    for groupName in os.listdir( notesDir ):
+        groupDir = notesDir + "/" + groupName
+        for noteName in os.listdir( groupDir ):
+            notePath = groupDir + "/" + noteName
+            with open( notePath, 'r') as file:
+                data = file.read()
+                if noteName in newNotes:
+                    ## the same note name in different groups -- append notes
+                    newNotes[ noteName ] = newNotes[ noteName ] + "\n" + data
+                else:
+                    newNotes[ noteName ] = data
+
+    return newNotes

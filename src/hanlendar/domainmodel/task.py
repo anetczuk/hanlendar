@@ -338,6 +338,7 @@ class Task( Item, persist.Versionable ):
         # pylint: disable=W0201
         self.__dict__ = dict_
 
+    ## overrided
     def setCompleted(self, value=100):
         if value < 0:
             value = 0

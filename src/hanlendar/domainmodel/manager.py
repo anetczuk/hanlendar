@@ -21,7 +21,6 @@
 # SOFTWARE.
 #
 
-import os
 from datetime import date, datetime
 
 import logging
@@ -162,6 +161,24 @@ class Manager():
                 retTasks.append( task )
         return retTasks
 
+    def getTaskCoords(self, task):
+        return Item.getItemCoords( self._tasks, task )
+
+    def getTaskByCoords(self, task):
+        return Item.getItemFromCoords( self.tasks, task )
+
+    def insertTask( self, task: Task, taskCoords ):
+        if taskCoords is None:
+            self._tasks.append( task )
+            return
+        taskCoords = list( taskCoords )     ## make copy
+        listPos = taskCoords.pop()
+        parentTask = self.getTaskByCoords( taskCoords )
+        if parentTask is not None:
+            parentTask.addSubItem( task, listPos )
+        else:
+            self.tasks.insert( listPos, task )
+
     def addTask( self, task: Task = None ):
         if task is None:
             task = Task()
@@ -282,22 +299,3 @@ def replace_in_list( aList, oldObject, newObject ):
         if entry == oldObject:
             aList[i] = newObject
             break
-
-
-def import_xfce_notes():
-    newNotes = {}
-
-    notesDir = os.path.expanduser( "~/.local/share/notes" )
-    for groupName in os.listdir( notesDir ):
-        groupDir = notesDir + "/" + groupName
-        for noteName in os.listdir( groupDir ):
-            notePath = groupDir + "/" + noteName
-            with open( notePath, 'r') as file:
-                data = file.read()
-                if noteName in newNotes:
-                    ## the same note name in different groups -- append notes
-                    newNotes[ noteName ] = newNotes[ noteName ] + "\n" + data
-                else:
-                    newNotes[ noteName ] = data
-
-    return newNotes
