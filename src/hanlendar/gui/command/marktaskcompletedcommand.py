@@ -22,6 +22,7 @@
 #
 
 import logging
+import copy
 
 from PyQt5.QtWidgets import QUndoCommand
 
@@ -36,15 +37,17 @@ class MarkTaskCompletedCommand( QUndoCommand ):
 
         self.data = dataObject
         self.domainModel = self.data.getManager()
+        self.oldState = copy.deepcopy( task )
         self.task = task
-        self.oldCompleted = self.task.completed
+        self.task.setCompleted()
+        self.domainModel.replaceTask( self.task, self.oldState )
 
         self.setText( "Mark Task completed: " + task.title )
 
     def redo(self):
-        self.task.setCompleted()
+        self.domainModel.replaceTask( self.oldState, self.task )
         self.data.tasksChanged.emit()
 
     def undo(self):
-        self.task.setCompleted( self.oldCompleted )
+        self.domainModel.replaceTask( self.task, self.oldState )
         self.data.tasksChanged.emit()
