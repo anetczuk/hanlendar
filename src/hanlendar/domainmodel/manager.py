@@ -162,7 +162,7 @@ class Manager():
         return retTasks
 
     def getTaskCoords(self, task):
-        return Item.getItemCoords( self._tasks, task )
+        return Item.getItemCoords( self.tasks, task )
 
     def getTaskByCoords(self, task):
         return Item.getItemFromCoords( self.tasks, task )
@@ -240,6 +240,9 @@ class Manager():
     def getTodosAll(self):
         """Return todos and all subtodos from tree."""
         return Item.getAllSubItemsFromList( self.todos )
+
+    def getToDoCoords(self, todo):
+        return Item.getItemCoords( self.todos, todo )
 
     def getToDoByCoords(self, todo):
         return Item.getItemFromCoords( self.todos, todo )

@@ -41,6 +41,12 @@ from hanlendar.gui.command.removetaskcommand import RemoveTaskCommand
 from hanlendar.gui.command.marktaskcompletedcommand import MarkTaskCompletedCommand
 from hanlendar.gui.command.movetaskcommand import MoveTaskCommand
 
+from hanlendar.gui.command.addtodocommand import AddToDoCommand
+from hanlendar.gui.command.addsubtodocommand import AddSubToDoCommand
+from hanlendar.gui.command.edittodocommand import EditToDoCommand
+from hanlendar.gui.command.removetodocommand import RemoveToDoCommand
+from hanlendar.gui.command.marktodocompletedcommand import MarkToDoCompletedCommand
+from hanlendar.gui.command.convertodototaskcommand import ConvertToDoToTaskCommand
 from hanlendar.gui.command.movetodocommand import MoveToDoCommand
 
 from hanlendar.domainmodel.manager import Manager
@@ -134,10 +140,13 @@ class DataObject( QObject ):
 
     def addNewToDo( self, content=None ):
         todo = self._createToDo( content )
+        self.addToDo( todo )
+
+    def addToDo(self, todo: ToDo = None ) -> ToDo:
         if todo is None:
-            return
-        self.domainModel.addToDo( todo )
-        self.todosChanged.emit()
+            todo = ToDo()
+        self.undoStack.push( AddToDoCommand( self, todo ) )
+        return todo
 
     def addNewSubToDo( self, parent: ToDo ):
         if parent is None:
@@ -146,8 +155,7 @@ class DataObject( QObject ):
         todo = self._createToDo()
         if todo is None:
             return
-        parent.addSubItem( todo )
-        self.todosChanged.emit()
+        self.undoStack.push( AddSubToDoCommand( self, parent, todo ) )
 
     def editToDo(self, todo: ToDo ):
         todoDialog = ToDoDialog( todo, self.parentWidget )
@@ -155,14 +163,10 @@ class DataObject( QObject ):
         dialogCode = todoDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return
-        self.domainModel.replaceToDo( todo, todoDialog.todo )
-        self.todosChanged.emit()
+        self.undoStack.push( EditToDoCommand( self, todo, todoDialog.todo ) )
 
     def removeToDo(self, todo: ToDo ):
-        removed = self.domainModel.removeToDo( todo )
-        if removed is None:
-            _LOGGER.warning( "unable to remove todo: %s", todo )
-        self.todosChanged.emit()
+        self.undoStack.push( RemoveToDoCommand( self, todo ) )
 
     def convertToDoToTask(self, todo: ToDo ):
         task = Task()
@@ -176,12 +180,10 @@ class DataObject( QObject ):
         dialogCode = taskDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return
-        self.addTask( taskDialog.task )
-        self.removeToDo( todo )
+        self.undoStack.push( ConvertToDoToTaskCommand( self, todo, taskDialog.task ) )
 
     def markToDoCompleted(self, todo: ToDo ):
-        todo.setCompleted()
-        self.todosChanged.emit()
+        self.undoStack.push( MarkToDoCompletedCommand( self, todo ) )
 
     def moveToDo(self, todoCoords, parentToDo, targetIndex):
         self.undoStack.push( MoveToDoCommand( self, todoCoords, parentToDo, targetIndex ) )
