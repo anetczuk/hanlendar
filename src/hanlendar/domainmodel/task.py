@@ -233,7 +233,16 @@ class TaskOccurrence:
         return currTime > self.dateRange.end
 
     def isReminded(self):
-        return self.task.isReminded()
+        if self.dateRange.end is None:
+            return False
+        retOffset = self.task.getReminderGreatest()
+        if retOffset is None:
+            return False
+        currTime = datetime.today()
+        notifTime = self.dateRange.end - retOffset
+        if notifTime > currTime:
+            return False
+        return True
 
     @property
     def dateRange(self):
@@ -554,6 +563,14 @@ class Task( Item, persist.Versionable ):
             return None
         if self.reminderList is None:
             return None
+        retOffset = self.getReminderGreatest()
+        if retOffset is None:
+            return None
+        return self.occurrenceDue - retOffset
+
+    def getReminderGreatest(self) -> datetime:
+        if self.reminderList is None:
+            return None
         retOffset = None
         for reminder in self.reminderList:
             if retOffset is None:
@@ -562,9 +579,7 @@ class Task( Item, persist.Versionable ):
             currOffset = reminder.getOffset()
             if currOffset > retOffset:
                 retOffset = currOffset
-        if retOffset is None:
-            return None
-        return self.occurrenceDue - retOffset
+        return retOffset
 
     def getNotifications(self) -> List[Notification]:
         if self.occurrenceDue is None:
@@ -606,8 +621,9 @@ class Task( Item, persist.Versionable ):
             return False
 
         currTime = datetime.today()
-        for reminder in self.reminderList:
-            notifTime = self.occurrenceDue - reminder.getOffset()
+        retOffset = self.getReminderGreatest()
+        if retOffset is not None:
+            notifTime = self.occurrenceDue - retOffset
             if notifTime < currTime:
                 return True
         return False
