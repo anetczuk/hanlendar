@@ -94,10 +94,10 @@ class ToDoTreeModel( ItemTreeModel ):
         manager = self.dataObject.getManager()
         return manager.getToDos()
 
-    def setRootList(self, newList):
-        if self.dataObject is None:
-            return
-        self.dataObject.setTodosList( newList )
+#     def setRootList(self, newList):
+#         if self.dataObject is None:
+#             return
+#         self.dataObject.setTodosList( newList )
 
     def _getAttrName(self, attrIndex):
         if attrIndex < 0:

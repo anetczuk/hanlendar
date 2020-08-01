@@ -201,17 +201,17 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
 
 class ItemTreeModel( CustomTreeModel ):
 
-    def moveItem(self, itemId, targetItem, targetIndex):
-        itemsList = self.getRootList()
-        sourceItem = Item.detachItemByCoords( itemsList, itemId )
-        if targetItem is not None:
-            targetItem.addSubItem( sourceItem, targetIndex )
-        elif targetIndex < 0:
-            itemsList.append( sourceItem )
-        else:
-            itemsList.insert( targetIndex, sourceItem )
-        ## triggers change event
-        self.setRootList( itemsList )
+#     def moveItem(self, itemId, targetItem, targetIndex):
+#         itemsList = self.getRootList()
+#         sourceItem = Item.detachItemByCoords( itemsList, itemId )
+#         if targetItem is not None:
+#             targetItem.addSubItem( sourceItem, targetIndex )
+#         elif targetIndex < 0:
+#             itemsList.append( sourceItem )
+#         else:
+#             itemsList.insert( targetIndex, sourceItem )
+#         ## triggers change event
+#         self.setRootList( itemsList )
 
     def getChildren(self, parent):
         if parent is not None:
@@ -231,6 +231,6 @@ class ItemTreeModel( CustomTreeModel ):
     def getRootList(self):
         raise NotImplementedError('You need to define this method in derived class!')
 
-    @abc.abstractmethod
-    def setRootList(self, newList):
-        raise NotImplementedError('You need to define this method in derived class!')
+#     @abc.abstractmethod
+#     def setRootList(self, newList):
+#         raise NotImplementedError('You need to define this method in derived class!')

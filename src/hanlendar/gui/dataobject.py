@@ -92,10 +92,6 @@ class DataObject( QObject ):
 
     ## ==============================================================
 
-    def setTasksList(self, newList):
-        self.getManager().tasks = newList
-        self.tasksChanged.emit()
-
     def addNewTask( self, newTaskDate: QDate = None ):
         task = self._createTask( newTaskDate )
         if task is None:
@@ -137,10 +133,6 @@ class DataObject( QObject ):
         self.undoStack.push( MoveTaskCommand( self, taskCoords, parentTask, targetIndex ) )
 
     ## ==============================================================
-
-    def setTodosList(self, newList):
-        self.getManager().todos = newList
-        self.todosChanged.emit()
 
     def addNewToDo( self, content=None ):
         todo = self._createToDo( content )

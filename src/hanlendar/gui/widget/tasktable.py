@@ -119,10 +119,10 @@ class TaskTreeModel( ItemTreeModel ):
         manager = self.dataObject.getManager()
         return manager.getTasks()
 
-    def setRootList(self, newList):
-        if self.dataObject is None:
-            return
-        self.dataObject.setTasksList( newList )
+#     def setRootList(self, newList):
+#         if self.dataObject is None:
+#             return
+#         self.dataObject.setTasksList( newList )
 
 
 ## ===========================================================
