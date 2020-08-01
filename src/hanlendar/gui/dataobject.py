@@ -49,6 +49,10 @@ from hanlendar.gui.command.marktodocompletedcommand import MarkToDoCompletedComm
 from hanlendar.gui.command.convertodototaskcommand import ConvertToDoToTaskCommand
 from hanlendar.gui.command.movetodocommand import MoveToDoCommand
 
+from hanlendar.gui.command.addnotecommand import AddNoteCommand
+from hanlendar.gui.command.renamenotecommand import RenameNoteCommand
+from hanlendar.gui.command.removenotecommand import RemoveNoteCommand
+
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.todo import ToDo
@@ -214,16 +218,20 @@ class DataObject( QObject ):
 
     ## ==============================================================
 
-    def setNotes(self, newNotes):
-        self.getManager().setNotes( newNotes )
-        self.notesChanged.emit()
+    def addNote(self, title):
+        self.undoStack.push( AddNoteCommand( self, title ) )
+
+    def renameNote(self, fromTitle, toTitle):
+        self.undoStack.push( RenameNoteCommand( self, fromTitle, toTitle ) )
+
+    def removeNote(self, title):
+        self.undoStack.push( RemoveNoteCommand( self, title ) )
 
     def importXfceNotes(self):
         newNotes = import_xfce_notes()
-        if newNotes:
-            # not empty
-            #self.data.setNotes( newNotes )
-            self.undoStack.push( ImportXfceNotesCommand( self, newNotes ) )
+        if not newNotes:
+            return
+        self.undoStack.push( ImportXfceNotesCommand( self, newNotes ) )
 
 
 def import_xfce_notes():

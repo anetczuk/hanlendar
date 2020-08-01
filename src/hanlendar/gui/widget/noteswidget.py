@@ -105,6 +105,10 @@ class SinglePageWidget( QWidget ):
 
 class NotesWidget( QtBaseClass ):           # type: ignore
 
+    addNote    = pyqtSignal( str )
+    renameNote = pyqtSignal( str, str )
+    removeNote = pyqtSignal( str )
+
     notesChanged = pyqtSignal()
     createToDo   = pyqtSignal( str )
 
@@ -172,27 +176,24 @@ class NotesWidget( QtBaseClass ):           # type: ignore
         elif action == renameAction:
             self._renameTabRequest( tabIndex )
         elif action == deleteAction:
-            self.ui.notes_tabs.removeTab( tabIndex )
-            self.notesChanged.emit()
+            noteTitle = self.ui.notes_tabs.tabText( tabIndex )
+            self.removeNote.emit( noteTitle )
 
     def _newTabRequest( self ):
         newTitle = self._requestTabName( "notes" )
         if len(newTitle) < 1:
             return
-        self.addTab( newTitle )
-        self.notesChanged.emit()
+        self.addNote.emit( newTitle )
 
     def _renameTabRequest( self, tabIndex ):
         if tabIndex < 0:
             return
-
-        tabText = self.ui.notes_tabs.tabText( tabIndex )
-        newText = self._requestTabName(tabText)
-        if not newText:
+        oldTitle = self.ui.notes_tabs.tabText( tabIndex )
+        newTitle = self._requestTabName(oldTitle)
+        if not newTitle:
             # empty
             return
-        self.ui.notes_tabs.setTabText( tabIndex, newText )
-        self.notesChanged.emit()
+        self.renameNote.emit( oldTitle, newTitle )
 
     def _requestTabName( self, currName ):
         newText, ok = QInputDialog.getText( self,

@@ -42,8 +42,8 @@ class ConvertToDoToTaskCommand( QUndoCommand ):
 
         self.setText( "Convert ToDo to Task" )
 
-    def redo(self):
-        super().redo()
+#     def redo(self):
+#         super().redo()
 
-    def undo(self):
-        super().undo()
+#     def undo(self):
+#         super().undo()

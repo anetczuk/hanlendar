@@ -302,6 +302,12 @@ class Manager():
     def addNote(self, title, content):
         self.notes[title] = content
 
+    def renameNote(self, fromTitle, toTitle):
+        self.notes[toTitle] = self.notes.pop(fromTitle)
+
+    def removeNote(self, title):
+        del self.notes[title]
+
     def printTasks(self):
         retStr = ""
         tSize = len(self.tasks)

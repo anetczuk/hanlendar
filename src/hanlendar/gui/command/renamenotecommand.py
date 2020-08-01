@@ -29,22 +29,22 @@ from PyQt5.QtWidgets import QUndoCommand
 _LOGGER = logging.getLogger(__name__)
 
 
-class ImportXfceNotesCommand( QUndoCommand ):
+class RenameNoteCommand( QUndoCommand ):
 
-    def __init__(self, dataObject, newNotes, parentCommand=None):
+    def __init__(self, dataObject, fromTitle, toTitle, parentCommand=None):
         super().__init__(parentCommand)
 
         self.data = dataObject
         self.domainModel = self.data.getManager()
-        self.oldNotes = self.data.getManager().getNotes()
-        self.newNotes = newNotes
+        self.fromTitle = fromTitle
+        self.toTitle   = toTitle
 
-        self.setText("Import Xfce Notes")
+        self.setText( "Rename Note: " + self.fromTitle )
 
     def redo(self):
-        self.domainModel.setNotes( self.newNotes )
+        self.domainModel.renameNote( self.fromTitle, self.toTitle )
         self.data.notesChanged.emit()
 
     def undo(self):
-        self.domainModel.setNotes( self.oldNotes )
+        self.domainModel.renameNote( self.toTitle, self.fromTitle )
         self.data.notesChanged.emit()
