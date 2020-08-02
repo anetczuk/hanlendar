@@ -67,25 +67,11 @@ class NavCalendar( QCalendarWidget ):
 
         if self.isHighlighted( date ) is True:
             painter.fillRect( rect, self.taskColor )
-            return
-
-        if self.isOccupied( date ) is True:
+        elif self.isOccupied( date ) is True:
             painter.fillRect( rect, self.occupiedColor )
-            return
 
-
-#         first_day = self.firstDayOfWeek()
-#         current_date = self.selectedDate()
-#         current_day = current_date.dayOfWeek()
-#
-#         if first_day <= current_day:
-#             first_date = current_date.addDays(first_day - current_day)
-#         else:
-#             first_date = current_date.addDays(first_day - 7 - current_day)
-#         last_date = first_date.addDays(6)
-#
-#         if first_date <= date <= last_date:
-#             painter.fillRect( rect, self.taskColor )
+        if date == QDate.currentDate():
+            painter.drawRect( rect.left(), rect.top(), rect.width() - 1, rect.height() - 1 )
 
     def isHighlighted(self, date):
         if self.highlightModel is None:
