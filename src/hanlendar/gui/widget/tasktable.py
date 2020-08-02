@@ -164,6 +164,7 @@ class TaskTable( QtWidgets.QTreeView ):
         super().__init__(parentWidget)
 
         self.data = None
+        self.expandItems = False
 
         self.setSelectionBehavior( QAbstractItemView.SelectRows )
         self.setSelectionMode( QAbstractItemView.SingleSelection )
@@ -199,6 +200,7 @@ class TaskTable( QtWidgets.QTreeView ):
 
         self.taskContextMenu = TaskContextMenu( self )
 
+        self.proxyModel.modelReset.connect( self.expandOnDemand )
         self.doubleClicked.connect( self.itemDoubleClicked )
 
     def connectData(self, dataObject):
@@ -215,6 +217,10 @@ class TaskTable( QtWidgets.QTreeView ):
         self.proxyModel.showCompleted( show )
         self.updateView()
 
+    def expandAllItems(self, expand):
+        self.expandItems = expand
+        self.expandOnDemand()
+
     def updateView(self, updatedTask: Task=None):
         if updatedTask is not None:
             taskIndex = self.getIndex( updatedTask )
@@ -222,6 +228,7 @@ class TaskTable( QtWidgets.QTreeView ):
                 self.proxyModel.dataChanged.emit( taskIndex, taskIndex )
                 return
         self.itemsModel.setDataObject( self.data )
+        self.expandOnDemand()
 
     def getIndex(self, task: Task):
         modelIndex = self.itemsModel.getIndex( task )
@@ -262,6 +269,10 @@ class TaskTable( QtWidgets.QTreeView ):
             self.setCurrentIndex(itemIndex)
             self.clearSelection()
         super().mousePressEvent( event )
+
+    def expandOnDemand(self):
+        if self.expandItems:
+            self.expandAll()
 
     def drawBranches(self, painter, rect, index):
         bgcolor = index.data( Qt.BackgroundRole )

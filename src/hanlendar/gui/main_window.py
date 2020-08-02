@@ -123,6 +123,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.tasksTable.selectedTask.connect( self.showDetails )
         self.ui.tasksTable.taskUnselected.connect( self.hideDetails )
         self.ui.showCompletedTasksListCB.toggled.connect( self.ui.tasksTable.showCompletedItems )
+        self.ui.expandAllTasksCB.toggled.connect( self.ui.tasksTable.expandAllItems )
 
         self.ui.dayList.connectData( self.data )
         self.ui.dayList.selectedTask.connect( self.showDetails )

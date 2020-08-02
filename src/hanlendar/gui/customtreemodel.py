@@ -78,8 +78,11 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
             return QModelIndex()
         grandParentItem = self.getParent( parentItem )
         children = self.getChildren( grandParentItem )
-        parentRow = children.index( parentItem )
-        return self.createIndex( parentRow, 0, parentItem )
+        try:
+            parentRow = children.index( parentItem )
+            return self.createIndex( parentRow, 0, parentItem )
+        except ValueError:
+            return QModelIndex()
 
     def flags(self, index: QModelIndex):
         if not index.isValid():

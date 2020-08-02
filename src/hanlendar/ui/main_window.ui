@@ -140,9 +140,19 @@
             </property>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <property name="leftMargin">
+               <number>6</number>
+              </property>
               <property name="topMargin">
                <number>9</number>
               </property>
+              <item>
+               <widget class="QCheckBox" name="expandAllTasksCB">
+                <property name="text">
+                 <string>Expand All</string>
+                </property>
+               </widget>
+              </item>
               <item>
                <spacer name="horizontalSpacer">
                 <property name="orientation">
@@ -428,12 +438,12 @@
   </action>
   <action name="actionUndo">
    <property name="text">
-    <string>Undo</string>
+    <string>&amp;Undo</string>
    </property>
   </action>
   <action name="actionRedo">
    <property name="text">
-    <string>Redo</string>
+    <string>&amp;Redo</string>
    </property>
   </action>
  </widget>
