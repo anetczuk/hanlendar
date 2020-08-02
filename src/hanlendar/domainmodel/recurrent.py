@@ -25,7 +25,7 @@ import logging
 
 from enum import Enum, unique, auto
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 
@@ -131,32 +131,6 @@ class Recurrent():
         if nextDate.date() > self.endDate:
             return None
         return nextDate
-
-    def hasTaskOccurrenceInMonth( self, referenceDate: date, monthDate: date ) -> bool:
-        if self.endDate is not None and self.endDate < monthDate:
-            return False
-
-        recurrentOffset: relativedelta = self.getDateOffset()
-        if recurrentOffset is None:
-            return False
-
-        multiplicator = find_multiplication( referenceDate, monthDate, recurrentOffset )
-        if multiplicator < 1:
-            return False
-
-        intYear  = monthDate.year
-        intMonth = monthDate.month
-
-        nextMonthDate = monthDate.replace( day=1 ) + timedelta( days=31 )
-        nextMonthDate = nextMonthDate.replace( day=1 )                      ## ensure first day of month
-        referenceDate += recurrentOffset * (multiplicator - 1)
-        while referenceDate < nextMonthDate:
-            referenceDate += recurrentOffset
-            if referenceDate.year == intYear and referenceDate.month == intMonth:
-                return True
-            multiplicator += 1
-
-        return False
 
     def findRecurrentOffset(self, referenceDate: date, targetDate: date) -> int:
         offset = self.getDateOffset()

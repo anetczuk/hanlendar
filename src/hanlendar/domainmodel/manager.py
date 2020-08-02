@@ -28,7 +28,7 @@ import logging
 import glob
 
 from hanlendar import persist
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.task import Task, TaskOccurrence
 from hanlendar.domainmodel.todo import ToDo
 from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.item import Item
@@ -145,9 +145,10 @@ class Manager():
         retTasks = list()
         allTasks = self.getTasksAll()
         for task in allTasks:
-            if task.isCompleted():
+            occurrence: TaskOccurrence = task.currentOccurrence()
+            if occurrence.isCompleted():
                 continue
-            if task.isTimedout():
+            if occurrence.isTimedout():
                 retTasks.append( task )
         return retTasks
 
@@ -155,9 +156,10 @@ class Manager():
         retTasks = list()
         allTasks = self.getTasksAll()
         for task in allTasks:
-            if task.isCompleted():
+            occurrence: TaskOccurrence = task.currentOccurrence()
+            if occurrence.isCompleted():
                 continue
-            if task.isReminded():
+            if occurrence.isReminded():
                 retTasks.append( task )
         return retTasks
 

@@ -60,26 +60,6 @@ class TaskTest(unittest.TestCase):
         self.assertEqual( task.occurrenceStart.date(), datetime.date( 2020, 5, 18 ) )
         self.assertEqual( task.occurrenceDue.date(), datetime.date( 2020, 5, 18 ) )
 
-    def test_hasTaskOccurrenceInMonth(self):
-        taskDate = datetime.date( 2020, 5, 17 )
-        task = Task()
-        task.setDefaultDate( taskDate )
-        has = task.hasTaskOccurrenceInMonth( taskDate )
-
-        self.assertEqual( has, True )
-
-    def test_hasTaskOccurrenceInMonth_recurrent_far(self):
-        taskDate = datetime.date( 2020, 5, 17 )
-        task = Task()
-        task.setDefaultDate( taskDate )
-        task.recurrence = Recurrent()
-        task.recurrence.setDaily(1)
-
-        entryDate = taskDate + timedelta( days=3333 * 366 )
-        has = task.hasTaskOccurrenceInMonth( entryDate )
-
-        self.assertEqual( has, True )
-
     def test_getTaskOccurrenceForDate(self):
         taskDate = datetime.datetime( 2020, 5, 17 )
         task = Task()
@@ -168,25 +148,6 @@ class TaskTest(unittest.TestCase):
         self.assertEqual( notifications[1].task, task )
         self.assertEqual( notifications[1].message, "task 'task 1' reached deadline" )
 
-    def test_isTimedout(self):
-        task = Task()
-        self.assertEqual( task.isTimedout(), False )
-
-    def test_isReminded(self):
-        task = Task()
-        task.dueDateTime = datetime.datetime.today() + datetime.timedelta( seconds=30 )
-        self.assertEqual( task.isReminded(), False )
-
-    def test_isReminded_reminded(self):
-        task = Task()
-        task.dueDateTime = datetime.datetime.today() + datetime.timedelta( seconds=30 )
-
-        reminder = Reminder()
-        reminder.setTime( 0, 300 )
-        task.addReminder( reminder )
-
-        self.assertEqual( task.isReminded(), True )
-
 
 class TaskOccurrenceTest(unittest.TestCase):
     def setUp(self):
@@ -210,3 +171,26 @@ class TaskOccurrenceTest(unittest.TestCase):
         occurrence = task.currentOccurrence()
         self.assertEqual( occurrence.startCurrent, task.startDateTime )
         self.assertEqual( occurrence.dueCurrent, subtask.dueDateTime )
+
+    def test_isTimedout(self):
+        task = Task()
+        occurrence = task.currentOccurrence()
+        self.assertEqual( occurrence.isTimedout(), False )
+
+    def test_isReminded(self):
+        task = Task()
+        task.dueDateTime = datetime.datetime.today() + datetime.timedelta( seconds=30 )
+
+        occurrence = task.currentOccurrence()
+        self.assertEqual( occurrence.isReminded(), False )
+
+    def test_isReminded_reminded(self):
+        task = Task()
+        task.dueDateTime = datetime.datetime.today() + datetime.timedelta( seconds=30 )
+
+        reminder = Reminder()
+        reminder.setTime( 0, 300 )
+        task.addReminder( reminder )
+
+        occurrence = task.currentOccurrence()
+        self.assertEqual( occurrence.isReminded(), True )

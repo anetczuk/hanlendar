@@ -128,6 +128,15 @@ class DateTimeRange():
             return False
         return True
 
+    def dateRange(self) -> DateRange:
+        start = None
+        if self.start is not None:
+            start = self.start.date()
+        end = None
+        if self.end is not None:
+            end = self.end.date()
+        return DateRange( start, end )
+
     def isNormalized(self):
         if self.start is None:
             return False
@@ -446,12 +455,6 @@ class Task( Item, persist.Versionable ):
     def recurrentOffset(self):
         return self._recurrentOffset
 
-    def getReferenceInitDateTime(self) -> datetime:
-        if self._startDate is not None:
-            return self._startDate
-        ## deadline case
-        return self._dueDate
-
     def getReferenceDateTime(self) -> datetime:
         if self.occurrenceStart is not None:
             return self.occurrenceStart
@@ -468,22 +471,6 @@ class Task( Item, persist.Versionable ):
         if remindDate is not None and remindDate < minDate:
             minDate = remindDate
         return minDate
-
-    def getDateRange(self) -> DateRange:
-        startDate = None
-        endDate   = None
-        if self._startDate is not None:
-            startDate = self._startDate.date()
-        if self._dueDate is not None:
-            endDate = self._dueDate.date()
-        return DateRange(startDate, endDate)
-
-    def getDateRangeNormalized(self) -> DateRange:
-        dateRange: DateRange = self.getDateRange()
-        dateRange.normalize()
-        if dateRange[1] is None:
-            return None
-        return dateRange
 
     def getDateTimeRange(self) -> DateTimeRange:
         startDate = None
@@ -509,25 +496,11 @@ class Task( Item, persist.Versionable ):
         self.startDateTime = None
         self.dueDateTime = due
 
-    def setDeadlineDate(self, dueDate: date):
-        due = datetime.combine( dueDate, time(10, 0, 0) )
-        self.setDeadlineDateTime( due )
-
-    def hasTaskOccurrenceInMonth( self, month: date ):
-        refDate = self.getReferenceInitDateTime()
-        if refDate is None:
-            return False
-        currDate = refDate.date()
-        if currDate.year == month.year and currDate.month == month.month:
-            return True
-        recurr = self.getAppliedRecurrence()
-        if recurr is None:
-            return False
-        return recurr.hasTaskOccurrenceInMonth( currDate, month )
-
     def getTaskOccurrenceForDate(self, entryDate: date):
-        dateRange: DateRange = self.getDateRangeNormalized()
-        if dateRange is None:
+        dateTimeRange: DateTimeRange = self.getDateTimeRange()
+        dateRange = dateTimeRange.dateRange()
+        dateRange.normalize()
+        if dateRange.isNormalized() is False:
             return None
         if entryDate in dateRange:
             return TaskOccurrence( self )
@@ -568,7 +541,7 @@ class Task( Item, persist.Versionable ):
             return None
         return self.occurrenceDue - retOffset
 
-    def getReminderGreatest(self) -> datetime:
+    def getReminderGreatest(self) -> timedelta:
         if self.reminderList is None:
             return None
         retOffset = None
@@ -607,26 +580,6 @@ class Task( Item, persist.Versionable ):
 
         ret.sort( key=Notification.sortByTime )
         return ret
-
-    def isTimedout(self):
-        if self.occurrenceDue is None:
-            return False
-        currTime = datetime.today()
-        return currTime > self.occurrenceDue
-
-    def isReminded(self):
-        if self.occurrenceDue is None:
-            return False
-        if self.reminderList is None:
-            return False
-
-        currTime = datetime.today()
-        retOffset = self.getReminderGreatest()
-        if retOffset is not None:
-            notifTime = self.occurrenceDue - retOffset
-            if notifTime < currTime:
-                return True
-        return False
 
     def addSubTask(self):
         return self.addSubItem( Task() )
