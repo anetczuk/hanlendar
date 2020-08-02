@@ -25,6 +25,7 @@ import logging
 
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QTableWidget, QTreeView
+from PyQt5.QtWidgets import QCheckBox
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from hanlendar.domainmodel.task import Task
@@ -410,6 +411,15 @@ class MainWindow( QtBaseClass ):           # type: ignore
                 w.restoreState( state )
             settings.endGroup()
 
+        widgets = self.findChildren(QCheckBox)
+        for w in widgets:
+            wKey = get_widget_key(w)
+            settings.beginGroup( wKey )
+            state = settings.value("checkState")
+            if state is not None:
+                w.setCheckState( int(state) )
+            settings.endGroup()
+
         widgets = self.findChildren(QTabWidget)
         for w in widgets:
             wKey = get_widget_key(w)
@@ -477,6 +487,13 @@ class MainWindow( QtBaseClass ):           # type: ignore
             wKey = get_widget_key(w)
             settings.beginGroup( wKey )
             settings.setValue("widgetState", w.saveState() )
+            settings.endGroup()
+
+        widgets = self.findChildren( QCheckBox )
+        for w in widgets:
+            wKey = get_widget_key(w)
+            settings.beginGroup( wKey )
+            settings.setValue("checkState", w.checkState() )
             settings.endGroup()
 
         widgets = self.findChildren( QTabWidget )
