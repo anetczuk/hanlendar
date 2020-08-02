@@ -112,7 +112,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.data.tasksChanged.connect( self._handleTasksChange )
         self.data.todosChanged.connect( self._handleToDosChange )
-        self.data.notesChanged.connect( self.updateNotesView )
+        self.data.notesChanged.connect( self._handleNotesChange )
 
         self.notifsTimer.remindTask.connect( self.handleNotification )
 
@@ -144,7 +144,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.notesWidget.addNote.connect( self.data.addNote )
         self.ui.notesWidget.renameNote.connect( self.data.renameNote )
         self.ui.notesWidget.removeNote.connect( self.data.removeNote )
-        self.ui.notesWidget.notesChanged.connect( self.saveData )
+        self.ui.notesWidget.notesChanged.connect( self.triggerSaveTimer )
         self.ui.notesWidget.createToDo.connect( self.data.addNewToDo )
 
         ## === main menu settings ===
@@ -166,6 +166,11 @@ class MainWindow( QtBaseClass ):           # type: ignore
         dataPath = self.getDataPath()
         self.data.load( dataPath )
         self.refreshView()
+
+    def triggerSaveTimer(self):
+        timeout = 30000
+        _LOGGER.info("triggering save timer with timeout %s", timeout)
+        QtCore.QTimer.singleShot( timeout, self.saveData )
 
     def saveData(self):
         if self._saveData():
@@ -249,7 +254,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
     ## ====================================================================
 
     def _handleTasksChange(self):
-        self.saveData()
+        self.triggerSaveTimer()
         self.refreshTasksView()
 
     def refreshTasksView(self):
@@ -274,11 +279,15 @@ class MainWindow( QtBaseClass ):           # type: ignore
     ## ====================================================================
 
     def _handleToDosChange(self):
-        self.saveData()
+        self.triggerSaveTimer()
         self.ui.todosTable.updateView()
         self.updateTrayToolTip()
 
     ## ====================================================================
+
+    def _handleNotesChange(self):
+        self.triggerSaveTimer()
+        self.updateNotesView()
 
     def updateNotesView(self):
         notesDict = self.data.getManager().getNotes()
