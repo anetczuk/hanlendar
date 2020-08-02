@@ -80,7 +80,7 @@ class TaskTreeModel( ItemTreeModel ):
             if item.isInMonth( nowDate ):
                 return QColor( "beige" )
             if item.isInPastMonths( nowDate ):
-                return QColor( "navajowhite" )
+                return QColor( "moccasin" )
 
         if role == QtCore.Qt.DisplayRole:
             attrIndex = index.column()
