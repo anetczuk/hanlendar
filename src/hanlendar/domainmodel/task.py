@@ -158,6 +158,18 @@ class DateTimeRange():
             return True
         return False
 
+    def isInPastMonths( self, monthDate: datetime ):
+        currDate = self.start
+        if currDate is None:
+            currDate = self.end
+        if currDate is None:
+            return False
+        if currDate.year < monthDate.year:
+            return True
+        if currDate.year == monthDate.year and currDate.month < monthDate.month:
+            return True
+        return False
+
     def __str__(self):
         return "[s:%s e:%s]" % ( self.start, self.end )
 
@@ -273,6 +285,9 @@ class TaskOccurrence:
 
     def isInMonth( self, monthDate: date ):
         return self.dateRange.isInMonth( monthDate )
+
+    def isInPastMonths( self, monthDate: date ):
+        return self.dateRange.isInPastMonths( monthDate )
 
     def calculateTimeSpan(self, entryDate: date):
         startDate = self.task.occurrenceStart

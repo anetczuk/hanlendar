@@ -60,7 +60,7 @@ class TaskTreeModel( ItemTreeModel ):
         task = self.getItem( index )
         if task is None:
             return None
-        item = task.currentOccurrence()
+        item: TaskOccurrence = task.currentOccurrence()
         if item is None:
             return None
 
@@ -79,6 +79,8 @@ class TaskTreeModel( ItemTreeModel ):
             nowDate = date.today()
             if item.isInMonth( nowDate ):
                 return QColor( "beige" )
+            if item.isInPastMonths( nowDate ):
+                return QColor( "navajowhite" )
 
         if role == QtCore.Qt.DisplayRole:
             attrIndex = index.column()
