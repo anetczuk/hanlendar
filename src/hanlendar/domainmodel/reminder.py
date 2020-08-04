@@ -50,6 +50,9 @@ class Notification():
         timeDiff = self.notifyTime - currTime
         return timeDiff.total_seconds()
 
+    def __str__(self):
+        return "[nt:%s m:%s t:%s]" % ( self.notifyTime, self.message, self.task.title )
+
     @staticmethod
     def sortByTime( notification ):
         return notification.notifyTime
