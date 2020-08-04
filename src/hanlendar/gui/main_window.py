@@ -24,8 +24,6 @@
 import logging
 
 from PyQt5.QtCore import QDate
-from PyQt5.QtWidgets import QTableWidget, QTreeView
-from PyQt5.QtWidgets import QCheckBox
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from hanlendar.domainmodel.task import Task
@@ -35,9 +33,9 @@ from hanlendar.domainmodel.todo import ToDo
 from . import uiloader
 from . import resources
 from . import tray_icon
+from . import guistate
 
 from .qt import qApp, QtCore, QtGui, QIcon
-from .qt import QWidget, QSplitter, QTabWidget
 
 from .dataobject import DataObject
 from .notifytimer import NotificationTimer
@@ -401,75 +399,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
             self.restoreState( state )
         settings.endGroup()
 
-        ## store geometry of all widgets
-        widgets = self.findChildren(QWidget)
-        for w in widgets:
-            wKey = get_widget_key(w)
-            settings.beginGroup( wKey )
-            geometry = settings.value("geometry")
-            if geometry is not None:
-                w.restoreGeometry( geometry )
-            settings.endGroup()
-
-        widgets = self.findChildren(QSplitter)
-        for w in widgets:
-            wKey = get_widget_key(w)
-            settings.beginGroup( wKey )
-            state = settings.value("widgetState")
-            if state is not None:
-                w.restoreState( state )
-            settings.endGroup()
-
-        widgets = self.findChildren(QCheckBox)
-        for w in widgets:
-            wKey = get_widget_key(w)
-            settings.beginGroup( wKey )
-            state = settings.value("checkState")
-            if state is not None:
-                w.setCheckState( int(state) )
-            settings.endGroup()
-
-        widgets = self.findChildren(QTabWidget)
-        for w in widgets:
-            wKey = get_widget_key(w)
-            settings.beginGroup( wKey )
-            state = settings.value("currentIndex")
-            if state is not None:
-                currIndex = int(state)
-                w.setCurrentIndex( currIndex )
-            settings.endGroup()
-
-        widgets = self.findChildren( QTableWidget )
-        for w in widgets:
-            wKey = get_widget_key(w)
-            settings.beginGroup( wKey )
-            colsNum = w.columnCount()
-            for c in range(0, colsNum):
-                state = settings.value( "column" + str(c) )
-                if state is not None:
-                    currWidth = int(state)
-                    w.setColumnWidth( c, currWidth )
-            sortColumn = settings.value( "sortColumn" )
-            sortOrder = settings.value( "sortOrder" )
-            if sortColumn is not None and sortOrder is not None:
-                w.sortByColumn( int(sortColumn), int(sortOrder) )
-            settings.endGroup()
-
-        widgets = self.findChildren( QTreeView )
-        for w in widgets:
-            wKey = get_widget_key(w)
-            settings.beginGroup( wKey )
-            colsNum = w.header().count()
-            for c in range(0, colsNum):
-                state = settings.value( "column" + str(c) )
-                if state is not None:
-                    currWidth = int(state)
-                    w.setColumnWidth( c, currWidth )
-            sortColumn = settings.value( "sortColumn" )
-            sortOrder = settings.value( "sortOrder" )
-            if sortColumn is not None and sortOrder is not None:
-                w.sortByColumn( int(sortColumn), int(sortOrder) )
-            settings.endGroup()
+        ## restore widget state and geometry
+        guistate.load_state( self, settings )
 
     def saveSettings(self):
         settings = self.getSettings()
@@ -483,62 +414,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
         settings.setValue("windowState", self.saveState() )
         settings.endGroup()
 
-        ## store geometry of all widgets
-        widgets = self.findChildren( QWidget )
-        for w in widgets:
-            wKey = get_widget_key(w)
-            settings.beginGroup( wKey )
-            settings.setValue("geometry", w.saveGeometry() )
-            settings.endGroup()
-
-        widgets = self.findChildren( QSplitter )
-        for w in widgets:
-            wKey = get_widget_key(w)
-            settings.beginGroup( wKey )
-            settings.setValue("widgetState", w.saveState() )
-            settings.endGroup()
-
-        widgets = self.findChildren( QCheckBox )
-        for w in widgets:
-            wKey = get_widget_key(w)
-            settings.beginGroup( wKey )
-            settings.setValue("checkState", w.checkState() )
-            settings.endGroup()
-
-        widgets = self.findChildren( QTabWidget )
-        for w in widgets:
-            wKey = get_widget_key(w)
-            settings.beginGroup( wKey )
-            settings.setValue("currentIndex", w.currentIndex() )
-            settings.endGroup()
-
-        widgets = self.findChildren( QTableWidget )
-        for w in widgets:
-            wKey = get_widget_key(w)
-            colsNum = w.columnCount()
-            settings.beginGroup( wKey )
-            for c in range(0, colsNum):
-                settings.setValue( "column" + str(c), w.columnWidth(c) )
-            header = w.horizontalHeader()
-            sortColumn = header.sortIndicatorSection()
-            settings.setValue( "sortColumn", sortColumn )
-            sortOrder = header.sortIndicatorOrder()
-            settings.setValue( "sortOrder", sortOrder )
-            settings.endGroup()
-
-        widgets = self.findChildren( QTreeView )
-        for w in widgets:
-            wKey = get_widget_key(w)
-            header = w.header()
-            colsNum = header.count()
-            settings.beginGroup( wKey )
-            for c in range(0, colsNum):
-                settings.setValue( "column" + str(c), w.columnWidth(c) )
-            sortColumn = header.sortIndicatorSection()
-            settings.setValue( "sortColumn", sortColumn )
-            sortOrder = header.sortIndicatorOrder()
-            settings.setValue( "sortOrder", sortOrder )
-            settings.endGroup()
+        ## store widget state and geometry
+        guistate.save_state(self, settings)
 
         ## force save to file
         settings.sync()

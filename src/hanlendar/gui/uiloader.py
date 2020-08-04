@@ -34,10 +34,9 @@ except ImportError:
     logging.exception("Exception while importing")
     exit(1)
 
-import hanlendar.defs as defs
-
 
 base_dir = os.path.dirname( __file__ )
+MAIN_MODULE_DIR = os.path.abspath( os.path.join( base_dir, ".." ) )
 
 
 def generate_ui_file_name(classFileName):
@@ -49,7 +48,7 @@ def generate_ui_file_name(classFileName):
 
 def load_ui(uiFilename):
     try:
-        ui_path = os.path.join( defs.ROOT_DIR, "ui", uiFilename )
+        ui_path = os.path.join( MAIN_MODULE_DIR, "ui", uiFilename )
         return uic.loadUiType( ui_path )
     except Exception as e:
         print("Exception while loading UI file:", uiFilename, e)
@@ -59,3 +58,9 @@ def load_ui(uiFilename):
 def load_ui_from_class_name(uiFilename):
     ui_file = generate_ui_file_name(uiFilename)
     return load_ui( ui_file )
+
+
+def printsyspath():
+    import sys
+    for p in sys.path:
+        print( "path:", p )
