@@ -22,8 +22,8 @@
 #
 
 from PyQt5.QtCore import QSettings, QObject
+from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QWidget, QSplitter, QCheckBox, QTabWidget, QTableWidget, QTableView, QTreeView
 
 
 # pylint: disable=R0915
@@ -38,7 +38,7 @@ def load_state(window: QMainWindow, settings: QSettings):
     settings.endGroup()
 
     ## store geometry of all widgets
-    widgets = window.findChildren(QWidget)
+    widgets = window.findChildren( QtWidgets.QWidget )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         settings.beginGroup( wKey )
@@ -47,7 +47,7 @@ def load_state(window: QMainWindow, settings: QSettings):
             w.restoreGeometry( geometry )
         settings.endGroup()
 
-    widgets = window.findChildren(QSplitter)
+    widgets = window.findChildren( QtWidgets.QSplitter )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         settings.beginGroup( wKey )
@@ -56,7 +56,7 @@ def load_state(window: QMainWindow, settings: QSettings):
             w.restoreState( state )
         settings.endGroup()
 
-    widgets = window.findChildren(QCheckBox)
+    widgets = window.findChildren( QtWidgets.QCheckBox )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         settings.beginGroup( wKey )
@@ -65,7 +65,7 @@ def load_state(window: QMainWindow, settings: QSettings):
             w.setCheckState( int(state) )
         settings.endGroup()
 
-    widgets = window.findChildren(QTabWidget)
+    widgets = window.findChildren( QtWidgets.QTabWidget )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         settings.beginGroup( wKey )
@@ -75,7 +75,7 @@ def load_state(window: QMainWindow, settings: QSettings):
             w.setCurrentIndex( currIndex )
         settings.endGroup()
 
-    widgets = window.findChildren( QTableView )
+    widgets = window.findChildren( QtWidgets.QTableView )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         settings.beginGroup( wKey )
@@ -90,7 +90,7 @@ def load_state(window: QMainWindow, settings: QSettings):
         if sortColumn is not None and sortOrder is not None:
             w.sortByColumn( int(sortColumn), int(sortOrder) )
 
-    widgets = window.findChildren( QTableWidget )
+    widgets = window.findChildren( QtWidgets.QTableWidget )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         settings.beginGroup( wKey )
@@ -106,7 +106,7 @@ def load_state(window: QMainWindow, settings: QSettings):
             w.sortByColumn( int(sortColumn), int(sortOrder) )
         settings.endGroup()
 
-    widgets = window.findChildren( QTreeView )
+    widgets = window.findChildren( QtWidgets.QTreeView )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         settings.beginGroup( wKey )
@@ -130,35 +130,35 @@ def save_state(window: QMainWindow, settings: QSettings):
     settings.endGroup()
 
     ## store geometry of all widgets
-    widgets = window.findChildren( QWidget )
+    widgets = window.findChildren( QtWidgets.QWidget )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         settings.beginGroup( wKey )
         settings.setValue("geometry", w.saveGeometry() )
         settings.endGroup()
 
-    widgets = window.findChildren( QSplitter )
+    widgets = window.findChildren( QtWidgets.QSplitter )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         settings.beginGroup( wKey )
         settings.setValue("widgetState", w.saveState() )
         settings.endGroup()
 
-    widgets = window.findChildren( QCheckBox )
+    widgets = window.findChildren( QtWidgets.QCheckBox )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         settings.beginGroup( wKey )
         settings.setValue("checkState", w.checkState() )
         settings.endGroup()
 
-    widgets = window.findChildren( QTabWidget )
+    widgets = window.findChildren( QtWidgets.QTabWidget )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         settings.beginGroup( wKey )
         settings.setValue("currentIndex", w.currentIndex() )
         settings.endGroup()
 
-    widgets = window.findChildren( QTableView )
+    widgets = window.findChildren( QtWidgets.QTableView )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         colsNum = w.model().columnCount()
@@ -171,7 +171,7 @@ def save_state(window: QMainWindow, settings: QSettings):
         sortOrder = header.sortIndicatorOrder()
         settings.setValue( "sortOrder", sortOrder )
 
-    widgets = window.findChildren( QTableWidget )
+    widgets = window.findChildren( QtWidgets.QTableWidget )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         colsNum = w.columnCount()
@@ -185,7 +185,7 @@ def save_state(window: QMainWindow, settings: QSettings):
         settings.setValue( "sortOrder", sortOrder )
         settings.endGroup()
 
-    widgets = window.findChildren( QTreeView )
+    widgets = window.findChildren( QtWidgets.QTreeView )
     widgetsList = sort_widgets( widgets )
     for w, wKey in widgetsList:
         header = w.header()
