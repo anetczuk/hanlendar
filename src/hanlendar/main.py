@@ -48,9 +48,12 @@ def run_app(args):
     app.setApplicationName("Hanlendar")
     app.setOrganizationName("arnet")
     ### app.setOrganizationDomain("www.my-org.com")
+    app.setQuitOnLastWindowClosed( False )
 
     ## disable Alt key switching to application menu
     app.setStyle( MenuStyle() )
+
+    setup_interrupt_handling()
 
     window = MainWindow()
     if args.blocksave is True:
@@ -61,13 +64,10 @@ def run_app(args):
     if args.minimized is False:
         window.show()
 
-    setup_interrupt_handling()
-
     exitCode = app.exec_()
 
     if exitCode == 0:
-        window.saveSettings()
-        window.saveData()
+        window.saveAll()
 
     return exitCode
 

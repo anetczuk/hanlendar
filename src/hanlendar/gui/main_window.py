@@ -348,6 +348,12 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     # Override closeEvent, to intercept the window closing event
     def closeEvent(self, event):
+        _LOGGER.info("received close event, saving session: %s", qApp.isSavingSession() )
+        if qApp.isSavingSession():
+            ## closing application due to system shutdown
+            self.saveAll()
+            return
+        ## windows close requested by user -- hide the window
         event.ignore()
         self.hide()
         self.trayIcon.show()
@@ -365,6 +371,11 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def closeApplication(self):
         ##self.close()
         qApp.quit()
+
+    def saveAll(self):
+        _LOGGER.info("saving application state")
+        self.saveSettings()
+        self.saveData()
 
     ## ====================================================================
 
