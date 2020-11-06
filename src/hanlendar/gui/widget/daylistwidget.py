@@ -44,6 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class DrawWidget( QWidget ):
+
     def __init__(self, parentWidget=None):
         super().__init__( parentWidget )
 
@@ -114,7 +115,7 @@ class DayItem( DrawWidget ):
 
 #         self.setStyleSheet( "background-color: red" )
 
-    def recalculatePosition( self, lineRect: QRect ):
+    def resizeItem( self, lineRect: QRect ):
         allowedWidth  = lineRect.width()
         allowedHeight = lineRect.height()
         xOffset       = lineRect.x()
@@ -126,7 +127,6 @@ class DayItem( DrawWidget ):
         spanDuration = daySpan[1] - daySpan[0]
         self.setFixedWidth( allowedWidth )
         self.setFixedHeight( allowedHeight * spanDuration )
-        self.update()
 
     def paintEvent(self, event):
         super().paintEvent( event )
@@ -218,6 +218,7 @@ class DayListContentWidget( QWidget ):
             self.items.append( item )
             item.show()
 
+        self._resizeItems()
         self.update()
 
     def paintEvent(self, event):
@@ -237,23 +238,22 @@ class DayListContentWidget( QWidget ):
             hourHeight = hourStep * h
             painter.drawLine( 0, hourHeight, width, hourHeight )
 
-        self._repaintChildren( painter )
-
-    def _repaintChildren(self, painter: QPainter):
-        sItems = len(self.items)
-        if sItems < 1:
-            return
-
         if self.currentIndex >= 0:
             ## paint background
             lineRect = self._lineRect( self.currentIndex )
             bgColor = self.palette().color( QPalette.Highlight )
             painter.fillRect( lineRect, bgColor )
 
+    def resizeEvent(self, event):
+        self._resizeItems()
+        return super().resizeEvent( event )
+
+    def _resizeItems(self):
+        sItems = len(self.items)
         for i in range(0, sItems):
             widget = self.items[i]
             lineRect = self._lineRect( i )
-            widget.recalculatePosition( lineRect )
+            widget.resizeItem( lineRect )
 
     def _lineRect(self, index) -> QRect:
         sItems = len(self.items)
