@@ -32,8 +32,11 @@ log_file = None
 
 
 def get_logging_output_file():
-    logDir = os.path.join(script_dir, "../../tmp")
+    logDir = os.path.join(script_dir, "../../tmp/log")
+    logDir = os.path.abspath( logDir )
+    os.makedirs( logDir, exist_ok=True )
     if os.path.isdir( logDir ) is False:
+        ## something bad happened (or unable to create directory)
         logDir = os.getcwd()
 
     logFile = os.path.join(logDir, "log.txt")
@@ -52,7 +55,7 @@ def configure( logFile=None, logLevel=None ):
         logLevel = logging.DEBUG
 
     ## rotation of log files, 1048576 equals to 1MB
-    fileHandler    = handlers.RotatingFileHandler( filename=log_file, mode="a+", maxBytes=1048576, backupCount=999 )
+    fileHandler    = handlers.RotatingFileHandler( filename=log_file, mode="a+", maxBytes=1048576, backupCount=100 )
     ## fileHandler    = logging.FileHandler( filename=log_file, mode="a+" )
     consoleHandler = logging.StreamHandler( stream=sys.stdout )
 
