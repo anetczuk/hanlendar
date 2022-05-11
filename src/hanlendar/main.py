@@ -25,9 +25,12 @@
 
 
 import sys
+import os
 
 import argparse
 import logging
+
+import pidfile
 
 import hanlendar.logger as logger
 
@@ -36,13 +39,18 @@ from hanlendar.gui.main_window import MainWindow
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.widget.menustyle import MenuStyle
+from hanlendar.fqueue import put_to_queue
+
+
+script_dir = os.path.dirname(__file__)
+tmp_dir    = os.path.realpath( os.path.join( script_dir, os.pardir, os.pardir, 'tmp' ) )
 
 
 logger.configure()
 _LOGGER = logging.getLogger(__name__)
 
 
-def run_app(args):
+def run_app( args ):
     ## GUI
     app = QApplication(sys.argv)
     app.setApplicationName("Hanlendar")
@@ -80,18 +88,19 @@ def create_parser( parser: argparse.ArgumentParser = None ):
     return parser
 
 
-def main( args=None ):
+def start( args=None ):
+    _LOGGER.debug( "Starting the application" )
+    _LOGGER.debug( "Logger log file: %s", logger.log_file )
+    _LOGGER.debug( "Arguments: %s", sys.argv[1:] )
+
     if args is None:
         parser = create_parser()
         args = parser.parse_args()
 
-    _LOGGER.debug( "Starting the application" )
-    _LOGGER.debug( "Logger log file: %s", logger.log_file )
-
     exitCode = 1
 
     try:
-        exitCode = run_app(args)
+        exitCode = run_app( args )
 
     except BaseException:
         _LOGGER.exception("Exception occurred")
@@ -101,6 +110,39 @@ def main( args=None ):
         sys.exit(exitCode)
 
     return exitCode
+
+
+def start_single( args=None ):
+    ## check if instance already running    
+    try:
+        pid_path = os.path.join( tmp_dir, 'hanlendar.pid' )
+        with pidfile.PidFile( pid_path ):
+            ## first instance -- start
+            start( args )
+    except SystemExit:
+        ## already running
+        pass
+
+
+def main( args=None ):
+    if len( sys.argv ) != 2:
+        ## run as usual
+        start_single( args )
+        return
+
+    ## only one argument passed -- it should be *.ics file path
+    file_path = sys.argv[1]
+    if os.path.isfile( file_path ) is False:
+        ## not file -- run as usual
+        start_single( args )
+        return
+
+    ## file passed -- add to queue
+    sys.argv = sys.argv[:1]
+    put_to_queue( "file", file_path )
+
+    ## run application
+    start_single( args )
 
 
 if __name__ == '__main__':

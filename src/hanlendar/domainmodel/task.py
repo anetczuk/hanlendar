@@ -546,6 +546,11 @@ class Task( Item, persist.Versionable ):
         self.reminderList.append( reminder )
         return reminder
 
+    def addReminderDays( self, days=1 ):
+        reminder = Reminder()
+        reminder.setDays( days )
+        self.addReminder( reminder )
+
     def getReminderFirstDate(self) -> datetime:
         if self.occurrenceDue is None:
             return None

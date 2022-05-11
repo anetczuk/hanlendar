@@ -25,10 +25,15 @@ import logging
 
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QDialog, QMessageBox
+from PyQt5.QtWidgets import QFileDialog
 
 from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.todo import ToDo
+from hanlendar.domainmodel.manager import Manager
+
+from hanlendar.fswatchdog import FSWatcher
+from hanlendar.fqueue import queue_path, get_from_queue
 
 from . import uiloader
 from . import resources
@@ -52,9 +57,9 @@ UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
 
 class DataHighlightModel( NavCalendarHighlightModel ):
 
-    def __init__(self, manager ):
+    def __init__(self, manager: Manager ):
         super().__init__()
-        self.manager = manager
+        self.manager: Manager = manager
 
     def isHighlighted(self, date: QDate):
         entryDate = date.toPyDate()
@@ -80,6 +85,9 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.data = DataObject( self )
         self.appSettings = AppSettings()
+        
+        self.messagesQueueWatchdog = FSWatcher()
+        self.messagesQueueWatchdog.start( queue_path, self._handleNextMessage )
 
         ## =============================
 
@@ -149,6 +157,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.ui.actionSave_data.triggered.connect( self.saveData )
         self.ui.actionImportNotes.triggered.connect( self.importXfceNotes )
+        self.ui.actionImport_iCalendar.triggered.connect( self.importICalendar )
 
         self.ui.actionOptions.triggered.connect( self.openSettingsDialog )
 
@@ -296,6 +305,30 @@ class MainWindow( QtBaseClass ):           # type: ignore
                                           "Do you want to import Xfce Notes (previous notes will be lost)?")
         if retButton == QMessageBox.Yes:
             self.data.importXfceNotes()
+
+    def importICalendar(self):
+        fielDialog = QFileDialog( self )
+        fielDialog.setFileMode( QFileDialog.ExistingFile )
+        dialogCode = fielDialog.exec_()
+        if dialogCode == QDialog.Rejected:
+            return
+        selectedFile = fielDialog.selectedFiles()[0]
+        self.data.importICalendar( selectedFile )
+        
+    def _handleNextMessage(self):
+        with self.messagesQueueWatchdog.ignoreEvents():
+            message = get_from_queue( True )
+
+        if message is None:
+            _LOGGER.warning( "received None message" )
+            return
+        
+        message_type, message_value = message
+        if message_type == "file":
+            self.data.importICalendar( message_value, silent=True )
+            return
+
+        _LOGGER.warning( "unknown message: %s", message )
 
     ## ====================================================================
 

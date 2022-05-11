@@ -26,6 +26,7 @@ from datetime import date, datetime
 import logging
 
 import glob
+from icalendar import cal
 
 from hanlendar import persist
 from hanlendar.domainmodel.task import Task, TaskOccurrence
@@ -223,6 +224,38 @@ class Manager():
             ret.extend( notifs )
         ret.sort( key=Notification.sortByTime )
         return ret
+    
+    def importICalendar(self, content: str):
+        try:
+            gcal = cal.Calendar.from_ical( content )
+            tasks = []
+            for component in gcal.walk():
+                if component.name == "VEVENT":
+                    summary    = component.get('summary')
+                    location   = component.get('location')
+                    start_date = component.get('dtstart').dt
+                    start_date = start_date.astimezone()            ## convert to local timezone
+                    start_date = start_date.replace(tzinfo=None)
+                    end_date   = component.get('dtend').dt
+                    end_date   = end_date.astimezone()              ## convert to local timezone
+                    end_date   = end_date.replace(tzinfo=None)
+                    
+                    #TODO: check if task already added
+                    
+                    task = Task()
+                    task.title = f"{summary}, {location}"
+                    task.description = component.get('description')
+                    task.description = task.description.replace( "=0D=0A", "\n" )
+                    task.startDateTime = start_date
+                    task.dueDateTime   = end_date
+                    task.addReminderDays( 1 )
+                    
+                    addedTask = self.addTask( task )
+                    tasks.append( addedTask )
+            return tasks
+        except ValueError:
+            _LOGGER.warning( "unable to import calendar data" )
+        return None
 
     ## ========================================================
 
@@ -317,6 +350,9 @@ class Manager():
             task = self.tasks[i]
             retStr += str(task) + "\n"
         return retStr
+
+
+## ========================================================
 
 
 def replace_in_list( aList, oldObject, newObject ):

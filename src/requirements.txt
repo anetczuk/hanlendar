@@ -1,2 +1,9 @@
 PyQt5
 python-dateutil
+
+## for ics files
+icalendar
+pidfile
+pqueue
+filelock
+watchdog

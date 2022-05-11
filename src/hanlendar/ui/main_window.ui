@@ -388,6 +388,7 @@
     </property>
     <addaction name="actionSave_data"/>
     <addaction name="actionImportNotes"/>
+    <addaction name="actionImport_iCalendar"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -446,8 +447,19 @@
     <string>&amp;Redo</string>
    </property>
   </action>
+  <action name="actionImport_iCalendar">
+   <property name="text">
+    <string>Import iCalendar</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>NotesWidget</class>
+   <extends>QWidget</extends>
+   <header>hanlendar.gui.widget.noteswidget</header>
+   <container>1</container>
+  </customwidget>
   <customwidget>
    <class>NavCalendar</class>
    <extends>QCalendarWidget</extends>
@@ -457,12 +469,6 @@
    <class>TaskDetails</class>
    <extends>QWidget</extends>
    <header>hanlendar.gui.widget.taskdetails</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>NotesWidget</class>
-   <extends>QWidget</extends>
-   <header>hanlendar.gui.widget.noteswidget</header>
    <container>1</container>
   </customwidget>
   <customwidget>

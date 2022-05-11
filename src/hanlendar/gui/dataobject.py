@@ -34,6 +34,7 @@ from hanlendar.gui.widget.taskdialog import TaskDialog
 from hanlendar.gui.widget.tododialog import ToDoDialog
 
 from hanlendar.gui.command.importxfcenotescommand import ImportXfceNotesCommand
+from hanlendar.gui.command.importicalendarcommand import ImportICalendarCommand
 from hanlendar.gui.command.addtaskcommand import AddTaskCommand
 from hanlendar.gui.command.addsubtaskcommand import AddSubTaskCommand
 from hanlendar.gui.command.edittaskcommand import EditTaskCommand
@@ -224,6 +225,12 @@ class DataObject( QObject ):
         if not newNotes:
             return
         self.undoStack.push( ImportXfceNotesCommand( self, newNotes ) )
+
+    def importICalendar(self, file_path, silent=False):
+        _LOGGER.info( "importing iCalendar from %s", file_path )
+        with open( file_path, 'r' ) as cal_file:
+            content = cal_file.read()
+            self.undoStack.push( ImportICalendarCommand( self, content, silent ) )
 
 
 def import_xfce_notes():
