@@ -43,6 +43,9 @@ from hanlendar.domainmodel.task import Task, TaskOccurrence
 _LOGGER = logging.getLogger(__name__)
 
 
+MIN_TASK_DRAW_HEIGHT_FACTOR = 1.0 / 24 * 45 / 60                ## minimal height -- 45 minutes
+
+
 class DrawWidget( QWidget ):
 
     def __init__(self, parentWidget=None):
@@ -124,7 +127,8 @@ class DayItem( DrawWidget ):
         yOffset = allowedHeight * daySpan[0]
         self.move(xOffset, yOffset)
 
-        spanDuration = daySpan[1] - daySpan[0]
+        spanDuration = daySpan[1] - daySpan[0]                              ## in range [0..1]
+        spanDuration = max( spanDuration, MIN_TASK_DRAW_HEIGHT_FACTOR )
         self.setFixedWidth( allowedWidth )
         self.setFixedHeight( allowedHeight * spanDuration )
 
@@ -141,7 +145,7 @@ class DayItem( DrawWidget ):
 
 #         taskBgColor = monthcalendar.get_task_bgcolor( self.task )
         selected = self.isSelected()
-        taskBgColor = get_task_bgcolor( self.task, selected )
+        taskBgColor = get_task_bgcolor( self.task, selected )               ## get task color
         painter.fillPath( path, taskBgColor )
 
         pathPen = QPen( QColor("black") )
@@ -170,6 +174,9 @@ class DayItem( DrawWidget ):
         return self.parent().isSelected(self)
 
 
+##
+## Container of items
+##
 class DayListContentWidget( QWidget ):
 
     selectedTask       = pyqtSignal( int )
@@ -290,6 +297,9 @@ class DayListContentWidget( QWidget ):
         return itemIndex == self.currentIndex
 
 
+##
+## widget wrapping container
+##
 class DayListWidget( QWidget ):
 
     selectedTask    = pyqtSignal( Task )
