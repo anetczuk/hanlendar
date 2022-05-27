@@ -191,6 +191,46 @@ END:VCALENDAR
         self.assertEqual( calTask.startDateTime, datetime.datetime(2022, 4, 14, 15, 20) )
         self.assertEqual( calTask.dueDateTime, datetime.datetime(2022, 4, 14, 15, 40) )
 
+    def test_importICalendar_eml(self):
+        manager = Manager()
+
+#         with open( "/tmp/test.eml", 'r' ) as cal_file:
+#             content = cal_file.read()
+
+        content = """
+X-Account-Key: account3
+X-Mozilla-Status: 0001
+X-Mozilla-Status2: 00000000
+
+BEGIN:VCALENDAR
+PRODID:-//Flo Inc.//FloSoft//EN
+BEGIN:VEVENT
+DTSTART:20220414T132000Z
+DTEND:20220414T134000Z
+UID:1234__4321
+LOCATION:Remiza Warszawska 123
+DESCRIPTION;ENCODING=QUOTED-PRINTABLE:Zapraszamy na wizytę.=0D=0AŻyczymy miłego dnia.
+SUMMARY:Umówiona wizyta
+PRIORITY:3
+END:VEVENT
+END:VCALENDAR
+
+
+"""
+
+        tasks = manager.getTasks()
+        self.assertEqual( len(tasks), 0 )
+
+        manager.importICalendar( content )
+
+        tasks = manager.getTasks()
+        self.assertEqual( len(tasks), 1 )
+
+        calTask = tasks[0]
+        self.assertEqual( calTask.title, "Umówiona wizyta, Remiza Warszawska 123" )
+        self.assertEqual( calTask.startDateTime, datetime.datetime(2022, 4, 14, 15, 20) )
+        self.assertEqual( calTask.dueDateTime, datetime.datetime(2022, 4, 14, 15, 40) )
+
     def test_getNotificationList(self):
         manager = Manager()
 

@@ -38,6 +38,19 @@ from hanlendar.domainmodel.item import Item
 _LOGGER = logging.getLogger(__name__)
 
 
+
+def extract_ical( content ):
+    cal_begin_pos = content.find( "BEGIN:VCALENDAR" )
+    if cal_begin_pos < 0:
+        return content
+    END_SUB = "END:VCALENDAR"
+    cal_end_pos = content.find( END_SUB, cal_begin_pos )
+    if cal_end_pos < 0:
+        return content
+    cal_end_pos += len( END_SUB )
+    return content[ cal_begin_pos:cal_end_pos ]
+
+
 class Manager():
     """Root class for domain data structure."""
 
@@ -227,7 +240,8 @@ class Manager():
     
     def importICalendar(self, content: str):
         try:
-            gcal = cal.Calendar.from_ical( content )
+            extracted_ical = extract_ical( content )
+            gcal = cal.Calendar.from_ical( extracted_ical )
             tasks = []
             for component in gcal.walk():
                 if component.name == "VEVENT":
