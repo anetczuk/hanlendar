@@ -1,0 +1,7 @@
+## 
+## test configuration for radicale server
+##
+
+[server]
+## bind to all interfaces/networks
+hosts = 0.0.0.0:5232, [::]:5232
