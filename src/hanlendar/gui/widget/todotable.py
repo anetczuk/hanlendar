@@ -32,7 +32,7 @@ from PyQt5.QtGui import QColor, QBrush
 from hanlendar.gui.customtreemodel import ItemTreeModel
 from hanlendar.gui.widget.tasktable import get_completed_color
 
-from hanlendar.domainmodel.todo import ToDo
+from hanlendar.domainmodel.local.todo import ToDo
 
 
 _LOGGER = logging.getLogger(__name__)

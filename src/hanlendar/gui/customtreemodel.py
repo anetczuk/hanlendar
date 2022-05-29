@@ -28,7 +28,7 @@ from typing import List
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QModelIndex
 
-from hanlendar.domainmodel.item import Item
+from hanlendar.domainmodel.local.item import Item
 
 
 _LOGGER = logging.getLogger(__name__)

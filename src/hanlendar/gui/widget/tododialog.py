@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import QDialog, QFileDialog
 from PyQt5.QtCore import QUrl
 from PyQt5.QtGui import QDesktopServices
 
-from hanlendar.domainmodel.todo import ToDo
+from hanlendar.domainmodel.local.todo import ToDo
 
 from .. import uiloader
 

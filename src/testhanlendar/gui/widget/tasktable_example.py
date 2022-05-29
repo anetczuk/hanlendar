@@ -42,7 +42,7 @@ from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.dataobject import DataObject
 from hanlendar.gui.widget.tasktable import TaskTable
 
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.local.task import Task
 
 
 ## ============================= main section ===================================

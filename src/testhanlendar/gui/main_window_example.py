@@ -46,9 +46,9 @@ from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.main_window import MainWindow
 
-from hanlendar.domainmodel.task import Task
-from hanlendar.domainmodel.manager import Manager
-from hanlendar.domainmodel.recurrent import Recurrent
+from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.manager import Manager
+from hanlendar.domainmodel.local.recurrent import Recurrent
 
 
 # pylint: disable=R0914, R0915

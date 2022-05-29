@@ -26,8 +26,8 @@ import logging
 
 from datetime import date
 
-from hanlendar.domainmodel.task import Task
-from hanlendar.domainmodel.recurrent import RepeatType, Recurrent
+from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.recurrent import RepeatType, Recurrent
 
 from .. import uiloader
 

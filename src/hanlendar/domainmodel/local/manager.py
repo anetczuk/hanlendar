@@ -29,10 +29,10 @@ import glob
 from icalendar import cal
 
 from hanlendar import persist
-from hanlendar.domainmodel.task import Task, TaskOccurrence
-from hanlendar.domainmodel.todo import ToDo
-from hanlendar.domainmodel.reminder import Notification
-from hanlendar.domainmodel.item import Item
+from hanlendar.domainmodel.local.task import Task, TaskOccurrence
+from hanlendar.domainmodel.local.todo import ToDo
+from hanlendar.domainmodel.local.reminder import Notification
+from hanlendar.domainmodel.local.item import Item
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,11 +51,22 @@ def extract_ical( content ):
     return content[ cal_begin_pos:cal_end_pos ]
 
 
+def unpack_manager_module_mapper_v0( module ):
+    ## convert from version 0 to actual version
+    module = module.replace( "todocalendar", "hanlendar" )
+    return unpack_manager_module_mapper_v1( module )
+
+def unpack_manager_module_mapper_v1( module ):
+    ## convert from version 1 to actual version
+    return module.replace( "hanlendar.domainmodel.", "hanlendar.domainmodel.local." )
+
+
 class Manager():
     """Root class for domain data structure."""
 
-    ## 1 - renamed modules
-    _class_version = 1
+    ## 1 - renamed modules from 'todocalendar' to 'hanlendar'
+    ## 2 - renamed modules from 'hanlendar.domainmodel.*' to 'hanlendar.domainmodel.local.*'
+    _class_version = 2
 
     def __init__(self):
         """Constructor."""
@@ -91,23 +102,29 @@ class Manager():
 
     def load( self, inputDir ):
         inputFile = inputDir + "/version.obj"
-        mngrVersion = persist.load_object( inputFile, self._class_version )
+        mngrVersion = persist.load_object( inputFile )
         if mngrVersion != self. _class_version:
             _LOGGER.info( "converting object from version %s to %s", mngrVersion, self._class_version )
             ## do nothing for now
 
+        module_mapper_dict = { 1: unpack_manager_module_mapper_v1 }
+        if mngrVersion > 0 is False:
+            module_mapper = unpack_manager_module_mapper_v0
+        else:
+            module_mapper = module_mapper_dict.get( mngrVersion, None )
+
         inputFile = inputDir + "/tasks.obj"
-        self.tasks = persist.load_object( inputFile, self._class_version )
+        self.tasks = persist.load_object( inputFile, class_mapper=module_mapper )
         if self.tasks is None:
             self.tasks = list()
 
         inputFile = inputDir + "/todos.obj"
-        self.todos = persist.load_object( inputFile, self._class_version )
+        self.todos = persist.load_object( inputFile, class_mapper=module_mapper )
         if self.todos is None:
             self.todos = list()
 
         inputFile = inputDir + "/notes.obj"
-        self.notes = persist.load_object( inputFile, self._class_version )
+        self.notes = persist.load_object( inputFile, class_mapper=module_mapper )
         if self.notes is None:
             self.notes = { "notes": "" }
 

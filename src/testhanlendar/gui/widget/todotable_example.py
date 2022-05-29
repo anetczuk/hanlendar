@@ -41,7 +41,7 @@ from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.dataobject import DataObject
 from hanlendar.gui.widget.todotable import ToDoTable
 
-from hanlendar.domainmodel.todo import ToDo
+from hanlendar.domainmodel.local.todo import ToDo
 
 
 ## ============================= main section ===================================

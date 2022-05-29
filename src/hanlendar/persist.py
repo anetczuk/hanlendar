@@ -36,24 +36,44 @@ _LOGGER = logging.getLogger(__name__)
 
 class RenamingUnpickler(pickle.Unpickler):
 
-    def __init__(self, codeVersion, file):
+    def __init__(self, file, module_mapper=None):
         super().__init__( file )
-        self.codeVersion = codeVersion
+        self.module_mapper = module_mapper
 
     def find_class(self, module, name):
 #         _LOGGER.info( "unpicking module: %s %s", module, name )
-        if self.codeVersion >= 1:
-            ## rename old module name to new one
-            module = module.replace( "todocalendar", "hanlendar" )
-        return super().find_class(module, name)
+        moduleName = self.findName( module )
+        return super().find_class(moduleName, name)
+    
+    def findName(self, module):
+        if self.module_mapper is None:
+            return module
+
+        ## find module name
+        try:
+            return self.module_mapper[ module ]
+        except TypeError:
+            ## whatever your fall-back plan is when obj doesn't support [] (__getitem__) 
+            pass
+        try:
+            return self.module_mapper( module )
+        except TypeError:
+            ## whatever your fall-back plan is when obj doesn't support [] (__getitem__) 
+            pass
+
+        ## do nothing
+        return module
 
 
-def load_object( inputFile, codeVersion, defaultValue=None ):
+## class_mapper -- object mapping class names based on code version
+def load_object( inputFile, defaultValue=None, class_mapper=None ):
     try:
         _LOGGER.info( "loading data from: %s", inputFile )
         with open( inputFile, 'rb') as fp:
-            return RenamingUnpickler(codeVersion, fp).load()
-#             return pickle.load(fp)
+            if class_mapper is None:
+                return pickle.load(fp)
+            else:
+                return RenamingUnpickler(fp, class_mapper).load()
     except FileNotFoundError:
         _LOGGER.exception("failed to load")
         return defaultValue

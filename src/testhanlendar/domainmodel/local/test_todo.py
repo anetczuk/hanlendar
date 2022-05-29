@@ -21,45 +21,37 @@
 # SOFTWARE.
 #
 
-import logging
-
-from PyQt5.QtGui import QDesktopServices
+import unittest
 
 from hanlendar.domainmodel.local.todo import ToDo
 
-from .. import uiloader
 
+class TaskTest(unittest.TestCase):
+    def setUp(self):
+        ## Called before testfunction is executed
+        pass
 
-UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
+    def tearDown(self):
+        ## Called after testfunction was executed
+        pass
 
+    def test_isCompleted(self):
+        todo = ToDo()
+        self.assertEqual( todo.isCompleted(), False )
 
-_LOGGER = logging.getLogger(__name__)
+        todo.setCompleted()
+        self.assertEqual( todo.isCompleted(), True )
 
+    def test_isCompleted_sub(self):
+        todo = ToDo()
+        self.assertEqual( todo.isCompleted(), False )
 
-class ToDoDetails( QtBaseClass ):           # type: ignore
+        todo.setCompleted()
+        self.assertEqual( todo.isCompleted(), True )
 
-    def __init__(self, parentWidget=None):
-        super().__init__(parentWidget)
-        self.ui = UiTargetClass()
-        self.ui.setupUi(self)
+        child = todo.addSubtodo( ToDo() )
+        self.assertEqual( todo.isCompleted(), False )
 
-        self.ui.descriptionEdit.anchorClicked.connect( self._openLink )
-
-        self.setToDo( None )
-
-    def setToDo(self, todo: ToDo):
-        if todo is None:
-            self.ui.titleEdit.clear()
-            self.ui.descriptionEdit.clear()
-            self.ui.completionLabel.clear()
-            self.ui.priorityBox.setValue( 0 )
-            return
-
-        self.ui.titleEdit.setText( todo.title )
-        self.ui.descriptionEdit.setText( todo.description )
-        self.ui.completionLabel.setText( str(todo.completed) + "%" )
-        self.ui.priorityBox.setValue( todo.priority )
-
-    # pylint: disable=R0201
-    def _openLink( self, link ):
-        QDesktopServices.openUrl( link )
+        child.setCompleted()
+        self.assertEqual( todo.isCompleted(), True )
+        self.assertEqual( child.isCompleted(), True )

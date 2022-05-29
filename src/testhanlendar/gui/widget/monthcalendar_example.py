@@ -48,7 +48,7 @@ from hanlendar.gui.dataobject import DataObject
 from hanlendar.gui.resources import get_root_path
 from hanlendar.gui.widget.monthcalendar import MonthCalendar
 
-from hanlendar.domainmodel.recurrent import Recurrent
+from hanlendar.domainmodel.local.recurrent import Recurrent
 
 from testhanlendar.mock_datetime import mock_datetime, mock_date
 
@@ -64,7 +64,7 @@ targetDate     = datetime.date(2020, 7, 16)
 targetDatetime = datetime.datetime(2020, 7, 16)
 mock_date( targetDate )
 mock_datetime( targetDatetime )
-mock_datetime( targetDatetime, hanlendar.domainmodel.task )
+mock_datetime( targetDatetime, hanlendar.domainmodel.local.task )
 
 
 logFile = logger.get_logging_output_file()

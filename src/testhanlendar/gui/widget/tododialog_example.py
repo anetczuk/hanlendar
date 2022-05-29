@@ -40,7 +40,7 @@ from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.widget.tododialog import ToDoDialog
 
-from hanlendar.domainmodel.todo import ToDo
+from hanlendar.domainmodel.local.todo import ToDo
 
 
 ## ============================= main section ===================================

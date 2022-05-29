@@ -54,9 +54,9 @@ from hanlendar.gui.command.addnotecommand import AddNoteCommand
 from hanlendar.gui.command.renamenotecommand import RenameNoteCommand
 from hanlendar.gui.command.removenotecommand import RemoveNoteCommand
 
-from hanlendar.domainmodel.manager import Manager
-from hanlendar.domainmodel.task import Task
-from hanlendar.domainmodel.todo import ToDo
+from hanlendar.domainmodel.local.manager import Manager
+from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.todo import ToDo
 
 
 _LOGGER = logging.getLogger(__name__)

@@ -27,10 +27,10 @@ from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QDialog, QMessageBox
 from PyQt5.QtWidgets import QFileDialog
 
-from hanlendar.domainmodel.task import Task
-from hanlendar.domainmodel.reminder import Notification
-from hanlendar.domainmodel.todo import ToDo
-from hanlendar.domainmodel.manager import Manager
+from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.reminder import Notification
+from hanlendar.domainmodel.local.todo import ToDo
+from hanlendar.domainmodel.local.manager import Manager
 
 from hanlendar.fswatchdog import FSWatcher
 from hanlendar.fqueue import queue_path, get_from_queue

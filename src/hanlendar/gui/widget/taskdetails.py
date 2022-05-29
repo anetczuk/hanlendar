@@ -27,7 +27,7 @@ from datetime import datetime
 from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtGui import QDesktopServices
 
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.local.task import Task
 
 from .. import uiloader
 

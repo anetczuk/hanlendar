@@ -21,12 +21,22 @@
 # SOFTWARE.
 #
 
+
 import unittest
 
-from hanlendar.domainmodel.todo import ToDo
+import hanlendar.persist as persist
 
 
-class TaskTest(unittest.TestCase):
+class FileMock():
+    
+    def read(self):
+        return None
+    
+    def readline(self):
+        return None
+
+
+class RenamingUnpicklerTest(unittest.TestCase):
     def setUp(self):
         ## Called before testfunction is executed
         pass
@@ -35,23 +45,22 @@ class TaskTest(unittest.TestCase):
         ## Called after testfunction was executed
         pass
 
-    def test_isCompleted(self):
-        todo = ToDo()
-        self.assertEqual( todo.isCompleted(), False )
+    def test_findName_dict(self):
+        mapper = { "aaa": "bbb" }
+        file = FileMock()
+        unpicker = persist.RenamingUnpickler( file, module_mapper=mapper )
 
-        todo.setCompleted()
-        self.assertEqual( todo.isCompleted(), True )
+        module = unpicker.findName( "aaa" )
 
-    def test_isCompleted_sub(self):
-        todo = ToDo()
-        self.assertEqual( todo.isCompleted(), False )
+        self.assertEqual( module, "bbb" )
 
-        todo.setCompleted()
-        self.assertEqual( todo.isCompleted(), True )
+    def test_findName_callable(self):
+        def mapper( name ):
+            name_map = { "aaa": "bbb" }
+            return name_map[name]
+        file = FileMock()
+        unpicker = persist.RenamingUnpickler( file, module_mapper=mapper )
 
-        child = todo.addSubtodo( ToDo() )
-        self.assertEqual( todo.isCompleted(), False )
+        module = unpicker.findName( "aaa" )
 
-        child.setCompleted()
-        self.assertEqual( todo.isCompleted(), True )
-        self.assertEqual( child.isCompleted(), True )
+        self.assertEqual( module, "bbb" )

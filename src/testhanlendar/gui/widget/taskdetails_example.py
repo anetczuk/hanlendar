@@ -41,7 +41,7 @@ from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.widget.taskdetails import TaskDetails
 
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.local.task import Task
 
 
 ## ============================= main section ===================================

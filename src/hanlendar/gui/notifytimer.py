@@ -25,7 +25,7 @@ import logging
 
 from PyQt5.QtCore import QObject, QTimer, pyqtSignal
 
-from hanlendar.domainmodel.reminder import Notification
+from hanlendar.domainmodel.local.reminder import Notification
 
 
 _LOGGER = logging.getLogger(__name__)

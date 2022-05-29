@@ -42,7 +42,7 @@ from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.resources import get_root_path
 from hanlendar.gui.widget.daylistwidget import DayListWidget
 
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.local.task import Task
 
 
 ## ============================= main section ===================================

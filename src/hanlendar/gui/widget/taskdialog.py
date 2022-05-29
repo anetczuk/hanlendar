@@ -29,7 +29,7 @@ from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMenu, QAction
 from PyQt5.QtGui import QDesktopServices
 
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.local.task import Task
 
 from .. import uiloader
 
