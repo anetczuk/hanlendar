@@ -218,11 +218,12 @@ class ItemTreeModel( CustomTreeModel ):
 
     def getChildren(self, parent):
         if parent is not None:
-            return parent.subitems
+            return parent.getSubitems()
         return self.getRootList()
 
     def getParent(self, item):
-        return item.parent
+        parent = item.getParent()
+        return parent
 
     def getItemId(self, item: object):
         itemsList = self.getRootList()

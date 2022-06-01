@@ -38,6 +38,11 @@ class ToDo( Item, persist.Versionable ):
     ## 1: add base class Item
     _class_version = 1
 
+    def __init__(self, title="" ):
+        super(ToDo, self).__init__( title )
+        self._parent                        = None
+        self.subitems: list                 = None
+
     def _convertstate_(self, dict_, dictVersion_ ):
         _LOGGER.info( "converting object from version %s to %s", dictVersion_, self._class_version )
 
@@ -59,15 +64,33 @@ class ToDo( Item, persist.Versionable ):
         # pylint: disable=W0201
         self.__dict__ = dict_
 
+    def __str__(self):
+        subLen = 0
+        subitems = self.getSubitems()
+        if subitems is not None:
+            subLen = len(subitems)
+        return "[t:%s d:%s c:%s p:%s subs: %s]" % (
+            self.title, self.description,
+            self._completed, self.priority, subLen )
+
+    ## overrided
+    def getParent(self):
+        return self._parent
+
+    ## overrided
+    def setParent(self, parentItem=None):
+        self._parent = parentItem
+
+    ## return mutable reference
+    ## overrided
+    def getSubitems( self ):
+        return self.subitems
+
+    ## overrided
+    def setSubitems( self, newList ):
+        self.subitems = newList
+
     def addSubtodo(self, todo=None, index=-1):
         if todo is None:
             todo = ToDo()
         return self.addSubItem(todo, index)
-
-    def __str__(self):
-        subLen = 0
-        if self.subitems is not None:
-            subLen = len(self.subitems)
-        return "[t:%s d:%s c:%s p:%s subs: %s]" % (
-            self.title, self.description,
-            self._completed, self.priority, subLen )

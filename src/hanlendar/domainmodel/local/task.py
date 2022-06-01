@@ -334,6 +334,8 @@ class Task( Item, persist.Versionable ):
 
     def __init__(self, title="" ):
         super(Task, self).__init__( title )
+        self._parent                        = None
+        self.subitems: list                 = None
         self._startDate: datetime           = None
         self._dueDate: datetime             = None
         self.reminderList: List[Reminder]   = None
@@ -370,6 +372,23 @@ class Task( Item, persist.Versionable ):
 
         # pylint: disable=W0201
         self.__dict__ = dict_
+
+    ## overrided
+    def getParent(self):
+        return self._parent
+
+    ## overrided
+    def setParent(self, parentItem=None):
+        self._parent = parentItem
+
+    ## return mutable reference
+    ## overrided
+    def getSubitems( self ):
+        return self.subitems
+
+    ## overrided
+    def setSubitems( self, newList ):
+        self.subitems = newList
 
     ## overrided
     def setCompleted(self, value=100):
@@ -437,10 +456,11 @@ class Task( Item, persist.Versionable ):
         return TaskOccurrence( self, self._recurrentOffset )
 
     def subOccurences(self) -> List[TaskOccurrence]:
-        if self.subitems is None:
+        subitems = self.getSubitems()
+        if subitems is None:
             return list()
         ret = list()
-        for currItem in self.subitems:
+        for currItem in subitems:
             currOccurrence = currItem.currentOccurrence()
             ret.append( currOccurrence )
         return ret
@@ -462,9 +482,10 @@ class Task( Item, persist.Versionable ):
             return None
         if self._recurrence.isAsParent() is False:
             return self._recurrence
-        if self.parent is None:
+        parent = self.getParent()
+        if parent is None:
             return None
-        return self.parent.getAppliedRecurrence()
+        return parent.getAppliedRecurrence()
 
     @property
     def recurrentOffset(self):

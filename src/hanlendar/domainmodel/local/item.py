@@ -22,6 +22,7 @@
 #
 
 import logging
+import abc
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +36,23 @@ class Item():
         self.description                    = ""
         self._completed                     = 0        ## in range [0..100]
         self.priority                       = 10       ## lower number, greater priority
-        self.subitems: list                 = None
-        self._parent                        = None
+
+    @abc.abstractmethod
+    def getParent(self):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def setParent(self, parentItem=None):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    ## return mutable reference
+    @abc.abstractmethod
+    def getSubitems( self ):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def setSubitems( self, newList ):
+        raise NotImplementedError('You need to define this method in derived class!')
 
     @property
     def completed(self):
@@ -56,55 +72,57 @@ class Item():
     def isCompleted(self):
         if self._completed < 100:
             return False
-        if not self.subitems:
+        subitems = self.getSubitems()
+        if not subitems:
             return True
-        for sub in self.subitems:
+        for sub in subitems:
             if sub.isCompleted() is False:
                 return False
         return True
 
     def getAllSubItems(self):
         """Return all sub items from tree."""
-        if self.subitems is None:
+        subitems = self.getSubitems()
+        if subitems is None:
             return list()
-        return Item.getAllSubItemsFromList( self.subitems )
-
-    @property
-    def parent(self):
-        return self._parent
-
-    def setParent(self, parentItem=None):
-        self._parent = parentItem
+        return Item.getAllSubItemsFromList( subitems )
 
     def getChildCoords(self, item):
-        return Item.getItemCoords( self.subitems, item )
+        subitems = self.getSubitems()
+        return Item.getItemCoords( subitems, item )
 
     def getChildFromCoords(self, coords):
-        return Item.getItemFromCoords( self.subitems, coords )
+        subitems = self.getSubitems()
+        return Item.getItemFromCoords( subitems, coords )
 
     def detachChildByCoords(self, coords):
-        return Item.detachItemByCoords( self.subitems, coords )
+        subitems = self.getSubitems()
+        return Item.detachItemByCoords( subitems, coords )
 
     def addSubItem(self, item: 'Item', index=-1):
-        if self.subitems is None:
-            self.subitems = list()
+        subitems = self.getSubitems()
+        if subitems is None:
+            subitems = list()
+            self.setSubitems( subitems )
         if index < 0:
-            self.subitems.append( item )
+            subitems.append( item )
             item.setParent( self )
         else:
-            self.subitems.insert( index, item )
+            subitems.insert( index, item )
             item.setParent( self )
         return item
 
     def removeSubItem(self, item):
-        if self.subitems is None:
+        subitems = self.getSubitems()
+        if subitems is None:
             return None
-        return Item.removeSubItemFromList( self.subitems, item )
+        return Item.removeSubItemFromList( subitems, item )
 
     def replaceSubItem( self, oldItem, newItem ):
-        if self.subitems is None:
+        subitems = self.getSubitems()
+        if subitems is None:
             return False
-        return Item.replaceSubItemInList( self.subitems, oldItem, newItem )
+        return Item.replaceSubItemInList( subitems, oldItem, newItem )
 
 #     def __str__(self):
 #         return "[t:%s d:%s c:%s p:%s]" % ( self.title, self.description, self._completed, self.priority )
@@ -144,7 +162,7 @@ class Item():
         for i, _ in enumerate(itemList):
             currItem = itemList[i]
             if currItem == oldItem:
-                newItem.setParent( oldItem.parent )
+                newItem.setParent( oldItem.getParent() )
                 itemList[i] = newItem
                 return True
             if currItem.replaceSubItem( oldItem, newItem ) is True:
