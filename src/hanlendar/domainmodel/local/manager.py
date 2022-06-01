@@ -73,7 +73,8 @@ class Manager():
 
     ## 1 - renamed modules from 'todocalendar' to 'hanlendar'
     ## 2 - renamed modules from 'hanlendar.domainmodel.*' to 'hanlendar.domainmodel.local.*'
-    _class_version = 2
+    ## 3 - renamed modules from 'hanlendar.domainmodel.local.item' to 'hanlendar.domainmodel.item'
+    _class_version = 3
 
     def __init__(self):
         """Constructor."""
@@ -114,7 +115,8 @@ class Manager():
             _LOGGER.info( "converting object from version %s to %s", mngrVersion, self._class_version )
             ## do nothing for now
 
-        module_mapper_dict = { 1: unpack_manager_module_mapper_v1 }
+        module_mapper_dict = { 1: unpack_manager_module_mapper_v1,
+                               2: unpack_manager_module_mapper_v2 }
         if mngrVersion > 0 is False:
             module_mapper = unpack_manager_module_mapper_v0
         else:
