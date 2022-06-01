@@ -30,9 +30,9 @@ from icalendar import cal
 
 from hanlendar import persist
 from hanlendar.domainmodel.local.task import Task, TaskOccurrence
+from hanlendar.domainmodel.item import Item
 from hanlendar.domainmodel.local.todo import ToDo
 from hanlendar.domainmodel.local.reminder import Notification
-from hanlendar.domainmodel.local.item import Item
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,11 +54,18 @@ def extract_ical( content ):
 def unpack_manager_module_mapper_v0( module ):
     ## convert from version 0 to actual version
     module = module.replace( "todocalendar", "hanlendar" )
-    return unpack_manager_module_mapper_v1( module )
+    module = unpack_manager_module_mapper_v1( module )
 
 def unpack_manager_module_mapper_v1( module ):
     ## convert from version 1 to actual version
-    return module.replace( "hanlendar.domainmodel.", "hanlendar.domainmodel.local." )
+    module = module.replace( "hanlendar.domainmodel.", "hanlendar.domainmodel.local." )
+    return unpack_manager_module_mapper_v2( module )
+
+def unpack_manager_module_mapper_v2( module ):
+    ## convert from version 2 to actual version
+    if module == "hanlendar.domainmodel.local.item":
+        return "hanlendar.domainmodel.item"
+    return module
 
 
 class Manager():

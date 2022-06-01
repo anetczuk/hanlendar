@@ -25,7 +25,7 @@ import logging
 
 from hanlendar import persist
 
-from hanlendar.domainmodel.local.item import Item
+from hanlendar.domainmodel.item import Item
 
 
 _LOGGER = logging.getLogger(__name__)

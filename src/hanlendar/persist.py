@@ -41,8 +41,8 @@ class RenamingUnpickler(pickle.Unpickler):
         self.module_mapper = module_mapper
 
     def find_class(self, module, name):
-#         _LOGGER.info( "unpicking module: %s %s", module, name )
         moduleName = self.findName( module )
+#         _LOGGER.info( "unpicking module: %s %s %s", module, name, moduleName )
         return super().find_class(moduleName, name)
     
     def findName(self, module):

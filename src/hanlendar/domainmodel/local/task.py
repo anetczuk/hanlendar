@@ -28,9 +28,9 @@ from datetime import date, time, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 from hanlendar import persist
+from hanlendar.domainmodel.item import Item
 from hanlendar.domainmodel.local import recurrent
 from hanlendar.domainmodel.local.recurrent import Recurrent
-from hanlendar.domainmodel.local.item import Item
 
 from .reminder import Reminder, Notification
 
