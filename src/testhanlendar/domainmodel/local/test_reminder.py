@@ -25,7 +25,7 @@ import unittest
 
 from datetime import datetime, timedelta
 
-from hanlendar.domainmodel.local.reminder import Reminder, Notification
+from hanlendar.domainmodel.reminder import Reminder, Notification
 
 
 class NotificationTest(unittest.TestCase):

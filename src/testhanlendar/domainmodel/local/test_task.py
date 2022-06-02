@@ -26,9 +26,9 @@ import unittest
 import datetime
 from datetime import timedelta
 
+from hanlendar.domainmodel.reminder import Reminder
+from hanlendar.domainmodel.recurrent import Recurrent
 from hanlendar.domainmodel.local.task import Task
-from hanlendar.domainmodel.local.reminder import Reminder
-from hanlendar.domainmodel.local.recurrent import Recurrent
 
 
 class TaskTest(unittest.TestCase):

@@ -42,8 +42,8 @@ from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.resources import get_root_path
 from hanlendar.gui.widget.taskdialog import TaskDialog
 
+from hanlendar.domainmodel.recurrent import Recurrent
 from hanlendar.domainmodel.local.task import Task
-from hanlendar.domainmodel.local.recurrent import Recurrent
 
 
 ## ============================= main section ===================================

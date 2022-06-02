@@ -25,7 +25,7 @@ import unittest
 
 from datetime import date
 
-from hanlendar.domainmodel.local.recurrent import Recurrent, RepeatType
+from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
 
 
 class RepeatTypeTest(unittest.TestCase):

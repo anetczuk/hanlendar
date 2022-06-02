@@ -26,9 +26,9 @@ import unittest
 import datetime
 from datetime import timedelta
 
+from hanlendar.domainmodel.recurrent import Recurrent
 from hanlendar.domainmodel.local.manager import Manager
 from hanlendar.domainmodel.local.task import Task
-from hanlendar.domainmodel.local.recurrent import Recurrent
 
 
 class ManagerTest(unittest.TestCase):

@@ -27,10 +27,12 @@ from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QDialog, QMessageBox
 from PyQt5.QtWidgets import QFileDialog
 
+from hanlendar.domainmodel.manager import Manager
+from hanlendar.domainmodel.caldav.manager import CalDAVManager, CalDAVConnector
+from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.local.task import Task
-from hanlendar.domainmodel.local.reminder import Notification
 from hanlendar.domainmodel.local.todo import ToDo
-from hanlendar.domainmodel.local.manager import Manager
+from hanlendar.domainmodel.local.manager import LocalManager
 
 from hanlendar.fswatchdog import FSWatcher
 from hanlendar.fqueue import queue_path, get_from_queue
@@ -84,6 +86,9 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.setupUi(self)
 
         self.data = DataObject( self )
+        dataPath = self.getDataPath()
+        self.data.setManager( LocalManager( dataPath ) )
+        
         self.appSettings = AppSettings()
         
         self.messagesQueueWatchdog = FSWatcher()
@@ -169,9 +174,14 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def getManager(self):
         return self.data.getManager()
 
+    def setCalDAVManager(self):
+        connector = CalDAVConnector()
+        connector.connectToCalendar()
+        manager = CalDAVManager( connector )
+        self.data.setManager( manager )
+
     def loadData(self):
-        dataPath = self.getDataPath()
-        self.data.load( dataPath )
+        self.data.loadData()
         self.refreshView()
 
     def triggerSaveTimer(self):
@@ -189,10 +199,9 @@ class MainWindow( QtBaseClass ):           # type: ignore
     def _saveData(self):
         ## having separate slot allows to monkey patch / mock "_saveData()" method
         _LOGGER.info( "storing data" )
-        dataPath = self.getDataPath()
         notes = self.ui.notesWidget.getNotes()
         self.data.getManager().setNotes( notes )
-        return self.data.store( dataPath )
+        return self.data.storeData()
 
     def disableSaving(self):
         def save_data_mock():

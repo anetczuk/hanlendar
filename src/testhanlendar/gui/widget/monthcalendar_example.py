@@ -48,7 +48,7 @@ from hanlendar.gui.dataobject import DataObject
 from hanlendar.gui.resources import get_root_path
 from hanlendar.gui.widget.monthcalendar import MonthCalendar
 
-from hanlendar.domainmodel.local.recurrent import Recurrent
+from hanlendar.domainmodel.recurrent import Recurrent
 
 from testhanlendar.mock_datetime import mock_datetime, mock_date
 

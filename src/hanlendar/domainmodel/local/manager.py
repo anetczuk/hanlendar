@@ -29,10 +29,11 @@ import glob
 from icalendar import cal
 
 from hanlendar import persist
-from hanlendar.domainmodel.local.task import Task, TaskOccurrence
+from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.item import Item
+from hanlendar.domainmodel.reminder import Notification
+from hanlendar.domainmodel.local.task import Task, TaskOccurrence
 from hanlendar.domainmodel.local.todo import ToDo
-from hanlendar.domainmodel.local.reminder import Notification
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,24 +66,42 @@ def unpack_manager_module_mapper_v2( module ):
     ## convert from version 2 to actual version
     if module == "hanlendar.domainmodel.local.item":
         return "hanlendar.domainmodel.item"
+    return unpack_manager_module_mapper_v3( module )
+
+def unpack_manager_module_mapper_v3( module ):
+    ## convert from version 3 to actual version
+    if module == "hanlendar.domainmodel.local.recurrent":
+        return "hanlendar.domainmodel.recurrent"
+    if module == "hanlendar.domainmodel.local.reminder":
+        return "hanlendar.domainmodel.reminder"
     return module
 
 
-class Manager():
+class LocalManager( Manager ):
     """Root class for domain data structure."""
 
     ## 1 - renamed modules from 'todocalendar' to 'hanlendar'
     ## 2 - renamed modules from 'hanlendar.domainmodel.*' to 'hanlendar.domainmodel.local.*'
     ## 3 - renamed modules from 'hanlendar.domainmodel.local.item' to 'hanlendar.domainmodel.item'
-    _class_version = 3
+    ## 4 - renamed modules from 'hanlendar.domainmodel.local.recurrent' to 'hanlendar.domainmodel.recurrent'
+    ##     renamed modules from 'hanlendar.domainmodel.local.reminder' to 'hanlendar.domainmodel.reminder'
+    _class_version = 4
 
-    def __init__(self):
+    def __init__(self, ioDir=None):
         """Constructor."""
         self._tasks = list()
         self._todos = list()
         self.notes = { "notes": "" }        ## default notes
+        
+        self._ioDir = ioDir                 ## do not persist
 
     def store( self, outputDir ):
+        self._ioDir = outputDir
+        self.store()
+
+    def storeData( self ):
+        outputDir = self._ioDir
+
         outputFile = outputDir + "/version.obj"
 
         changed = False
@@ -109,6 +128,12 @@ class Manager():
         return changed
 
     def load( self, inputDir ):
+        self._ioDir = inputDir
+        self.loadData()
+
+    def loadData( self ):
+        inputDir = self._ioDir
+
         inputFile = inputDir + "/version.obj"
         mngrVersion = persist.load_object( inputFile )
         if mngrVersion != self. _class_version:
@@ -116,8 +141,9 @@ class Manager():
             ## do nothing for now
 
         module_mapper_dict = { 1: unpack_manager_module_mapper_v1,
-                               2: unpack_manager_module_mapper_v2 }
-        if mngrVersion > 0 is False:
+                               2: unpack_manager_module_mapper_v2,
+                               3: unpack_manager_module_mapper_v3 }
+        if mngrVersion < 1:
             module_mapper = unpack_manager_module_mapper_v0
         else:
             module_mapper = module_mapper_dict.get( mngrVersion, None )
@@ -181,28 +207,6 @@ class Manager():
                 retTask = task
         return retTask
 
-    def getDeadlinedTasks(self):
-        retTasks = list()
-        allTasks = self.getTasksAll()
-        for task in allTasks:
-            occurrence: TaskOccurrence = task.currentOccurrence()
-            if occurrence.isCompleted():
-                continue
-            if occurrence.isTimedout():
-                retTasks.append( task )
-        return retTasks
-
-    def getRemindedTasks(self):
-        retTasks = list()
-        allTasks = self.getTasksAll()
-        for task in allTasks:
-            occurrence: TaskOccurrence = task.currentOccurrence()
-            if occurrence.isCompleted():
-                continue
-            if occurrence.isReminded():
-                retTasks.append( task )
-        return retTasks
-
     def getTaskCoords(self, task):
         return Item.getItemCoords( self.tasks, task )
 
@@ -254,15 +258,6 @@ class Manager():
         eventTask.setDeadlineDateTime( eventdate )
         self.addTask( eventTask )
         return eventTask
-
-    def getNotificationList(self):
-        ret = list()
-        for i in range(0, len(self.tasks)):
-            task = self.tasks[i]
-            notifs = task.getNotifications()
-            ret.extend( notifs )
-        ret.sort( key=Notification.sortByTime )
-        return ret
     
     def importICalendar(self, content: str):
         try:

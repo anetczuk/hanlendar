@@ -29,10 +29,9 @@ from dateutil.relativedelta import relativedelta
 
 from hanlendar import persist
 from hanlendar.domainmodel.item import Item
-from hanlendar.domainmodel.local import recurrent
-from hanlendar.domainmodel.local.recurrent import Recurrent
-
-from .reminder import Reminder, Notification
+from hanlendar.domainmodel import recurrent
+from hanlendar.domainmodel.recurrent import Recurrent
+from hanlendar.domainmodel.reminder import Reminder, Notification
 
 
 _LOGGER = logging.getLogger(__name__)
