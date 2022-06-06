@@ -57,6 +57,7 @@ def match_tests( pattern: str ):
     # pylint: disable=W1401
     rePattern = rePattern.replace(".", "\.")
     rePattern = rePattern.replace("*", ".*")
+    rePattern = rePattern.replace("/", ".")
     ## rePattern = "^" + rePattern + "$"
     _LOGGER.info( "searching test cases with pattern: %s", rePattern )
     loader = unittest.TestLoader()
@@ -92,7 +93,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test runner')
     parser.add_argument('-la', '--logall', action='store_true', help='Log all messages' )
     # pylint: disable=C0301
-    parser.add_argument('-rt', '--runtest', action='store', required=False, default="",
+    parser.add_argument('-rt', '--run_test', action='store', required=False, default="",
                         help='Module with tests, e.g. module.submodule.test_file.test_class.test_method, wildcard * allowed' )
     parser.add_argument('-r', '--repeat', action='store', type=int, default=0, help='Repeat tests given number of times' )
     parser.add_argument('-ut', '--untilfailure', action="store_true", help='Run tests in loop until failure' )
@@ -121,9 +122,9 @@ if __name__ == '__main__':
         ##coverageData.load()
         coverageData.start()
 
-    if args.runtest:
+    if args.run_test:
         ## not empty
-        suite = match_tests( args.runtest )
+        suite = match_tests( args.run_test )
     else:
         testsLoader = unittest.TestLoader()
         suite = testsLoader.discover( script_dir )
