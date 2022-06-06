@@ -31,12 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 class Item():
     """Base class for Task and ToDo."""
 
-    def __init__(self, title=""):
-        self.title                          = title
-        self.description                    = ""
-        self._completed                     = 0        ## in range [0..100]
-        self.priority                       = 10       ## lower number, greater priority
-
     @abc.abstractmethod
     def getParent(self):
         raise NotImplementedError('You need to define this method in derived class!')
@@ -54,20 +48,81 @@ class Item():
     def setSubitems( self, newList ):
         raise NotImplementedError('You need to define this method in derived class!')
 
-    @property
-    def completed(self):
-        return self._completed
+    ## ========================================================================
 
-    @completed.setter
-    def completed(self, value):
-        self.setCompleted( value )
+    @abc.abstractmethod
+    def _getTitle(self):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def _setTitle(self, value):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    def getTitle(self):
+        return self._getTitle()
+
+    def setTitle(self, value):
+        self._setTitle( value )
+
+    @property
+    def title(self):
+        return self.getTitle()
+
+    @title.setter
+    def title(self, value):
+        self.setTitle( value )
+        
+    ## ========================================================================
+
+    @abc.abstractmethod
+    def _getDescription(self):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def _setDescription(self, value):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    def getDescription(self):
+        return self._getDescription()
+
+    def setDescription(self, value):
+        self._setDescription( value )
+
+    @property
+    def description(self):
+        return self.getDescription()
+
+    @description.setter
+    def description(self, value):
+        self.setDescription( value )
+        
+    ## ========================================================================
+
+    @abc.abstractmethod
+    def _getCompleted(self):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def _setCompleted(self, value=100):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    def getCompleted(self):
+        return self._getCompleted()
 
     def setCompleted(self, value=100):
         if value < 0:
             value = 0
         elif value > 100:
             value = 100
-        self._completed = value
+        self._setCompleted( value )
+
+    @property
+    def completed(self):
+        return self.getCompleted()
+
+    @completed.setter
+    def completed(self, value):
+        self.setCompleted( value )
 
     def isCompleted(self):
         if self._completed < 100:
@@ -79,7 +134,34 @@ class Item():
             if sub.isCompleted() is False:
                 return False
         return True
+    
+    ## ========================================================================
+    
+    @abc.abstractmethod
+    def _getPriority(self):
+        raise NotImplementedError('You need to define this method in derived class!')
 
+    @abc.abstractmethod
+    def _setPriority(self, value):
+        raise NotImplementedError('You need to define this method in derived class!')
+    
+    def getPriority(self):
+        return self._getPriority()
+
+    def setPriority(self, value):
+        self._setPriority( value )
+
+    @property
+    def priority(self):
+        return self.getPriority()
+
+    @priority.setter
+    def priority(self, value):
+        self.setPriority( value )
+
+    ## ========================================================================
+    ## ========================================================================
+    
     def getAllSubItems(self):
         """Return all sub items from tree."""
         subitems = self.getSubitems()

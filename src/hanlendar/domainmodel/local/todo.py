@@ -36,10 +36,16 @@ class ToDo( Item, persist.Versionable ):
 
     ## 0: add subtodos
     ## 1: add base class Item
-    _class_version = 1
+    ## 2: rename: 'title' to '_title', 'description' to '_description', 'priority' to '_priority'
+    _class_version = 2
 
     def __init__(self, title="" ):
-        super(ToDo, self).__init__( title )
+        super(ToDo, self).__init__()
+        self._title                         = title
+        self._description                   = ""
+        self._completed                     = 0        ## in range [0..100]
+        self._priority                      = 10       ## lower number, greater priority
+
         self._parent                        = None
         self.subitems: list                 = None
 
@@ -60,6 +66,13 @@ class ToDo( Item, persist.Versionable ):
             dict_["subitems"] = dict_["subtodos"]
             dict_.pop('subtodos', None)
             dictVersion_ = 1
+
+        if dictVersion_ == 1:
+            ## rename fields
+            dict_["_title"]       = dict_.pop( "title", "" )
+            dict_["_description"] = dict_.pop( "description", "" )
+            dict_["_priority"]    = dict_.pop( "priority", 10 )
+            dictVersion_ = 2
 
         # pylint: disable=W0201
         self.__dict__ = dict_
@@ -89,6 +102,48 @@ class ToDo( Item, persist.Versionable ):
     ## overrided
     def setSubitems( self, newList ):
         self.subitems = newList
+
+    ## ========================================================================
+
+    ## overriden
+    def _getTitle(self):
+        return self._title
+
+    ## overriden
+    def _setTitle(self, value):
+        self._title = value
+
+    ## ========================================================================
+
+    ## overriden
+    def _getDescription(self):
+        return self._description
+
+    ## overriden
+    def _setDescription(self, value):
+        self._description = value
+
+    ## ========================================================================
+
+    ## overrided
+    def _getCompleted(self):
+        return self._completed
+
+    ## overrided
+    def _setCompleted(self, value=100):
+        self._completed = value
+
+    ## ========================================================================
+    
+    ## overrided
+    def _getPriority(self):
+        return self._priority
+
+    ## overrided
+    def _setPriority(self, value):
+        self._priority = value
+    
+    ## ========================================================================
 
     def addSubtodo(self, todo=None, index=-1):
         if todo is None:

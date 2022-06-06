@@ -45,6 +45,25 @@ class RenamingUnpicklerTest(unittest.TestCase):
         ## Called after testfunction was executed
         pass
 
+    def test_dict_property(self):
+        class TestClass():
+            
+            def __init__(self):
+                self._field = None
+                
+            @property
+            def field(self):
+                return self._field
+                
+            @field.setter
+            def field(self, value):
+                self._field = value
+
+
+        testObject = TestClass()
+        self.assertTrue( "_field" in testObject.__dict__ )
+        self.assertTrue( "field" not in testObject.__dict__ )
+
     def test_findName_dict(self):
         mapper = { "aaa": "bbb" }
         file = FileMock()
