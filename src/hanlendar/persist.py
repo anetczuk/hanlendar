@@ -41,28 +41,23 @@ class RenamingUnpickler(pickle.Unpickler):
         self.module_mapper = module_mapper
 
     def find_class(self, module, name):
-        moduleName = self.findName( module )
+        moduleName, itemName = self.findName( module, name )
 #         _LOGGER.info( "unpicking module: %s %s %s", module, name, moduleName )
-        return super().find_class(moduleName, name)
+        return super().find_class( moduleName, itemName )
     
-    def findName(self, module):
+    def findName(self, module, name):
         if self.module_mapper is None:
-            return module
+            return (module, name)
 
         ## find module name
         try:
-            return self.module_mapper[ module ]
-        except TypeError:
-            ## whatever your fall-back plan is when obj doesn't support [] (__getitem__) 
-            pass
-        try:
-            return self.module_mapper( module )
+            return self.module_mapper( module, name )
         except TypeError:
             ## whatever your fall-back plan is when obj doesn't support [] (__getitem__) 
             pass
 
         ## do nothing
-        return module
+        return (module, name)
 
 
 ## class_mapper -- object mapping class names based on code version

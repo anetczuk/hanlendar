@@ -33,7 +33,7 @@ from PyQt5.QtWidgets import QTableView, QHeaderView
 
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
 
-from hanlendar.domainmodel.local.task import Task, TaskOccurrence
+from hanlendar.domainmodel.task import Task, TaskOccurrence
 
 
 class MonthCalendar( QCalendarWidget ):

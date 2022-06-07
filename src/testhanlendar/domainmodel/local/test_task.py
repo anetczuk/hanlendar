@@ -28,7 +28,7 @@ from datetime import timedelta
 
 from hanlendar.domainmodel.reminder import Reminder
 from hanlendar.domainmodel.recurrent import Recurrent
-from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.task import LocalTask as Task
 
 
 class TaskTest(unittest.TestCase):

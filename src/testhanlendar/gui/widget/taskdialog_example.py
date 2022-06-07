@@ -43,7 +43,7 @@ from hanlendar.gui.resources import get_root_path
 from hanlendar.gui.widget.taskdialog import TaskDialog
 
 from hanlendar.domainmodel.recurrent import Recurrent
-from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.task import LocalTask
 
 
 ## ============================= main section ===================================
@@ -58,11 +58,11 @@ app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
-parentTask = Task()
+parentTask = LocalTask()
 parentTask.recurrence = Recurrent()
 parentTask.recurrence.setWeekly( 1 )
 
-task = Task()
+task = LocalTask()
 task.setParent( parentTask )
 task.title = "Task 1"
 # pylint: disable=C0301

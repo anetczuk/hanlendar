@@ -28,7 +28,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QMenu
 from PyQt5.QtGui import QCursor
 
-from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.task import Task
 from hanlendar.gui.dataobject import DataObject
 
 

@@ -42,7 +42,7 @@ from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.resources import get_root_path
 from hanlendar.gui.widget.daylistwidget import DayListWidget
 
-from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.task import LocalTask
 
 
 ## ============================= main section ===================================
@@ -59,7 +59,7 @@ app.setOrganizationName("arnet")
 
 taskDate = datetime.today().replace( hour=8 )
 
-task1 = Task()
+task1 = LocalTask()
 task1.title = "Completed Task"
 task1.description = "Description"
 task1.completed = 100

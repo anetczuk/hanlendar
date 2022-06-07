@@ -34,7 +34,7 @@ from PyQt5.QtGui import QColor, QBrush
 from hanlendar.gui.customtreemodel import ItemTreeModel
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
 
-from hanlendar.domainmodel.local.task import Task, TaskOccurrence
+from hanlendar.domainmodel.task import Task, TaskOccurrence
 
 
 _LOGGER = logging.getLogger(__name__)

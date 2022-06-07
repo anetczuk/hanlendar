@@ -41,7 +41,7 @@ from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.widget.taskdetails import TaskDetails
 
-from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.task import LocalTask
 
 
 ## ============================= main section ===================================
@@ -56,7 +56,7 @@ app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
-task = Task()
+task = LocalTask()
 task.title = "Task title"
 task.description = "Description"
 task.completed = 50

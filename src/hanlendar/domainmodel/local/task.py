@@ -28,8 +28,9 @@ from datetime import date, time, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 from hanlendar import persist
-from hanlendar.domainmodel.item import Item
 from hanlendar.domainmodel import recurrent
+from hanlendar.domainmodel.task import Task, ensure_date_time, TaskOccurrence,\
+    DateTimeRange
 from hanlendar.domainmodel.recurrent import Recurrent
 from hanlendar.domainmodel.reminder import Reminder, Notification
 
@@ -37,294 +38,7 @@ from hanlendar.domainmodel.reminder import Reminder, Notification
 _LOGGER = logging.getLogger(__name__)
 
 
-class DateRange():
-
-    def __init__(self, start=None, end=None ):
-        self.start: date = start
-        self.end:   date = end
-
-    ## [] (array) operator
-    def __getitem__(self, arg):
-        if arg == 0:
-            return self.start
-        if arg == 1:
-            return self.end
-        raise IndexError( "bad index: 0 or 1 allowed" )
-
-    ## + (plus) operator
-    def __add__(self, dateOffset):
-        start = self.start
-        if start is not None:
-            start += dateOffset
-        end = self.end
-        if end is not None:
-            end += dateOffset
-        return DateRange( start, end )
-
-    ## in keyword
-    def __contains__(self, entryDate: date):
-        if self.start is not None and entryDate < self.start:
-            return False
-        if entryDate > self.end:
-            return False
-        return True
-
-    def isNormalized(self):
-        if self.start is None:
-            return False
-        if self.end is None:
-            return False
-        return True
-
-    def normalize(self):
-        if self.start is None:
-            self.start = self.end
-
-    def isInMonth( self, monthDate: date ):
-        currDate = self.start
-        if currDate is None:
-            currDate = self.end
-        if currDate.year == monthDate.year and currDate.month == monthDate.month:
-            return True
-        return False
-
-    def __str__(self):
-        return "[s:%s e:%s]" % ( self.start, self.end )
-
-
-## ========================================================================
-
-
-class DateTimeRange():
-
-    def __init__(self, start=None, end=None ):
-        self.start: datetime = start
-        self.end:   datetime = end
-
-    ## [] (array) operator
-    def __getitem__(self, arg):
-        if arg == 0:
-            return self.start
-        if arg == 1:
-            return self.end
-        raise IndexError( "bad index: 0 or 1 allowed" )
-
-    ## + (plus) operator
-    def __add__(self, dateOffset):
-        start = self.start
-        if start is not None:
-            start += dateOffset
-        end = self.end
-        if end is not None:
-            end += dateOffset
-        return DateTimeRange( start, end )
-
-    ## in keyword
-    def __contains__(self, entryDate: datetime):
-        if self.start is not None and entryDate < self.start:
-            return False
-        if self.end is not None and entryDate > self.end:
-            return False
-        return True
-
-    def dateRange(self) -> DateRange:
-        start = None
-        if self.start is not None:
-            start = self.start.date()
-        end = None
-        if self.end is not None:
-            end = self.end.date()
-        return DateRange( start, end )
-
-    def isNormalized(self):
-        if self.start is None:
-            return False
-        if self.end is None:
-            return False
-        return True
-
-    def normalize(self):
-        if self.start is None:
-            self.start = self.end
-
-    def isInMonth( self, monthDate: datetime ):
-        currDate = self.start
-        if currDate is None:
-            currDate = self.end
-        if currDate is None:
-            return False
-        if currDate.year == monthDate.year and currDate.month == monthDate.month:
-            return True
-        return False
-
-    def isInPastMonths( self, monthDate: datetime ):
-        currDate = self.start
-        if currDate is None:
-            currDate = self.end
-        if currDate is None:
-            return False
-        if currDate.year < monthDate.year:
-            return True
-        if currDate.year == monthDate.year and currDate.month < monthDate.month:
-            return True
-        return False
-
-    def __str__(self):
-        return "[s:%s e:%s]" % ( self.start, self.end )
-
-
-## ========================================================================
-
-
-class TaskOccurrence:
-    """Occurrences of task.
-
-    Regular task has only one occurrence.
-    Recurrent tasks has many occurrences.
-    """
-
-    def __init__(self, task, offset=0):
-        if task is None:
-            raise TypeError
-        self.task                      = task
-        self.offset                    = offset         ## recurrence offset
-        self._dateRange: DateTimeRange = None           ## cache
-
-    def isValid(self):
-        if self.dateRange is None:
-            return False
-        return True
-
-    @property
-    def title(self):
-        return self.task.title
-
-    @property
-    def priority(self):
-        return self.task.priority
-
-    @property
-    def completed(self):
-        return self.task.completed
-
-    @property
-    def start(self):
-        return self.dateRange.start
-
-    @property
-    def startCurrent(self):
-        subOccurrences = self.task.subOccurences()
-        retDate = self.start
-        for currItem in subOccurrences:
-            if currItem.start is None:
-                continue
-            if retDate is None:
-                retDate = currItem.start
-            else:
-                retDate = min( currItem.start, retDate )
-        return retDate
-
-    @property
-    def due(self):
-        return self.dateRange.end
-
-    @property
-    def dueCurrent(self):
-        subOccurrences = self.task.subOccurences()
-        retDate = self.due
-        for currItem in subOccurrences:
-            if currItem.due is None:
-                continue
-            if retDate is None:
-                retDate = currItem.due
-            else:
-                retDate = min( currItem.due, retDate )
-        return retDate
-
-    def isCompleted(self):
-        if self.offset < self.task.recurrentOffset:
-            return True
-        return self.task.isCompleted()
-
-    def isTimedout(self):
-        if self.dateRange.end is None:
-            return False
-        currTime = datetime.today()
-        return currTime > self.dateRange.end
-
-    def isReminded(self):
-        if self.dateRange.end is None:
-            return False
-        retOffset = self.task.getReminderGreatest()
-        if retOffset is None:
-            return False
-        currTime = datetime.today()
-        notifTime = self.dateRange.end - retOffset
-        if notifTime > currTime:
-            return False
-        return True
-
-    @property
-    def dateRange(self):
-        if hasattr(self, '_dateRange') and self._dateRange is not None:
-            return self._dateRange
-
-        dateRange: DateTimeRange = self.task.getDateTimeRange()
-        if dateRange is None:
-            self._dateRange = DateTimeRange()
-            return self._dateRange
-        if self.offset != 0:
-            recurrenceOffset = self.task.getAppliedRecurrence().getDateOffset()
-            dateRange += recurrenceOffset * self.offset
-        self._dateRange = dateRange
-        return self._dateRange
-
-    def getFirstDateTime(self):
-        return self.task.getFirstDateTime()
-
-    def isInMonth( self, monthDate: date ):
-        return self.dateRange.isInMonth( monthDate )
-
-    def isInPastMonths( self, monthDate: date ):
-        return self.dateRange.isInPastMonths( monthDate )
-
-    def calculateTimeSpan(self, entryDate: date):
-        startDate = self.task.occurrenceStart
-        endDate   = self.task.occurrenceDue
-        ret = calc_time_span( entryDate, startDate, endDate )
-        if ret is not None:
-            return ret
-
-        recurrence = self.task.getAppliedRecurrence()
-        if recurrence is None:
-            return [0, 1]
-        recurrentOffset: relativedelta = recurrence.getDateOffset()
-        if recurrentOffset is None:
-            return [0, 1]
-
-        multiplicator = recurrent.find_multiplication_after( endDate.date(), entryDate, recurrentOffset )
-        if multiplicator < 0:
-            return [0, 1]
-        endDate += recurrentOffset * multiplicator
-        if startDate is not None:
-            startDate += recurrentOffset * multiplicator
-        ret = calc_time_span( entryDate, startDate, endDate )
-        if ret is not None:
-            return ret
-        return [0, 1]
-
-    def __str__(self):
-        return "[t:%s %s off:%s range:%s]" % ( self.task.title, self.task.occurrenceDue, self.offset, self.dateRange )
-
-    @staticmethod
-    def sortByDates( entry ):
-        return ( entry.dateRange[1], entry.dateRange[0] )
-
-
-## ========================================================================
-
-
-class Task( Item, persist.Versionable ):
+class LocalTask( Task, persist.Versionable ):
     """Task is entity that lasts over time."""
 
     ## 1: _recurrentStartDate and _recurrentDueDate replaced with _recurrentOffset
@@ -333,7 +47,7 @@ class Task( Item, persist.Versionable ):
     _class_version = 3
 
     def __init__(self, title="" ):
-        super(Task, self).__init__()
+        super(LocalTask, self).__init__()
         self._title                         = title
         self._description                   = ""
         self._completed                     = 0        ## in range [0..100]
@@ -412,8 +126,6 @@ class Task( Item, persist.Versionable ):
     def _setTitle(self, value):
         self._title = value
         
-    ## ========================================================================
-
     ## overriden
     def _getDescription(self):
         return self._description
@@ -421,8 +133,6 @@ class Task( Item, persist.Versionable ):
     ## overriden
     def _setDescription(self, value):
         self._description = value
-
-    ## ========================================================================
 
     ## overrided
     def _getCompleted(self):
@@ -440,8 +150,6 @@ class Task( Item, persist.Versionable ):
         else:
             self._completed = value
 
-    ## ========================================================================
-    
     ## overrided
     def _getPriority(self):
         return self._priority
@@ -673,7 +381,7 @@ class Task( Item, persist.Versionable ):
         return ret
 
     def addSubTask(self):
-        return self.addSubItem( Task() )
+        return self.addSubItem( LocalTask() )
 
     def printNextRecurrence(self) -> str:
         recurr = self.getAppliedRecurrence()
@@ -723,38 +431,3 @@ class Task( Item, persist.Versionable ):
     def sortByDates( task ):
         return ( task.occurrenceDue, task.occurrenceStart )
 
-
-def calc_time_span(entryDate: date, start: datetime, end: datetime):
-    startFactor = 0.0
-    if start is not None:
-        startDate = start.date()
-        if entryDate < startDate:
-            return None
-        elif entryDate == startDate:
-            midnight = datetime.combine( entryDate, datetime.min.time() )
-            startDiff = start - midnight
-            daySecs = timedelta( days=1 ).total_seconds()
-            startFactor = startDiff.total_seconds() / timedelta( days=1 ).total_seconds()
-    dueFactor = 1.0
-    if end is not None:
-        endDate = end.date()
-        if entryDate > endDate:
-            return None
-        elif entryDate == endDate:
-            midnight = datetime.combine( entryDate, datetime.min.time() )
-            startDiff = end - midnight
-            daySecs = timedelta( days=1 ).total_seconds()
-            dueFactor = startDiff.total_seconds() / daySecs
-    ret = [startFactor, dueFactor]
-    return ret
-
-
-def ensure_date_time( value ):
-    if value is None:
-        return value
-    if isinstance( value, datetime):
-        return value
-    if isinstance( value, date):
-        value = datetime.combine( value, datetime.min.time() )
-    _LOGGER.warning( "unknown type: %s %s", value, type(value) )
-    return None

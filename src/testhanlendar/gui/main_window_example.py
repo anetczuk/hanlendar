@@ -47,7 +47,7 @@ from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.main_window import MainWindow
 
 from hanlendar.domainmodel.recurrent import Recurrent
-from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.task import LocalTask
 from hanlendar.domainmodel.local.manager import Manager
 
 
@@ -59,7 +59,7 @@ def prepare_example_data( dataManager: Manager ):
     task1.description = ("<a href=\"http://www.google.com\">xxx</a> <br> "
                          "<a href=\"file:///media/E/bluetooth.txt\">yyy</a> <br> "
                          "<a href=\"file:///media/E/Pani1.jpg\">zzz</a>")
-    task1.addSubItem( Task("Subtask") )
+    task1.addSubItem( LocalTask("Subtask") )
 
     completedTask = dataManager.addNewTaskDateTime( taskDate + timedelta( days=7 ), "completed task" )
     completedTask.setCompleted()

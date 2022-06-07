@@ -34,7 +34,7 @@ from PyQt5.QtGui import QPainter, QPainterPath, QPen, QColor, QPalette
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
 from hanlendar.gui.widget.monthcalendar import get_task_bgcolor
 
-from hanlendar.domainmodel.local.task import Task, TaskOccurrence
+from hanlendar.domainmodel.task import Task, TaskOccurrence
 
 
 # UiTargetClass, QtBaseClass = uiloader.loadUiFromClassName( __file__ )

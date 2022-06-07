@@ -31,8 +31,9 @@ from icalendar import cal
 from hanlendar import persist
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.item import Item
+from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.reminder import Notification
-from hanlendar.domainmodel.local.task import Task, TaskOccurrence
+from hanlendar.domainmodel.local.task import LocalTask, TaskOccurrence
 from hanlendar.domainmodel.local.todo import ToDo
 
 
@@ -52,29 +53,35 @@ def extract_ical( content ):
     return content[ cal_begin_pos:cal_end_pos ]
 
 
-def unpack_manager_module_mapper_v0( module ):
+def unpack_manager_module_mapper_v0( module, name ):
     ## convert from version 0 to actual version
     module = module.replace( "todocalendar", "hanlendar" )
-    module = unpack_manager_module_mapper_v1( module )
+    return unpack_manager_module_mapper_v1( module, name )
 
-def unpack_manager_module_mapper_v1( module ):
+def unpack_manager_module_mapper_v1( module, name ):
     ## convert from version 1 to actual version
     module = module.replace( "hanlendar.domainmodel.", "hanlendar.domainmodel.local." )
-    return unpack_manager_module_mapper_v2( module )
+    return unpack_manager_module_mapper_v2( module, name )
 
-def unpack_manager_module_mapper_v2( module ):
+def unpack_manager_module_mapper_v2( module, name ):
     ## convert from version 2 to actual version
     if module == "hanlendar.domainmodel.local.item":
-        return "hanlendar.domainmodel.item"
-    return unpack_manager_module_mapper_v3( module )
+        return ("hanlendar.domainmodel.item", name)
+    return unpack_manager_module_mapper_v3( module, name )
 
-def unpack_manager_module_mapper_v3( module ):
+def unpack_manager_module_mapper_v3( module, name ):
     ## convert from version 3 to actual version
     if module == "hanlendar.domainmodel.local.recurrent":
-        return "hanlendar.domainmodel.recurrent"
+        return ("hanlendar.domainmodel.recurrent", name)
     if module == "hanlendar.domainmodel.local.reminder":
-        return "hanlendar.domainmodel.reminder"
-    return module
+        return ("hanlendar.domainmodel.reminder", name)
+    return unpack_manager_module_mapper_v4( module, name )
+
+def unpack_manager_module_mapper_v4( module, name ):
+    ## convert from version 3 to actual version
+    if module == "hanlendar.domainmodel.local.task" and name == "Task":
+        return ("hanlendar.domainmodel.local.task", "LocalTask")
+    return (module, name)
 
 
 class LocalManager( Manager ):
@@ -85,7 +92,8 @@ class LocalManager( Manager ):
     ## 3 - renamed modules from 'hanlendar.domainmodel.local.item' to 'hanlendar.domainmodel.item'
     ## 4 - renamed modules from 'hanlendar.domainmodel.local.recurrent' to 'hanlendar.domainmodel.recurrent'
     ##     renamed modules from 'hanlendar.domainmodel.local.reminder' to 'hanlendar.domainmodel.reminder'
-    _class_version = 4
+    ## 5 - renamed class from 'hanlendar.domainmodel.local.task.Task' to 'hanlendar.domainmodel.local.task.LocalTask'
+    _class_version = 5
 
     def __init__(self, ioDir=None):
         """Constructor."""
@@ -142,7 +150,8 @@ class LocalManager( Manager ):
 
         module_mapper_dict = { 1: unpack_manager_module_mapper_v1,
                                2: unpack_manager_module_mapper_v2,
-                               3: unpack_manager_module_mapper_v3 }
+                               3: unpack_manager_module_mapper_v3,
+                               4: unpack_manager_module_mapper_v4 }
         if mngrVersion < 1:
             module_mapper = unpack_manager_module_mapper_v0
         else:
@@ -227,20 +236,20 @@ class LocalManager( Manager ):
 
     def addTask( self, task: Task = None ):
         if task is None:
-            task = Task()
+            task = LocalTask()
         self.tasks.append( task )
         task.setParent( None )
         return task
 
     def addNewTask( self, taskdate: date, title ):
-        task = Task()
+        task = LocalTask()
         task.title = title
         task.setDefaultDate( taskdate )
         self.addTask( task )
         return task
 
     def addNewTaskDateTime( self, taskdate: datetime, title ):
-        task = Task()
+        task = LocalTask()
         task.title = title
         task.setDefaultDateTime( taskdate )
         self.addTask( task )
@@ -253,7 +262,7 @@ class LocalManager( Manager ):
         return Item.replaceSubItemInList(self.tasks, oldTask, newTask)
 
     def addNewDeadlineDateTime( self, eventdate: datetime, title ):
-        eventTask = Task()
+        eventTask = LocalTask()
         eventTask.title = title
         eventTask.setDeadlineDateTime( eventdate )
         self.addTask( eventTask )
@@ -277,7 +286,7 @@ class LocalManager( Manager ):
                     
                     #TODO: check if task already added
                     
-                    task = Task()
+                    task = LocalTask()
                     task.title = f"{summary}, {location}"
                     task.description = component.get('description')
                     task.description = task.description.replace( "=0D=0A", "\n" )

@@ -28,7 +28,7 @@ from PyQt5.QtCore import QTime
 from PyQt5.QtWidgets import QListWidgetItem
 
 from hanlendar.domainmodel.reminder import Reminder
-from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.task import Task
 
 from .. import uiloader
 
