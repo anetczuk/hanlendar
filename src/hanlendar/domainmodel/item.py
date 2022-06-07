@@ -125,7 +125,7 @@ class Item():
         self.setCompleted( value )
 
     def isCompleted(self):
-        if self._completed < 100:
+        if self.completed < 100:
             return False
         subitems = self.getSubitems()
         if not subitems:
