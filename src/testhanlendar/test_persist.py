@@ -76,3 +76,19 @@ class RenamingUnpicklerTest(unittest.TestCase):
 
         self.assertEqual( module, "bbb" )
         self.assertEqual( name, "xxx" )
+
+    def test_findName_object(self):
+        class MapperClass():
+            def __call__(self, module, name):
+                name_map = { "aaa": "bbb" }
+                return ( name_map.get( module, module ), name )
+        
+        mapper = MapperClass()
+        
+        file = FileMock()
+        unpicker = persist.RenamingUnpickler( file, module_mapper=mapper )
+
+        module, name = unpicker.findName( "aaa", "xxx" )
+
+        self.assertEqual( module, "bbb" )
+        self.assertEqual( name, "xxx" )

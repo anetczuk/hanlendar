@@ -53,35 +53,37 @@ def extract_ical( content ):
     return content[ cal_begin_pos:cal_end_pos ]
 
 
-def unpack_manager_module_mapper_v0( module, name ):
-    ## convert from version 0 to actual version
-    module = module.replace( "todocalendar", "hanlendar" )
-    return unpack_manager_module_mapper_v1( module, name )
+class ModuleMapper():
+    def __init__(self, version):
+        self.version = version
 
-def unpack_manager_module_mapper_v1( module, name ):
-    ## convert from version 1 to actual version
-    module = module.replace( "hanlendar.domainmodel.", "hanlendar.domainmodel.local." )
-    return unpack_manager_module_mapper_v2( module, name )
-
-def unpack_manager_module_mapper_v2( module, name ):
-    ## convert from version 2 to actual version
-    if module == "hanlendar.domainmodel.local.item":
-        return ("hanlendar.domainmodel.item", name)
-    return unpack_manager_module_mapper_v3( module, name )
-
-def unpack_manager_module_mapper_v3( module, name ):
-    ## convert from version 3 to actual version
-    if module == "hanlendar.domainmodel.local.recurrent":
-        return ("hanlendar.domainmodel.recurrent", name)
-    if module == "hanlendar.domainmodel.local.reminder":
-        return ("hanlendar.domainmodel.reminder", name)
-    return unpack_manager_module_mapper_v4( module, name )
-
-def unpack_manager_module_mapper_v4( module, name ):
-    ## convert from version 3 to actual version
-    if module == "hanlendar.domainmodel.local.task" and name == "Task":
-        return ("hanlendar.domainmodel.local.task", "LocalTask")
-    return (module, name)
+    def __call__(self, module, name):
+        version = self.version
+        if version < 1:
+            ## convert from version 0
+            module = module.replace( "todocalendar", "hanlendar" )
+            version = 1
+        if version == 1:
+            ## convert from version 1
+            module = module.replace( "hanlendar.domainmodel.", "hanlendar.domainmodel.local." )
+            version = 2
+        if version == 2:
+            ## convert from version 2
+            if module == "hanlendar.domainmodel.local.item":
+                return ("hanlendar.domainmodel.item", name)
+            version = 3
+        if version == 3:
+            ## convert from version 3
+            if module == "hanlendar.domainmodel.local.recurrent":
+                return ("hanlendar.domainmodel.recurrent", name)
+            if module == "hanlendar.domainmodel.local.reminder":
+                return ("hanlendar.domainmodel.reminder", name)
+            version = 4
+        if version == 4:
+            ## convert from version 4
+            if module == "hanlendar.domainmodel.local.task" and name == "Task":
+                return ("hanlendar.domainmodel.local.task", "LocalTask")
+        return (module, name)
 
 
 class LocalManager( Manager ):
@@ -148,27 +150,20 @@ class LocalManager( Manager ):
             _LOGGER.info( "converting object from version %s to %s", mngrVersion, self._class_version )
             ## do nothing for now
 
-        module_mapper_dict = { 1: unpack_manager_module_mapper_v1,
-                               2: unpack_manager_module_mapper_v2,
-                               3: unpack_manager_module_mapper_v3,
-                               4: unpack_manager_module_mapper_v4 }
-        if mngrVersion < 1:
-            module_mapper = unpack_manager_module_mapper_v0
-        else:
-            module_mapper = module_mapper_dict.get( mngrVersion, None )
+        mapperObject = ModuleMapper( mngrVersion )
 
         inputFile = inputDir + "/tasks.obj"
-        self.tasks = persist.load_object( inputFile, class_mapper=module_mapper )
+        self.tasks = persist.load_object( inputFile, class_mapper=mapperObject )
         if self.tasks is None:
             self.tasks = list()
 
         inputFile = inputDir + "/todos.obj"
-        self.todos = persist.load_object( inputFile, class_mapper=module_mapper )
+        self.todos = persist.load_object( inputFile, class_mapper=mapperObject )
         if self.todos is None:
             self.todos = list()
 
         inputFile = inputDir + "/notes.obj"
-        self.notes = persist.load_object( inputFile, class_mapper=module_mapper )
+        self.notes = persist.load_object( inputFile, class_mapper=mapperObject )
         if self.notes is None:
             self.notes = { "notes": "" }
 
