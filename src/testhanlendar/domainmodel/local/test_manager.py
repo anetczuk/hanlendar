@@ -27,11 +27,11 @@ import datetime
 from datetime import timedelta
 
 from hanlendar.domainmodel.recurrent import Recurrent
-from hanlendar.domainmodel.local.manager import Manager
-from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.manager import LocalManager as Manager
+from hanlendar.domainmodel.local.task import LocalTask as Task
 
 
-class ManagerTest(unittest.TestCase):
+class LocalManagerTest(unittest.TestCase):
     def setUp(self):
         ## Called before testfunction is executed
         pass
