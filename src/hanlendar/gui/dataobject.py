@@ -54,8 +54,8 @@ from hanlendar.gui.command.addnotecommand import AddNoteCommand
 from hanlendar.gui.command.renamenotecommand import RenameNoteCommand
 from hanlendar.gui.command.removenotecommand import RemoveNoteCommand
 
-from hanlendar.domainmodel.local.manager import Manager
-from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.manager import LocalManager
+from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.local.todo import ToDo
 
 
@@ -75,18 +75,29 @@ class DataObject( QObject ):
         super().__init__( parent )
 
         self.parentWidget = parent
-        self.domainModel = Manager()
+        self.domainModel  = LocalManager()
 
         self.undoStack = QUndoStack(self)
 
     def getManager(self):
         return self.domainModel
 
+    def setManager(self, model):
+        self.domainModel = model
+
+    #TODO: remove
     def load( self, inputDir ):
         self.domainModel.load( inputDir )
 
+    def loadData( self ):
+        self.domainModel.loadData()
+
+    #TODO: remove
     def store( self, inputDir ):
         return self.domainModel.store( inputDir )
+
+    def storeData( self ):
+        return self.domainModel.storeData()
 
     def getTaskOccurrences(self, taskDate: date, includeCompleted=True):
         return self.domainModel.getTaskOccurrencesForDate( taskDate, includeCompleted )
