@@ -23,6 +23,7 @@
 
 from datetime import date, datetime
 
+import os
 import logging
 
 import glob
@@ -33,7 +34,8 @@ from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.item import Item
 from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.reminder import Notification
-from hanlendar.domainmodel.local.task import LocalTask, TaskOccurrence
+from hanlendar.domainmodel.task import TaskOccurrence
+from hanlendar.domainmodel.local.task import LocalTask
 from hanlendar.domainmodel.local.todo import ToDo
 
 
@@ -54,6 +56,8 @@ def extract_ical( content ):
 
 
 class ModuleMapper():
+    """Convert module names for given versions to properly deserialize data."""
+    
     def __init__(self, version):
         self.version = version
 
@@ -95,7 +99,8 @@ class LocalManager( Manager ):
     ## 4 - renamed modules from 'hanlendar.domainmodel.local.recurrent' to 'hanlendar.domainmodel.recurrent'
     ##     renamed modules from 'hanlendar.domainmodel.local.reminder' to 'hanlendar.domainmodel.reminder'
     ## 5 - renamed class from 'hanlendar.domainmodel.local.task.Task' to 'hanlendar.domainmodel.local.task.LocalTask'
-    _class_version = 5
+    ## 6 - move data to 'local' subdirectory
+    _class_version = 6
 
     def __init__(self, ioDir=None):
         """Constructor."""
@@ -110,29 +115,30 @@ class LocalManager( Manager ):
         self.store()
 
     def storeData( self ):
-        outputDir = self._ioDir
-
-        outputFile = outputDir + "/version.obj"
+        outputDir = os.path.join( self._ioDir, "local" )
+        os.makedirs( outputDir, exist_ok=True )
 
         changed = False
+
+        outputFile = os.path.join( outputDir, "version.obj" )
         if persist.store_object( self._class_version, outputFile ) is True:
             changed = True
 
-        outputFile = outputDir + "/tasks.obj"
+        outputFile = os.path.join( outputDir, "tasks.obj" )
         if persist.store_object( self.tasks, outputFile ) is True:
             changed = True
 
-        outputFile = outputDir + "/todos.obj"
+        outputFile = os.path.join( outputDir, "todos.obj" )
         if persist.store_object( self.todos, outputFile ) is True:
             changed = True
 
-        outputFile = outputDir + "/notes.obj"
+        outputFile = os.path.join( outputDir, "notes.obj" )
         if persist.store_object( self.notes, outputFile ) is True:
             changed = True
 
         ## backup data
         objFiles = glob.glob( outputDir + "/*.obj" )
-        storedZipFile = outputDir + "/data.zip"
+        storedZipFile = os.path.join( outputDir, "data.zip" )
         persist.backup_files( objFiles, storedZipFile )
 
         return changed
@@ -142,9 +148,10 @@ class LocalManager( Manager ):
         self.loadData()
 
     def loadData( self ):
-        inputDir = self._ioDir
+        inputDir = os.path.join( self._ioDir, "local" )
+        os.makedirs( inputDir, exist_ok=True )
 
-        inputFile = inputDir + "/version.obj"
+        inputFile = os.path.join( inputDir, "version.obj" )
         mngrVersion = persist.load_object( inputFile )
         if mngrVersion != self. _class_version:
             _LOGGER.info( "converting object from version %s to %s", mngrVersion, self._class_version )
@@ -152,17 +159,17 @@ class LocalManager( Manager ):
 
         mapperObject = ModuleMapper( mngrVersion )
 
-        inputFile = inputDir + "/tasks.obj"
+        inputFile = os.path.join( inputDir, "tasks.obj" )
         self.tasks = persist.load_object( inputFile, class_mapper=mapperObject )
         if self.tasks is None:
             self.tasks = list()
 
-        inputFile = inputDir + "/todos.obj"
+        inputFile = os.path.join( inputDir, "todos.obj" )
         self.todos = persist.load_object( inputFile, class_mapper=mapperObject )
         if self.todos is None:
             self.todos = list()
 
-        inputFile = inputDir + "/notes.obj"
+        inputFile = os.path.join( inputDir, "notes.obj" )
         self.notes = persist.load_object( inputFile, class_mapper=mapperObject )
         if self.notes is None:
             self.notes = { "notes": "" }

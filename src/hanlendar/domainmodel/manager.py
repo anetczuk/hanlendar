@@ -33,7 +33,7 @@ from hanlendar.domainmodel.reminder import Notification
 
 # from hanlendar import persist
 # from hanlendar.domainmodel.item import Item
-# from hanlendar.domainmodel.local.task import LocalTask, TaskOccurrence
+# from hanlendar.domainmodel.task import TaskOccurrence
 # from hanlendar.domainmodel.local.todo import ToDo
 
 
