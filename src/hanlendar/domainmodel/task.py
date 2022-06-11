@@ -430,10 +430,11 @@ class Task( Item ):
         self._setRecurrence( value )
  
     def getAppliedRecurrence(self) -> Recurrent:
-        if self._recurrence is None:
+        recurrence = self._getRecurrence()
+        if recurrence is None:
             return None
-        if self._recurrence.isAsParent() is False:
-            return self._recurrence
+        if recurrence.isAsParent() is False:
+            return recurrence
         parent = self.getParent()
         if parent is None:
             return None
