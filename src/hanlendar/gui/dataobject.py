@@ -92,10 +92,6 @@ class DataObject( QObject ):
     def loadData( self ):
         self.domainModel.loadData()
 
-    #TODO: remove
-    def store( self, inputDir ):
-        return self.domainModel.store( inputDir )
-
     def storeData( self ):
         return self.domainModel.storeData()
 

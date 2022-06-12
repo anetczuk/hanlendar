@@ -30,6 +30,10 @@ import abc
 import glob
 from icalendar import cal
 from hanlendar.domainmodel.reminder import Notification
+from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.item import Item
+import icalendar
+from hanlendar.domainmodel.local.todo import ToDo
 
 # from hanlendar import persist
 # from hanlendar.domainmodel.item import Item
@@ -40,17 +44,19 @@ from hanlendar.domainmodel.reminder import Notification
 _LOGGER = logging.getLogger(__name__)
 
 
+def extract_ical( content ):
+    cal_begin_pos = content.find( "BEGIN:VCALENDAR" )
+    if cal_begin_pos < 0:
+        return content
+    END_SUB = "END:VCALENDAR"
+    cal_end_pos = content.find( END_SUB, cal_begin_pos )
+    if cal_end_pos < 0:
+        return content
+    cal_end_pos += len( END_SUB )
+    return content[ cal_begin_pos:cal_end_pos ]
 
-# def extract_ical( content ):
-#     cal_begin_pos = content.find( "BEGIN:VCALENDAR" )
-#     if cal_begin_pos < 0:
-#         return content
-#     END_SUB = "END:VCALENDAR"
-#     cal_end_pos = content.find( END_SUB, cal_begin_pos )
-#     if cal_end_pos < 0:
-#         return content
-#     cal_end_pos += len( END_SUB )
-#     return content[ cal_begin_pos:cal_end_pos ]
+
+## ======================================================
 
 
 class Manager():
@@ -65,24 +71,83 @@ class Manager():
         raise NotImplementedError('You need to define this method in derived class!')
 
     ## ======================================================================
-
-#     @property
-#     def tasks(self):
-#         return self._tasks
-# 
-#     @tasks.setter
-#     def tasks(self, newList):
-#         self._tasks = newList
- 
-    ## return shallow copy (of list)
+    
     @abc.abstractmethod
-    def getTasks( self ):
+    def _getTasks( self ):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def _setTasks( self, value ):
         raise NotImplementedError('You need to define this method in derived class!')
  
     @abc.abstractmethod
     def getTasksAll(self):
         """Return tasks and all subtasks from tree."""
         raise NotImplementedError('You need to define this method in derived class!')
+
+    ## return shallow copy (of list)
+    def getTasks( self ):
+        tasksList = self._getTasks()
+        return list( tasksList )
+ 
+    @property
+    def tasks(self):
+        return self._getTasks()
+
+    @tasks.setter
+    def tasks(self, newList):
+        self._setTasks( newList )
+
+    @abc.abstractmethod
+    def createEmptyTask(self) -> Task:
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def _getToDos( self ):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def _setToDos( self, value ):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def getTodosAll(self):
+        """Return tasks and all subtasks from tree."""
+        raise NotImplementedError('You need to define this method in derived class!')
+ 
+    ## return shallow copy (of list)
+    def getToDos( self, includeCompleted=True ):
+        if includeCompleted:
+            return list( self.todos )       ## shallow copy of list
+        return [ item for item in self.todos if not item.isCompleted() ]
+
+    @property
+    def todos(self):
+        return self._getToDos()
+
+    @todos.setter
+    def todos(self, newList):
+        self._setToDos( newList )
+
+    @abc.abstractmethod
+    def createEmptyToDo(self) -> ToDo:
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def _getNotes( self ):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def _setNotes( self, value ):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    def getNotes(self):
+        return self._getNotes()
+
+    def setNotes(self, notesDict):
+        self._setNotes( notesDict )
+
+    ## ======================================================================
  
     def getTaskOccurrencesForDate(self, taskDate: date, includeCompleted=True):
         retList = list()
@@ -97,7 +162,7 @@ class Manager():
             retList.append( entry )
         return retList
 
-    def getNextDeadline(self):# -> Task:
+    def getNextDeadline(self) -> Task:
         retTask: Task = None
         allTasks = self.getTasksAll()
         for task in allTasks:
@@ -133,57 +198,65 @@ class Manager():
                 retTasks.append( task )
         return retTasks
  
-#     def getTaskCoords(self, task):
-#         return Item.getItemCoords( self.tasks, task )
-# 
-#     def getTaskByCoords(self, task):
-#         return Item.getItemFromCoords( self.tasks, task )
-# 
-#     def insertTask( self, task: Task, taskCoords ):
-#         if taskCoords is None:
-#             self.tasks.append( task )
-#             return
-#         taskCoords = list( taskCoords )     ## make copy
-#         listPos = taskCoords.pop()
-#         parentTask = self.getTaskByCoords( taskCoords )
-#         if parentTask is not None:
-#             parentTask.addSubItem( task, listPos )
-#         else:
-#             self.tasks.insert( listPos, task )
-# 
-#     def addTask( self, task: Task = None ):
-#         if task is None:
-#             task = Task()
-#         self.tasks.append( task )
-#         task.setParent( None )
-#         return task
-# 
-#     def addNewTask( self, taskdate: date, title ):
-#         task = Task()
-#         task.title = title
-#         task.setDefaultDate( taskdate )
-#         self.addTask( task )
-#         return task
-# 
-#     def addNewTaskDateTime( self, taskdate: datetime, title ):
-#         task = Task()
-#         task.title = title
-#         task.setDefaultDateTime( taskdate )
-#         self.addTask( task )
-#         return task
-# 
-#     def removeTask( self, task: Task ):
-#         return Item.removeSubItemFromList(self.tasks, task)
-# 
-#     def replaceTask( self, oldTask: Task, newTask: Task ):
-#         return Item.replaceSubItemInList(self.tasks, oldTask, newTask)
-# 
-#     def addNewDeadlineDateTime( self, eventdate: datetime, title ):
-#         eventTask = Task()
-#         eventTask.title = title
-#         eventTask.setDeadlineDateTime( eventdate )
-#         self.addTask( eventTask )
-#         return eventTask
+    def getTaskCoords(self, task):
+        return Item.getItemCoords( self.tasks, task )
+ 
+    def getTaskByCoords(self, task):
+        return Item.getItemFromCoords( self.tasks, task )
+ 
+    def insertTask( self, task: Task, taskCoords ):
+        if taskCoords is None:
+            self.tasks.append( task )
+            return
+        taskCoords = list( taskCoords )     ## make copy
+        listPos = taskCoords.pop()
+        parentTask = self.getTaskByCoords( taskCoords )
+        if parentTask is not None:
+            parentTask.addSubItem( task, listPos )
+        else:
+            self.tasks.insert( listPos, task )
+
+    def addTask( self, task: Task = None ):
+        if task is None:
+            task = self.createEmptyTask()
+        self.tasks.append( task )
+        task.setParent( None )
+        return task
+
+    def addNewTask( self, taskdate: date, title ):
+        task = self.createEmptyTask()
+        task.title = title
+        task.setDefaultDate( taskdate )
+        self.addTask( task )
+        return task
+
+    def addNewTaskDateTime( self, taskdate: datetime, title ):
+        task = self.createEmptyTask()
+        task.title = title
+        task.setDefaultDateTime( taskdate )
+        self.addTask( task )
+        return task
+
+    def removeTask( self, task: Task ):
+        return Item.removeSubItemFromList(self.tasks, task)
+
+    def replaceTask( self, oldTask: Task, newTask: Task ):
+        return Item.replaceSubItemInList(self.tasks, oldTask, newTask)
+ 
+    def printTasks(self):
+        retStr = ""
+        tSize = len(self.tasks)
+        for i in range(0, tSize):
+            task = self.tasks[i]
+            retStr += str(task) + "\n"
+        return retStr
+ 
+    def addNewDeadlineDateTime( self, eventdate: datetime, title ):
+        eventTask = self.createEmptyTask()
+        eventTask.title = title
+        eventTask.setDeadlineDateTime( eventdate )
+        self.addTask( eventTask )
+        return eventTask
  
     def getNotificationList(self):
         ret = list()
@@ -193,98 +266,47 @@ class Manager():
             ret.extend( notifs )
         ret.sort( key=Notification.sortByTime )
         return ret
-     
-#     def importICalendar(self, content: str):
-#         try:
-#             extracted_ical = extract_ical( content )
-#             gcal = cal.Calendar.from_ical( extracted_ical )
-#             tasks = []
-#             for component in gcal.walk():
-#                 if component.name == "VEVENT":
-#                     summary    = component.get('summary')
-#                     location   = component.get('location')
-#                     start_date = component.get('dtstart').dt
-#                     start_date = start_date.astimezone()            ## convert to local timezone
-#                     start_date = start_date.replace(tzinfo=None)
-#                     end_date   = component.get('dtend').dt
-#                     end_date   = end_date.astimezone()              ## convert to local timezone
-#                     end_date   = end_date.replace(tzinfo=None)
-#                     
-#                     #TODO: check if task already added
-#                     
-#                     task = Task()
-#                     task.title = f"{summary}, {location}"
-#                     task.description = component.get('description')
-#                     task.description = task.description.replace( "=0D=0A", "\n" )
-#                     task.startDateTime = start_date
-#                     task.dueDateTime   = end_date
-#                     task.addReminderDays( 1 )
-#                     
-#                     addedTask = self.addTask( task )
-#                     tasks.append( addedTask )
-#             return tasks
-#         except ValueError:
-#             _LOGGER.warning( "unable to import calendar data" )
-#         return None
-# 
-#     ## ========================================================
-# 
-#     @property
-#     def todos(self):
-#         return self._todos
-# 
-#     @todos.setter
-#     def todos(self, newList):
-#         self._todos = newList
- 
-    ## return shallow copy (of list)
-    @abc.abstractmethod
-    def getToDos( self, includeCompleted=True ):
-        raise NotImplementedError('You need to define this method in derived class!')
 
-    @abc.abstractmethod
-    def getTodosAll(self):
-        """Return tasks and all subtasks from tree."""
-        raise NotImplementedError('You need to define this method in derived class!')
-
-#     def getToDoCoords(self, todo):
-#         return Item.getItemCoords( self.todos, todo )
-# 
-#     def getToDoByCoords(self, todo):
-#         return Item.getItemFromCoords( self.todos, todo )
-# 
-#     def insertToDo( self, todo: ToDo, todoCoords ):
-#         if todoCoords is None:
-#             self.todos.append( todo )
-#             return
-#         todoCoords = list( todoCoords )     ## make copy
-#         listPos = todoCoords.pop()
-#         parentToDo = self.getToDoByCoords( todoCoords )
-#         if parentToDo is not None:
-#             parentToDo.addSubItem( todo, listPos )
-#         else:
-#             self.todos.insert( listPos, todo )
-# 
-#     def addToDo( self, todo: ToDo = None ):
-#         if todo is None:
-#             todo = ToDo()
-#         self.todos.append( todo )
-#         todo.setParent( None )
-#         return todo
-# 
-#     def addNewToDo( self, title ):
-#         todo = ToDo()
-#         todo.title = title
-#         self.addToDo( todo )
-#         return todo
-# 
-#     def removeToDo( self, todo: ToDo ):
-#         return Item.removeSubItemFromList(self.todos, todo)
-# 
-#     def replaceToDo( self, oldToDo: ToDo, newToDo: ToDo ):
-#         return Item.replaceSubItemInList(self.todos, oldToDo, newToDo)
+    ## ========================================================
  
-    def getNextToDo(self):# -> ToDo:
+    def getToDoCoords(self, todo):
+        return Item.getItemCoords( self.todos, todo )
+ 
+    def getToDoByCoords(self, todo):
+        return Item.getItemFromCoords( self.todos, todo )
+ 
+    def insertToDo( self, todo: ToDo, todoCoords ):
+        if todoCoords is None:
+            self.todos.append( todo )
+            return
+        todoCoords = list( todoCoords )     ## make copy
+        listPos = todoCoords.pop()
+        parentToDo = self.getToDoByCoords( todoCoords )
+        if parentToDo is not None:
+            parentToDo.addSubItem( todo, listPos )
+        else:
+            self.todos.insert( listPos, todo )
+ 
+    def addToDo( self, todo: ToDo = None ):
+        if todo is None:
+            todo = self.createEmptyToDo()
+        self.todos.append( todo )
+        todo.setParent( None )
+        return todo
+ 
+    def addNewToDo( self, title ):
+        todo = self.createEmptyToDo()
+        todo.title = title
+        self.addToDo( todo )
+        return todo
+ 
+    def removeToDo( self, todo: ToDo ):
+        return Item.removeSubItemFromList(self.todos, todo)
+ 
+    def replaceToDo( self, oldToDo: ToDo, newToDo: ToDo ):
+        return Item.replaceSubItemInList(self.todos, oldToDo, newToDo)
+ 
+    def getNextToDo(self) -> ToDo:
         nextToDo = None
         allItems = self.getTodosAll()
         for item in allItems:
@@ -298,30 +320,58 @@ class Manager():
         return nextToDo
 
     ## ========================================================
+ 
+    def addNote(self, title, content):
+        notes = self._getNotes()
+        notes[title] = content
+ 
+    def renameNote(self, fromTitle, toTitle):
+        notes = self._getNotes()
+        notes[toTitle] = notes.pop(fromTitle)
+ 
+    def removeNote(self, title):
+        notes = self._getNotes()
+        del notes[title]
 
-    @abc.abstractmethod
-    def getNotes( self ):
-        raise NotImplementedError('You need to define this method in derived class!')
+    ## ========================================================
 
-#     def setNotes(self, notesDict):
-#         self.notes = notesDict
-# 
-#     def addNote(self, title, content):
-#         self.notes[title] = content
-# 
-#     def renameNote(self, fromTitle, toTitle):
-#         self.notes[toTitle] = self.notes.pop(fromTitle)
-# 
-#     def removeNote(self, title):
-#         del self.notes[title]
-# 
-#     def printTasks(self):
-#         retStr = ""
-#         tSize = len(self.tasks)
-#         for i in range(0, tSize):
-#             task = self.tasks[i]
-#             retStr += str(task) + "\n"
-#         return retStr
+    def importICalendar(self, content: str):
+        try:
+            extracted_ical = extract_ical( content )
+            calendar: icalendar.cal.Calendar = cal.Calendar.from_ical( extracted_ical )
+            return self.importICalendarObject( calendar )
+        except ValueError as ex:
+            _LOGGER.warning( "unable to import calendar data: %s", ex )
+        return None
+
+    def importICalendarObject(self, calendar: icalendar.cal.Calendar):
+        tasks = []
+        for component in calendar.walk():
+            if component.name == "VEVENT":
+                summary    = component.get('summary')
+                location   = component.get('location')
+                start_date = component.get('dtstart').dt
+                start_date = start_date.astimezone()            ## convert to local timezone
+                start_date = start_date.replace(tzinfo=None)
+                end_date   = component.get('dtend').dt
+                end_date   = end_date.astimezone()              ## convert to local timezone
+                end_date   = end_date.replace(tzinfo=None)
+                
+                #TODO: check if task already added
+                
+                task = self.createEmptyTask()
+                task.title = f"{summary}, {location}"
+                task.description = component.get('description')
+                if task.description is None:
+                    task.description = ""
+                task.description = task.description.replace( "=0D=0A", "\n" )
+                task.startDateTime = start_date
+                task.dueDateTime   = end_date
+                task.addReminderDays( 1 )
+                
+                addedTask = self.addTask( task )
+                tasks.append( addedTask )
+        return tasks
 
 
 ## ========================================================

@@ -21,6 +21,7 @@
 # SOFTWARE.
 #
 
+import os
 import logging
 
 from PyQt5.QtCore import QDate
@@ -87,6 +88,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.data = DataObject( self )
         dataPath = self.getDataPath()
+        dataPath = os.path.join( dataPath, "local" )
+        os.makedirs( dataPath, exist_ok=True )
         self.data.setManager( LocalManager( dataPath ) )
         
         self.appSettings = AppSettings()

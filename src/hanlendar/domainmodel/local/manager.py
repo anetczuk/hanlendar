@@ -37,22 +37,10 @@ from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.task import TaskOccurrence
 from hanlendar.domainmodel.local.task import LocalTask
 from hanlendar.domainmodel.local.todo import ToDo
+import icalendar
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-
-def extract_ical( content ):
-    cal_begin_pos = content.find( "BEGIN:VCALENDAR" )
-    if cal_begin_pos < 0:
-        return content
-    END_SUB = "END:VCALENDAR"
-    cal_end_pos = content.find( END_SUB, cal_begin_pos )
-    if cal_end_pos < 0:
-        return content
-    cal_end_pos += len( END_SUB )
-    return content[ cal_begin_pos:cal_end_pos ]
 
 
 class ModuleMapper():
@@ -99,7 +87,7 @@ class LocalManager( Manager ):
     ## 4 - renamed modules from 'hanlendar.domainmodel.local.recurrent' to 'hanlendar.domainmodel.recurrent'
     ##     renamed modules from 'hanlendar.domainmodel.local.reminder' to 'hanlendar.domainmodel.reminder'
     ## 5 - renamed class from 'hanlendar.domainmodel.local.task.Task' to 'hanlendar.domainmodel.local.task.LocalTask'
-    ## 6 - move data to 'local' subdirectory
+    ## 6 - moved data to 'local' subdirectory
     _class_version = 6
 
     def __init__(self, ioDir=None):
@@ -112,11 +100,11 @@ class LocalManager( Manager ):
 
     def store( self, outputDir ):
         self._ioDir = outputDir
-        self.store()
+        self.storeData()
 
+    # override
     def storeData( self ):
-        outputDir = os.path.join( self._ioDir, "local" )
-        os.makedirs( outputDir, exist_ok=True )
+        outputDir = self._ioDir
 
         changed = False
 
@@ -147,9 +135,9 @@ class LocalManager( Manager ):
         self._ioDir = inputDir
         self.loadData()
 
+    # override
     def loadData( self ):
-        inputDir = os.path.join( self._ioDir, "local" )
-        os.makedirs( inputDir, exist_ok=True )
+        inputDir = self._ioDir
 
         inputFile = os.path.join( inputDir, "version.obj" )
         mngrVersion = persist.load_object( inputFile )
@@ -176,226 +164,45 @@ class LocalManager( Manager ):
 
     ## ======================================================================
 
-    @property
-    def tasks(self):
+    # override
+    def _getTasks( self ):
         return self._tasks
 
-    @tasks.setter
-    def tasks(self, newList):
-        self._tasks = newList
+    # override
+    def _setTasks( self, value ):
+        self._tasks = value
 
-    def getTasks( self ):
-        return list( self.tasks )                   ## shallow copy of list
-
+    # override
     def getTasksAll(self):
-        """Return tasks and all subtasks from tree."""
         return Item.getAllSubItemsFromList( self.tasks )
 
-    def getTaskOccurrencesForDate(self, taskDate: date, includeCompleted=True):
-        retList = list()
-        allTasks = self.getTasksAll()
-        for task in allTasks:
-            entry = task.getTaskOccurrenceForDate( taskDate )
-            if entry is None:
-                continue
-            if includeCompleted is False:
-                if entry.isCompleted():
-                    continue
-            retList.append( entry )
-        return retList
+    # override
+    def createEmptyTask(self):
+        return LocalTask()
 
-    def getNextDeadline(self) -> Task:
-        retTask: Task = None
-        allTasks = self.getTasksAll()
-        for task in allTasks:
-            if task.isCompleted():
-                continue
-            if task.occurrenceDue is None:
-                continue
-            if retTask is None:
-                retTask = task
-            elif task.occurrenceDue < retTask.occurrenceDue:
-                retTask = task
-        return retTask
-
-    def getTaskCoords(self, task):
-        return Item.getItemCoords( self.tasks, task )
-
-    def getTaskByCoords(self, task):
-        return Item.getItemFromCoords( self.tasks, task )
-
-    def insertTask( self, task: Task, taskCoords ):
-        if taskCoords is None:
-            self.tasks.append( task )
-            return
-        taskCoords = list( taskCoords )     ## make copy
-        listPos = taskCoords.pop()
-        parentTask = self.getTaskByCoords( taskCoords )
-        if parentTask is not None:
-            parentTask.addSubItem( task, listPos )
-        else:
-            self.tasks.insert( listPos, task )
-
-    def addTask( self, task: Task = None ):
-        if task is None:
-            task = LocalTask()
-        self.tasks.append( task )
-        task.setParent( None )
-        return task
-
-    def addNewTask( self, taskdate: date, title ):
-        task = LocalTask()
-        task.title = title
-        task.setDefaultDate( taskdate )
-        self.addTask( task )
-        return task
-
-    def addNewTaskDateTime( self, taskdate: datetime, title ):
-        task = LocalTask()
-        task.title = title
-        task.setDefaultDateTime( taskdate )
-        self.addTask( task )
-        return task
-
-    def removeTask( self, task: Task ):
-        return Item.removeSubItemFromList(self.tasks, task)
-
-    def replaceTask( self, oldTask: Task, newTask: Task ):
-        return Item.replaceSubItemInList(self.tasks, oldTask, newTask)
-
-    def addNewDeadlineDateTime( self, eventdate: datetime, title ):
-        eventTask = LocalTask()
-        eventTask.title = title
-        eventTask.setDeadlineDateTime( eventdate )
-        self.addTask( eventTask )
-        return eventTask
-    
-    def importICalendar(self, content: str):
-        try:
-            extracted_ical = extract_ical( content )
-            gcal = cal.Calendar.from_ical( extracted_ical )
-            tasks = []
-            for component in gcal.walk():
-                if component.name == "VEVENT":
-                    summary    = component.get('summary')
-                    location   = component.get('location')
-                    start_date = component.get('dtstart').dt
-                    start_date = start_date.astimezone()            ## convert to local timezone
-                    start_date = start_date.replace(tzinfo=None)
-                    end_date   = component.get('dtend').dt
-                    end_date   = end_date.astimezone()              ## convert to local timezone
-                    end_date   = end_date.replace(tzinfo=None)
-                    
-                    #TODO: check if task already added
-                    
-                    task = LocalTask()
-                    task.title = f"{summary}, {location}"
-                    task.description = component.get('description')
-                    task.description = task.description.replace( "=0D=0A", "\n" )
-                    task.startDateTime = start_date
-                    task.dueDateTime   = end_date
-                    task.addReminderDays( 1 )
-                    
-                    addedTask = self.addTask( task )
-                    tasks.append( addedTask )
-            return tasks
-        except ValueError:
-            _LOGGER.warning( "unable to import calendar data" )
-        return None
-
-    ## ========================================================
-
-    @property
-    def todos(self):
+    # override
+    def _getToDos( self ):
         return self._todos
 
-    @todos.setter
-    def todos(self, newList):
-        self._todos = newList
+    # override
+    def _setToDos( self, value ):
+        self._todos = value
 
-    def getToDos( self, includeCompleted=True ):
-        if includeCompleted:
-            return list( self.todos )       ## shallow copy of list
-        return [ item for item in self.todos if not item.isCompleted() ]
-
+    # override
     def getTodosAll(self):
-        """Return todos and all subtodos from tree."""
         return Item.getAllSubItemsFromList( self.todos )
 
-    def getToDoCoords(self, todo):
-        return Item.getItemCoords( self.todos, todo )
+    # override
+    def createEmptyToDo(self) -> ToDo:
+        return ToDo()
 
-    def getToDoByCoords(self, todo):
-        return Item.getItemFromCoords( self.todos, todo )
-
-    def insertToDo( self, todo: ToDo, todoCoords ):
-        if todoCoords is None:
-            self.todos.append( todo )
-            return
-        todoCoords = list( todoCoords )     ## make copy
-        listPos = todoCoords.pop()
-        parentToDo = self.getToDoByCoords( todoCoords )
-        if parentToDo is not None:
-            parentToDo.addSubItem( todo, listPos )
-        else:
-            self.todos.insert( listPos, todo )
-
-    def addToDo( self, todo: ToDo = None ):
-        if todo is None:
-            todo = ToDo()
-        self.todos.append( todo )
-        todo.setParent( None )
-        return todo
-
-    def addNewToDo( self, title ):
-        todo = ToDo()
-        todo.title = title
-        self.addToDo( todo )
-        return todo
-
-    def removeToDo( self, todo: ToDo ):
-        return Item.removeSubItemFromList(self.todos, todo)
-
-    def replaceToDo( self, oldToDo: ToDo, newToDo: ToDo ):
-        return Item.replaceSubItemInList(self.todos, oldToDo, newToDo)
-
-    def getNextToDo(self) -> ToDo:
-        nextToDo = None
-        allItems = self.getTodosAll()
-        for item in allItems:
-            if item.isCompleted():
-                continue
-            if nextToDo is None:
-                nextToDo = item
-                continue
-            if nextToDo.priority < item.priority:
-                nextToDo = item
-        return nextToDo
-
-    ## ========================================================
-
-    def getNotes(self):
+    # override
+    def _getNotes(self):
         return self.notes
 
-    def setNotes(self, notesDict):
-        self.notes = notesDict
-
-    def addNote(self, title, content):
-        self.notes[title] = content
-
-    def renameNote(self, fromTitle, toTitle):
-        self.notes[toTitle] = self.notes.pop(fromTitle)
-
-    def removeNote(self, title):
-        del self.notes[title]
-
-    def printTasks(self):
-        retStr = ""
-        tSize = len(self.tasks)
-        for i in range(0, tSize):
-            task = self.tasks[i]
-            retStr += str(task) + "\n"
-        return retStr
+    # override
+    def _setNotes(self, value):
+        self.notes = value
 
 
 ## ========================================================
