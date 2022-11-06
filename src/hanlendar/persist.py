@@ -27,6 +27,7 @@ import os
 import zipfile
 import filecmp
 import pickle
+import io
 
 import abc
 
@@ -62,13 +63,20 @@ class RenamingUnpickler(pickle.Unpickler):
 
 ## class_mapper -- object mapping class names based on code version
 def load_object( inputFile, defaultValue=None, class_mapper=None ):
+    _LOGGER.info( "loading data from: %s", inputFile )
+    with open( inputFile, 'rb') as fp:
+        content = fp.read()
+        return load_data( content, defaultValue, class_mapper )
+
+
+## class_mapper -- object mapping class names based on code version
+def load_data( content, defaultValue=None, class_mapper=None ):
     try:
-        _LOGGER.info( "loading data from: %s", inputFile )
-        with open( inputFile, 'rb') as fp:
-            if class_mapper is None:
-                return pickle.load(fp)
-            else:
-                return RenamingUnpickler(fp, class_mapper).load()
+        if class_mapper is None:
+            return pickle.loads( content )
+        else:
+            stream_str = io.BytesIO( content )
+            return RenamingUnpickler( stream_str, class_mapper ).load()
     except FileNotFoundError:
         _LOGGER.exception("failed to load")
         return defaultValue
@@ -142,6 +150,12 @@ def backup_files( inputFiles, outputArchive ):
     os.rename( tmpZipFile, storedZipFile )
 
 
+def load_backup( outputArchive ):
+    input_zip = zipfile.ZipFile( outputArchive )
+    return { name: input_zip.read(name) for name in input_zip.namelist() }
+
+
+##
 class Versionable( metaclass=abc.ABCMeta ):
 
     def __getstate__(self):

@@ -50,8 +50,7 @@ logger.configure()
 _LOGGER = logging.getLogger(__name__)
 
 
-def run_app( args ):
-    ## GUI
+def initializeQT():
     app = QApplication(sys.argv)
     app.setApplicationName("Hanlendar")
     app.setOrganizationName("arnet")
@@ -62,6 +61,13 @@ def run_app( args ):
     app.setStyle( MenuStyle() )
 
     setup_interrupt_handling()
+    
+    return app
+
+
+def run_app( args ):
+    ## GUI
+    app = initializeQT()
 
     window = MainWindow()
     if args.blocksave is True:

@@ -25,6 +25,7 @@ import os
 import logging
 
 from PyQt5.QtCore import QDate
+from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QDialog, QMessageBox
 from PyQt5.QtWidgets import QFileDialog
 
@@ -76,6 +77,41 @@ class DataHighlightModel( NavCalendarHighlightModel ):
         return len(occurrencesList) > 0
 
 
+##
+class SettingsObject( QObject ):
+    
+    def __init__( self, parent = None ):
+        super().__init__( parent )
+
+    def getSettings(self):
+#         ## store in app directory
+#         if self.settingsFilePath is None:
+# #             scriptDir = os.path.dirname(os.path.realpath(__file__))
+# #             self.settingsFilePath = os.path.realpath( scriptDir + "../../../../tmp/settings.ini" )
+#             self.settingsFilePath = "settings.ini"
+#         settings = QtCore.QSettings(self.settingsFilePath, QtCore.QSettings.IniFormat, self)
+
+        ## store in home directory
+        orgName = qApp.organizationName()
+        appName = qApp.applicationName()
+        settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, orgName, appName, self)
+        return settings
+
+    def getDataPath(self):
+        settings = self.getSettings()
+        settingsDir = settings.fileName()
+        settingsDir = settingsDir[0:-4]       ## remove extension
+        settingsDir += "-data"
+        return settingsDir
+
+    def createLocalManager(self) -> LocalManager:
+        dataPath = self.getDataPath()
+        dataPath = os.path.join( dataPath, "local" )
+        os.makedirs( dataPath, exist_ok=True )
+        return LocalManager( dataPath )
+
+
+##
 class MainWindow( QtBaseClass ):           # type: ignore
 
     logger: logging.Logger = None
@@ -86,13 +122,14 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
 
+        self.qtSettings  = SettingsObject( self )
+        self.appSettings = AppSettings()
+
         self.data = DataObject( self )
         dataPath = self.getDataPath()
         dataPath = os.path.join( dataPath, "local" )
         os.makedirs( dataPath, exist_ok=True )
         self.data.setManager( LocalManager( dataPath ) )
-        
-        self.appSettings = AppSettings()
         
         self.messagesQueueWatchdog = FSWatcher()
         self.messagesQueueWatchdog.start( queue_path, self._handleNextMessage )
@@ -211,13 +248,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
             _LOGGER.info("saving data is disabled")
         _LOGGER.info("disabling saving data")
         self._saveData = save_data_mock           # type: ignore
-
-    def getDataPath(self):
-        settings = self.getSettings()
-        settingsDir = settings.fileName()
-        settingsDir = settingsDir[0:-4]       ## remove extension
-        settingsDir += "-data"
-        return settingsDir
 
     ## ===============================================================
 
@@ -439,7 +469,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.setIconTheme( self.appSettings.trayIcon )
 
     def loadSettings(self):
-        settings = self.getSettings()
+        settings = self.qtSettings.getSettings()
         self.logger.debug( "loading app state from %s", settings.fileName() )
 
         self.appSettings.loadSettings( settings )
@@ -459,7 +489,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         guistate.load_state( self, settings )
 
     def saveSettings(self):
-        settings = self.getSettings()
+        settings = self.qtSettings.getSettings()
         self.logger.debug( "saving app state to %s", settings.fileName() )
 
         self.appSettings.saveSettings( settings )
@@ -475,20 +505,6 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         ## force save to file
         settings.sync()
-
-    def getSettings(self):
-#         ## store in app directory
-#         if self.settingsFilePath is None:
-# #             scriptDir = os.path.dirname(os.path.realpath(__file__))
-# #             self.settingsFilePath = os.path.realpath( scriptDir + "../../../../tmp/settings.ini" )
-#             self.settingsFilePath = "settings.ini"
-#         settings = QtCore.QSettings(self.settingsFilePath, QtCore.QSettings.IniFormat, self)
-
-        ## store in home directory
-        orgName = qApp.organizationName()
-        appName = qApp.applicationName()
-        settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, orgName, appName, self)
-        return settings
 
 
 MainWindow.logger = _LOGGER.getChild(MainWindow.__name__)

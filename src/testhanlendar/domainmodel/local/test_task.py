@@ -27,7 +27,7 @@ import datetime
 from datetime import timedelta
 
 from hanlendar.domainmodel.reminder import Reminder
-from hanlendar.domainmodel.recurrent import Recurrent
+from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
 from hanlendar.domainmodel.local.task import LocalTask as Task
 
 
@@ -147,6 +147,23 @@ class TaskTest(unittest.TestCase):
         self.assertEqual( notifications[0].message, "task 'task 1': 0:00:10 before due time" )
         self.assertEqual( notifications[1].task, task )
         self.assertEqual( notifications[1].message, "task 'task 1' reached deadline" )
+
+    def test_recurrence(self):
+        task = Task()
+        task.recurrence = Recurrent( RepeatType.DAILY, 3 )
+
+        recurrent = task.recurrence
+        self.assertEqual( recurrent.mode, RepeatType.DAILY )
+        self.assertEqual( recurrent.every, 3 )
+        
+#     def test_repr(self):
+#         task = Task()
+#         task.addSubItem( Task() )
+#         task.recurrence = Recurrent()
+#         task.recurrence.setDaily()
+#         task.reminderList = [ Reminder(1) ]
+#         raw_data = task.__dict__
+#         self.assertEqual( "", repr(raw_data) )
 
 
 class TaskOccurrenceTest(unittest.TestCase):
