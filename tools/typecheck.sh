@@ -13,6 +13,8 @@ CACHE_DIR=$SCRIPT_DIR/../tmp/.mypy_cache
 cd $SCRIPT_DIR/../src
 
 
-mypy --cache-dir $CACHE_DIR --no-strict-optional --ignore-missing-imports -p hanlendar -p testhanlendar
+echo "running mypy"
+echo "ignore line warning using: # type: ignore"
+mypy --cache-dir $CACHE_DIR --no-strict-optional --ignore-missing-imports .
 
 echo "mypy finished"

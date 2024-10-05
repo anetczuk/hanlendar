@@ -57,6 +57,38 @@ In addition application can be added to system menu and autostart by followings 
 - `src/configure_autostart.sh`
 
 
+Application accepts following parameters:
+
+<!-- insertstart include="doc/cmdargs.txt" pre="\n\n```\n" post="```\n\n" -->
+
+```
+usage: startcalendar [-h] [--minimized] [--blocksave] [--caldav]
+                     [--exportlocal]
+
+Hanlendar
+
+options:
+  -h, --help        show this help message and exit
+  --minimized       Start minimized
+  --blocksave, -bs  Block save data
+  --caldav          Run in CalDAV mode
+  --exportlocal     Export local database to CalDAV server
+```
+
+<!-- insertend -->
+
+
+## Installation
+
+Installation of package can be done by:
+ - to install package from downloaded ZIP file execute: `pip3 install --user -I file:hanlendar-master.zip#subdirectory=src`
+ - to install package directly from GitHub execute: `pip3 install --user -I git+https://github.com/anetczuk/hanlendar.git#subdirectory=src`
+ - uninstall: `pip3 uninstall hanlendar`
+
+Installation for development:
+ - `install-deps.sh` to install package dependencies only (`requirements.txt`)
+
+
 ## Development
 
 Application requires *PyQt5* library.
@@ -90,7 +122,12 @@ It is possible to promote widgets to custom classes from within Qt Designer. Ste
 - persisting and versioning classes (*persist.py*)
 
 
-## References:
+### Similar applications
 
 - https://kde.org/applications/en/office/org.kde.korganizer
 - https://en.wikipedia.org/wiki/GNOME_Evolution
+
+
+## References
+
+- iCalendar specification (https://datatracker.ietf.org/doc/html/rfc5545)

@@ -1,0 +1,14 @@
+## <a name="main_help"></a> startcalendar --help
+```
+usage: startcalendar [-h] [--minimized] [--blocksave] [--caldav]
+                     [--exportlocal]
+
+Hanlendar
+
+options:
+  -h, --help        show this help message and exit
+  --minimized       Start minimized
+  --blocksave, -bs  Block save data
+  --caldav          Run in CalDAV mode
+  --exportlocal     Export local database to CalDAV server
+```
