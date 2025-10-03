@@ -66,9 +66,9 @@ def get_tasks_all( tasks_list: List[ Task ] ):
     return ret_list
 
 
-def handle_history( localManager: LocalManager, args ):  
+def handle_history( localManager: LocalManager, args ):
     detailed = bool( args.detailed )
-    
+
     if args.index is not None:
         index = int( args.index )
         data = localManager.loadHistory( index )
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
     app      = initializeQT()
     settings = SettingsObject()
-    
+
     localManager: LocalManager = settings.createLocalManager()
 
 #     localManager.loadData()
@@ -109,5 +109,5 @@ if __name__ == '__main__':
 #         localManager.storeData()
 #         print( "task restored" )
 #         exit(1)
-    
+
     handle_history( localManager, args )

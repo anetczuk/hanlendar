@@ -25,6 +25,7 @@ from datetime import date, datetime
 
 import os
 import logging
+from typing import List
 
 import glob
 from icalendar import cal
@@ -36,7 +37,7 @@ from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.task import TaskOccurrence
 from hanlendar.domainmodel.local.task import LocalTask
-from hanlendar.domainmodel.local.todo import ToDo
+from hanlendar.domainmodel.local.todo import LocalToDo
 import icalendar
 
 
@@ -45,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class ModuleMapper():
     """Convert module names for given versions to properly deserialize data."""
-    
+
     def __init__(self, version):
         self.version = version
 
@@ -75,6 +76,14 @@ class ModuleMapper():
             ## convert from version 4
             if module == "hanlendar.domainmodel.local.task" and name == "Task":
                 return ("hanlendar.domainmodel.local.task", "LocalTask")
+            version = 5
+        if version == 5:
+            ## do nothing
+            version = 6
+        if version == 6:
+            if module == "hanlendar.domainmodel.local.todo" and name == "ToDo":
+                return ("hanlendar.domainmodel.local.todo", "LocalToDo")
+            version = 7
         return (module, name)
 
 
@@ -88,14 +97,15 @@ class LocalManager( Manager ):
     ##     renamed modules from 'hanlendar.domainmodel.local.reminder' to 'hanlendar.domainmodel.reminder'
     ## 5 - renamed class from 'hanlendar.domainmodel.local.task.Task' to 'hanlendar.domainmodel.local.task.LocalTask'
     ## 6 - moved data to 'local' subdirectory
-    _class_version = 6
+    ## 7 - renamed class from 'hanlendar.domainmodel.local.todo.ToDo' to 'hanlendar.domainmodel.local.todo.LocalToDo'
+    _class_version = 7
 
     def __init__(self, ioDir=None):
         """Constructor."""
         self._tasks = list()
         self._todos = list()
         self.notes = { "notes": "" }        ## default notes
-        
+
         self._ioDir = ioDir                 ## do not persist
 
     def store( self, outputDir ):
@@ -104,6 +114,10 @@ class LocalManager( Manager ):
 
     # override
     def storeData( self ):
+        if self._ioDir is None:
+            _LOGGER.warning( "unable to store data -- no root directory given" )
+            return
+
         outputDir = self._ioDir
 
         changed = False
@@ -137,6 +151,10 @@ class LocalManager( Manager ):
 
     # override
     def loadData( self ):
+        if self._ioDir is None:
+            _LOGGER.warning( "unable to load data -- no root directory given" )
+            return
+
         inputDir = self._ioDir
 
         inputFile = os.path.join( inputDir, "version.obj" )
@@ -161,6 +179,79 @@ class LocalManager( Manager ):
         self.notes = persist.load_object( inputFile, class_mapper=mapperObject )
         if self.notes is None:
             self.notes = { "notes": "" }
+
+        self.fixData()
+
+    ## index meaning:
+    ##    negative: current
+    ##           0: first history entry
+    ##    positive: history entry by index
+    def loadHistory( self, index=-1 ):
+        if index < 0:
+            self.loadData()
+            ret_dict = { 'file': None,
+                         'version': self. _class_version,
+                         'tasks': self.tasks,
+                         'todos': self.todos,
+                         'notes': self.notes
+                         }
+            return ret_dict
+
+        outputDir = self._ioDir
+        if index <= 0:
+            storedZipFile = os.path.join( outputDir, "data.zip" )
+        else:
+            storedZipFile = os.path.join( outputDir, "data.zip.%s" % index )
+
+        hist_data_raw = persist.load_backup( storedZipFile )
+
+        version_raw = hist_data_raw.get( "version.obj", None )
+        mngrVersion = persist.load_data( version_raw )
+        if mngrVersion != self. _class_version:
+            _LOGGER.info( "converting object from version %s to %s", mngrVersion, self._class_version )
+            ## do nothing for now
+
+        mapperObject = ModuleMapper( mngrVersion )
+
+        tasks_raw = hist_data_raw.get( "tasks.obj", None )
+        tasks = persist.load_data( tasks_raw, class_mapper=mapperObject )
+        if tasks is None:
+            tasks = list()
+
+        todos_raw = hist_data_raw.get( "todos.obj", None )
+        todos = persist.load_data( todos_raw, class_mapper=mapperObject )
+        if todos is None:
+            todos = list()
+
+        notes_raw = hist_data_raw.get( "notes.obj", None )
+        notes = persist.load_data( notes_raw, class_mapper=mapperObject )
+        if notes is None:
+            notes = list()
+
+        ret_dict = { 'file': storedZipFile,
+                     'version': mngrVersion,
+                     'tasks': tasks,
+                     'todos': todos,
+                     'notes': notes
+                     }
+        return ret_dict
+
+    def restoreTaskByTitle( self, history_index, task_title ):
+        data_dict = self.loadHistory( 160 )
+        tasks: List[ Task ] = data_dict.get( 'tasks', [] )
+        found_task = self.findTaskByTitle( tasks, task_title )
+        if found_task is not None:
+            self.addTask( found_task )
+            return True
+        return False
+
+    def findTaskByTitle( self, tasks_list, title ):
+        flat_set = set( Item.getAllSubItemsFromList( tasks_list ) )
+        for task in flat_set:
+            task_title = task.getTitle()
+            if task_title == title:
+                return task
+        return None
 
     ## ======================================================================
 
@@ -193,8 +284,8 @@ class LocalManager( Manager ):
         return Item.getAllSubItemsFromList( self.todos )
 
     # override
-    def createEmptyToDo(self) -> ToDo:
-        return ToDo()
+    def createEmptyToDo(self) -> LocalToDo:
+        return LocalToDo()
 
     # override
     def _getNotes(self):
@@ -203,14 +294,3 @@ class LocalManager( Manager ):
     # override
     def _setNotes(self, value):
         self.notes = value
-
-
-## ========================================================
-
-
-def replace_in_list( aList, oldObject, newObject ):
-    for i, _ in enumerate(aList):
-        entry = aList[i]
-        if entry == oldObject:
-            aList[i] = newObject
-            break

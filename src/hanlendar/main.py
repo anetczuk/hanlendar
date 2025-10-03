@@ -61,7 +61,7 @@ def initializeQT():
     app.setStyle( MenuStyle() )
 
     setup_interrupt_handling()
-    
+
     return app
 
 
@@ -73,6 +73,10 @@ def run_app( args ):
     if args.blocksave is True:
         window.disableSaving()
     window.loadSettings()
+    if args.exportlocal is True:
+        window.exportLocalToCalDAV()
+    if args.caldav is True:
+        window.setCalDAVManager()
     window.loadData()
 
     if args.minimized is False:
@@ -91,17 +95,19 @@ def create_parser( parser: argparse.ArgumentParser = None ):
         parser = argparse.ArgumentParser(description='Hanlendar')
     parser.add_argument('--minimized', action='store_const', const=True, default=False, help='Start minimized' )
     parser.add_argument('--blocksave', '-bs', action='store_const', const=True, default=None, help='Block save data' )
+    parser.add_argument('--caldav', action='store_const', const=True, default=None, help='Run in CalDAV mode' )
+    parser.add_argument('--exportlocal', action='store_const', const=True, default=None, help='Export local database to CalDAV server' )
     return parser
 
 
 def start( args=None ):
-    _LOGGER.debug( "Starting the application" )
-    _LOGGER.debug( "Logger log file: %s", logger.log_file )
-    _LOGGER.debug( "Arguments: %s", sys.argv[1:] )
-
     if args is None:
         parser = create_parser()
         args = parser.parse_args()
+
+    _LOGGER.debug( "Starting the application" )
+    _LOGGER.debug( "Logger log file: %s", logger.log_file )
+    _LOGGER.debug( "Arguments: %s", sys.argv[1:] )
 
     exitCode = 1
 
@@ -119,15 +125,11 @@ def start( args=None ):
 
 
 def start_single( args=None ):
-    ## check if instance already running    
-    try:
-        pid_path = os.path.join( tmp_dir, 'hanlendar.pid' )
-        with pidfile.PidFile( pid_path ):
-            ## first instance -- start
-            start( args )
-    except SystemExit:
-        ## already running
-        pass
+    ## check if instance already running
+    pid_path = os.path.join( tmp_dir, 'hanlendar.pid' )
+    with pidfile.PidFile( pid_path ):
+        ## first instance -- start
+        start( args )
 
 
 def main( args=None ):

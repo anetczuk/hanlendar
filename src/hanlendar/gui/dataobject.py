@@ -56,7 +56,7 @@ from hanlendar.gui.command.removenotecommand import RemoveNoteCommand
 
 from hanlendar.domainmodel.local.manager import LocalManager
 from hanlendar.domainmodel.task import Task
-from hanlendar.domainmodel.local.todo import ToDo
+from hanlendar.domainmodel.local.todo import LocalToDo
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ class DataObject( QObject ):
     ## added, modified or removed
     notesChanged = pyqtSignal()
 
-    def __init__(self, parent: QWidget=None):
+    def __init__(self, parent: QWidget = None):
         super().__init__( parent )
 
         self.parentWidget = parent
@@ -117,7 +117,7 @@ class DataObject( QObject ):
 
     def addTask(self, task: Task = None ) -> Task:
         if task is None:
-            task = Task()
+            task = self.domainModel.createEmptyTask()
         self.undoStack.push( AddTaskCommand( self, task ) )
         return task
 
@@ -146,13 +146,13 @@ class DataObject( QObject ):
         todo = self._createToDo( content )
         self.addToDo( todo )
 
-    def addToDo(self, todo: ToDo = None ) -> ToDo:
+    def addToDo(self, todo: LocalToDo = None ) -> LocalToDo:
         if todo is None:
-            todo = ToDo()
+            todo = self.domainModel.createEmptyToDo()
         self.undoStack.push( AddToDoCommand( self, todo ) )
         return todo
 
-    def addNewSubToDo( self, parent: ToDo ):
+    def addNewSubToDo( self, parent: LocalToDo ):
         if parent is None:
             self.addNewToDo()
             return
@@ -161,7 +161,7 @@ class DataObject( QObject ):
             return
         self.undoStack.push( AddSubToDoCommand( self, parent, todo ) )
 
-    def editToDo(self, todo: ToDo ):
+    def editToDo(self, todo: LocalToDo ):
         todoDialog = ToDoDialog( todo, self.parentWidget )
         todoDialog.setModal( True )
         dialogCode = todoDialog.exec_()
@@ -169,11 +169,11 @@ class DataObject( QObject ):
             return
         self.undoStack.push( EditToDoCommand( self, todo, todoDialog.todo ) )
 
-    def removeToDo(self, todo: ToDo ):
+    def removeToDo(self, todo: LocalToDo ):
         self.undoStack.push( RemoveToDoCommand( self, todo ) )
 
-    def convertToDoToTask(self, todo: ToDo ):
-        task = Task()
+    def convertToDoToTask(self, todo: LocalToDo ):
+        task             = self.domainModel.createEmptyTask()
         task.title       = todo.title
         task.description = todo.description
         task.completed   = todo.completed
@@ -186,14 +186,14 @@ class DataObject( QObject ):
             return
         self.undoStack.push( ConvertToDoToTaskCommand( self, todo, taskDialog.task ) )
 
-    def markToDoCompleted(self, todo: ToDo ):
+    def markToDoCompleted(self, todo: LocalToDo ):
         self.undoStack.push( MarkToDoCompletedCommand( self, todo ) )
 
     def moveToDo(self, todoCoords, parentToDo, targetIndex):
         self.undoStack.push( MoveToDoCommand( self, todoCoords, parentToDo, targetIndex ) )
 
     def _createTask( self, newTaskDate: QDate = None ):
-        task = Task()
+        task = self.domainModel.createEmptyTask()
         if newTaskDate is not None:
             startDate = newTaskDate.toPyDate()
             task.setDefaultDate( startDate )
@@ -206,7 +206,7 @@ class DataObject( QObject ):
         return taskDialog.task
 
     def _createToDo( self, content=None ):
-        todo = ToDo()
+        todo = self.domainModel.createEmptyToDo()
         if content is not None:
             todo.description = content
         todoDialog = ToDoDialog( todo, self.parentWidget )

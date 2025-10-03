@@ -45,7 +45,7 @@ class RenamingUnpickler(pickle.Unpickler):
         moduleName, itemName = self.findName( module, name )
 #         _LOGGER.info( "unpicking module: %s %s %s", module, name, moduleName )
         return super().find_class( moduleName, itemName )
-    
+
     def findName(self, module, name):
         if self.module_mapper is None:
             return (module, name)
@@ -54,7 +54,7 @@ class RenamingUnpickler(pickle.Unpickler):
         try:
             return self.module_mapper( module, name )
         except TypeError:
-            ## whatever your fall-back plan is when obj doesn't support [] (__getitem__) 
+            ## whatever your fall-back plan is when obj doesn't support [] (__getitem__)
             pass
 
         ## do nothing

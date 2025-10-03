@@ -25,7 +25,7 @@ import logging
 
 from PyQt5.QtGui import QDesktopServices
 
-from hanlendar.domainmodel.local.todo import ToDo
+from hanlendar.domainmodel.local.todo import LocalToDo
 
 from .. import uiloader
 
@@ -47,7 +47,7 @@ class ToDoDetails( QtBaseClass ):           # type: ignore
 
         self.setToDo( None )
 
-    def setToDo(self, todo: ToDo):
+    def setToDo(self, todo: LocalToDo):
         if todo is None:
             self.ui.titleEdit.clear()
             self.ui.descriptionEdit.clear()

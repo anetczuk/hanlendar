@@ -23,6 +23,7 @@
 
 import os
 import logging
+from typing import List
 
 from PyQt5.QtCore import QDate
 from PyQt5.QtCore import QObject
@@ -33,7 +34,7 @@ from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.caldav.manager import CalDAVManager, CalDAVConnector
 from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.task import Task
-from hanlendar.domainmodel.local.todo import ToDo
+from hanlendar.domainmodel.local.todo import LocalToDo
 from hanlendar.domainmodel.local.manager import LocalManager
 
 from hanlendar.fswatchdog import FSWatcher
@@ -48,7 +49,7 @@ from .qt import qApp, QtCore, QtGui, QIcon
 
 from .dataobject import DataObject
 from .notifytimer import NotificationTimer
-from .widget.settingsdialog import SettingsDialog, AppSettings
+from .widget.settingsdialog import SettingsDialog, AppSettings, DatabaseMode
 from .widget.navcalendar import NavCalendarHighlightModel
 from .widget.tasktable import get_reminded_color, get_timeout_color
 
@@ -61,26 +62,28 @@ UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
 
 class DataHighlightModel( NavCalendarHighlightModel ):
 
-    def __init__(self, manager: Manager ):
+    def __init__(self, dataObject: DataObject ):
         super().__init__()
-        self.manager: Manager = manager
+        self.dataObject: DataObject = dataObject
 
     def isHighlighted(self, date: QDate):
         entryDate = date.toPyDate()
-        occurrencesList = self.manager.getTaskOccurrencesForDate( entryDate, False )
+        manager = self.dataObject.getManager()
+        occurrencesList = manager.getTaskOccurrencesForDate( entryDate, False )
         return len(occurrencesList) > 0
 
     def isOccupied(self, date: QDate):
         entryDate = date.toPyDate()
-        occurrencesList = self.manager.getTaskOccurrencesForDate( entryDate, True )
+        manager = self.dataObject.getManager()
+        occurrencesList = manager.getTaskOccurrencesForDate( entryDate, True )
         occurrencesList = [ task for task in occurrencesList if task.isCompleted() ]
         return len(occurrencesList) > 0
 
 
 ##
 class SettingsObject( QObject ):
-    
-    def __init__( self, parent = None ):
+
+    def __init__( self, parent=None ):
         super().__init__( parent )
 
     def getSettings(self):
@@ -126,11 +129,8 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.appSettings = AppSettings()
 
         self.data = DataObject( self )
-        dataPath = self.getDataPath()
-        dataPath = os.path.join( dataPath, "local" )
-        os.makedirs( dataPath, exist_ok=True )
-        self.data.setManager( LocalManager( dataPath ) )
-        
+        self.data.setManager( self.qtSettings.createLocalManager() )
+
         self.messagesQueueWatchdog = FSWatcher()
         self.messagesQueueWatchdog.start( queue_path, self._handleNextMessage )
 
@@ -155,7 +155,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.notifsTimer = NotificationTimer( self )
 
-        self.ui.navcalendar.highlightModel = DataHighlightModel( self.data.getManager() )
+        self.ui.navcalendar.highlightModel = DataHighlightModel( self.data )
 
         self.setDayViewDate()
 
@@ -211,14 +211,45 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
         self.statusBar().showMessage("Ready", 10000)
 
-    def getManager(self):
-        return self.data.getManager()
+    def createCalDAVConnector(self):
+        serverURL      = self.appSettings.serverURL
+        serverUser     = self.appSettings.serverUser
+        serverPassword = self.appSettings.serverPassword
+        calendarName   = self.appSettings.calendarName
+
+        try:
+            connector = CalDAVConnector()
+            connector.connectToServer( serverURL, serverUser, serverPassword )
+        except Exception as ex:
+            _LOGGER.warning( "unable to connect to server: %s", ex )
+            return None
+        connector.connectToCalendar( calendarName )
+        return connector
+
+    def createCalDAVManager(self, connector):
+        dataPath = self.qtSettings.getDataPath()
+        dataPath = os.path.join( dataPath, "caldav" )
+        os.makedirs( dataPath, exist_ok=True )
+        manager = CalDAVManager( connector, dataPath )
+        return manager
 
     def setCalDAVManager(self):
-        connector = CalDAVConnector()
-        connector.connectToCalendar()
-        manager = CalDAVManager( connector )
+        self.appSettings.databaseMode = DatabaseMode.CALDAV
+
+        connector = self.createCalDAVConnector()
+        manager = self.createCalDAVManager( connector )
         self.data.setManager( manager )
+
+    def exportLocalToCalDAV(self):
+        connector = self.createCalDAVConnector()
+        self.exportLocalDB( connector )
+
+    def exportLocalDB(self, connector: CalDAVConnector ):
+        manager = self.qtSettings.createLocalManager()
+        manager.loadData()
+        caldavManager = self.createCalDAVManager( connector )
+        caldavManager.setData( manager )
+        caldavManager.saveToServer()
 
     def loadData(self):
         self.data.loadData()
@@ -265,7 +296,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
             self.ui.taskDetails.setTask( entity )
             self.ui.entityDetailsStack.setCurrentIndex( 1 )
             return
-        if isinstance(entity, ToDo):
+        if isinstance(entity, LocalToDo):
             self.ui.todoDetails.setToDo( entity )
             self.ui.entityDetailsStack.setCurrentIndex( 2 )
             return
@@ -292,7 +323,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
     ## ====================================================================
 
     def updateNotificationTimer(self):
-        notifs = self.data.getManager().getNotificationList()
+        notifs: List[ Notification ] = self.data.getManager().getNotificationList()
         self.notifsTimer.setNotifications( notifs )
 
     def handleNotification( self, notification: Notification ):
@@ -313,7 +344,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         self.ui.navcalendar.repaint()
         self.updateTrayToolTip()
 
-    def updateTasksView(self, updatedTask: Task=None ):
+    def updateTasksView(self, updatedTask: Task = None ):
         self.ui.tasksTable.updateView( updatedTask )
         #self.ui.dayList.updateView()
         self.ui.monthCalendar.updateCells()
@@ -356,7 +387,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
             return
         selectedFile = fielDialog.selectedFiles()[0]
         self.data.importICalendar( selectedFile )
-        
+
     def _handleNextMessage(self):
         with self.messagesQueueWatchdog.ignoreEvents():
             message = get_from_queue( True )
@@ -364,7 +395,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         if message is None:
             _LOGGER.warning( "received None message" )
             return
-        
+
         message_type, message_value = message
         if message_type == "file":
             self.data.importICalendar( message_value, silent=True )
@@ -458,6 +489,7 @@ class MainWindow( QtBaseClass ):           # type: ignore
         dialog = SettingsDialog( self.appSettings, self )
         dialog.setModal( True )
         dialog.iconThemeChanged.connect( self.setIconTheme )
+        dialog.exportLocal.connect( self.exportLocalDB )
         dialogCode = dialog.exec_()
         if dialogCode == QDialog.Rejected:
             self.applySettings()
@@ -467,6 +499,19 @@ class MainWindow( QtBaseClass ):           # type: ignore
 
     def applySettings(self):
         self.setIconTheme( self.appSettings.trayIcon )
+
+        manager = self.qtSettings.createLocalManager()
+        if self.appSettings.databaseMode == DatabaseMode.LOCAL:
+            ## do nothing
+            pass
+        elif self.appSettings.databaseMode == DatabaseMode.CALDAV:
+            connector = self.createCalDAVConnector()
+            manager = self.createCalDAVManager( connector )
+        else:
+            _LOGGER.warning( "unhandled database mode: %s", self.appSettings.databaseMode )
+
+        self.data.setManager( manager )
+        self.loadData()
 
     def loadSettings(self):
         settings = self.qtSettings.getSettings()

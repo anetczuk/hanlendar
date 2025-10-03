@@ -29,7 +29,7 @@ from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMenu, QAction
 from PyQt5.QtGui import QDesktopServices
 
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.local.task import LocalTask
 
 from .. import uiloader
 
@@ -69,6 +69,13 @@ class TaskDialog( QtBaseClass ):           # type: ignore
                 self.task.dueDateTime = self.task.occurrenceStart + timedelta(hours=1)
 
         self.ui.descriptionEdit.setContextMenuPolicy( Qt.CustomContextMenu )
+
+        self.ui.uidText.setText( self.task.UID )
+        taskParent = self.task.getParent()
+        if taskParent is not None:
+            self.ui.parentUidText.setText( taskParent.UID )
+        else:
+            self.ui.parentUidText.setText( "None" )
 
         self.ui.titleEdit.setText( self.task.title )
         self.ui.descriptionEdit.setText( self.task.description )

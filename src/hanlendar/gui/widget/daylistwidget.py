@@ -79,14 +79,15 @@ class DayTimeline( DrawWidget ):
         painter.fillRect( 0, 0, width, height, bgColor )
 
         hourStep = height / 24
+        hourStepInt = int(hourStep)
 
         pen = painter.pen()
         pen.setColor( QColor("black") )
         painter.setPen(pen)
-        painter.drawText( 0, 0, width - 6, hourStep, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, "0" )
+        painter.drawText( 0, 0, width - 6, hourStepInt, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, "0" )
 
         for h in range(0, 24):
-            hourHeight = hourStep * h
+            hourHeight = int(hourStep * h)
             text = str(h)
 
             pen = painter.pen()
@@ -97,11 +98,11 @@ class DayTimeline( DrawWidget ):
             pen = painter.pen()
             pen.setColor( QColor("black") )
             painter.setPen(pen)
-            painter.drawText( 0, hourHeight, width - 6, hourStep,
+            painter.drawText( 0, hourHeight, width - 6, hourStepInt,
                               Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight,
                               text )
 
-    def mousePressEvent(self, _):
+    def mousePressEvent(self, _event):
         self.itemClicked.emit()
 
 
@@ -121,16 +122,17 @@ class DayItem( DrawWidget ):
     def resizeItem( self, lineRect: QRect ):
         allowedWidth  = lineRect.width()
         allowedHeight = lineRect.height()
-        xOffset       = lineRect.x()
+        xOffset       = int(lineRect.x())
 
         daySpan = self.task.calculateTimeSpan( self.day )
-        yOffset = allowedHeight * daySpan[0]
+        yOffset = int(allowedHeight * daySpan[0])
         self.move(xOffset, yOffset)
 
         spanDuration = daySpan[1] - daySpan[0]                              ## in range [0..1]
         spanDuration = max( spanDuration, MIN_TASK_DRAW_HEIGHT_FACTOR )
         self.setFixedWidth( allowedWidth )
-        self.setFixedHeight( allowedHeight * spanDuration )
+        fixedWidth = int(allowedHeight * spanDuration)
+        self.setFixedHeight( fixedWidth )
 
     def paintEvent(self, event):
         super().paintEvent( event )
@@ -164,10 +166,10 @@ class DayItem( DrawWidget ):
                               Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft,
                               self.task.title )
 
-    def mousePressEvent(self, _):
+    def mousePressEvent(self, _event):
         self.selectedItem.emit( self )
 
-    def mouseDoubleClickEvent(self, _):
+    def mouseDoubleClickEvent(self, _event):
         self.itemDoubleClicked.emit( self )
 
     def isSelected(self):
@@ -242,7 +244,7 @@ class DayListContentWidget( QWidget ):
 
         hourStep = height / 24
         for h in range(0, 24):
-            hourHeight = hourStep * h
+            hourHeight = int(hourStep * h)
             painter.drawLine( 0, hourHeight, width, hourHeight )
 
         if self.currentIndex >= 0:
@@ -284,10 +286,10 @@ class DayListContentWidget( QWidget ):
             _LOGGER.exception("item not found")
             return -1
 
-    def mousePressEvent(self, _):
+    def mousePressEvent(self, _event):
         self.setCurrentIndex( -1 )
 
-    def mouseDoubleClickEvent(self, _):
+    def mouseDoubleClickEvent(self, _event):
         self.taskDoubleClicked.emit( -1 )
 
     def isSelected(self, item: DayItem):
@@ -364,7 +366,7 @@ class DayListWidget( QWidget ):
         occurrencesList = [ task.currentOccurrence() for task in tasksList ]
         self.content.setTasks( occurrencesList, day )
 
-    def contextMenuEvent( self, _ ):
+    def contextMenuEvent( self, _event ):
         task: Task = self.content.getCurrentTask()
         self.taskContextMenu.show( task )
 

@@ -22,11 +22,15 @@
 #
 
 import logging
+import datetime
 
 from typing import List
 
 from hanlendar import persist
 from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.item import generate_uid
+from hanlendar.domainmodel.recurrent import Recurrent
+from hanlendar.domainmodel.reminder import Reminder
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,14 +43,17 @@ class LocalTask( Task, persist.Versionable ):
     ## 2: add base class Item
     ## 3: rename: 'title' to '_title', 'description' to '_description', 'priority' to '_priority'
     ## 4: rename: 'reminderList' to '_reminderList'
-    _class_version = 4
+    ## 5: rescaled 'priority'
+    ## 6: added 'UID'
+    _class_version = 6
 
     def __init__(self, title="" ):
         super(LocalTask, self).__init__()
+        self._UID                           = generate_uid()
         self._title                         = title
         self._description                   = ""
         self._completed                     = 0        ## in range [0..100]
-        self._priority                      = 10       ## lower number, greater priority
+        self._priority                      = 5        ## lower number, greater priority
 
         self._parent                        = None
         self.subitems: list                 = None
@@ -96,6 +103,16 @@ class LocalTask( Task, persist.Versionable ):
             dict_["_reminderList"] = dict_.pop( "reminderList", None )
             dictVersion_ = 4
 
+        if dictVersion_ == 4:
+            ## rescale priority
+            priority = dict_.pop( "_priority", 10 )
+            dict_["_priority"] = int( priority / 2.0 )
+            dictVersion_ = 5
+
+        if dictVersion_ == 5:
+            dict_["_UID"] = generate_uid()
+            dictVersion_ = 6
+
         # pylint: disable=W0201
         self.__dict__ = dict_
 
@@ -115,9 +132,17 @@ class LocalTask( Task, persist.Versionable ):
     ## overrided
     def setSubitems( self, newList ):
         self.subitems = newList
-        
+
     ## ========================================================================
-        
+
+    ## overriden
+    def _getUID(self):
+        return self._UID
+
+    ## overriden
+    def _setUID(self, value):
+        self._UID = value
+
     ## overriden
     def _getTitle(self):
         return self._title
@@ -125,7 +150,7 @@ class LocalTask( Task, persist.Versionable ):
     ## overriden
     def _setTitle(self, value):
         self._title = value
-        
+
     ## overriden
     def _getDescription(self):
         return self._description
@@ -157,7 +182,7 @@ class LocalTask( Task, persist.Versionable ):
     ## overrided
     def _setPriority(self, value):
         self._priority = value
-    
+
     ## ========================================================================
 
     ## overriden
@@ -183,8 +208,8 @@ class LocalTask( Task, persist.Versionable ):
         return self._reminderList
 
     ## overriden
-    def _setReminderList(self, value):
-        self._reminderList = value
+    def _setReminderList(self, values):
+        self._reminderList = values
 
     ## =====================================================================
 
@@ -217,4 +242,3 @@ class LocalTask( Task, persist.Versionable ):
             self.occurrenceStart, self.occurrenceDue,
             reminderList, self._recurrence,
             self._recurrentOffset )
-

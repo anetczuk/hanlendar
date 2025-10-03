@@ -41,7 +41,7 @@ queue_lock      = os.path.join( '/tmp', 'hanlendar.spool.lock' )
 
 
 ## ensure directory exists (required for watchdog)
-os.makedirs( queue_path, exist_ok = True )
+os.makedirs( queue_path, exist_ok=True )
 
 
 def get_from_queue( nowait=False ):

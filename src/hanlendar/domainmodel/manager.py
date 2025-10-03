@@ -26,34 +26,23 @@ from datetime import date, datetime
 import logging
 
 import abc
+from typing import List
 
 import glob
-from icalendar import cal
-from hanlendar.domainmodel.reminder import Notification
-from hanlendar.domainmodel.task import Task
-from hanlendar.domainmodel.item import Item
-import icalendar
-from hanlendar.domainmodel.local.todo import ToDo
 
+import icalendar
+
+from hanlendar.domainmodel.reminder import Notification
+from hanlendar.domainmodel.task import Task, TaskOccurrence
+from hanlendar.domainmodel.item import Item
+from hanlendar.domainmodel.local.todo import LocalToDo
 # from hanlendar import persist
 # from hanlendar.domainmodel.item import Item
 # from hanlendar.domainmodel.task import TaskOccurrence
-# from hanlendar.domainmodel.local.todo import ToDo
+# from hanlendar.domainmodel.local.todo import LocalToDo
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def extract_ical( content ):
-    cal_begin_pos = content.find( "BEGIN:VCALENDAR" )
-    if cal_begin_pos < 0:
-        return content
-    END_SUB = "END:VCALENDAR"
-    cal_end_pos = content.find( END_SUB, cal_begin_pos )
-    if cal_end_pos < 0:
-        return content
-    cal_end_pos += len( END_SUB )
-    return content[ cal_begin_pos:cal_end_pos ]
 
 
 ## ======================================================
@@ -64,6 +53,7 @@ class Manager():
 
     @abc.abstractmethod
     def storeData( self ):
+        """ retrun bool: True if new data saved, otherwise False """
         raise NotImplementedError('You need to define this method in derived class!')
 
     @abc.abstractmethod
@@ -71,7 +61,15 @@ class Manager():
         raise NotImplementedError('You need to define this method in derived class!')
 
     ## ======================================================================
-    
+
+    def setData( self, manager: 'Manager' ):
+        tasks = manager._getTasks()
+        self._setTasks( tasks )
+        todos = manager._getToDos()
+        self._setToDos( todos )
+        notes = manager._getNotes()
+        self._setNotes( notes )
+
     @abc.abstractmethod
     def _getTasks( self ):
         raise NotImplementedError('You need to define this method in derived class!')
@@ -79,9 +77,9 @@ class Manager():
     @abc.abstractmethod
     def _setTasks( self, value ):
         raise NotImplementedError('You need to define this method in derived class!')
- 
+
     @abc.abstractmethod
-    def getTasksAll(self):
+    def getTasksAll(self) -> List[Task]:
         """Return tasks and all subtasks from tree."""
         raise NotImplementedError('You need to define this method in derived class!')
 
@@ -89,7 +87,7 @@ class Manager():
     def getTasks( self ):
         tasksList = self._getTasks()
         return list( tasksList )
- 
+
     @property
     def tasks(self):
         return self._getTasks()
@@ -114,7 +112,7 @@ class Manager():
     def getTodosAll(self):
         """Return tasks and all subtasks from tree."""
         raise NotImplementedError('You need to define this method in derived class!')
- 
+
     ## return shallow copy (of list)
     def getToDos( self, includeCompleted=True ):
         if includeCompleted:
@@ -130,7 +128,7 @@ class Manager():
         self._setToDos( newList )
 
     @abc.abstractmethod
-    def createEmptyToDo(self) -> ToDo:
+    def createEmptyToDo(self) -> LocalToDo:
         raise NotImplementedError('You need to define this method in derived class!')
 
     @abc.abstractmethod
@@ -148,7 +146,14 @@ class Manager():
         self._setNotes( notesDict )
 
     ## ======================================================================
- 
+
+    def findTaskByUID(self, uid) -> Task:
+        allTasks = self.getTasksAll()
+        for task in allTasks:
+            if task.UID == uid:
+                return task
+        return None
+
     def getTaskOccurrencesForDate(self, taskDate: date, includeCompleted=True):
         retList = list()
         allTasks = self.getTasksAll()
@@ -175,7 +180,7 @@ class Manager():
             elif task.occurrenceDue < retTask.occurrenceDue:
                 retTask = task
         return retTask
- 
+
     def getDeadlinedTasks(self):
         retTasks = list()
         allTasks = self.getTasksAll()
@@ -186,7 +191,7 @@ class Manager():
             if occurrence.isTimedout():
                 retTasks.append( task )
         return retTasks
- 
+
     def getRemindedTasks(self):
         retTasks = list()
         allTasks = self.getTasksAll()
@@ -197,13 +202,13 @@ class Manager():
             if occurrence.isReminded():
                 retTasks.append( task )
         return retTasks
- 
+
     def getTaskCoords(self, task):
         return Item.getItemCoords( self.tasks, task )
- 
+
     def getTaskByCoords(self, task):
         return Item.getItemFromCoords( self.tasks, task )
- 
+
     def insertTask( self, task: Task, taskCoords ):
         if taskCoords is None:
             self.tasks.append( task )
@@ -242,7 +247,55 @@ class Manager():
 
     def replaceTask( self, oldTask: Task, newTask: Task ):
         return Item.replaceSubItemInList(self.tasks, oldTask, newTask)
- 
+
+    ### check if ancestor of task is added to root tasks
+    def fixData(self):
+        self.fixTaskParents()
+        self.fixTaskRoots()
+        self.fixTaskChildren()
+
+    def fixTaskParents(self):
+        rootTasks = self._getTasks()
+        allTasks = self.getTasksAll()
+        for task in allTasks:
+            rootItem = task.getRootItem()
+            if rootItem is None:
+                continue
+            if rootItem in rootTasks:
+                continue
+            ## invalid case -- root item not added to tasks
+            _LOGGER.warning( "fixing task ancestor -- adding root task %s %s", rootItem.title, rootItem.UID )
+            self.addTask( rootItem )
+
+    def fixTaskRoots(self):
+        rootTasks = self._getTasks()
+        for index in range(len(rootTasks) - 1, -1, -1):
+            task = rootTasks[ index ]
+            if task.getParent() is not None:
+                ## invalid case -- task with parent added to root tasks
+                _LOGGER.warning( "fixing root tasks -- removing child %s %s", task.title, task.UID )
+                del rootTasks[ index ]
+
+    def fixTaskChildren(self):
+        allTasks = self.getTasksAll()
+        for task in allTasks:
+            taskParent: Task = task.getParent()
+            if taskParent is not None:
+                subitems = taskParent.getSubitems()
+                if task not in subitems:
+                    ## invalid case
+                    _LOGGER.warning( "task '%s' have invalid parent -- moved to task %s", task.title, taskParent.title )
+                    task.setParent( taskParent )
+            children = task.getSubitems()
+            if children is None:
+                continue
+            for child in children:
+                childParent = child.getParent()
+                if childParent is not task:
+                    ## invalid case
+                    _LOGGER.warning( "task '%s' have invalid parent -- moved to task %s", child.title, task.title )
+                    task.setParent( taskParent )
+
     def printTasks(self):
         retStr = ""
         tSize = len(self.tasks)
@@ -250,15 +303,15 @@ class Manager():
             task = self.tasks[i]
             retStr += str(task) + "\n"
         return retStr
- 
+
     def addNewDeadlineDateTime( self, eventdate: datetime, title ):
         eventTask = self.createEmptyTask()
         eventTask.title = title
         eventTask.setDeadlineDateTime( eventdate )
         self.addTask( eventTask )
         return eventTask
- 
-    def getNotificationList(self):
+
+    def getNotificationList(self) -> List[ Notification ]:
         ret = list()
         for i in range(0, len(self.tasks)):
             task = self.tasks[i]
@@ -268,14 +321,14 @@ class Manager():
         return ret
 
     ## ========================================================
- 
+
     def getToDoCoords(self, todo):
         return Item.getItemCoords( self.todos, todo )
- 
+
     def getToDoByCoords(self, todo):
         return Item.getItemFromCoords( self.todos, todo )
- 
-    def insertToDo( self, todo: ToDo, todoCoords ):
+
+    def insertToDo( self, todo: LocalToDo, todoCoords ):
         if todoCoords is None:
             self.todos.append( todo )
             return
@@ -286,27 +339,27 @@ class Manager():
             parentToDo.addSubItem( todo, listPos )
         else:
             self.todos.insert( listPos, todo )
- 
-    def addToDo( self, todo: ToDo = None ):
+
+    def addToDo( self, todo: LocalToDo = None ):
         if todo is None:
             todo = self.createEmptyToDo()
         self.todos.append( todo )
         todo.setParent( None )
         return todo
- 
+
     def addNewToDo( self, title ):
         todo = self.createEmptyToDo()
         todo.title = title
         self.addToDo( todo )
         return todo
- 
-    def removeToDo( self, todo: ToDo ):
+
+    def removeToDo( self, todo: LocalToDo ):
         return Item.removeSubItemFromList(self.todos, todo)
- 
-    def replaceToDo( self, oldToDo: ToDo, newToDo: ToDo ):
+
+    def replaceToDo( self, oldToDo: LocalToDo, newToDo: LocalToDo ):
         return Item.replaceSubItemInList(self.todos, oldToDo, newToDo)
- 
-    def getNextToDo(self) -> ToDo:
+
+    def getNextToDo(self) -> LocalToDo:
         nextToDo = None
         allItems = self.getTodosAll()
         for item in allItems:
@@ -320,58 +373,18 @@ class Manager():
         return nextToDo
 
     ## ========================================================
- 
+
     def addNote(self, title, content):
         notes = self._getNotes()
         notes[title] = content
- 
+
     def renameNote(self, fromTitle, toTitle):
         notes = self._getNotes()
         notes[toTitle] = notes.pop(fromTitle)
- 
+
     def removeNote(self, title):
         notes = self._getNotes()
         del notes[title]
-
-    ## ========================================================
-
-    def importICalendar(self, content: str):
-        try:
-            extracted_ical = extract_ical( content )
-            calendar: icalendar.cal.Calendar = cal.Calendar.from_ical( extracted_ical )
-            return self.importICalendarObject( calendar )
-        except ValueError as ex:
-            _LOGGER.warning( "unable to import calendar data: %s", ex )
-        return None
-
-    def importICalendarObject(self, calendar: icalendar.cal.Calendar):
-        tasks = []
-        for component in calendar.walk():
-            if component.name == "VEVENT":
-                summary    = component.get('summary')
-                location   = component.get('location')
-                start_date = component.get('dtstart').dt
-                start_date = start_date.astimezone()            ## convert to local timezone
-                start_date = start_date.replace(tzinfo=None)
-                end_date   = component.get('dtend').dt
-                end_date   = end_date.astimezone()              ## convert to local timezone
-                end_date   = end_date.replace(tzinfo=None)
-                
-                #TODO: check if task already added
-                
-                task = self.createEmptyTask()
-                task.title = f"{summary}, {location}"
-                task.description = component.get('description')
-                if task.description is None:
-                    task.description = ""
-                task.description = task.description.replace( "=0D=0A", "\n" )
-                task.startDateTime = start_date
-                task.dueDateTime   = end_date
-                task.addReminderDays( 1 )
-                
-                addedTask = self.addTask( task )
-                tasks.append( addedTask )
-        return tasks
 
 
 ## ========================================================

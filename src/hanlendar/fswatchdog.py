@@ -66,7 +66,7 @@ class FSWatcher:
         try:
             while True:
                 time.sleep(5)
-        except:
+        except:  # noqa
             self.observer.stop()
             print( "Error" )
 
@@ -106,7 +106,6 @@ class WatcherBlocker:
         return False                                                                ## do not suppress exceptions
 
 
-
 class FSHandler(FileSystemEventHandler):
 
     def __init__(self, callback=None):
@@ -125,7 +124,7 @@ class FSHandler(FileSystemEventHandler):
 
 # if __name__ == '__main__':
 #     import os
-# 
+#
 #     queue_path = os.path.join( '/tmp', 'hanlendar.spool' )
 #     w = FSWatcher()
 #     w.run( queue_path )

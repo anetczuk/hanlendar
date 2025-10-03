@@ -40,11 +40,11 @@ class TrayIconTheme(Enum):
     BLACK_WHITE   = 'calendar-bw.png'
 
     @classmethod
-    def findByName(cls, name):
+    def findByName(cls, name, defaultValue=None):
         for item in cls:
             if item.name == name:
                 return item
-        return None
+        return defaultValue
 
     @classmethod
     def indexOf(cls, key):

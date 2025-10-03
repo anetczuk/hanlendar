@@ -26,6 +26,7 @@ import logging
 from PyQt5.QtWidgets import QUndoCommand
 
 from PyQt5.QtWidgets import QMessageBox
+from hanlendar.domainmodel.icalio import import_icalendar_content
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ class ImportICalendarCommand( QUndoCommand ):
         self.setText("Import iCalendar")
 
     def redo(self):
-        self.newTasks = self.domainModel.importICalendar( self.content )
+        self.newTasks = import_icalendar_content( self.domainModel, self.content )
         if self.newTasks is None:
             if self.silent is False:
                 QMessageBox.warning( None, "Import iCalendar", "Unable to import data" )

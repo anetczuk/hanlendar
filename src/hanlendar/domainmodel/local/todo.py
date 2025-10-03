@@ -25,26 +25,29 @@ import logging
 
 from hanlendar import persist
 
-from hanlendar.domainmodel.item import Item
+from hanlendar.domainmodel.item import Item, generate_uid
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ToDo( Item, persist.Versionable ):
+class LocalToDo( Item, persist.Versionable ):
     """ToDo is entity without placement in time."""
 
     ## 0: add subtodos
     ## 1: add base class Item
     ## 2: rename: 'title' to '_title', 'description' to '_description', 'priority' to '_priority'
-    _class_version = 2
+    ## 3: rescaled 'priority'
+    ## 4: added 'UID'
+    _class_version = 4
 
     def __init__(self, title="" ):
-        super(ToDo, self).__init__()
+        super(LocalToDo, self).__init__()
+        self._UID                           = generate_uid()
         self._title                         = title
         self._description                   = ""
         self._completed                     = 0        ## in range [0..100]
-        self._priority                      = 10       ## lower number, greater priority
+        self._priority                      = 5        ## lower number, greater priority
 
         self._parent                        = None
         self.subitems: list                 = None
@@ -73,6 +76,16 @@ class ToDo( Item, persist.Versionable ):
             dict_["_description"] = dict_.pop( "description", "" )
             dict_["_priority"]    = dict_.pop( "priority", 10 )
             dictVersion_ = 2
+
+        if dictVersion_ == 2:
+            ## rescale priority
+            priority = dict_.pop( "_priority", 10 )
+            dict_["_priority"] = int( priority / 2.0 )
+            dictVersion_ = 3
+
+        if dictVersion_ == 3:
+            dict_["_UID"] = generate_uid()
+            dictVersion_ = 4
 
         # pylint: disable=W0201
         self.__dict__ = dict_
@@ -106,6 +119,16 @@ class ToDo( Item, persist.Versionable ):
     ## ========================================================================
 
     ## overriden
+    def _getUID(self):
+        return self._UID
+
+    ## overriden
+    def _setUID(self, value):
+        self._UID = value
+
+    ## ========================================================================
+
+    ## overriden
     def _getTitle(self):
         return self._title
 
@@ -134,7 +157,7 @@ class ToDo( Item, persist.Versionable ):
         self._completed = value
 
     ## ========================================================================
-    
+
     ## overrided
     def _getPriority(self):
         return self._priority
@@ -142,10 +165,10 @@ class ToDo( Item, persist.Versionable ):
     ## overrided
     def _setPriority(self, value):
         self._priority = value
-    
+
     ## ========================================================================
 
     def addSubtodo(self, todo=None, index=-1):
         if todo is None:
-            todo = ToDo()
+            todo = LocalToDo()
         return self.addSubItem(todo, index)

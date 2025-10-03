@@ -101,3 +101,48 @@ class ReminderTest(unittest.TestCase):
 
         text = reminder.printPretty()
         self.assertEqual( text, "0:00:00 before due time" )
+
+    def test_from_timedelta_string_hours(self):
+        delta = timedelta( hours=3 )
+        delta_string = str( delta )
+        self.assertEqual( delta_string, "3:00:00" )
+        reminder: Reminder = Reminder.from_timedelta_string( delta_string )
+
+        self.assertEqual( reminder.timeOffset, delta )
+
+    def test_from_timedelta_string_hours_negative(self):
+        delta = timedelta( hours=-3 )
+        delta_string = str( delta )
+        self.assertEqual( delta_string, "-1 day, 21:00:00" )
+        reminder: Reminder = Reminder.from_timedelta_string( delta_string )
+
+        self.assertEqual( reminder.timeOffset, delta )
+
+    def test_from_timedelta_string_days(self):
+        delta = timedelta( weeks=1, days=2, hours=0)
+        delta_string = str( delta )
+        self.assertEqual( delta_string, "9 days, 0:00:00" )
+        reminder: Reminder = Reminder.from_timedelta_string( delta_string )
+
+        self.assertEqual( reminder.timeOffset, delta )
+
+    def test_from_timedelta_string_days_only(self):
+        delta = timedelta( days=7 )
+        delta_string = str( delta )
+        self.assertEqual( delta_string, "7 days, 0:00:00" )
+        reminder: Reminder = Reminder.from_timedelta_string( delta_string )
+
+        self.assertEqual( reminder.timeOffset, delta )
+
+    def test_from_timedelta_string_days_negative(self):
+        delta = timedelta( weeks=-1, days=-2, hours=0)
+        delta_string = str( delta )
+        self.assertEqual( delta_string, "-9 days, 0:00:00" )
+        reminder: Reminder = Reminder.from_timedelta_string( delta_string )
+
+        self.assertEqual( reminder.timeOffset, delta )
+
+#     def test_repr(self):
+#         reminder = Reminder()
+#         raw_data = reminder.__dict__
+#         self.assertEqual( "", str(raw_data) )

@@ -23,9 +23,14 @@
 
 import logging
 import abc
+import uuid
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def generate_uid():
+    return str( uuid.uuid4() ) + "@hanlendar"
 
 
 class Item():
@@ -51,6 +56,30 @@ class Item():
     ## ========================================================================
 
     @abc.abstractmethod
+    def _getUID(self):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    @abc.abstractmethod
+    def _setUID(self, value):
+        raise NotImplementedError('You need to define this method in derived class!')
+
+    def getUID(self):
+        return self._getUID()
+
+    def setUID(self, value):
+        self._setUID( value )
+
+    @property
+    def UID(self):
+        return self.getUID()
+
+    @UID.setter
+    def UID(self, value):
+        self.setUID( value )
+
+    ## ========================================================================
+
+    @abc.abstractmethod
     def _getTitle(self):
         raise NotImplementedError('You need to define this method in derived class!')
 
@@ -71,7 +100,7 @@ class Item():
     @title.setter
     def title(self, value):
         self.setTitle( value )
-        
+
     ## ========================================================================
 
     @abc.abstractmethod
@@ -95,7 +124,7 @@ class Item():
     @description.setter
     def description(self, value):
         self.setDescription( value )
-        
+
     ## ========================================================================
 
     @abc.abstractmethod
@@ -134,9 +163,9 @@ class Item():
             if sub.isCompleted() is False:
                 return False
         return True
-    
+
     ## ========================================================================
-    
+
     @abc.abstractmethod
     def _getPriority(self):
         raise NotImplementedError('You need to define this method in derived class!')
@@ -144,11 +173,13 @@ class Item():
     @abc.abstractmethod
     def _setPriority(self, value):
         raise NotImplementedError('You need to define this method in derived class!')
-    
+
     def getPriority(self):
         return self._getPriority()
 
     def setPriority(self, value):
+        if value > 9:
+            value = 9
         self._setPriority( value )
 
     @property
@@ -161,7 +192,20 @@ class Item():
 
     ## ========================================================================
     ## ========================================================================
-    
+
+    def getRootItem(self):
+        currItem = self
+        visitedItems = set()
+        while True:
+            if currItem in visitedItems:
+                _LOGGER.warning( "cycle detected -- unable to find root item" )
+                return None
+            visitedItems.add( currItem )
+            currParent = currItem.getParent()
+            if currParent is None:
+                return currItem
+            currItem = currParent
+
     def getAllSubItems(self):
         """Return all sub items from tree."""
         subitems = self.getSubitems()

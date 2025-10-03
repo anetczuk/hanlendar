@@ -28,10 +28,10 @@ import hanlendar.persist as persist
 
 
 class FileMock():
-    
+
     def read(self):
         return None
-    
+
     def readline(self):
         return None
 
@@ -47,18 +47,17 @@ class RenamingUnpicklerTest(unittest.TestCase):
 
     def test_dict_property(self):
         class TestClass():
-            
+
             def __init__(self):
                 self._field = None
-                
+
             @property
             def field(self):
                 return self._field
-                
+
             @field.setter
             def field(self, value):
                 self._field = value
-
 
         testObject = TestClass()
         self.assertTrue( "_field" in testObject.__dict__ )
@@ -68,7 +67,7 @@ class RenamingUnpicklerTest(unittest.TestCase):
         def mapper_function( module, name ):
             name_map = { "aaa": "bbb" }
             return ( name_map.get( module, module ), name )
-        
+
         file = FileMock()
         unpicker = persist.RenamingUnpickler( file, module_mapper=mapper_function )
 
@@ -82,9 +81,9 @@ class RenamingUnpicklerTest(unittest.TestCase):
             def __call__(self, module, name):
                 name_map = { "aaa": "bbb" }
                 return ( name_map.get( module, module ), name )
-        
+
         mapper = MapperClass()
-        
+
         file = FileMock()
         unpicker = persist.RenamingUnpickler( file, module_mapper=mapper )
 

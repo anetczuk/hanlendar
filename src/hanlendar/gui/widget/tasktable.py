@@ -223,7 +223,7 @@ class TaskTable( QtWidgets.QTreeView ):
         self.expandItems = expand
         self.expandOnDemand()
 
-    def updateView(self, updatedTask: Task=None):
+    def updateView(self, updatedTask: Task = None):
         if updatedTask is not None:
             taskIndex = self.getIndex( updatedTask )
             if taskIndex is not None:

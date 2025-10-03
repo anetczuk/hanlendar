@@ -49,5 +49,5 @@ class MainWindowTest(unittest.TestCase):
         self.widget = None
 
     def test_getDataPath(self):
-        dataPath = self.widget.getDataPath()
+        dataPath = self.widget.qtSettings.getDataPath()
         self.assertTrue( "Hanlendar-data" in dataPath )

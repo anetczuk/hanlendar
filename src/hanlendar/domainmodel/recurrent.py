@@ -60,9 +60,34 @@ class RepeatType(Enum):
         return -1
 
 
+@unique
+class RecurrentField(Enum):
+    MODE     = auto()
+    STEP     = auto()
+    ENDDATE  = auto()
+
+    @classmethod
+    def findByName(cls, name, defaultValue=None):
+        for item in cls:
+            if item.name == name:
+                return item
+        return defaultValue
+
+    @classmethod
+    def indexOf(cls, key):
+        index = 0
+        for item in cls:
+            if item == key:
+                return index
+            if item.name == key:
+                return index
+            index = index + 1
+        return -1
+
+
 class Recurrent():
 
-    def __init__(self, mode: RepeatType = None, every: int = None):
+    def __init__(self, mode: RepeatType = None, every: int = None, endDate: date = None):
         if mode is None:
             mode = RepeatType.NEVER
         if every is None:
@@ -71,8 +96,15 @@ class Recurrent():
             every = 0
 
         self.mode: RepeatType = mode
-        self.every            = every
-        self.endDate: date    = None
+        self.every: int       = every
+        self.endDate: date    = endDate
+
+    def isValid(self):
+        if self.mode == RepeatType.NEVER:
+            return False
+        if self.every < 1:
+            return False
+        return True
 
     def isAsParent(self):
         return self.mode == RepeatType.ASPARENT
@@ -125,7 +157,10 @@ class Recurrent():
     def nextDateTime(self, currDate: datetime) -> datetime:
         if currDate is None:
             return None
-        nextDate = currDate + self.getDateOffset()
+        dateOffset = self.getDateOffset()
+        if dateOffset is None:
+            return None
+        nextDate = currDate + dateOffset
         if self.endDate is None:
             return nextDate
         if nextDate.date() > self.endDate:
@@ -136,8 +171,16 @@ class Recurrent():
         offset = self.getDateOffset()
         return find_multiplication( referenceDate, targetDate, offset )
 
+    def __eq__( self, other: 'Recurrent' ):
+        if not isinstance(other, Recurrent):
+            ## don't attempt to compare against unrelated types
+            return NotImplemented
+
+        return self.mode == other.mode and self.every == other.every and self.endDate == other.endDate
+
     def __repr__(self):
-        return "[m:%s e:%s ed:%s]" % ( self.mode, self.every, self.endDate )
+        return "Recurrent( mode=%s, every=%s, endDate=%s )" % ( self.mode, self.every, self.endDate )
+        ## return "[m:%s e:%s ed:%s]" % ( self.mode, self.every, self.endDate )
 
 
 def find_multiplication( startDate: date, endDate: date, offset: relativedelta ) -> int:

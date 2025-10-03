@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import QDialog, QFileDialog
 from PyQt5.QtCore import QUrl
 from PyQt5.QtGui import QDesktopServices
 
-from hanlendar.domainmodel.local.todo import ToDo
+from hanlendar.domainmodel.local.todo import LocalToDo
 
 from .. import uiloader
 
@@ -49,7 +49,7 @@ class ToDoDialog( QtBaseClass ):           # type: ignore
         if todoObject is not None:
             self.todo = copy.deepcopy( todoObject )
         else:
-            self.todo = ToDo()
+            self.todo = LocalToDo()
 
         self.completed = self.todo.completed
 

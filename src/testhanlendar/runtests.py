@@ -55,7 +55,7 @@ def match_tests( pattern: str ):
     ## wildcarded
     rePattern = pattern
     # pylint: disable=W1401
-    rePattern = rePattern.replace(".", "\.")
+    rePattern = rePattern.replace(".", r"\.")
     rePattern = rePattern.replace("*", ".*")
     rePattern = rePattern.replace("/", ".")
     ## rePattern = "^" + rePattern + "$"

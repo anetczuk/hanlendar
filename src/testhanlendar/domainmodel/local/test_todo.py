@@ -23,7 +23,7 @@
 
 import unittest
 
-from hanlendar.domainmodel.local.todo import ToDo
+from hanlendar.domainmodel.local.todo import LocalToDo
 
 
 class TaskTest(unittest.TestCase):
@@ -36,20 +36,20 @@ class TaskTest(unittest.TestCase):
         pass
 
     def test_isCompleted(self):
-        todo = ToDo()
+        todo = LocalToDo()
         self.assertEqual( todo.isCompleted(), False )
 
         todo.setCompleted()
         self.assertEqual( todo.isCompleted(), True )
 
     def test_isCompleted_sub(self):
-        todo = ToDo()
+        todo = LocalToDo()
         self.assertEqual( todo.isCompleted(), False )
 
         todo.setCompleted()
         self.assertEqual( todo.isCompleted(), True )
 
-        child = todo.addSubtodo( ToDo() )
+        child = todo.addSubtodo( LocalToDo() )
         self.assertEqual( todo.isCompleted(), False )
 
         child.setCompleted()

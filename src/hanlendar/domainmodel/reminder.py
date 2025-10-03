@@ -21,9 +21,15 @@
 # SOFTWARE.
 #
 
+import logging
+
 from enum import Enum, unique
 from datetime import datetime, timedelta
-# import copy
+
+# from hanlendar.domainmodel.task import Task
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @unique
@@ -41,14 +47,18 @@ class RemainderDirectionType(Enum):
 class Notification():
 
     def __init__(self):
-        self.notifyTime = None
-        self.message = None
-        self.task = None
+        self.notifyTime: datetime = None                  ## time given in seconds since epoch
+        self.message: str = None
+        self.task: Task = None
 
-    def remainingSeconds(self):
+    def remainingSeconds(self) -> float:
+        timeDiff = self.remainingTime()
+        return timeDiff.total_seconds()
+
+    def remainingTime(self) -> timedelta:
         currTime = datetime.today()
         timeDiff = self.notifyTime - currTime
-        return timeDiff.total_seconds()
+        return timeDiff
 
     def __str__(self):
         return "[nt:%s m:%s t:%s]" % ( self.notifyTime, self.message, self.task.title )
@@ -60,10 +70,12 @@ class Notification():
 
 class Reminder():
 
-    def __init__(self):
-        self.timeOffset: timedelta              = None
-        self.timePoint: TimePointType           = None
-        self.direction: RemainderDirectionType  = None
+    def __init__(self, days=None, timeOffset=None, timePoint=None, direction=None ):
+        self.timeOffset: timedelta              = timeOffset
+        self.timePoint: TimePointType           = timePoint              ## not used?
+        self.direction: RemainderDirectionType  = direction              ## not used?
+        if days is not None:
+            self.setDays(days)
 
     def setTime(self, days, seconds):
         self.setDays( days )
@@ -104,7 +116,29 @@ class Reminder():
         return output
 
     def __repr__(self):
-        return "[t:%s p:%s d:%s]" % ( self.timeOffset, self.timePoint, self.direction )
+        return "Reminder( timeOffset=%s, timePoint=%s, direction=%s )" % ( repr(self.timeOffset), self.timePoint, self.direction )
+#         return "[t:%s p:%s d:%s]" % ( self.timeOffset, self.timePoint, self.direction )
+
+    @staticmethod
+    def from_timedelta_string( value ):
+        fields = value.split(",")
+        days = 0
+        timeField = None
+        if len(fields) > 1:
+            timeField  = fields[1]
+            daysFields = fields[0].split(" ")
+            days = int( daysFields[0] )
+        else:
+            timeField = fields[0]
+        timeField = timeField.strip()
+        try:
+            timePart = datetime.strptime( timeField, "%H:%M:%S" )
+            retObj = Reminder()
+            retObj.timeOffset = timedelta( days=days, hours=timePart.hour, minutes=timePart.minute, seconds=timePart.second )
+            return retObj
+        except ValueError as ex:
+            _LOGGER.error( "unable to load reminder from '%s' reason: %s", timeField, ex )
+            return None
 
 
 def print_timedelta( value: timedelta ):

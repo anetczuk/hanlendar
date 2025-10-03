@@ -22,6 +22,8 @@
 #
 
 import logging
+import datetime
+from typing import List
 
 from PyQt5.QtCore import QObject, QTimer, pyqtSignal
 
@@ -38,11 +40,11 @@ class NotificationTimer( QObject ):
     def __init__( self, *args ):
         QObject.__init__( self, *args )
         self.timer = QTimer(self)
-        self.notifs = list()
-        self.nextNotif = None
+        self.notifs: List[ Notification ] = list()
+        self.nextNotif: Notification = None
         self.timer.timeout.connect( self.handleTimeout )
 
-    def setNotifications(self, notifList):
+    def setNotifications( self, notifList: List[ Notification ] ):
         self.notifs = notifList
         self.processNotifs()
 
@@ -53,13 +55,18 @@ class NotificationTimer( QObject ):
             self.nextNotif = None
             return
         self.nextNotif = self.notifs.pop(0)
-        secs = self.nextNotif.remainingSeconds()
+        remainingTime: datetime.timedelta = self.nextNotif.remainingTime()
+        secs = remainingTime.total_seconds()
         _LOGGER.info( "next notification: %s[s] %s", secs, self.nextNotif )
-        if secs > 0:
-            millis = secs * 1000
-            self.timer.start( millis )
-        else:
+        if secs < 1:
             self.handleTimeout()
+            return
+        millis = int(secs * 1000)
+        ## 2147483647ms is ~24 days -- enough to skip
+        if millis >= 2147483647:
+            _LOGGER.warning( "unable to set timer for time delta %s", remainingTime )
+            return
+        self.timer.start( millis )      ## 2147483647 maximum accepted value
 
     def handleTimeout(self):
         self.remindTask.emit( self.nextNotif )

@@ -155,7 +155,7 @@ class TaskTest(unittest.TestCase):
         recurrent = task.recurrence
         self.assertEqual( recurrent.mode, RepeatType.DAILY )
         self.assertEqual( recurrent.every, 3 )
-        
+
 #     def test_repr(self):
 #         task = Task()
 #         task.addSubItem( Task() )

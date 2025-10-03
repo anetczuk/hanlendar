@@ -69,7 +69,7 @@ class ReminderWidget( QtBaseClass ):           # type: ignore
 
     def _newReminder(self):
         reminder = Reminder()
-        reminder.setDays( 1 )
+        reminder.setDays( 2 )
         self.task.addReminder( reminder )
         self._activateWidget()
 
@@ -93,7 +93,8 @@ class ReminderWidget( QtBaseClass ):           # type: ignore
 
         timeOffset = reminder.splitTimeOffset()
         self.ui.daysBox.setValue( timeOffset[0] )
-        time = QTime.fromMSecsSinceStartOfDay( timeOffset[1] * 1000 )
+        timeout = int(timeOffset[1] * 1000)
+        time = QTime.fromMSecsSinceStartOfDay( timeout )
         self.ui.hoursEdit.setTime( time )
 
     def _daysChanged(self, newValue):

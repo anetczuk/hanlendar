@@ -32,7 +32,7 @@ from PyQt5.QtGui import QColor, QBrush
 from hanlendar.gui.customtreemodel import ItemTreeModel
 from hanlendar.gui.widget.tasktable import get_completed_color
 
-from hanlendar.domainmodel.local.todo import ToDo
+from hanlendar.domainmodel.local.todo import LocalToDo
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ class ToDoTreeModel( ItemTreeModel ):
         if role == QtCore.Qt.SizeHintRole:
             return QtCore.QSize(10, 30)
 
-        item: ToDo = self.getItem( index )
+        item: LocalToDo = self.getItem( index )
         if item is None:
             return None
 
@@ -124,7 +124,7 @@ class ToDoSortFilterProxyModel( QtCore.QSortFilterProxyModel ):
         if self._showCompleted is True:
             return True
         dataIndex = self.sourceModel().index( sourceRow, 2, sourceParent )
-        item: ToDo = dataIndex.internalPointer()
+        item: LocalToDo = dataIndex.internalPointer()
         return item.isCompleted() is False
 
     def lessThan(self, left: QModelIndex, right: QModelIndex):
@@ -138,14 +138,14 @@ class ToDoSortFilterProxyModel( QtCore.QSortFilterProxyModel ):
 
 class ToDoTable( QtWidgets.QTreeView ):
 
-    selectedToDo        = pyqtSignal( ToDo )
+    selectedToDo        = pyqtSignal( LocalToDo )
     todoUnselected      = pyqtSignal()
     addNewToDo          = pyqtSignal()
-    addNewSubToDo       = pyqtSignal( ToDo )
-    editToDo            = pyqtSignal( ToDo )
-    removeToDo          = pyqtSignal( ToDo )
-    convertToDoToTask   = pyqtSignal( ToDo )
-    markCompleted       = pyqtSignal( ToDo )
+    addNewSubToDo       = pyqtSignal( LocalToDo )
+    editToDo            = pyqtSignal( LocalToDo )
+    removeToDo          = pyqtSignal( LocalToDo )
+    convertToDoToTask   = pyqtSignal( LocalToDo )
+    markCompleted       = pyqtSignal( LocalToDo )
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -203,7 +203,7 @@ class ToDoTable( QtWidgets.QTreeView ):
         evPos     = event.pos()
         globalPos = self.viewport().mapToGlobal( evPos )
 
-        todo: ToDo = None
+        todo: LocalToDo = None
         mIndex = self.indexAt( evPos )
         if mIndex is not None:
             todo = self.getToDo( mIndex )
@@ -261,7 +261,7 @@ class ToDoTable( QtWidgets.QTreeView ):
         super().mousePressEvent( event )
 
 
-def get_todo_fgcolor( todo: ToDo ) -> QBrush:
+def get_todo_fgcolor( todo: LocalToDo ) -> QBrush:
     if todo.isCompleted():
         ## completed -- green
         return QBrush( get_completed_color() )

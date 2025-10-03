@@ -152,7 +152,7 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
             return itemIndex.internalPointer()
         return None
 
-    def getIndex(self, item, parentIndex: QModelIndex=None):
+    def getIndex(self, item, parentIndex: QModelIndex = None):
         if parentIndex is None:
             parentIndex = QModelIndex()
         if parentIndex.isValid():

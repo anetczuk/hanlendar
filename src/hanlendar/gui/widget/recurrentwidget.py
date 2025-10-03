@@ -45,8 +45,8 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
 
-        self.task = None
-        self.readOnly = False
+        self.task: Task = None
+        self.readOnly: bool = False
 
         self.setReadOnly( False )
 
@@ -99,9 +99,11 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
         self._activateWidget()
 
     def _setRepeatMode(self, repeatMode):
+        self.ui.repeatModeCB.blockSignals( True )
         index = RepeatType.indexOf( repeatMode )
         self.ui.repeatModeCB.setCurrentIndex( index )
         self.ui.repeatModeLabel.setText( repeatMode.name )
+        self.ui.repeatModeCB.blockSignals( False )
 
     # ===================== update data ===================================
 
@@ -126,7 +128,8 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
             self.ui.endDateCB.setChecked( False )
 
     def _everyValueChanged(self, newValue):
-        self.task.recurrence.every = newValue
+        if self.task:
+            self.task.recurrence.every = newValue
         self._updateNextRepeat()
 
     def _finiteChanged(self):
@@ -164,5 +167,7 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
         self._updateNextRepeat()
 
     def _updateNextRepeat(self):
+        if self.task is None:
+            return
         repeatText = self.task.printNextRecurrence()
         self.ui.nextRepeatLabel.setText( repeatText )

@@ -29,7 +29,7 @@ try:
     ## otherwise will throw exception when executing as parameter for "python -m"
     # pylint: disable=W0611
     import __init__
-except ImportError as error:
+except ImportError:
     ## when import fails then it means that the script was executed indirectly
     ## in this case __init__ is already loaded
     pass
@@ -41,7 +41,7 @@ from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.dataobject import DataObject
 from hanlendar.gui.widget.todotable import ToDoTable
 
-from hanlendar.domainmodel.local.todo import ToDo
+from hanlendar.domainmodel.local.todo import LocalToDo as ToDo
 
 
 ## ============================= main section ===================================
