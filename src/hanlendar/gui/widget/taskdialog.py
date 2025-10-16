@@ -27,7 +27,7 @@ import copy
 
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMenu, QAction
-from PyQt5.QtGui import QDesktopServices
+from PyQt5.QtGui import QDesktopServices, QKeySequence
 
 from hanlendar.domainmodel.local.task import LocalTask
 
@@ -99,6 +99,17 @@ class TaskDialog( QtBaseClass ):           # type: ignore
 
         self.finished.connect( self._finished )
 
+        self.ui.descriptionEdit.setUndoRedoEnabled(True)
+
+    ## handle Ctrl+Shift+V key shortcut
+    ## done "manually", because other methods does not work
+    def keyPressEvent(self, event):
+        event_key = event.key()
+        if event_key == Qt.Key_V and event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier):
+            self._pasteUnformattedToDescription()
+            event.accept()      ## do not propagate event to parents
+        super().keyPressEvent(event)
+
     def _titleChanged(self, newValue):
         self.task.title = newValue
 
@@ -114,7 +125,7 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         self.task.priority = newValue
 
     ## deadline checkbox
-    def _deadlineChanged(self, _):
+    def _deadlineChanged(self, _state):
         if self.ui.deadlineBox.isChecked():
             self.task.setDeadline()
         else:
@@ -176,14 +187,14 @@ class TaskDialog( QtBaseClass ):           # type: ignore
         pastePlainAction = QAction( menu )
         menu.insertAction( deleteAction, pastePlainAction )
         pastePlainAction.setText( "Paste unformatted" )
-        # pastePlainAction.setShortcut( QKeySequence("Ctrl+Shift+V") )
+        pastePlainAction.setShortcut( QKeySequence("Ctrl+Shift+V") )
         pastePlainAction.triggered.connect( self._pasteUnformattedToDescription )
         if self.ui.descriptionEdit.canPaste() is False:
             pastePlainAction.setEnabled( False )
         globalPos = self.ui.descriptionEdit.mapToGlobal( point )
         menu.exec_( globalPos )
 
-    def _finished(self, _):
+    def _finished(self, _value):
         self.task.completed = self.completed
 
     def _pasteUnformattedToDescription(self):
