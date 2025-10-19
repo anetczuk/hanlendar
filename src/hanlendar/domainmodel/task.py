@@ -321,6 +321,9 @@ class TaskOccurrence:
 
     @staticmethod
     def sortByDates( entry ):
+        ## entry.dateRange[0] can be None
+        if entry.dateRange[0] is None:
+            return ( entry.dateRange[1], )
         return ( entry.dateRange[1], entry.dateRange[0] )
 
 

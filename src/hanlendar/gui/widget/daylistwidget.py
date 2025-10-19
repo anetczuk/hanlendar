@@ -368,7 +368,10 @@ class DayListWidget( QWidget ):
 
     def contextMenuEvent( self, _event ):
         task: Task = self.content.getCurrentTask()
-        self.taskContextMenu.show( task )
+        newTaskDate: QDate = None
+        if task is None:
+            newTaskDate = self.currentDate
+        self.taskContextMenu.show( task, newTaskDate )
 
     def taskDoubleClicked(self, index):
         task = self.content.getTask( index )
