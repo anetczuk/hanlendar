@@ -32,34 +32,34 @@ from hanlendar.domainmodel.icalio import import_icalendar_content
 _LOGGER = logging.getLogger(__name__)
 
 
-class ImportICalendarCommand( QUndoCommand ):
+class ImportICalendarCommand(QUndoCommand):
 
     def __init__(self, dataObject, content, silent, parentCommand=None):
         super().__init__(parentCommand)
 
         self.data = dataObject
         self.domainModel = self.data.getManager()
-        self.content  = content
+        self.content = content
         self.newTasks = []
         self.silent = silent
         self.setText("Import iCalendar")
 
     def redo(self):
-        self.newTasks = import_icalendar_content( self.domainModel, self.content )
+        self.newTasks = import_icalendar_content(self.domainModel, self.content)
         if self.newTasks is None:
             if self.silent is False:
-                QMessageBox.warning( None, "Import iCalendar", "Unable to import data" )
-                self.silent = True              ## do not show message on repeated redo
+                QMessageBox.warning(None, "Import iCalendar", "Unable to import data")
+                self.silent = True  ## do not show message on repeated redo
             return
 
         message = "Added tasks:"
         for item in self.newTasks:
-            message += "\n%s: %s" % ( str(item.startDateTime), item.title )
-        _LOGGER.info( "import iCalendar: %s", message )
+            message += "\n%s: %s" % (str(item.startDateTime), item.title)
+        _LOGGER.info("import iCalendar: %s", message)
 
         if self.silent is False:
-            QMessageBox.information( None, "Import iCalendar", message )
-            self.silent = True                  ## do not show message on repeated redo
+            QMessageBox.information(None, "Import iCalendar", message)
+            self.silent = True  ## do not show message on repeated redo
 
         self.data.tasksChanged.emit()
 
@@ -67,6 +67,6 @@ class ImportICalendarCommand( QUndoCommand ):
         if self.newTasks is None:
             return
         for item in self.newTasks:
-            self.domainModel.removeTask( item )
+            self.domainModel.removeTask(item)
         self.newTasks = []
         self.data.tasksChanged.emit()

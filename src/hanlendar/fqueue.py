@@ -35,18 +35,18 @@ from filelock import Timeout, FileLock
 _LOGGER = logging.getLogger(__name__)
 
 
-queue_path      = os.path.join( '/tmp', 'hanlendar.spool' )
-queue_info_path = os.path.join( queue_path, 'info' )
-queue_lock      = os.path.join( '/tmp', 'hanlendar.spool.lock' )
+queue_path = os.path.join("/tmp", "hanlendar.spool")
+queue_info_path = os.path.join(queue_path, "info")
+queue_lock = os.path.join("/tmp", "hanlendar.spool.lock")
 
 
 ## ensure directory exists (required for watchdog)
-os.makedirs( queue_path, exist_ok=True )
+os.makedirs(queue_path, exist_ok=True)
 
 
-def get_from_queue( nowait=False ):
-    with FileLock( queue_lock ):
-        quene = pqueue.Queue( queue_path )
+def get_from_queue(nowait=False):
+    with FileLock(queue_lock):
+        quene = pqueue.Queue(queue_path)
         if nowait:
             message = quene.get()
         else:
@@ -56,9 +56,9 @@ def get_from_queue( nowait=False ):
     return None
 
 
-def put_to_queue( message_type, value ):
-    with FileLock( queue_lock ):
-        quene = pqueue.Queue( queue_path )
+def put_to_queue(message_type, value):
+    with FileLock(queue_lock):
+        quene = pqueue.Queue(queue_path)
         message = (message_type, value)
-        print( "adding to queue:", message )
-        quene.put( message )
+        print("adding to queue:", message)
+        quene.put(message)

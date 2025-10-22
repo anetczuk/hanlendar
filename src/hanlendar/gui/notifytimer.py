@@ -33,18 +33,18 @@ from hanlendar.domainmodel.reminder import Notification
 _LOGGER = logging.getLogger(__name__)
 
 
-class NotificationTimer( QObject ):
+class NotificationTimer(QObject):
 
-    remindTask = pyqtSignal( Notification )
+    remindTask = pyqtSignal(Notification)
 
-    def __init__( self, *args ):
-        QObject.__init__( self, *args )
+    def __init__(self, *args):
+        QObject.__init__(self, *args)
         self.timer = QTimer(self)
-        self.notifs: List[ Notification ] = list()
+        self.notifs: List[Notification] = list()
         self.nextNotif: Notification = None
-        self.timer.timeout.connect( self.handleTimeout )
+        self.timer.timeout.connect(self.handleTimeout)
 
-    def setNotifications( self, notifList: List[ Notification ] ):
+    def setNotifications(self, notifList: List[Notification]):
         self.notifs = notifList
         self.processNotifs()
 
@@ -57,17 +57,17 @@ class NotificationTimer( QObject ):
         self.nextNotif = self.notifs.pop(0)
         remainingTime: datetime.timedelta = self.nextNotif.remainingTime()
         secs = remainingTime.total_seconds()
-        _LOGGER.info( "next notification: %s[s] %s", secs, self.nextNotif )
+        _LOGGER.info("next notification: %s[s] %s", secs, self.nextNotif)
         if secs < 1:
             self.handleTimeout()
             return
         millis = int(secs * 1000)
         ## 2147483647ms is ~24 days -- enough to skip
         if millis >= 2147483647:
-            _LOGGER.warning( "unable to set timer for time delta %s", remainingTime )
+            _LOGGER.warning("unable to set timer for time delta %s", remainingTime)
             return
-        self.timer.start( millis )      ## 2147483647 maximum accepted value
+        self.timer.start(millis)  ## 2147483647 maximum accepted value
 
     def handleTimeout(self):
-        self.remindTask.emit( self.nextNotif )
+        self.remindTask.emit(self.nextNotif)
         self.processNotifs()

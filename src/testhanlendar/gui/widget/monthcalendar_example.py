@@ -56,19 +56,19 @@ from testhanlendar.mock_datetime import mock_datetime, mock_date
 ## ============================= main section ===================================
 
 
-if __name__ != '__main__':
+if __name__ != "__main__":
     sys.exit(0)
 
 
-targetDate     = datetime.date(2020, 7, 16)
+targetDate = datetime.date(2020, 7, 16)
 targetDatetime = datetime.datetime(2020, 7, 16)
-mock_date( targetDate )
-mock_datetime( targetDatetime )
-mock_datetime( targetDatetime, hanlendar.domainmodel.local.task )
+mock_date(targetDate)
+mock_datetime(targetDatetime)
+mock_datetime(targetDatetime, hanlendar.domainmodel.local.task)
 
 
 logFile = logger.get_logging_output_file()
-logger.configure( logFile )
+logger.configure(logFile)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,62 +81,62 @@ app.setOrganizationName("arnet")
 setup_interrupt_handling()
 
 
-dataObject = DataObject( None )
+dataObject = DataObject(None)
 
-todayDate = datetime.datetime.today().replace( hour=6 )
+todayDate = datetime.datetime.today().replace(hour=6)
 task1 = dataObject.addTask()
 task1.title = "Task 1"
-task1.startDateTime = todayDate + timedelta( hours=5 )
-task1.dueDateTime   = task1.startDateTime + timedelta( hours=5 )
+task1.startDateTime = todayDate + timedelta(hours=5)
+task1.dueDateTime = task1.startDateTime + timedelta(hours=5)
 
-refDate = todayDate + timedelta( days=1 )
+refDate = todayDate + timedelta(days=1)
 task1 = dataObject.addTask()
 task1.title = "Task 2"
-task1.startDateTime = refDate + timedelta( hours=5 )
-task1.dueDateTime   = task1.startDateTime + timedelta( hours=5 )
+task1.startDateTime = refDate + timedelta(hours=5)
+task1.dueDateTime = task1.startDateTime + timedelta(hours=5)
 
 task1 = dataObject.addTask()
 task1.title = "Task 3"
-task1.startDateTime = refDate + timedelta( hours=8 )
-task1.dueDateTime   = task1.startDateTime + timedelta( hours=5 )
+task1.startDateTime = refDate + timedelta(hours=8)
+task1.dueDateTime = task1.startDateTime + timedelta(hours=5)
 
 task1 = dataObject.addTask()
 task1.title = "Expired task 1"
-task1.startDateTime = refDate - timedelta( days=2 )
-task1.dueDateTime   = task1.startDateTime + timedelta( hours=5 )
+task1.startDateTime = refDate - timedelta(days=2)
+task1.dueDateTime = task1.startDateTime + timedelta(hours=5)
 
 task1 = dataObject.addTask()
 task1.title = "Completed task 1"
-task1.startDateTime = refDate - timedelta( days=2 )
-task1.dueDateTime   = task1.startDateTime + timedelta( hours=5 )
+task1.startDateTime = refDate - timedelta(days=2)
+task1.dueDateTime = task1.startDateTime + timedelta(hours=5)
 task1.setCompleted()
 
-recurrentDate = refDate.replace( day=20 ) + timedelta( hours=2 )
+recurrentDate = refDate.replace(day=20) + timedelta(hours=2)
 recurrentTask = dataObject.addTask()
 recurrentTask.title = "Recurrent task 1"
 recurrentTask.dueDateTime = recurrentDate
 recurrentTask.recurrence = Recurrent()
 recurrentTask.recurrence.setDaily()
-recurrentTask.recurrence.endDate = recurrentDate + timedelta( days=3 )
+recurrentTask.recurrence.endDate = recurrentDate + timedelta(days=3)
 
 recurrentTask = dataObject.addTask()
 recurrentTask.title = "Recurrent task 2"
-recurrentTask.dueDateTime = refDate.replace( day=1, hour=22 )
+recurrentTask.dueDateTime = refDate.replace(day=1, hour=22)
 recurrentTask.recurrence = Recurrent()
 recurrentTask.recurrence.setWeekly()
-recurrentTask.setCompleted()                ## mark first occurrence completed
+recurrentTask.setCompleted()  ## mark first occurrence completed
 
 calendar = MonthCalendar()
 calendar.showCompletedTasks()
-calendar.connectData( dataObject )
-calendar.resize( 1024, 768 )
+calendar.connectData(dataObject)
+calendar.resize(1024, 768)
 calendar.show()
 # dialogCode = dialog.exec_()
 
 root_path = get_root_path()
-renderToPixmap( calendar, root_path + "/tmp/monthcalendar-big.png" )
+renderToPixmap(calendar, root_path + "/tmp/monthcalendar-big.png")
 
 # print( "Dialog return:", dialogCode )
 # print( "Created todo:", dialog.todo )
 
-sys.exit( app.exec_() )
+sys.exit(app.exec_())

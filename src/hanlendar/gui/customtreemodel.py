@@ -34,15 +34,15 @@ from hanlendar.domainmodel.item import Item
 _LOGGER = logging.getLogger(__name__)
 
 
-class CustomTreeModel( QtCore.QAbstractItemModel ):
+class CustomTreeModel(QtCore.QAbstractItemModel):
 
     ## for invalid parent returns number of elements in root list
     def rowCount(self, parent: QModelIndex):
-        parentItem = self.getItem( parent )
-        children = self.getChildren( parentItem )
+        parentItem = self.getItem(parent)
+        children = self.getChildren(parentItem)
         if children is None:
             return 0
-        return len( children )
+        return len(children)
 
     def columnCount(self, _):
         labels = self.headerLabels()
@@ -58,11 +58,11 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
     def index(self, row, column, parent: QModelIndex):
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
-        parentItem = self.getItem( parent )         ## None allowed
-        children = self.getChildren( parentItem )
+        parentItem = self.getItem(parent)  ## None allowed
+        children = self.getChildren(parentItem)
         if children is None:
             return QModelIndex()
-        childItem = children[ row ]
+        childItem = children[row]
         if childItem is None:
             return QModelIndex()
         return self.createIndex(row, column, childItem)
@@ -70,17 +70,17 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
     def parent(self, index: QModelIndex):
         if not index.isValid():
             return QModelIndex()
-        indexItem = self.getItem( index )
+        indexItem = self.getItem(index)
         if indexItem is None:
             return QModelIndex()
-        parentItem = self.getParent( indexItem )
+        parentItem = self.getParent(indexItem)
         if parentItem is None:
             return QModelIndex()
-        grandParentItem = self.getParent( parentItem )
-        children = self.getChildren( grandParentItem )
+        grandParentItem = self.getParent(parentItem)
+        children = self.getChildren(grandParentItem)
         try:
-            parentRow = children.index( parentItem )
-            return self.createIndex( parentRow, 0, parentItem )
+            parentRow = children.index(parentItem)
+            return self.createIndex(parentRow, 0, parentItem)
         except ValueError:
             return QModelIndex()
 
@@ -104,7 +104,7 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
         return super().canDropMimeData(data, action, row, column, parent)
 
     def mimeTypes(self):
-        return [ self.internalMoveMimeType() ]
+        return [self.internalMoveMimeType()]
 
     def mimeData(self, indexes):
         encodedData = QtCore.QByteArray()
@@ -113,17 +113,17 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
             if ind.column() != 0:
                 continue
             item = ind.internalPointer()
-            itemId = self.getItemId( item )
+            itemId = self.getItemId(item)
             # pylint: disable=W0106
             stream << QtCore.QVariant(itemId)
         mimeObject = QtCore.QMimeData()
-        mimeObject.setData( self.internalMoveMimeType(), encodedData )
+        mimeObject.setData(self.internalMoveMimeType(), encodedData)
         return mimeObject
 
     def dropMimeData(self, data, action, row, _, parent):
         if action == Qt.IgnoreAction:
             return True
-        if not data.hasFormat( self.internalMoveMimeType() ):
+        if not data.hasFormat(self.internalMoveMimeType()):
             return False
 
         if action != Qt.MoveAction:
@@ -134,14 +134,14 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
 
         ## adding child to parent
         targetParent = parent.internalPointer()
-        encodedData = data.data( self.internalMoveMimeType() )
+        encodedData = data.data(self.internalMoveMimeType())
         stream = QtCore.QDataStream(encodedData, QtCore.QIODevice.ReadOnly)
         while not stream.atEnd():
             value = QtCore.QVariant()
             # pylint: disable=W0104
             stream >> value
             itemCoords = value.value()
-            self.moveItem( itemCoords, targetParent, row )
+            self.moveItem(itemCoords, targetParent, row)
 
         self.endResetModel()
         return True
@@ -160,9 +160,9 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
             dataTask = parentIndex.internalPointer()
             if dataTask == item:
                 return parentIndex
-        elems = self.rowCount( parentIndex )
+        elems = self.rowCount(parentIndex)
         for i in range(elems):
-            index = self.index( i, 0, parentIndex )
+            index = self.index(i, 0, parentIndex)
             subIndex = self.getIndex(item, index)
             if subIndex is not None:
                 return subIndex
@@ -172,19 +172,19 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
 
     @abc.abstractmethod
     def headerLabels(self) -> List[str]:
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
     def internalMoveMimeType(self) -> str:
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
     def getChildren(self, parent: object):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
     def getParent(self, item: object):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
     def getItemId(self, item: object):
@@ -192,29 +192,29 @@ class CustomTreeModel( QtCore.QAbstractItemModel ):
 
         It could be unique number or item's coordinates in objects tree.
         """
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
     def moveItem(self, itemId, targetItem: object, targetIndex):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
 
 ## ====================================================================
 
 
-class ItemTreeModel( CustomTreeModel ):
+class ItemTreeModel(CustomTreeModel):
 
-#     def moveItem(self, itemId, targetItem, targetIndex):
-#         itemsList = self.getRootList()
-#         sourceItem = Item.detachItemByCoords( itemsList, itemId )
-#         if targetItem is not None:
-#             targetItem.addSubItem( sourceItem, targetIndex )
-#         elif targetIndex < 0:
-#             itemsList.append( sourceItem )
-#         else:
-#             itemsList.insert( targetIndex, sourceItem )
-#         ## triggers change event
-#         self.setRootList( itemsList )
+    #     def moveItem(self, itemId, targetItem, targetIndex):
+    #         itemsList = self.getRootList()
+    #         sourceItem = Item.detachItemByCoords( itemsList, itemId )
+    #         if targetItem is not None:
+    #             targetItem.addSubItem( sourceItem, targetIndex )
+    #         elif targetIndex < 0:
+    #             itemsList.append( sourceItem )
+    #         else:
+    #             itemsList.insert( targetIndex, sourceItem )
+    #         ## triggers change event
+    #         self.setRootList( itemsList )
 
     def getChildren(self, parent):
         if parent is not None:
@@ -227,13 +227,14 @@ class ItemTreeModel( CustomTreeModel ):
 
     def getItemId(self, item: object):
         itemsList = self.getRootList()
-        return Item.getItemCoords( itemsList, item )
+        return Item.getItemCoords(itemsList, item)
 
     ## ================================================================
 
     @abc.abstractmethod
     def getRootList(self):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
+
 
 #     @abc.abstractmethod
 #     def setRootList(self, newList):

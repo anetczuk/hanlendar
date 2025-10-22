@@ -38,12 +38,12 @@ class RepeatTypeTest(unittest.TestCase):
         pass
 
     def test_values(self):
-        self.assertEqual( RepeatType.NEVER.value, 1 )
-        self.assertEqual( RepeatType.DAILY.value, 2 )
-        self.assertEqual( RepeatType.WEEKLY.value, 3 )
-        self.assertEqual( RepeatType.MONTHLY.value, 4 )
-        self.assertEqual( RepeatType.YEARLY.value, 5 )
-        self.assertEqual( RepeatType.ASPARENT.value, 6 )
+        self.assertEqual(RepeatType.NEVER.value, 1)
+        self.assertEqual(RepeatType.DAILY.value, 2)
+        self.assertEqual(RepeatType.WEEKLY.value, 3)
+        self.assertEqual(RepeatType.MONTHLY.value, 4)
+        self.assertEqual(RepeatType.YEARLY.value, 5)
+        self.assertEqual(RepeatType.ASPARENT.value, 6)
 
 
 class RecurrentTest(unittest.TestCase):
@@ -57,10 +57,10 @@ class RecurrentTest(unittest.TestCase):
 
     def test_findRecurrentOffset(self):
         recurrent = Recurrent()
-        recurrent.setYearly( 1 )
+        recurrent.setYearly(1)
 
-        refDate    = date( 2020, 5, 2 )
+        refDate = date(2020, 5, 2)
         targetDate = refDate + recurrent.getDateOffset()
         offset = recurrent.findRecurrentOffset(refDate, targetDate)
 
-        self.assertEqual( offset, 1 )
+        self.assertEqual(offset, 1)

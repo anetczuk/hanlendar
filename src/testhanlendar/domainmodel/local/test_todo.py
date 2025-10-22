@@ -37,21 +37,21 @@ class TaskTest(unittest.TestCase):
 
     def test_isCompleted(self):
         todo = LocalToDo()
-        self.assertEqual( todo.isCompleted(), False )
+        self.assertEqual(todo.isCompleted(), False)
 
         todo.setCompleted()
-        self.assertEqual( todo.isCompleted(), True )
+        self.assertEqual(todo.isCompleted(), True)
 
     def test_isCompleted_sub(self):
         todo = LocalToDo()
-        self.assertEqual( todo.isCompleted(), False )
+        self.assertEqual(todo.isCompleted(), False)
 
         todo.setCompleted()
-        self.assertEqual( todo.isCompleted(), True )
+        self.assertEqual(todo.isCompleted(), True)
 
-        child = todo.addSubtodo( LocalToDo() )
-        self.assertEqual( todo.isCompleted(), False )
+        child = todo.addSubtodo(LocalToDo())
+        self.assertEqual(todo.isCompleted(), False)
 
         child.setCompleted()
-        self.assertEqual( todo.isCompleted(), True )
-        self.assertEqual( child.isCompleted(), True )
+        self.assertEqual(todo.isCompleted(), True)
+        self.assertEqual(child.isCompleted(), True)

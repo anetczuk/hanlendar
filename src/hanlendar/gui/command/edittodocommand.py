@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import QUndoCommand
 _LOGGER = logging.getLogger(__name__)
 
 
-class EditToDoCommand( QUndoCommand ):
+class EditToDoCommand(QUndoCommand):
 
     def __init__(self, dataObject, oldToDo, newToDo, parentCommand=None):
         super().__init__(parentCommand)
@@ -39,12 +39,12 @@ class EditToDoCommand( QUndoCommand ):
         self.oldToDo = oldToDo
         self.newToDo = newToDo
 
-        self.setText( "Edit ToDo: " + newToDo.title )
+        self.setText("Edit ToDo: " + newToDo.title)
 
     def redo(self):
-        self.domainModel.replaceToDo( self.oldToDo, self.newToDo )
+        self.domainModel.replaceToDo(self.oldToDo, self.newToDo)
         self.data.todosChanged.emit()
 
     def undo(self):
-        self.domainModel.replaceToDo( self.newToDo, self.oldToDo )
+        self.domainModel.replaceToDo(self.newToDo, self.oldToDo)
         self.data.todosChanged.emit()

@@ -34,60 +34,60 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QMenu
 
 
-class NavCalendarHighlightModel():
+class NavCalendarHighlightModel:
 
     @abc.abstractmethod
-    def isHighlighted(self, date: QDate ):
-        raise NotImplementedError('You need to define this method in derived class!')
+    def isHighlighted(self, date: QDate):
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
-    def isOccupied(self, date: QDate ):
-        raise NotImplementedError('You need to define this method in derived class!')
+    def isOccupied(self, date: QDate):
+        raise NotImplementedError("You need to define this method in derived class!")
 
 
-class NavCalendar( QCalendarWidget ):
+class NavCalendar(QCalendarWidget):
 
-    addTask  = pyqtSignal( QDate )
+    addTask = pyqtSignal(QDate)
 
-    def __init__( self, *args ):
-        QCalendarWidget.__init__( self, *args )
+    def __init__(self, *args):
+        QCalendarWidget.__init__(self, *args)
 
-        self.cellsTable = self.findChild( QTableView )
+        self.cellsTable = self.findChild(QTableView)
 
-        self.taskColor = QColor( self.palette().color( QPalette.Highlight) )
-        self.taskColor.setAlpha( 64 )
-        self.occupiedColor = QColor( QColor(160, 160, 160) )
-        self.occupiedColor.setAlpha( 64 )
+        self.taskColor = QColor(self.palette().color(QPalette.Highlight))
+        self.taskColor.setAlpha(64)
+        self.occupiedColor = QColor(QColor(160, 160, 160))
+        self.occupiedColor.setAlpha(64)
 
         self.highlightModel = None
-        self.selectionChanged.connect( self.updateCells )
+        self.selectionChanged.connect(self.updateCells)
 
     def paintCell(self, painter, rect, date):
         QCalendarWidget.paintCell(self, painter, rect, date)
 
-        if self.isHighlighted( date ) is True:
-            painter.fillRect( rect, self.taskColor )
-        elif self.isOccupied( date ) is True:
-            painter.fillRect( rect, self.occupiedColor )
+        if self.isHighlighted(date) is True:
+            painter.fillRect(rect, self.taskColor)
+        elif self.isOccupied(date) is True:
+            painter.fillRect(rect, self.occupiedColor)
 
         if date == QDate.currentDate():
-            painter.drawRect( rect.left(), rect.top(), rect.width() - 1, rect.height() - 1 )
+            painter.drawRect(rect.left(), rect.top(), rect.width() - 1, rect.height() - 1)
 
     def isHighlighted(self, date):
         if self.highlightModel is None:
             return False
-        return self.highlightModel.isHighlighted( date )
+        return self.highlightModel.isHighlighted(date)
 
     def isOccupied(self, date):
         if self.highlightModel is None:
             return False
-        return self.highlightModel.isOccupied( date )
+        return self.highlightModel.isOccupied(date)
 
-    def contextMenuEvent( self, event ):
-        evPos     = event.pos()
-        globalPos = self.mapToGlobal( evPos )
-        tabPos    = self.cellsTable.mapFromGlobal( globalPos )
-        cellIndex = self.cellsTable.indexAt( tabPos )
+    def contextMenuEvent(self, event):
+        evPos = event.pos()
+        globalPos = self.mapToGlobal(evPos)
+        tabPos = self.cellsTable.mapFromGlobal(globalPos)
+        cellIndex = self.cellsTable.indexAt(tabPos)
         if cellIndex.row() < 1:
             ## skip row with days of week
             return
@@ -96,27 +96,27 @@ class NavCalendar( QCalendarWidget ):
             return
 
         contextMenu = QMenu(self)
-        addTaskAction  = contextMenu.addAction("New Task")
-        action = contextMenu.exec_( globalPos )
+        addTaskAction = contextMenu.addAction("New Task")
+        action = contextMenu.exec_(globalPos)
 
         if action == addTaskAction:
             dayIndex = (cellIndex.row() - 1) * 7 + (cellIndex.column() - 1)
-            contextDate = self.dateAt( dayIndex )
-            self.addTask.emit( contextDate )
+            contextDate = self.dateAt(dayIndex)
+            self.addTask.emit(contextDate)
 
-    def dateAt( self, dayIndex ):
+    def dateAt(self, dayIndex):
         prevMonthDays = self.daysFromPreviousMonth()
         dayOffset = dayIndex - prevMonthDays
-        currYear  = self.yearShown()
+        currYear = self.yearShown()
         currMonth = self.monthShown()
-        currDate  = QDate( currYear, currMonth, 1 )
-        return currDate.addDays( dayOffset )
+        currDate = QDate(currYear, currMonth, 1)
+        return currDate.addDays(dayOffset)
 
-    def daysFromPreviousMonth( self ):
-        currYear     = self.yearShown()
-        currMonth    = self.monthShown()
-        firstOfMonth = datetime.date( currYear, currMonth, 1 )
+    def daysFromPreviousMonth(self):
+        currYear = self.yearShown()
+        currMonth = self.monthShown()
+        firstOfMonth = datetime.date(currYear, currMonth, 1)
         days = firstOfMonth.weekday()
-        if days == 0:                       # 0 means Monday
-            days += 7                       # there is always one row
+        if days == 0:  # 0 means Monday
+            days += 7  # there is always one row
         return days

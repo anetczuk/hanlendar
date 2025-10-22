@@ -22,6 +22,7 @@
 #
 
 import logging
+
 # from datetime import datetime
 
 from PyQt5.QtCore import QTime
@@ -33,13 +34,13 @@ from hanlendar.domainmodel.task import Task
 from .. import uiloader
 
 
-UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
+UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ReminderWidget( QtBaseClass ):           # type: ignore
+class ReminderWidget(QtBaseClass):  # type: ignore
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -48,67 +49,67 @@ class ReminderWidget( QtBaseClass ):           # type: ignore
 
         self.task = None
 
-        self.ui.daysBox.valueChanged.connect( self._daysChanged )
-        self.ui.hoursEdit.timeChanged.connect( self._hoursChanged )
+        self.ui.daysBox.valueChanged.connect(self._daysChanged)
+        self.ui.hoursEdit.timeChanged.connect(self._hoursChanged)
 
-        self.ui.newPB.clicked.connect( self._newReminder )
-        self.ui.removePB.clicked.connect( self._removeReminder )
-        self.ui.reminderList.itemSelectionChanged.connect( self._selectReminder )
+        self.ui.newPB.clicked.connect(self._newReminder)
+        self.ui.removePB.clicked.connect(self._removeReminder)
+        self.ui.reminderList.itemSelectionChanged.connect(self._selectReminder)
 
-        self.setTask( None )
+        self.setTask(None)
 
     def setTask(self, task: Task):
         self.task = task
         if self.task is None:
-            self.setEnabled( False )
+            self.setEnabled(False)
             self.ui.reminderList.clear()
             return
 
-        self.setEnabled( True )
+        self.setEnabled(True)
         self.refreshWidget()
 
     def _newReminder(self):
         reminder = Reminder()
-        reminder.setDays( 2 )
-        self.task.addReminder( reminder )
+        reminder.setDays(2)
+        self.task.addReminder(reminder)
         self._activateWidget()
 
     def _removeReminder(self):
         assert self.task.reminderList is not None
         reminder = self._getCurrentReminder()
-        self.task.reminderList.remove( reminder )
+        self.task.reminderList.remove(reminder)
         self.refreshWidget()
 
     def _selectReminder(self):
         reminder: Reminder = self._getCurrentReminder()
         if reminder is None:
-            self.ui.daysBox.setEnabled( False )
-            self.ui.hoursEdit.setEnabled( False )
-            self.ui.removePB.setEnabled( False )
+            self.ui.daysBox.setEnabled(False)
+            self.ui.hoursEdit.setEnabled(False)
+            self.ui.removePB.setEnabled(False)
             return
 
-        self.ui.daysBox.setEnabled( True )
-        self.ui.hoursEdit.setEnabled( True )
-        self.ui.removePB.setEnabled( True )
+        self.ui.daysBox.setEnabled(True)
+        self.ui.hoursEdit.setEnabled(True)
+        self.ui.removePB.setEnabled(True)
 
         timeOffset = reminder.splitTimeOffset()
-        self.ui.daysBox.setValue( timeOffset[0] )
+        self.ui.daysBox.setValue(timeOffset[0])
         timeout = int(timeOffset[1] * 1000)
-        time = QTime.fromMSecsSinceStartOfDay( timeout )
-        self.ui.hoursEdit.setTime( time )
+        time = QTime.fromMSecsSinceStartOfDay(timeout)
+        self.ui.hoursEdit.setTime(time)
 
     def _daysChanged(self, newValue):
         reminder: Reminder = self._getCurrentReminder()
-        reminder.setDays( newValue )
+        reminder.setDays(newValue)
         item = self.ui.reminderList.currentItem()
-        item.setText( reminder.printPretty() )
+        item.setText(reminder.printPretty())
 
     def _hoursChanged(self, newTime):
         reminder: Reminder = self._getCurrentReminder()
         millis = newTime.msecsSinceStartOfDay()
-        reminder.setMillis( millis )
+        reminder.setMillis(millis)
         item = self.ui.reminderList.currentItem()
-        item.setText( reminder.printPretty() )
+        item.setText(reminder.printPretty())
 
     # ===================================================================
 
@@ -119,36 +120,36 @@ class ReminderWidget( QtBaseClass ):           # type: ignore
         if self.task.reminderList is None:
             self._disableWidget()
             return
-        if len( self.task.reminderList ) < 1:
+        if len(self.task.reminderList) < 1:
             self._disableWidget()
             return
         self._activateWidget()
 
     def _disableWidget(self):
-        self.ui.daysBox.setEnabled( False )
-        self.ui.hoursEdit.setEnabled( False )
-        self.ui.removePB.setEnabled( False )
+        self.ui.daysBox.setEnabled(False)
+        self.ui.hoursEdit.setEnabled(False)
+        self.ui.removePB.setEnabled(False)
         self.ui.reminderList.clear()
-        self.ui.reminderList.setEnabled( False )
+        self.ui.reminderList.setEnabled(False)
 
     def _activateWidget(self):
-        self.ui.daysBox.setEnabled( False )
-        self.ui.hoursEdit.setEnabled( False )
-        self.ui.reminderList.setEnabled( True )
+        self.ui.daysBox.setEnabled(False)
+        self.ui.hoursEdit.setEnabled(False)
+        self.ui.reminderList.setEnabled(True)
 
         self.ui.reminderList.clear()
-        for i in range( 0, len(self.task.reminderList) ):
-            rem = self.task.reminderList[ i ]
-            item = QListWidgetItem( rem.printPretty() )
-            self.ui.reminderList.insertItem( i, item )
+        for i in range(0, len(self.task.reminderList)):
+            rem = self.task.reminderList[i]
+            item = QListWidgetItem(rem.printPretty())
+            self.ui.reminderList.insertItem(i, item)
 
     def _getCurrentReminder(self):
         selected = self.ui.reminderList.selectedItems()
-        if len( selected ) < 1:
+        if len(selected) < 1:
             return None
         currentRow = self.ui.reminderList.currentRow()
         if currentRow < 0:
             return None
-        if currentRow >= len( self.task.reminderList ):
+        if currentRow >= len(self.task.reminderList):
             return None
-        return self.task.reminderList[ currentRow ]
+        return self.task.reminderList[currentRow]

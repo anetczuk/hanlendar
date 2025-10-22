@@ -41,27 +41,27 @@ class DateTest(unittest.TestCase):
 
     def test_today_mock_with(self):
         target = datetime.date(2009, 1, 1)
-        self.assertLess( target, datetime.date.today() )
+        self.assertLess(target, datetime.date.today())
 
         with get_mock_date(target):
             today = datetime.date.today()
-            self.assertEqual( target, today )
-            self.assertTrue( isinstance(today, datetime.date) )
+            self.assertEqual(target, today)
+            self.assertTrue(isinstance(today, datetime.date))
 
-        self.assertLess( target, datetime.date.today() )
+        self.assertLess(target, datetime.date.today())
 
     def test_today_mock_start(self):
         target = datetime.date(2009, 1, 1)
-        self.assertLess( target, datetime.date.today() )
+        self.assertLess(target, datetime.date.today())
 
         mockObj = get_mock_date(target)
         mockObj.start()
         today = datetime.date.today()
-        self.assertEqual( target, today )
-        self.assertTrue( isinstance(today, datetime.date) )
+        self.assertEqual(target, today)
+        self.assertTrue(isinstance(today, datetime.date))
         mockObj.stop()
 
-        self.assertLess( target, datetime.date.today() )
+        self.assertLess(target, datetime.date.today())
 
 
 class DateTimeTest(unittest.TestCase):
@@ -75,32 +75,32 @@ class DateTimeTest(unittest.TestCase):
 
     def test_today_mock_with(self):
         target = datetime.datetime(2009, 1, 1)
-        self.assertLess( target, datetime.datetime.today() )
+        self.assertLess(target, datetime.datetime.today())
 
         with get_mock_datetime(target):
             today = datetime.datetime.today()
-            self.assertEqual( target, today )
-            self.assertTrue( isinstance(today, datetime.datetime) )
+            self.assertEqual(target, today)
+            self.assertTrue(isinstance(today, datetime.datetime))
 
-        self.assertLess( target, datetime.datetime.today() )
+        self.assertLess(target, datetime.datetime.today())
 
     def test_today_mock_start(self):
         target = datetime.datetime(2009, 1, 1)
-        self.assertLess( target, datetime.datetime.today() )
+        self.assertLess(target, datetime.datetime.today())
 
         mockObj = get_mock_datetime(target)
         mockObj.start()
         today = datetime.datetime.today()
-        self.assertEqual( target, today )
-        self.assertTrue( isinstance(today, datetime.datetime) )
+        self.assertEqual(target, today)
+        self.assertTrue(isinstance(today, datetime.datetime))
         mockObj.stop()
 
-        self.assertLess( target, datetime.datetime.today() )
+        self.assertLess(target, datetime.datetime.today())
 
     def test_get_today_mock(self):
         target = datetime.datetime(2009, 1, 1)
-        self.assertLess( target, datetime.datetime.today() )
+        self.assertLess(target, datetime.datetime.today())
 
         with get_mock_datetime(target):
             today = get_today()
-            self.assertEqual( target, today )
+            self.assertEqual(target, today)

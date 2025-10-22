@@ -32,71 +32,71 @@ from hanlendar.domainmodel.task import Task
 from hanlendar.gui.dataobject import DataObject
 
 
-class TaskContextMenu( QObject ):
+class TaskContextMenu(QObject):
 
-    addNewTask      = pyqtSignal( QDate )
-    addNewSubTask   = pyqtSignal( Task )
-    editTask        = pyqtSignal( Task )
-    removeTask      = pyqtSignal( Task )
-    markCompleted   = pyqtSignal( Task )
+    addNewTask = pyqtSignal(QDate)
+    addNewSubTask = pyqtSignal(Task)
+    editTask = pyqtSignal(Task)
+    removeTask = pyqtSignal(Task)
+    markCompleted = pyqtSignal(Task)
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
 
         self.contextMenu = QMenu(parentWidget)
-        self.addTaskAction       = self.contextMenu.addAction("New Task")
-        self.addSubTaskAction    = self.contextMenu.addAction("New Sub Task")
-        self.editTaskAction      = self.contextMenu.addAction("Edit Task")
-        self.removeTaskAction    = self.contextMenu.addAction("Remove Task")
+        self.addTaskAction = self.contextMenu.addAction("New Task")
+        self.addSubTaskAction = self.contextMenu.addAction("New Sub Task")
+        self.editTaskAction = self.contextMenu.addAction("Edit Task")
+        self.removeTaskAction = self.contextMenu.addAction("Remove Task")
         self.markCompletedAction = self.contextMenu.addAction("Mark completed")
 
     def connectData(self, dataObject: DataObject):
-        self.addNewTask.connect( dataObject.addNewTask )
-        self.addNewSubTask.connect( dataObject.addNewSubTask )
-        self.editTask.connect( dataObject.editTask )
-        self.removeTask.connect( dataObject.removeTask )
-        self.markCompleted.connect( dataObject.markTaskCompleted )
+        self.addNewTask.connect(dataObject.addNewTask)
+        self.addNewSubTask.connect(dataObject.addNewSubTask)
+        self.editTask.connect(dataObject.editTask)
+        self.removeTask.connect(dataObject.removeTask)
+        self.markCompleted.connect(dataObject.markTaskCompleted)
 
-    def show(self, task: Task = None, newTaskDate: QDate = None ):
+    def show(self, task: Task = None, newTaskDate: QDate = None):
         if task is None:
-            self.showNewTask( newTaskDate )
+            self.showNewTask(newTaskDate)
             return
 
-        self.addSubTaskAction.setEnabled( True )
-        self.editTaskAction.setEnabled( True )
-        self.removeTaskAction.setEnabled( True )
+        self.addSubTaskAction.setEnabled(True)
+        self.editTaskAction.setEnabled(True)
+        self.removeTaskAction.setEnabled(True)
         if task.isCompleted():
-            self.markCompletedAction.setEnabled( False )
+            self.markCompletedAction.setEnabled(False)
         else:
-            self.markCompletedAction.setEnabled( True )
+            self.markCompletedAction.setEnabled(True)
 
         globalPos = QCursor.pos()
-        action = self.contextMenu.exec_( globalPos )
+        action = self.contextMenu.exec_(globalPos)
 
         if action == self.addTaskAction:
             if newTaskDate is None:
                 newTaskDate = QDate.currentDate()
-            self.addNewTask.emit( newTaskDate )
+            self.addNewTask.emit(newTaskDate)
         elif action == self.addSubTaskAction:
-            self.addNewSubTask.emit( task )
+            self.addNewSubTask.emit(task)
         elif action == self.editTaskAction:
-            self.editTask.emit( task )
+            self.editTask.emit(task)
         elif action == self.removeTaskAction:
-            self.removeTask.emit( task )
+            self.removeTask.emit(task)
         elif action == self.markCompletedAction:
-            self.markCompleted.emit( task )
+            self.markCompleted.emit(task)
 
-    def showNewTask(self, newTaskDate: QDate = None ):
+    def showNewTask(self, newTaskDate: QDate = None):
         ## context menu on background
-        self.addSubTaskAction.setEnabled( False )
-        self.editTaskAction.setEnabled( False )
-        self.removeTaskAction.setEnabled( False )
-        self.markCompletedAction.setEnabled( False )
+        self.addSubTaskAction.setEnabled(False)
+        self.editTaskAction.setEnabled(False)
+        self.removeTaskAction.setEnabled(False)
+        self.markCompletedAction.setEnabled(False)
 
         globalPos = QCursor.pos()
-        action = self.contextMenu.exec_( globalPos )
+        action = self.contextMenu.exec_(globalPos)
 
         if action == self.addTaskAction:
             if newTaskDate is None:
                 newTaskDate = QDate.currentDate()
-            self.addNewTask.emit( newTaskDate )
+            self.addNewTask.emit(newTaskDate)

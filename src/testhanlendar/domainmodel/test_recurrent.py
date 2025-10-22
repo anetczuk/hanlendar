@@ -43,4 +43,4 @@ class RepeatTypeTest(unittest.TestCase):
 
     def test_serialize(self):
         mode = RepeatType.DAILY
-        self.assertEqual( mode.name, "DAILY" )
+        self.assertEqual(mode.name, "DAILY")

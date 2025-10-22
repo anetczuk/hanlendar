@@ -26,6 +26,7 @@ import sys
 import unittest
 
 from PyQt5.QtWidgets import QApplication
+
 # from PyQt5.QtWidgets import QWidget
 # from PyQt5.QtCore import QObject
 # from PyQt5.QtTest import QTest
@@ -50,4 +51,4 @@ class MainWindowTest(unittest.TestCase):
 
     def test_getDataPath(self):
         dataPath = self.widget.qtSettings.getDataPath()
-        self.assertTrue( "Hanlendar-data" in dataPath )
+        self.assertTrue("Hanlendar-data" in dataPath)

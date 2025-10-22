@@ -32,15 +32,16 @@ from hanlendar.gui.command.removetodocommand import RemoveToDoCommand
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConvertToDoToTaskCommand( QUndoCommand ):
+class ConvertToDoToTaskCommand(QUndoCommand):
 
     def __init__(self, dataObject, currentTodo, newTask, parentCommand=None):
         super().__init__(parentCommand)
 
-        AddTaskCommand( dataObject, newTask, self )
-        RemoveToDoCommand( dataObject, currentTodo, self )
+        AddTaskCommand(dataObject, newTask, self)
+        RemoveToDoCommand(dataObject, currentTodo, self)
 
-        self.setText( "Convert ToDo to Task" )
+        self.setText("Convert ToDo to Task")
+
 
 #     def redo(self):
 #         super().redo()

@@ -22,6 +22,7 @@
 #
 
 import logging
+
 # from datetime import datetime
 
 from datetime import date
@@ -32,13 +33,13 @@ from hanlendar.domainmodel.task import Task
 from .. import uiloader
 
 
-UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
+UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class RecurrentWidget( QtBaseClass ):           # type: ignore
+class RecurrentWidget(QtBaseClass):  # type: ignore
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -48,34 +49,34 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
         self.task: Task = None
         self.readOnly: bool = False
 
-        self.setReadOnly( False )
+        self.setReadOnly(False)
 
         ## recurrent combo box
         for item in RepeatType:
             itemName = item.name
-            self.ui.repeatModeCB.addItem( itemName, item )
+            self.ui.repeatModeCB.addItem(itemName, item)
 
-        self.ui.endDateEdit.setDate( date.today() )
+        self.ui.endDateEdit.setDate(date.today())
 
         ## update GUI
         self._repeatModeChanged()
 
-        self.ui.repeatModeCB.currentIndexChanged.connect( self._repeatModeChanged )
-        self.ui.everySB.valueChanged.connect( self._everyValueChanged )
-        self.ui.endDateCB.stateChanged.connect( self._finiteChanged )
-        self.ui.endDateEdit.dateChanged.connect( self._endDateChanged )
+        self.ui.repeatModeCB.currentIndexChanged.connect(self._repeatModeChanged)
+        self.ui.everySB.valueChanged.connect(self._everyValueChanged)
+        self.ui.endDateCB.stateChanged.connect(self._finiteChanged)
+        self.ui.endDateEdit.dateChanged.connect(self._endDateChanged)
 
-        self.setTask( None )
+        self.setTask(None)
 
     def setReadOnly(self, readOnly):
         self.readOnly = readOnly
         if self.readOnly is False:
-            self.ui.repeatModeStack.setCurrentIndex( 0 )
+            self.ui.repeatModeStack.setCurrentIndex(0)
         else:
-            self.ui.repeatModeStack.setCurrentIndex( 1 )
-        self.ui.everySB.setReadOnly( self.readOnly )
-        self.ui.endDateEdit.setReadOnly( self.readOnly )
-        self.ui.endDateCB.setDisabled( self.readOnly )
+            self.ui.repeatModeStack.setCurrentIndex(1)
+        self.ui.everySB.setReadOnly(self.readOnly)
+        self.ui.endDateEdit.setReadOnly(self.readOnly)
+        self.ui.endDateCB.setDisabled(self.readOnly)
 
     def setTask(self, task: Task):
         self.task = task
@@ -83,27 +84,27 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
 
     def refreshWidget(self):
         if self.task is None:
-            self._setRepeatMode( RepeatType.NEVER )
+            self._setRepeatMode(RepeatType.NEVER)
             return
         if self.task.recurrence is None:
-            self._setRepeatMode( RepeatType.NEVER )
+            self._setRepeatMode(RepeatType.NEVER)
             return
 
-        self._setRepeatMode( self.task.recurrence.mode )
-        self.ui.everySB.setValue( self.task.recurrence.every )
+        self._setRepeatMode(self.task.recurrence.mode)
+        self.ui.everySB.setValue(self.task.recurrence.every)
         if self.task.recurrence.endDate is not None:
-            self.ui.endDateCB.setChecked( True )
-            self.ui.endDateEdit.setDate( self.task.recurrence.endDate )
+            self.ui.endDateCB.setChecked(True)
+            self.ui.endDateEdit.setDate(self.task.recurrence.endDate)
         else:
-            self.ui.endDateCB.setChecked( False )
+            self.ui.endDateCB.setChecked(False)
         self._activateWidget()
 
     def _setRepeatMode(self, repeatMode):
-        self.ui.repeatModeCB.blockSignals( True )
-        index = RepeatType.indexOf( repeatMode )
-        self.ui.repeatModeCB.setCurrentIndex( index )
-        self.ui.repeatModeLabel.setText( repeatMode.name )
-        self.ui.repeatModeCB.blockSignals( False )
+        self.ui.repeatModeCB.blockSignals(True)
+        index = RepeatType.indexOf(repeatMode)
+        self.ui.repeatModeCB.setCurrentIndex(index)
+        self.ui.repeatModeLabel.setText(repeatMode.name)
+        self.ui.repeatModeCB.blockSignals(False)
 
     # ===================== update data ===================================
 
@@ -122,10 +123,10 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
         self.task.recurrence.mode = repeatMode
         self._activateWidget()
         if repeatMode is RepeatType.ASPARENT:
-            self.ui.everySB.setEnabled( False )
-            self.ui.endDateEdit.setEnabled( False )
-            self.ui.endDateCB.setEnabled( False )
-            self.ui.endDateCB.setChecked( False )
+            self.ui.everySB.setEnabled(False)
+            self.ui.endDateEdit.setEnabled(False)
+            self.ui.endDateCB.setEnabled(False)
+            self.ui.endDateCB.setChecked(False)
 
     def _everyValueChanged(self, newValue):
         if self.task:
@@ -150,24 +151,24 @@ class RecurrentWidget( QtBaseClass ):           # type: ignore
     ## ================= update GUI state ================
 
     def _disableWidget(self):
-        self.ui.everySB.setEnabled( False )
-        self.ui.endDateEdit.setEnabled( False )
-        self.ui.endDateCB.setEnabled( False )
-        self.ui.endDateCB.setChecked( False )
-        self.ui.nextRepeatLabel.setText( "None" )
+        self.ui.everySB.setEnabled(False)
+        self.ui.endDateEdit.setEnabled(False)
+        self.ui.endDateCB.setEnabled(False)
+        self.ui.endDateCB.setChecked(False)
+        self.ui.nextRepeatLabel.setText("None")
 
     def _activateWidget(self):
-        self.ui.everySB.setEnabled( True )
+        self.ui.everySB.setEnabled(True)
         if self.readOnly is False:
-            self.ui.endDateCB.setEnabled( True )
+            self.ui.endDateCB.setEnabled(True)
         if self.ui.endDateCB.isChecked():
-            self.ui.endDateEdit.setEnabled( True )
+            self.ui.endDateEdit.setEnabled(True)
         else:
-            self.ui.endDateEdit.setEnabled( False )
+            self.ui.endDateEdit.setEnabled(False)
         self._updateNextRepeat()
 
     def _updateNextRepeat(self):
         if self.task is None:
             return
         repeatText = self.task.printNextRecurrence()
-        self.ui.nextRepeatLabel.setText( repeatText )
+        self.ui.nextRepeatLabel.setText(repeatText)

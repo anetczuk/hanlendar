@@ -30,24 +30,24 @@ from PyQt5.QtWidgets import QUndoCommand
 _LOGGER = logging.getLogger(__name__)
 
 
-class MarkToDoCompletedCommand( QUndoCommand ):
+class MarkToDoCompletedCommand(QUndoCommand):
 
     def __init__(self, dataObject, todo, parentCommand=None):
         super().__init__(parentCommand)
 
         self.data = dataObject
         self.domainModel = self.data.getManager()
-        self.oldState = copy.deepcopy( todo )
+        self.oldState = copy.deepcopy(todo)
         self.todo = todo
         self.todo.setCompleted()
-        self.domainModel.replaceTask( self.todo, self.oldState )
+        self.domainModel.replaceTask(self.todo, self.oldState)
 
-        self.setText( "Mark ToDo completed: " + todo.title )
+        self.setText("Mark ToDo completed: " + todo.title)
 
     def redo(self):
-        self.domainModel.replaceToDo( self.oldState, self.todo )
+        self.domainModel.replaceToDo(self.oldState, self.todo)
         self.data.todosChanged.emit()
 
     def undo(self):
-        self.domainModel.replaceToDo( self.todo, self.oldState )
+        self.domainModel.replaceToDo(self.todo, self.oldState)
         self.data.todosChanged.emit()

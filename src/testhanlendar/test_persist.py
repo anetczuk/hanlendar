@@ -27,7 +27,7 @@ import unittest
 import hanlendar.persist as persist
 
 
-class FileMock():
+class FileMock:
 
     def read(self):
         return None
@@ -46,7 +46,7 @@ class RenamingUnpicklerTest(unittest.TestCase):
         pass
 
     def test_dict_property(self):
-        class TestClass():
+        class TestClass:
 
             def __init__(self):
                 self._field = None
@@ -60,34 +60,34 @@ class RenamingUnpicklerTest(unittest.TestCase):
                 self._field = value
 
         testObject = TestClass()
-        self.assertTrue( "_field" in testObject.__dict__ )
-        self.assertTrue( "field" not in testObject.__dict__ )
+        self.assertTrue("_field" in testObject.__dict__)
+        self.assertTrue("field" not in testObject.__dict__)
 
     def test_findName_callable(self):
-        def mapper_function( module, name ):
-            name_map = { "aaa": "bbb" }
-            return ( name_map.get( module, module ), name )
+        def mapper_function(module, name):
+            name_map = {"aaa": "bbb"}
+            return (name_map.get(module, module), name)
 
         file = FileMock()
-        unpicker = persist.RenamingUnpickler( file, module_mapper=mapper_function )
+        unpicker = persist.RenamingUnpickler(file, module_mapper=mapper_function)
 
-        module, name = unpicker.findName( "aaa", "xxx" )
+        module, name = unpicker.findName("aaa", "xxx")
 
-        self.assertEqual( module, "bbb" )
-        self.assertEqual( name, "xxx" )
+        self.assertEqual(module, "bbb")
+        self.assertEqual(name, "xxx")
 
     def test_findName_object(self):
-        class MapperClass():
+        class MapperClass:
             def __call__(self, module, name):
-                name_map = { "aaa": "bbb" }
-                return ( name_map.get( module, module ), name )
+                name_map = {"aaa": "bbb"}
+                return (name_map.get(module, module), name)
 
         mapper = MapperClass()
 
         file = FileMock()
-        unpicker = persist.RenamingUnpickler( file, module_mapper=mapper )
+        unpicker = persist.RenamingUnpickler(file, module_mapper=mapper)
 
-        module, name = unpicker.findName( "aaa", "xxx" )
+        module, name = unpicker.findName("aaa", "xxx")
 
-        self.assertEqual( module, "bbb" )
-        self.assertEqual( name, "xxx" )
+        self.assertEqual(module, "bbb")
+        self.assertEqual(name, "xxx")

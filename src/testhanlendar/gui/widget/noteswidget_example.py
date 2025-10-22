@@ -46,7 +46,7 @@ from hanlendar.gui.widget.noteswidget import NotesWidget
 ## ============================= main section ===================================
 
 
-if __name__ != '__main__':
+if __name__ != "__main__":
     sys.exit(0)
 
 
@@ -58,8 +58,8 @@ app.setOrganizationName("arnet")
 setup_interrupt_handling()
 
 widget = NotesWidget()
-widget.addTab( "notes2" )
+widget.addTab("notes2")
 widget.show()
 
 exitCode = app.exec_()
-sys.exit( exitCode )
+sys.exit(exitCode)

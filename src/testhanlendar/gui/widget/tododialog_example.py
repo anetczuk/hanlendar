@@ -46,7 +46,7 @@ from hanlendar.domainmodel.local.todo import LocalToDo as ToDo
 ## ============================= main section ===================================
 
 
-if __name__ != '__main__':
+if __name__ != "__main__":
     sys.exit(0)
 
 
@@ -63,8 +63,8 @@ todo.priority = 5
 
 setup_interrupt_handling()
 
-dialog = ToDoDialog( todo )
+dialog = ToDoDialog(todo)
 dialogCode = dialog.exec_()
 
-print( "Dialog return:", dialogCode )
-print( "Created todo:", dialog.todo )
+print("Dialog return:", dialogCode)
+print("Created todo:", dialog.todo)

@@ -64,19 +64,19 @@ class DatabaseMode(Enum):
         items = list(cls.__members__.items())
         if len(items) <= index:
             return defaultValue
-        return items[ index ][ 1 ]
+        return items[index][1]
 
 
-class AppSettings():
+class AppSettings:
 
     def __init__(self):
         self.trayIcon = tray_icon.TrayIconTheme.WHITE
 
-        self.databaseMode   = DatabaseMode.LOCAL
-        self.serverURL      = ""
-        self.serverUser     = ""
+        self.databaseMode = DatabaseMode.LOCAL
+        self.serverURL = ""
+        self.serverUser = ""
         self.serverPassword = ""
-        self.calendarName   = ""
+        self.calendarName = ""
 
     def loadSettings(self, settings):
         settings.beginGroup("app_settings")
@@ -87,10 +87,10 @@ class AppSettings():
         databaseName = settings.value("databaseMode", None, type=str)
         self.databaseMode = DatabaseMode.findByName(databaseName, DatabaseMode.LOCAL)
 
-        self.serverURL      = settings.value( "serverURL", "", type=str )
-        self.serverUser     = settings.value( "serverUser", "", type=str )
-        self.serverPassword = settings.value( "serverPassword", "", type=str )
-        self.calendarName   = settings.value( "calendarName", "", type=str )
+        self.serverURL = settings.value("serverURL", "", type=str)
+        self.serverUser = settings.value("serverUser", "", type=str)
+        self.serverPassword = settings.value("serverPassword", "", type=str)
+        self.calendarName = settings.value("calendarName", "", type=str)
 
         settings.endGroup()
 
@@ -101,10 +101,10 @@ class AppSettings():
 
         settings.setValue("databaseMode", self.databaseMode.name)
 
-        settings.setValue( "serverURL", self.serverURL )
-        settings.setValue( "serverUser", self.serverUser )
-        settings.setValue( "serverPassword", self.serverPassword )
-        settings.setValue( "calendarName", self.calendarName )
+        settings.setValue("serverURL", self.serverURL)
+        settings.setValue("serverUser", self.serverUser)
+        settings.setValue("serverPassword", self.serverPassword)
+        settings.setValue("calendarName", self.calendarName)
 
         settings.endGroup()
 
@@ -117,8 +117,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class SettingsDialog(QtBaseClass):  # type: ignore
 
-    iconThemeChanged = pyqtSignal( tray_icon.TrayIconTheme )
-    exportLocal      = pyqtSignal( CalDAVConnector )
+    iconThemeChanged = pyqtSignal(tray_icon.TrayIconTheme)
+    exportLocal = pyqtSignal(CalDAVConnector)
 
     def __init__(self, appSettings, parentWidget=None):
         super().__init__(parentWidget)
@@ -143,15 +143,15 @@ class SettingsDialog(QtBaseClass):  # type: ignore
         self.ui.localRB.toggled.connect(self.ui.serverData.setDisabled)
         self.ui.caldavRB.toggled.connect(self.ui.serverData.setEnabled)
 
-        self.ui.serverURLLE.setText( self.appSettings.serverURL )
-        self.ui.serverUserLE.setText( self.appSettings.serverUser )
-        self.ui.serverPasswordLE.setText( self.appSettings.serverPassword )
-        self.ui.calendarLE.setText( self.appSettings.calendarName )
+        self.ui.serverURLLE.setText(self.appSettings.serverURL)
+        self.ui.serverUserLE.setText(self.appSettings.serverUser)
+        self.ui.serverPasswordLE.setText(self.appSettings.serverPassword)
+        self.ui.calendarLE.setText(self.appSettings.calendarName)
 
         databaseIndex = DatabaseMode.indexOf(self.appSettings.databaseMode)
         databaseIndex = max(0, databaseIndex)
         gbChildren = self.ui.databaseGB.findChildren(QRadioButton)
-        gbChildren[ databaseIndex ].toggle()
+        gbChildren[databaseIndex].toggle()
 
         self.ui.testURLPB.clicked.connect(self._testConnection)
         self.ui.exportLocalPB.clicked.connect(self._exportLocalData)
@@ -164,59 +164,61 @@ class SettingsDialog(QtBaseClass):  # type: ignore
         databaseIndex = max(0, databaseIndex)
         self.appSettings.databaseMode = DatabaseMode.getByIndex(databaseIndex, DatabaseMode.LOCAL)
 
-        self.appSettings.serverURL      = self.ui.serverURLLE.text()
-        self.appSettings.serverUser     = self.ui.serverUserLE.text()
+        self.appSettings.serverURL = self.ui.serverURLLE.text()
+        self.appSettings.serverUser = self.ui.serverUserLE.text()
         self.appSettings.serverPassword = self.ui.serverPasswordLE.text()
-        self.appSettings.calendarName   = self.ui.calendarLE.text()
+        self.appSettings.calendarName = self.ui.calendarLE.text()
 
         super().accept()
 
     def _getDatabaseModeIndex(self):
         gbChildren = self.ui.databaseGB.findChildren(QRadioButton)
         for index in range(0, len(gbChildren)):
-            item = gbChildren[ index ]
+            item = gbChildren[index]
             if item.isChecked():
                 return index
         return -1
 
     def _testConnection(self):
-        serverURL      = self.ui.serverURLLE.text()
-        serverUser     = self.ui.serverUserLE.text()
+        serverURL = self.ui.serverURLLE.text()
+        serverUser = self.ui.serverUserLE.text()
         serverPassword = self.ui.serverPasswordLE.text()
-        calendarName   = self.ui.calendarLE.text()
+        calendarName = self.ui.calendarLE.text()
 
         try:
             connector = CalDAVConnector()
-            connector.connectToServer( serverURL, serverUser, serverPassword )
+            connector.connectToServer(serverURL, serverUser, serverPassword)
         except Exception as ex:
             _LOGGER.warning("unable to connect to server: %s", ex)
             message = str(ex)
             QMessageBox.critical(self, "Connection test", "Connection problem:\n" + message)
 
         try:
-            connector.connectToCalendar( calendarName, allow_throw=True )
+            connector.connectToCalendar(calendarName, allow_throw=True)
             QMessageBox.information(self, "Connection test", "Successfully connected to calendar")
         except Exception as ex:
             _LOGGER.warning("unable to get calendar: %s", ex)
-            QMessageBox.information(self, "Connection test", "Successfully connected to server. New calendar will be created.")
+            QMessageBox.information(
+                self, "Connection test", "Successfully connected to server. New calendar will be created."
+            )
 
     def _exportLocalData(self):
-        serverURL      = self.ui.serverURLLE.text()
-        serverUser     = self.ui.serverUserLE.text()
+        serverURL = self.ui.serverURLLE.text()
+        serverUser = self.ui.serverUserLE.text()
         serverPassword = self.ui.serverPasswordLE.text()
-        calendarName   = self.ui.calendarLE.text()
+        calendarName = self.ui.calendarLE.text()
 
         try:
             connector = CalDAVConnector()
-            connector.connectToServer( serverURL, serverUser, serverPassword )
+            connector.connectToServer(serverURL, serverUser, serverPassword)
         except Exception as ex:
             _LOGGER.warning("unable to connect to server: %s", ex)
             message = str(ex)
             QMessageBox.critical(self, "Connection test", "Connection problem:\n" + message)
             return
 
-        connector.connectToCalendar( calendarName )
-        self.exportLocal.emit( connector )
+        connector.connectToCalendar(calendarName)
+        self.exportLocal.emit(connector)
 
     ## =====================================================
 
@@ -241,5 +243,5 @@ def load_keys_to_dict(settings):
         value = settings.value(key, "", type=str)
         if value:
             # not empty
-            state[ key ] = value
+            state[key] = value
     return state

@@ -34,12 +34,12 @@ _LOGGER = logging.getLogger(__name__)
 
 @unique
 class RepeatType(Enum):
-    NEVER     = auto()
-    DAILY     = auto()
-    WEEKLY    = auto()
-    MONTHLY   = auto()
-    YEARLY    = auto()
-    ASPARENT  = auto()
+    NEVER = auto()
+    DAILY = auto()
+    WEEKLY = auto()
+    MONTHLY = auto()
+    YEARLY = auto()
+    ASPARENT = auto()
 
     @classmethod
     def findByName(cls, name):
@@ -62,9 +62,9 @@ class RepeatType(Enum):
 
 @unique
 class RecurrentField(Enum):
-    MODE     = auto()
-    STEP     = auto()
-    ENDDATE  = auto()
+    MODE = auto()
+    STEP = auto()
+    ENDDATE = auto()
 
     @classmethod
     def findByName(cls, name, defaultValue=None):
@@ -85,7 +85,7 @@ class RecurrentField(Enum):
         return -1
 
 
-class Recurrent():
+class Recurrent:
 
     def __init__(self, mode: RepeatType = None, every: int = None, endDate: date = None):
         if mode is None:
@@ -96,8 +96,8 @@ class Recurrent():
             every = 0
 
         self.mode: RepeatType = mode
-        self.every: int       = every
-        self.endDate: date    = endDate
+        self.every: int = every
+        self.endDate: date = endDate
 
     def isValid(self):
         if self.mode == RepeatType.NEVER:
@@ -125,7 +125,7 @@ class Recurrent():
         self.mode = RepeatType.YEARLY
         self.every = every
 
-    def getDateOffset( self ) -> relativedelta:
+    def getDateOffset(self) -> relativedelta:
         if self.every < 1:
             return None
 
@@ -134,15 +134,15 @@ class Recurrent():
         if self.mode is RepeatType.ASPARENT:
             return None
         if self.mode is RepeatType.DAILY:
-            return relativedelta( days=1 * self.every )
+            return relativedelta(days=1 * self.every)
         if self.mode is RepeatType.WEEKLY:
-            return relativedelta( days=7 * self.every )
+            return relativedelta(days=7 * self.every)
         if self.mode is RepeatType.MONTHLY:
-            return relativedelta( months=1 * self.every )
+            return relativedelta(months=1 * self.every)
         if self.mode is RepeatType.YEARLY:
-            return relativedelta( years=1 * self.every )
+            return relativedelta(years=1 * self.every)
 
-        _LOGGER.warning( "unhandled case" )
+        _LOGGER.warning("unhandled case")
         return None
 
     def isEnd(self, currDate: date) -> bool:
@@ -169,9 +169,9 @@ class Recurrent():
 
     def findRecurrentOffset(self, referenceDate: date, targetDate: date) -> int:
         offset = self.getDateOffset()
-        return find_multiplication( referenceDate, targetDate, offset )
+        return find_multiplication(referenceDate, targetDate, offset)
 
-    def __eq__( self, other: 'Recurrent' ):
+    def __eq__(self, other: "Recurrent"):
         if not isinstance(other, Recurrent):
             ## don't attempt to compare against unrelated types
             return NotImplemented
@@ -179,11 +179,11 @@ class Recurrent():
         return self.mode == other.mode and self.every == other.every and self.endDate == other.endDate
 
     def __repr__(self):
-        return "Recurrent( mode=%s, every=%s, endDate=%s )" % ( self.mode, self.every, self.endDate )
+        return "Recurrent( mode=%s, every=%s, endDate=%s )" % (self.mode, self.every, self.endDate)
         ## return "[m:%s e:%s ed:%s]" % ( self.mode, self.every, self.endDate )
 
 
-def find_multiplication( startDate: date, endDate: date, offset: relativedelta ) -> int:
+def find_multiplication(startDate: date, endDate: date, offset: relativedelta) -> int:
     dateTD = endDate - startDate
     diffDays = dateTD.days
 
@@ -193,7 +193,7 @@ def find_multiplication( startDate: date, endDate: date, offset: relativedelta )
 
     ret = int(diffDays / maxDaysOffset)
     mul = int(ret / 2)
-    mul = max( mul, 1 )     ## handle case when 'maxDaysOffset' is greater than 'offset'
+    mul = max(mul, 1)  ## handle case when 'maxDaysOffset' is greater than 'offset'
 
     startDate += offset * ret
     while mul > 0:
@@ -207,8 +207,8 @@ def find_multiplication( startDate: date, endDate: date, offset: relativedelta )
 
 
 # returns: startDate + offset * multiplicator >= endDate
-def find_multiplication_after( startDate: date, endDate: date, offset: relativedelta ) -> int:
-    multiplicator = find_multiplication( startDate, endDate, offset )
+def find_multiplication_after(startDate: date, endDate: date, offset: relativedelta) -> int:
+    multiplicator = find_multiplication(startDate, endDate, offset)
     if multiplicator < 0:
         return multiplicator
 

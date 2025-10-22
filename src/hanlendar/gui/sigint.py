@@ -8,7 +8,6 @@ As stated on the website (https://coldfix.eu/about/), content and source code
 is published under CC BY and CC0 license respectively.
 """
 
-
 import signal
 import logging
 
@@ -33,6 +32,7 @@ def safe_timer(timeout, func, *args, **kwargs):
 
     See: http://ralsina.me/weblog/posts/BB974.html
     """
+
     def timer_event():
         try:
             func(*args, **kwargs)

@@ -31,7 +31,7 @@ from hanlendar.domainmodel.item import Item, generate_uid
 _LOGGER = logging.getLogger(__name__)
 
 
-class LocalToDo( Item, persist.Versionable ):
+class LocalToDo(Item, persist.Versionable):
     """ToDo is entity without placement in time."""
 
     ## 0: add subtodos
@@ -41,19 +41,19 @@ class LocalToDo( Item, persist.Versionable ):
     ## 4: added 'UID'
     _class_version = 4
 
-    def __init__(self, title="" ):
+    def __init__(self, title=""):
         super(LocalToDo, self).__init__()
-        self._UID                           = generate_uid()
-        self._title                         = title
-        self._description                   = ""
-        self._completed                     = 0        ## in range [0..100]
-        self._priority                      = 5        ## lower number, greater priority
+        self._UID = generate_uid()
+        self._title = title
+        self._description = ""
+        self._completed = 0  ## in range [0..100]
+        self._priority = 5  ## lower number, greater priority
 
-        self._parent                        = None
-        self.subitems: list                 = None
+        self._parent = None
+        self.subitems: list = None
 
-    def _convertstate_(self, dict_, dictVersion_ ):
-        _LOGGER.info( "converting object from version %s to %s", dictVersion_, self._class_version )
+    def _convertstate_(self, dict_, dictVersion_):
+        _LOGGER.info("converting object from version %s to %s", dictVersion_, self._class_version)
 
         if dictVersion_ is None:
             dictVersion_ = -1
@@ -67,20 +67,20 @@ class LocalToDo( Item, persist.Versionable ):
         if dictVersion_ == 0:
             ## base class extracted, "subtodos" renamed to "subitems"
             dict_["subitems"] = dict_["subtodos"]
-            dict_.pop('subtodos', None)
+            dict_.pop("subtodos", None)
             dictVersion_ = 1
 
         if dictVersion_ == 1:
             ## rename fields
-            dict_["_title"]       = dict_.pop( "title", "" )
-            dict_["_description"] = dict_.pop( "description", "" )
-            dict_["_priority"]    = dict_.pop( "priority", 10 )
+            dict_["_title"] = dict_.pop("title", "")
+            dict_["_description"] = dict_.pop("description", "")
+            dict_["_priority"] = dict_.pop("priority", 10)
             dictVersion_ = 2
 
         if dictVersion_ == 2:
             ## rescale priority
-            priority = dict_.pop( "_priority", 10 )
-            dict_["_priority"] = int( priority / 2.0 )
+            priority = dict_.pop("_priority", 10)
+            dict_["_priority"] = int(priority / 2.0)
             dictVersion_ = 3
 
         if dictVersion_ == 3:
@@ -95,9 +95,7 @@ class LocalToDo( Item, persist.Versionable ):
         subitems = self.getSubitems()
         if subitems is not None:
             subLen = len(subitems)
-        return "[t:%s d:%s c:%s p:%s subs: %s]" % (
-            self.title, self.description,
-            self._completed, self.priority, subLen )
+        return "[t:%s d:%s c:%s p:%s subs: %s]" % (self.title, self.description, self._completed, self.priority, subLen)
 
     ## overrided
     def getParent(self):
@@ -109,11 +107,11 @@ class LocalToDo( Item, persist.Versionable ):
 
     ## return mutable reference
     ## overrided
-    def getSubitems( self ):
+    def getSubitems(self):
         return self.subitems
 
     ## overrided
-    def setSubitems( self, newList ):
+    def setSubitems(self, newList):
         self.subitems = newList
 
     ## ========================================================================

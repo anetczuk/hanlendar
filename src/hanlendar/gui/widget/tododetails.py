@@ -30,36 +30,36 @@ from hanlendar.domainmodel.local.todo import LocalToDo
 from .. import uiloader
 
 
-UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
+UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ToDoDetails( QtBaseClass ):           # type: ignore
+class ToDoDetails(QtBaseClass):  # type: ignore
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
 
-        self.ui.descriptionEdit.anchorClicked.connect( self._openLink )
+        self.ui.descriptionEdit.anchorClicked.connect(self._openLink)
 
-        self.setToDo( None )
+        self.setToDo(None)
 
     def setToDo(self, todo: LocalToDo):
         if todo is None:
             self.ui.titleEdit.clear()
             self.ui.descriptionEdit.clear()
             self.ui.completionLabel.clear()
-            self.ui.priorityBox.setValue( 0 )
+            self.ui.priorityBox.setValue(0)
             return
 
-        self.ui.titleEdit.setText( todo.title )
-        self.ui.descriptionEdit.setText( todo.description )
-        self.ui.completionLabel.setText( str(todo.completed) + "%" )
-        self.ui.priorityBox.setValue( todo.priority )
+        self.ui.titleEdit.setText(todo.title)
+        self.ui.descriptionEdit.setText(todo.description)
+        self.ui.completionLabel.setText(str(todo.completed) + "%")
+        self.ui.priorityBox.setValue(todo.priority)
 
     # pylint: disable=R0201
-    def _openLink( self, link ):
-        QDesktopServices.openUrl( link )
+    def _openLink(self, link):
+        QDesktopServices.openUrl(link)

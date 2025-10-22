@@ -48,7 +48,7 @@ from hanlendar.domainmodel.task import Task
 ## ============================= main section ===================================
 
 
-if __name__ != '__main__':
+if __name__ != "__main__":
     sys.exit(0)
 
 
@@ -57,7 +57,7 @@ app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
-taskDate = datetime.today().replace( hour=8 )
+taskDate = datetime.today().replace(hour=8)
 
 task1 = LocalTask()
 task1.title = "Completed Task"
@@ -65,35 +65,35 @@ task1.description = "Description"
 task1.completed = 100
 task1.priority = 5
 task1.startDateTime = taskDate
-task1.dueDateTime = task1.startDateTime + timedelta( hours=4 )
+task1.dueDateTime = task1.startDateTime + timedelta(hours=4)
 
 task2 = Task()
 task2.title = "Task 1"
 task2.description = "Description"
 task2.completed = 0
 task2.priority = 3
-task2.setDefaultDateTime( taskDate + timedelta( hours=6 ) )
+task2.setDefaultDateTime(taskDate + timedelta(hours=6))
 
 task3 = Task()
 task3.title = "Full Day Task"
 task3.description = "Description"
 task3.completed = 0
 task3.priority = 3
-task3.startDateTime = taskDate             - timedelta( days=2 )
-task3.dueDateTime   = task3.startDateTime  + timedelta( days=4 )
+task3.startDateTime = taskDate - timedelta(days=2)
+task3.dueDateTime = task3.startDateTime + timedelta(days=4)
 
 setup_interrupt_handling()
 
 widget = DayListWidget()
 widget.showCompletedTasks()
-widget.resize( 800, 600 )
-widget.setTasks( [task1, task2, task3], taskDate.date() )
+widget.resize(800, 600)
+widget.setTasks([task1, task2, task3], taskDate.date())
 widget.show()
 
 root_path = get_root_path()
-renderToPixmap( widget, root_path + "/tmp/daylistwidget-big.png" )
+renderToPixmap(widget, root_path + "/tmp/daylistwidget-big.png")
 
 # print( "Dialog return:", dialogCode )
 # print( "Created task:", dialog.task )
 
-sys.exit( app.exec_() )
+sys.exit(app.exec_())

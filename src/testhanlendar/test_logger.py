@@ -35,12 +35,12 @@ class LoggerTest(unittest.TestCase):
         ## Called before testfunction is executed
         self.logger = logging.Logger(__name__)
         self.logger.propagate = False
-        self.logger.setLevel( logging.DEBUG )
+        self.logger.setLevel(logging.DEBUG)
         self.buffer = io.StringIO()
-        handler = logging.StreamHandler( self.buffer )
+        handler = logging.StreamHandler(self.buffer)
         formatter = logger.create_formatter()
-        handler.setFormatter( formatter )
-        self.logger.addHandler( handler )
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
 
     def tearDown(self):
         ## Called after testfunction was executed

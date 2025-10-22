@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import QUndoCommand
 _LOGGER = logging.getLogger(__name__)
 
 
-class AddSubTaskCommand( QUndoCommand ):
+class AddSubTaskCommand(QUndoCommand):
 
     def __init__(self, dataObject, parentTask, newTask, parentCommand=None):
         super().__init__(parentCommand)
@@ -39,12 +39,12 @@ class AddSubTaskCommand( QUndoCommand ):
         self.parentTask = parentTask
         self.newTask = newTask
 
-        self.setText( "Add New Subtask: " + newTask.title )
+        self.setText("Add New Subtask: " + newTask.title)
 
     def redo(self):
-        self.parentTask.addSubItem( self.newTask )
+        self.parentTask.addSubItem(self.newTask)
         self.data.tasksChanged.emit()
 
     def undo(self):
-        self.parentTask.removeSubItem( self.newTask )
+        self.parentTask.removeSubItem(self.newTask)
         self.data.tasksChanged.emit()

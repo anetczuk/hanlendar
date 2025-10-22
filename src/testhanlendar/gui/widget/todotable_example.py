@@ -47,7 +47,7 @@ from hanlendar.domainmodel.local.todo import LocalToDo as ToDo
 ## ============================= main section ===================================
 
 
-if __name__ != '__main__':
+if __name__ != "__main__":
     sys.exit(0)
 
 
@@ -62,57 +62,57 @@ todo1.title = "ToDo 1"
 todo1.description = "Description"
 todo1.completed = 50
 todo1.priority = 5
-todosList.append( todo1 )
+todosList.append(todo1)
 
 todo2 = ToDo()
 todo2.title = "ToDo 2"
 todo2.description = "Description"
 todo2.completed = 0
 todo2.priority = 3
-todosList.append( todo2 )
+todosList.append(todo2)
 
 todo = ToDo()
 todo.title = "ToDo 3"
 todo.description = "Description"
 todo.completed = 30
 todo.priority = 11
-todosList.append( todo )
+todosList.append(todo)
 
 todo = ToDo()
 todo.title = "ToDo 4"
 todo.description = "Description"
 todo.completed = 0
 todo.priority = 12
-todosList.append( todo )
+todosList.append(todo)
 
 todo = ToDo()
 todo.title = "Completed ToDo"
 todo.description = "Description"
 todo.completed = 100
 todo.priority = 14
-todosList.append( todo )
+todosList.append(todo)
 
 todo = ToDo()
 todo.title = "ToDo Tree"
 todo.description = "Description"
 todo.completed = 0
 todo.priority = 14
-todosList.append( todo )
+todosList.append(todo)
 
 todoLeaf = ToDo()
 todoLeaf.title = "ToDo Leaf 1"
 todoLeaf.description = "Description"
 todoLeaf.completed = 0
 todoLeaf.priority = 16
-todo.addSubtodo( todoLeaf )
+todo.addSubtodo(todoLeaf)
 
 todoLeaf = ToDo()
 todoLeaf.title = "ToDo Leaf 2"
 todoLeaf.description = "Description"
 todoLeaf.completed = 0
 todoLeaf.priority = 15
-todoLeaf.addSubtodo( ToDo() ).title = "xxx"
-todo.addSubtodo( todoLeaf )
+todoLeaf.addSubtodo(ToDo()).title = "xxx"
+todo.addSubtodo(todoLeaf)
 # todo.subtodos.append( todoLeaf )
 
 dataObject = DataObject()
@@ -122,11 +122,11 @@ manager.todos = todosList
 setup_interrupt_handling()
 
 widget = ToDoTable()
-widget.resize( 1024, 768 )
-widget.connectData( dataObject )
+widget.resize(1024, 768)
+widget.connectData(dataObject)
 widget.show()
 
 # print( "Dialog return:", dialogCode )
 # print( "Created task:", dialog.task )
 
-sys.exit( app.exec_() )
+sys.exit(app.exec_())

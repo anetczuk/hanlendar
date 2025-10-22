@@ -41,5 +41,5 @@ class UiLoaderTest(unittest.TestCase):
         self.assertEqual("aaa.ui", uiFile)
 
     def test_generate_ui_file_name_file(self):
-        uiFile = uiloader.generate_ui_file_name( __file__ )
+        uiFile = uiloader.generate_ui_file_name(__file__)
         self.assertEqual("testhanlendar/gui/test_uiloader.ui", uiFile)

@@ -22,6 +22,7 @@
 #
 
 import logging
+
 # from datetime import datetime
 
 from PyQt5.QtCore import Qt
@@ -32,7 +33,7 @@ from PyQt5.QtWidgets import QLineEdit
 from .. import uiloader
 
 
-UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name( __file__ )
+UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,10 +42,10 @@ _LOGGER = logging.getLogger(__name__)
 NOTES_BG_COLOR = "#f7ec9d"
 
 
-class SinglePageWidget( QWidget ):
+class SinglePageWidget(QWidget):
 
     contentChanged = pyqtSignal()
-    createToDo     = pyqtSignal( str )
+    createToDo = pyqtSignal(str)
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -53,33 +54,34 @@ class SinglePageWidget( QWidget ):
         self.changeCounter = 0
 
         vlayout = QVBoxLayout()
-        vlayout.setContentsMargins( 0, 0, 0, 0 )
-        self.setLayout( vlayout )
+        vlayout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(vlayout)
         self.textEdit = QTextEdit(self)
-        self.textEdit.setContextMenuPolicy( Qt.CustomContextMenu )
+        self.textEdit.setContextMenuPolicy(Qt.CustomContextMenu)
 
-#         self.textEdit.setStyleSheet( "background-color: #f7ec9d;" )
+        #         self.textEdit.setStyleSheet( "background-color: #f7ec9d;" )
         self.setStyleSheet(
             """
             QTextEdit {
                 background: %s;
             }
-            """ % NOTES_BG_COLOR
+            """
+            % NOTES_BG_COLOR
         )
 
-        vlayout.addWidget( self.textEdit )
+        vlayout.addWidget(self.textEdit)
 
-        self.textEdit.textChanged.connect( self.textChanged )
-        self.textEdit.customContextMenuRequested.connect( self.textEditContextMenuRequest )
+        self.textEdit.textChanged.connect(self.textChanged)
+        self.textEdit.customContextMenuRequested.connect(self.textEditContextMenuRequest)
 
     def getText(self):
         return self.textEdit.toPlainText()
 
     def textChanged(self):
         contentText = self.getText()
-        newLength  = len( contentText )
-        currLength = len( self.content )
-        diff = abs( newLength - currLength )
+        newLength = len(contentText)
+        currLength = len(self.content)
+        diff = abs(newLength - currLength)
         self.changeCounter += diff
         self.content = contentText
         if self.changeCounter > 24:
@@ -89,28 +91,28 @@ class SinglePageWidget( QWidget ):
     def textEditContextMenuRequest(self, point):
         menu = self.textEdit.createStandardContextMenu()
         convertAction = menu.addAction("Convert to ToDo")
-        convertAction.triggered.connect( self._convertToToDo )
+        convertAction.triggered.connect(self._convertToToDo)
         selectedText = self.textEdit.textCursor().selectedText()
         if not selectedText:
-            convertAction.setEnabled( False )
-        globalPos = self.mapToGlobal( point )
-        menu.exec_( globalPos )
+            convertAction.setEnabled(False)
+        globalPos = self.mapToGlobal(point)
+        menu.exec_(globalPos)
 
     def _convertToToDo(self):
         selectedText = self.textEdit.textCursor().selectedText()
         if not selectedText:
             return
-        self.createToDo.emit( selectedText )
+        self.createToDo.emit(selectedText)
 
 
-class NotesWidget( QtBaseClass ):           # type: ignore
+class NotesWidget(QtBaseClass):  # type: ignore
 
-    addNote    = pyqtSignal( str )
-    renameNote = pyqtSignal( str, str )
-    removeNote = pyqtSignal( str )
+    addNote = pyqtSignal(str)
+    renameNote = pyqtSignal(str, str)
+    removeNote = pyqtSignal(str)
 
     notesChanged = pyqtSignal()
-    createToDo   = pyqtSignal( str )
+    createToDo = pyqtSignal(str)
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -125,82 +127,79 @@ class NotesWidget( QtBaseClass ):           # type: ignore
             QTabBar {
                 background: %s;
             }
-            """ % (NOTES_BG_COLOR, NOTES_BG_COLOR)
+            """
+            % (NOTES_BG_COLOR, NOTES_BG_COLOR)
         )
 
         self.ui.notes_tabs.clear()
-        self.addTab( "notes" )
+        self.addTab("notes")
 
     def getNotes(self):
         notes = dict()
         notesSize = self.ui.notes_tabs.count()
         for tabIndex in range(0, notesSize):
-            title = self.ui.notes_tabs.tabText( tabIndex )
-            pageWidget = self.ui.notes_tabs.widget( tabIndex )
+            title = self.ui.notes_tabs.tabText(tabIndex)
+            pageWidget = self.ui.notes_tabs.widget(tabIndex)
             text = pageWidget.getText()
-            notes[ title ] = text
+            notes[title] = text
         return notes
 
     def setNotes(self, notesDict):
         self.ui.notes_tabs.clear()
         for key, value in notesDict.items():
-            self.addTab( key, value )
+            self.addTab(key, value)
 
     def addTab(self, title, text=""):
         pageWidget = SinglePageWidget(self)
-        pageWidget.textEdit.setText( text )
-        pageWidget.contentChanged.connect( self.notesChanged )
-        pageWidget.createToDo.connect( self.createToDo )
-        self.ui.notes_tabs.addTab( pageWidget, title )
+        pageWidget.textEdit.setText(text)
+        pageWidget.contentChanged.connect(self.notesChanged)
+        pageWidget.createToDo.connect(self.createToDo)
+        self.ui.notes_tabs.addTab(pageWidget, title)
 
-    def contextMenuEvent( self, event ):
-        evPos     = event.pos()
-        globalPos = self.mapToGlobal( evPos )
-        tabBar    = self.ui.notes_tabs.tabBar()
-        tabPos    = tabBar.mapFromGlobal( globalPos )
-        tabIndex  = tabBar.tabAt( tabPos )
+    def contextMenuEvent(self, event):
+        evPos = event.pos()
+        globalPos = self.mapToGlobal(evPos)
+        tabBar = self.ui.notes_tabs.tabBar()
+        tabPos = tabBar.mapFromGlobal(globalPos)
+        tabIndex = tabBar.tabAt(tabPos)
 
-        contextMenu   = QMenu(self)
-        newAction     = contextMenu.addAction("New")
-        renameAction  = contextMenu.addAction("Rename")
-        deleteAction  = contextMenu.addAction("Delete")
+        contextMenu = QMenu(self)
+        newAction = contextMenu.addAction("New")
+        renameAction = contextMenu.addAction("Rename")
+        deleteAction = contextMenu.addAction("Delete")
 
         if tabIndex < 0:
-            renameAction.setEnabled( False )
-            deleteAction.setEnabled( False )
+            renameAction.setEnabled(False)
+            deleteAction.setEnabled(False)
 
-        action = contextMenu.exec_( globalPos )
+        action = contextMenu.exec_(globalPos)
 
         if action == newAction:
             self._newTabRequest()
         elif action == renameAction:
-            self._renameTabRequest( tabIndex )
+            self._renameTabRequest(tabIndex)
         elif action == deleteAction:
-            noteTitle = self.ui.notes_tabs.tabText( tabIndex )
-            self.removeNote.emit( noteTitle )
+            noteTitle = self.ui.notes_tabs.tabText(tabIndex)
+            self.removeNote.emit(noteTitle)
 
-    def _newTabRequest( self ):
-        newTitle = self._requestTabName( "notes" )
+    def _newTabRequest(self):
+        newTitle = self._requestTabName("notes")
         if len(newTitle) < 1:
             return
-        self.addNote.emit( newTitle )
+        self.addNote.emit(newTitle)
 
-    def _renameTabRequest( self, tabIndex ):
+    def _renameTabRequest(self, tabIndex):
         if tabIndex < 0:
             return
-        oldTitle = self.ui.notes_tabs.tabText( tabIndex )
+        oldTitle = self.ui.notes_tabs.tabText(tabIndex)
         newTitle = self._requestTabName(oldTitle)
         if not newTitle:
             # empty
             return
-        self.renameNote.emit( oldTitle, newTitle )
+        self.renameNote.emit(oldTitle, newTitle)
 
-    def _requestTabName( self, currName ):
-        newText, ok = QInputDialog.getText( self,
-                                            "Rename Note",
-                                            "Note name:",
-                                            QLineEdit.Normal,
-                                            currName )
+    def _requestTabName(self, currName):
+        newText, ok = QInputDialog.getText(self, "Rename Note", "Note name:", QLineEdit.Normal, currName)
         if ok and newText:
             # not empty
             return newText

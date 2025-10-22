@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import QUndoCommand
 _LOGGER = logging.getLogger(__name__)
 
 
-class MoveTaskCommand( QUndoCommand ):
+class MoveTaskCommand(QUndoCommand):
 
     def __init__(self, dataObject, taskCoords, parentTask, targetIndex, parentCommand=None):
         super().__init__(parentCommand)
@@ -37,20 +37,20 @@ class MoveTaskCommand( QUndoCommand ):
         self.data = dataObject
         self.domainModel = self.data.getManager()
         self.taskCoords = taskCoords
-        self.task = self.domainModel.getTaskByCoords( taskCoords )
-        self.parentTask  = parentTask
+        self.task = self.domainModel.getTaskByCoords(taskCoords)
+        self.parentTask = parentTask
         self.targetIndex = targetIndex
 
-        self.setText( "Move Task: " + self.task.title )
+        self.setText("Move Task: " + self.task.title)
 
     def redo(self):
-        self.domainModel.removeTask( self.task )
-        self.parentTask.addSubItem( self.task, self.targetIndex )
+        self.domainModel.removeTask(self.task)
+        self.parentTask.addSubItem(self.task, self.targetIndex)
         self.data.tasksChanged.emit()
 
     def undo(self):
         if self.parentTask is None:
             return
-        self.parentTask.removeSubItem( self.task )
-        self.domainModel.insertTask( self.task, self.taskCoords )
+        self.parentTask.removeSubItem(self.task)
+        self.domainModel.insertTask(self.task, self.taskCoords)
         self.data.tasksChanged.emit()

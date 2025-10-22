@@ -62,7 +62,7 @@ from hanlendar.domainmodel.local.todo import LocalToDo
 _LOGGER = logging.getLogger(__name__)
 
 
-class DataObject( QObject ):
+class DataObject(QObject):
 
     ## added, modified or removed
     tasksChanged = pyqtSignal()
@@ -72,10 +72,10 @@ class DataObject( QObject ):
     notesChanged = pyqtSignal()
 
     def __init__(self, parent: QWidget = None):
-        super().__init__( parent )
+        super().__init__(parent)
 
         self.parentWidget = parent
-        self.domainModel  = LocalManager()
+        self.domainModel = LocalManager()
 
         self.undoStack = QUndoStack(self)
 
@@ -85,132 +85,132 @@ class DataObject( QObject ):
     def setManager(self, model):
         self.domainModel = model
 
-    #TODO: remove
-    def load( self, inputDir ):
-        self.domainModel.load( inputDir )
+    # TODO: remove
+    def load(self, inputDir):
+        self.domainModel.load(inputDir)
 
-    def loadData( self ):
+    def loadData(self):
         self.domainModel.loadData()
 
-    def storeData( self ):
+    def storeData(self):
         return self.domainModel.storeData()
 
     def getTaskOccurrences(self, taskDate: date, includeCompleted=True):
-        return self.domainModel.getTaskOccurrencesForDate( taskDate, includeCompleted )
+        return self.domainModel.getTaskOccurrencesForDate(taskDate, includeCompleted)
 
     ## ==============================================================
 
-    def addNewTask( self, newTaskDate: QDate = None ):
-        task = self._createTask( newTaskDate )
+    def addNewTask(self, newTaskDate: QDate = None):
+        task = self._createTask(newTaskDate)
         if task is None:
             return
-        self.addTask( task )
+        self.addTask(task)
 
-    def addNewSubTask( self, parent: Task ):
+    def addNewSubTask(self, parent: Task):
         if parent is None:
             self.addNewTask()
             return
         task = self._createTask()
         if task is None:
             return
-        self.undoStack.push( AddSubTaskCommand( self, parent, task ) )
+        self.undoStack.push(AddSubTaskCommand(self, parent, task))
 
-    def addTask(self, task: Task = None ) -> Task:
+    def addTask(self, task: Task = None) -> Task:
         if task is None:
             task = self.domainModel.createEmptyTask()
-        self.undoStack.push( AddTaskCommand( self, task ) )
+        self.undoStack.push(AddTaskCommand(self, task))
         return task
 
-    def editTask(self, task: Task ):
+    def editTask(self, task: Task):
         if task is None:
             return
-        taskDialog = TaskDialog( task, self.parentWidget )
-        taskDialog.setModal( True )
+        taskDialog = TaskDialog(task, self.parentWidget)
+        taskDialog.setModal(True)
         dialogCode = taskDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return
-        self.undoStack.push( EditTaskCommand( self, task, taskDialog.task ) )
+        self.undoStack.push(EditTaskCommand(self, task, taskDialog.task))
 
-    def removeTask(self, task: Task ):
-        self.undoStack.push( RemoveTaskCommand( self, task ) )
+    def removeTask(self, task: Task):
+        self.undoStack.push(RemoveTaskCommand(self, task))
 
-    def markTaskCompleted(self, task: Task ):
-        self.undoStack.push( MarkTaskCompletedCommand( self, task ) )
+    def markTaskCompleted(self, task: Task):
+        self.undoStack.push(MarkTaskCompletedCommand(self, task))
 
     def moveTask(self, taskCoords, parentTask, targetIndex):
-        self.undoStack.push( MoveTaskCommand( self, taskCoords, parentTask, targetIndex ) )
+        self.undoStack.push(MoveTaskCommand(self, taskCoords, parentTask, targetIndex))
 
     ## ==============================================================
 
-    def addNewToDo( self, content=None ):
-        todo = self._createToDo( content )
-        self.addToDo( todo )
+    def addNewToDo(self, content=None):
+        todo = self._createToDo(content)
+        self.addToDo(todo)
 
-    def addToDo(self, todo: LocalToDo = None ) -> LocalToDo:
+    def addToDo(self, todo: LocalToDo = None) -> LocalToDo:
         if todo is None:
             todo = self.domainModel.createEmptyToDo()
-        self.undoStack.push( AddToDoCommand( self, todo ) )
+        self.undoStack.push(AddToDoCommand(self, todo))
         return todo
 
-    def addNewSubToDo( self, parent: LocalToDo ):
+    def addNewSubToDo(self, parent: LocalToDo):
         if parent is None:
             self.addNewToDo()
             return
         todo = self._createToDo()
         if todo is None:
             return
-        self.undoStack.push( AddSubToDoCommand( self, parent, todo ) )
+        self.undoStack.push(AddSubToDoCommand(self, parent, todo))
 
-    def editToDo(self, todo: LocalToDo ):
-        todoDialog = ToDoDialog( todo, self.parentWidget )
-        todoDialog.setModal( True )
+    def editToDo(self, todo: LocalToDo):
+        todoDialog = ToDoDialog(todo, self.parentWidget)
+        todoDialog.setModal(True)
         dialogCode = todoDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return
-        self.undoStack.push( EditToDoCommand( self, todo, todoDialog.todo ) )
+        self.undoStack.push(EditToDoCommand(self, todo, todoDialog.todo))
 
-    def removeToDo(self, todo: LocalToDo ):
-        self.undoStack.push( RemoveToDoCommand( self, todo ) )
+    def removeToDo(self, todo: LocalToDo):
+        self.undoStack.push(RemoveToDoCommand(self, todo))
 
-    def convertToDoToTask(self, todo: LocalToDo ):
-        task             = self.domainModel.createEmptyTask()
-        task.title       = todo.title
+    def convertToDoToTask(self, todo: LocalToDo):
+        task = self.domainModel.createEmptyTask()
+        task.title = todo.title
         task.description = todo.description
-        task.completed   = todo.completed
-        task.priority    = todo.priority
+        task.completed = todo.completed
+        task.priority = todo.priority
 
-        taskDialog = TaskDialog( task, self.parentWidget )
-        taskDialog.setModal( True )
+        taskDialog = TaskDialog(task, self.parentWidget)
+        taskDialog.setModal(True)
         dialogCode = taskDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return
-        self.undoStack.push( ConvertToDoToTaskCommand( self, todo, taskDialog.task ) )
+        self.undoStack.push(ConvertToDoToTaskCommand(self, todo, taskDialog.task))
 
-    def markToDoCompleted(self, todo: LocalToDo ):
-        self.undoStack.push( MarkToDoCompletedCommand( self, todo ) )
+    def markToDoCompleted(self, todo: LocalToDo):
+        self.undoStack.push(MarkToDoCompletedCommand(self, todo))
 
     def moveToDo(self, todoCoords, parentToDo, targetIndex):
-        self.undoStack.push( MoveToDoCommand( self, todoCoords, parentToDo, targetIndex ) )
+        self.undoStack.push(MoveToDoCommand(self, todoCoords, parentToDo, targetIndex))
 
-    def _createTask( self, newTaskDate: QDate = None ):
+    def _createTask(self, newTaskDate: QDate = None):
         task = self.domainModel.createEmptyTask()
         if newTaskDate is not None:
             startDate = newTaskDate.toPyDate()
-            task.setDefaultDate( startDate )
+            task.setDefaultDate(startDate)
 
-        taskDialog = TaskDialog( task, self.parentWidget )
-        taskDialog.setModal( True )
+        taskDialog = TaskDialog(task, self.parentWidget)
+        taskDialog.setModal(True)
         dialogCode = taskDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return None
         return taskDialog.task
 
-    def _createToDo( self, content=None ):
+    def _createToDo(self, content=None):
         todo = self.domainModel.createEmptyToDo()
         if content is not None:
             todo.description = content
-        todoDialog = ToDoDialog( todo, self.parentWidget )
-        todoDialog.setModal( True )
+        todoDialog = ToDoDialog(todo, self.parentWidget)
+        todoDialog.setModal(True)
         dialogCode = todoDialog.exec_()
         if dialogCode == QDialog.Rejected:
             return None
@@ -219,41 +219,41 @@ class DataObject( QObject ):
     ## ==============================================================
 
     def addNote(self, title):
-        self.undoStack.push( AddNoteCommand( self, title ) )
+        self.undoStack.push(AddNoteCommand(self, title))
 
     def renameNote(self, fromTitle, toTitle):
-        self.undoStack.push( RenameNoteCommand( self, fromTitle, toTitle ) )
+        self.undoStack.push(RenameNoteCommand(self, fromTitle, toTitle))
 
     def removeNote(self, title):
-        self.undoStack.push( RemoveNoteCommand( self, title ) )
+        self.undoStack.push(RemoveNoteCommand(self, title))
 
     def importXfceNotes(self):
         newNotes = import_xfce_notes()
         if not newNotes:
             return
-        self.undoStack.push( ImportXfceNotesCommand( self, newNotes ) )
+        self.undoStack.push(ImportXfceNotesCommand(self, newNotes))
 
     def importICalendar(self, file_path, silent=False):
-        _LOGGER.info( "importing iCalendar from %s", file_path )
-        with open( file_path, 'r' ) as cal_file:
+        _LOGGER.info("importing iCalendar from %s", file_path)
+        with open(file_path, "r") as cal_file:
             content = cal_file.read()
-            self.undoStack.push( ImportICalendarCommand( self, content, silent ) )
+            self.undoStack.push(ImportICalendarCommand(self, content, silent))
 
 
 def import_xfce_notes():
     newNotes = {}
 
-    notesDir = os.path.expanduser( "~/.local/share/notes" )
-    for groupName in os.listdir( notesDir ):
+    notesDir = os.path.expanduser("~/.local/share/notes")
+    for groupName in os.listdir(notesDir):
         groupDir = notesDir + "/" + groupName
-        for noteName in os.listdir( groupDir ):
+        for noteName in os.listdir(groupDir):
             notePath = groupDir + "/" + noteName
-            with open( notePath, 'r') as file:
+            with open(notePath, "r") as file:
                 data = file.read()
                 if noteName in newNotes:
                     ## the same note name in different groups -- append notes
-                    newNotes[ noteName ] = newNotes[ noteName ] + "\n" + data
+                    newNotes[noteName] = newNotes[noteName] + "\n" + data
                 else:
-                    newNotes[ noteName ] = data
+                    newNotes[noteName] = data
 
     return newNotes

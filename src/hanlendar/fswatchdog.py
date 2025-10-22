@@ -50,10 +50,10 @@ class FSWatcher:
         self.observer.event_queue.queue.clear()
         self.event_handler.ignore = False
 
-    def start( self, path, callback=None, recursive=True ):
-        _LOGGER.info( "starting file system watchdog on %s", path )
-        self.event_handler = FSHandler( callback )
-        self.observer.schedule( self.event_handler, path, recursive=recursive )
+    def start(self, path, callback=None, recursive=True):
+        _LOGGER.info("starting file system watchdog on %s", path)
+        self.event_handler = FSHandler(callback)
+        self.observer.schedule(self.event_handler, path, recursive=recursive)
         self.observer.start()
 
     def stop(self):
@@ -61,14 +61,14 @@ class FSWatcher:
         self.observer.join()
 
     def run(self, directory):
-        self.start( directory )
+        self.start(directory)
 
         try:
             while True:
                 time.sleep(5)
         except:  # noqa
             self.observer.stop()
-            print( "Error" )
+            print("Error")
 
         self.stop()
 
@@ -92,18 +92,18 @@ class WatcherBlocker:
     def __enter__(self):
         if self.watcher is None:
             return
-        self.oldEnabled = self.watcher.setEnabled( False )
-        _LOGGER.debug( "disabling sysfs watcher, prev state: %s" % self.oldEnabled )
+        self.oldEnabled = self.watcher.setEnabled(False)
+        _LOGGER.debug("disabling sysfs watcher, prev state: %s" % self.oldEnabled)
         self.watcher.ignoreNextEvent()
 
     def __exit__(self, exceptionType, value, traceback):
-        _LOGGER.debug( "restoring sysfs watcher state to %s" % self.oldEnabled )
+        _LOGGER.debug("restoring sysfs watcher state to %s" % self.oldEnabled)
         if self.watcher is None:
-            return False                                                            ## do not suppress exceptions
+            return False  ## do not suppress exceptions
         if self.oldEnabled is None:
-            return False                                                            ## do not suppress exceptions
-        self.watcher.setEnabled( self.oldEnabled )
-        return False                                                                ## do not suppress exceptions
+            return False  ## do not suppress exceptions
+        self.watcher.setEnabled(self.oldEnabled)
+        return False  ## do not suppress exceptions
 
 
 class FSHandler(FileSystemEventHandler):
@@ -115,7 +115,7 @@ class FSHandler(FileSystemEventHandler):
     def on_created(self, event):
         # Take any action here when a file is first created.
         if self.callback is None:
-            print( "Received created event - %s." % event.src_path )
+            print("Received created event - %s." % event.src_path)
             return
         if self.ignore:
             return

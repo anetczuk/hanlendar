@@ -32,7 +32,7 @@ import datetime
 import unittest.mock as mock
 
 
-real_date_class     = datetime.date
+real_date_class = datetime.date
 real_datetime_class = datetime.datetime
 
 
@@ -56,7 +56,7 @@ def mock_date_meta(target):
             return target
 
     # Python2 & Python3 compatible metaclass
-    MockedDate = DateSubclassMeta('date', (BaseMockedDate,), {})
+    MockedDate = DateSubclassMeta("date", (BaseMockedDate,), {})
     return MockedDate
 
 
@@ -64,14 +64,14 @@ def get_mock_date(value, module=datetime):
     MockedDate = mock_date_meta(value)
     ## moduke/object, attribute, new value
     ## more info: https://docs.python.org/3/library/unittest.mock.html#patch-object
-    return mock.patch.object( module, 'date', MockedDate )
+    return mock.patch.object(module, "date", MockedDate)
 
 
 def mock_date(value, module=datetime):
     MockedDate = mock_date_meta(value)
     ## moduke/object, attribute, new value
     ## more info: https://docs.python.org/3/library/unittest.mock.html#patch-object
-    obj = mock.patch.object( module, 'date', MockedDate )
+    obj = mock.patch.object(module, "date", MockedDate)
     obj.start()
     return obj
 
@@ -96,21 +96,21 @@ def mock_datetime_meta(value):
             return value
 
     # Python2 & Python3 compatible metaclass
-    MockedDatetime = DatetimeSubclassMeta('datetime', (BaseMockedDatetime,), {})
+    MockedDatetime = DatetimeSubclassMeta("datetime", (BaseMockedDatetime,), {})
     return MockedDatetime
 
 
-def get_mock_datetime( value, module=datetime ):
+def get_mock_datetime(value, module=datetime):
     MockedDatetime = mock_datetime_meta(value)
     ## moduke/object, attribute, new value
     ## more info: https://docs.python.org/3/library/unittest.mock.html#patch-object
-    return mock.patch.object(module, 'datetime', MockedDatetime)
+    return mock.patch.object(module, "datetime", MockedDatetime)
 
 
-def mock_datetime( value, module=datetime ):
+def mock_datetime(value, module=datetime):
     MockedDatetime = mock_datetime_meta(value)
     ## moduke/object, attribute, new value
     ## more info: https://docs.python.org/3/library/unittest.mock.html#patch-object
-    obj = mock.patch.object(module, 'datetime', MockedDatetime)
+    obj = mock.patch.object(module, "datetime", MockedDatetime)
     obj.start()
     return obj

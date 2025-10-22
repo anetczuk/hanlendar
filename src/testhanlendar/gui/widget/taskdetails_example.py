@@ -47,7 +47,7 @@ from hanlendar.domainmodel.local.task import LocalTask
 ## ============================= main section ===================================
 
 
-if __name__ != '__main__':
+if __name__ != "__main__":
     sys.exit(0)
 
 
@@ -61,13 +61,13 @@ task.title = "Task title"
 task.description = "Description"
 task.completed = 50
 task.priority = 5
-task.setDefaultDateTime( datetime.today() )
+task.setDefaultDateTime(datetime.today())
 
 setup_interrupt_handling()
 
 widget = TaskDetails()
-widget.setTask( task )
+widget.setTask(task)
 widget.show()
 
 exitCode = app.exec_()
-sys.exit( exitCode )
+sys.exit(exitCode)

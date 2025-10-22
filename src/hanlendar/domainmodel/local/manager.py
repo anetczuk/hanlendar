@@ -44,7 +44,7 @@ import icalendar
 _LOGGER = logging.getLogger(__name__)
 
 
-class ModuleMapper():
+class ModuleMapper:
     """Convert module names for given versions to properly deserialize data."""
 
     def __init__(self, version):
@@ -54,11 +54,11 @@ class ModuleMapper():
         version = self.version
         if version < 1:
             ## convert from version 0
-            module = module.replace( "todocalendar", "hanlendar" )
+            module = module.replace("todocalendar", "hanlendar")
             version = 1
         if version == 1:
             ## convert from version 1
-            module = module.replace( "hanlendar.domainmodel.", "hanlendar.domainmodel.local." )
+            module = module.replace("hanlendar.domainmodel.", "hanlendar.domainmodel.local.")
             version = 2
         if version == 2:
             ## convert from version 2
@@ -87,7 +87,7 @@ class ModuleMapper():
         return (module, name)
 
 
-class LocalManager( Manager ):
+class LocalManager(Manager):
     """Root class for domain data structure."""
 
     ## 1 - renamed modules from 'todocalendar' to 'hanlendar'
@@ -104,81 +104,81 @@ class LocalManager( Manager ):
         """Constructor."""
         self._tasks = list()
         self._todos = list()
-        self.notes = { "notes": "" }        ## default notes
+        self.notes = {"notes": ""}  ## default notes
 
-        self._ioDir = ioDir                 ## do not persist
+        self._ioDir = ioDir  ## do not persist
 
-    def store( self, outputDir ):
+    def store(self, outputDir):
         self._ioDir = outputDir
         self.storeData()
 
     # override
-    def storeData( self ):
+    def storeData(self):
         if self._ioDir is None:
-            _LOGGER.warning( "unable to store data -- no root directory given" )
+            _LOGGER.warning("unable to store data -- no root directory given")
             return
 
         outputDir = self._ioDir
 
         changed = False
 
-        outputFile = os.path.join( outputDir, "version.obj" )
-        if persist.store_object( self._class_version, outputFile ) is True:
+        outputFile = os.path.join(outputDir, "version.obj")
+        if persist.store_object(self._class_version, outputFile) is True:
             changed = True
 
-        outputFile = os.path.join( outputDir, "tasks.obj" )
-        if persist.store_object( self.tasks, outputFile ) is True:
+        outputFile = os.path.join(outputDir, "tasks.obj")
+        if persist.store_object(self.tasks, outputFile) is True:
             changed = True
 
-        outputFile = os.path.join( outputDir, "todos.obj" )
-        if persist.store_object( self.todos, outputFile ) is True:
+        outputFile = os.path.join(outputDir, "todos.obj")
+        if persist.store_object(self.todos, outputFile) is True:
             changed = True
 
-        outputFile = os.path.join( outputDir, "notes.obj" )
-        if persist.store_object( self.notes, outputFile ) is True:
+        outputFile = os.path.join(outputDir, "notes.obj")
+        if persist.store_object(self.notes, outputFile) is True:
             changed = True
 
         ## backup data
-        objFiles = glob.glob( outputDir + "/*.obj" )
-        storedZipFile = os.path.join( outputDir, "data.zip" )
-        persist.backup_files( objFiles, storedZipFile )
+        objFiles = glob.glob(outputDir + "/*.obj")
+        storedZipFile = os.path.join(outputDir, "data.zip")
+        persist.backup_files(objFiles, storedZipFile)
 
         return changed
 
-    def load( self, inputDir ):
+    def load(self, inputDir):
         self._ioDir = inputDir
         self.loadData()
 
     # override
-    def loadData( self ):
+    def loadData(self):
         if self._ioDir is None:
-            _LOGGER.warning( "unable to load data -- no root directory given" )
+            _LOGGER.warning("unable to load data -- no root directory given")
             return
 
         inputDir = self._ioDir
 
-        inputFile = os.path.join( inputDir, "version.obj" )
-        mngrVersion = persist.load_object( inputFile )
-        if mngrVersion != self. _class_version:
-            _LOGGER.info( "converting object from version %s to %s", mngrVersion, self._class_version )
+        inputFile = os.path.join(inputDir, "version.obj")
+        mngrVersion = persist.load_object(inputFile)
+        if mngrVersion != self._class_version:
+            _LOGGER.info("converting object from version %s to %s", mngrVersion, self._class_version)
             ## do nothing for now
 
-        mapperObject = ModuleMapper( mngrVersion )
+        mapperObject = ModuleMapper(mngrVersion)
 
-        inputFile = os.path.join( inputDir, "tasks.obj" )
-        self.tasks = persist.load_object( inputFile, class_mapper=mapperObject )
+        inputFile = os.path.join(inputDir, "tasks.obj")
+        self.tasks = persist.load_object(inputFile, class_mapper=mapperObject)
         if self.tasks is None:
             self.tasks = list()
 
-        inputFile = os.path.join( inputDir, "todos.obj" )
-        self.todos = persist.load_object( inputFile, class_mapper=mapperObject )
+        inputFile = os.path.join(inputDir, "todos.obj")
+        self.todos = persist.load_object(inputFile, class_mapper=mapperObject)
         if self.todos is None:
             self.todos = list()
 
-        inputFile = os.path.join( inputDir, "notes.obj" )
-        self.notes = persist.load_object( inputFile, class_mapper=mapperObject )
+        inputFile = os.path.join(inputDir, "notes.obj")
+        self.notes = persist.load_object(inputFile, class_mapper=mapperObject)
         if self.notes is None:
-            self.notes = { "notes": "" }
+            self.notes = {"notes": ""}
 
         self.fixData()
 
@@ -186,67 +186,63 @@ class LocalManager( Manager ):
     ##    negative: current
     ##           0: first history entry
     ##    positive: history entry by index
-    def loadHistory( self, index=-1 ):
+    def loadHistory(self, index=-1):
         if index < 0:
             self.loadData()
-            ret_dict = { 'file': None,
-                         'version': self. _class_version,
-                         'tasks': self.tasks,
-                         'todos': self.todos,
-                         'notes': self.notes
-                         }
+            ret_dict = {
+                "file": None,
+                "version": self._class_version,
+                "tasks": self.tasks,
+                "todos": self.todos,
+                "notes": self.notes,
+            }
             return ret_dict
 
         outputDir = self._ioDir
         if index <= 0:
-            storedZipFile = os.path.join( outputDir, "data.zip" )
+            storedZipFile = os.path.join(outputDir, "data.zip")
         else:
-            storedZipFile = os.path.join( outputDir, "data.zip.%s" % index )
+            storedZipFile = os.path.join(outputDir, "data.zip.%s" % index)
 
-        hist_data_raw = persist.load_backup( storedZipFile )
+        hist_data_raw = persist.load_backup(storedZipFile)
 
-        version_raw = hist_data_raw.get( "version.obj", None )
-        mngrVersion = persist.load_data( version_raw )
-        if mngrVersion != self. _class_version:
-            _LOGGER.info( "converting object from version %s to %s", mngrVersion, self._class_version )
+        version_raw = hist_data_raw.get("version.obj", None)
+        mngrVersion = persist.load_data(version_raw)
+        if mngrVersion != self._class_version:
+            _LOGGER.info("converting object from version %s to %s", mngrVersion, self._class_version)
             ## do nothing for now
 
-        mapperObject = ModuleMapper( mngrVersion )
+        mapperObject = ModuleMapper(mngrVersion)
 
-        tasks_raw = hist_data_raw.get( "tasks.obj", None )
-        tasks = persist.load_data( tasks_raw, class_mapper=mapperObject )
+        tasks_raw = hist_data_raw.get("tasks.obj", None)
+        tasks = persist.load_data(tasks_raw, class_mapper=mapperObject)
         if tasks is None:
             tasks = list()
 
-        todos_raw = hist_data_raw.get( "todos.obj", None )
-        todos = persist.load_data( todos_raw, class_mapper=mapperObject )
+        todos_raw = hist_data_raw.get("todos.obj", None)
+        todos = persist.load_data(todos_raw, class_mapper=mapperObject)
         if todos is None:
             todos = list()
 
-        notes_raw = hist_data_raw.get( "notes.obj", None )
-        notes = persist.load_data( notes_raw, class_mapper=mapperObject )
+        notes_raw = hist_data_raw.get("notes.obj", None)
+        notes = persist.load_data(notes_raw, class_mapper=mapperObject)
         if notes is None:
             notes = list()
 
-        ret_dict = { 'file': storedZipFile,
-                     'version': mngrVersion,
-                     'tasks': tasks,
-                     'todos': todos,
-                     'notes': notes
-                     }
+        ret_dict = {"file": storedZipFile, "version": mngrVersion, "tasks": tasks, "todos": todos, "notes": notes}
         return ret_dict
 
-    def restoreTaskByTitle( self, history_index, task_title ):
-        data_dict = self.loadHistory( 160 )
-        tasks: List[ Task ] = data_dict.get( 'tasks', [] )
-        found_task = self.findTaskByTitle( tasks, task_title )
+    def restoreTaskByTitle(self, history_index, task_title):
+        data_dict = self.loadHistory(160)
+        tasks: List[Task] = data_dict.get("tasks", [])
+        found_task = self.findTaskByTitle(tasks, task_title)
         if found_task is not None:
-            self.addTask( found_task )
+            self.addTask(found_task)
             return True
         return False
 
-    def findTaskByTitle( self, tasks_list, title ):
-        flat_set = set( Item.getAllSubItemsFromList( tasks_list ) )
+    def findTaskByTitle(self, tasks_list, title):
+        flat_set = set(Item.getAllSubItemsFromList(tasks_list))
         for task in flat_set:
             task_title = task.getTitle()
             if task_title == title:
@@ -256,32 +252,32 @@ class LocalManager( Manager ):
     ## ======================================================================
 
     # override
-    def _getTasks( self ):
+    def _getTasks(self):
         return self._tasks
 
     # override
-    def _setTasks( self, value ):
+    def _setTasks(self, value):
         self._tasks = value
 
     # override
     def getTasksAll(self):
-        return Item.getAllSubItemsFromList( self.tasks )
+        return Item.getAllSubItemsFromList(self.tasks)
 
     # override
     def createEmptyTask(self):
         return LocalTask()
 
     # override
-    def _getToDos( self ):
+    def _getToDos(self):
         return self._todos
 
     # override
-    def _setToDos( self, value ):
+    def _setToDos(self, value):
         self._todos = value
 
     # override
     def getTodosAll(self):
-        return Item.getAllSubItemsFromList( self.todos )
+        return Item.getAllSubItemsFromList(self.todos)
 
     # override
     def createEmptyToDo(self) -> LocalToDo:

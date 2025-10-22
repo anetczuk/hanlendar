@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import QUndoCommand
 _LOGGER = logging.getLogger(__name__)
 
 
-class RenameNoteCommand( QUndoCommand ):
+class RenameNoteCommand(QUndoCommand):
 
     def __init__(self, dataObject, fromTitle, toTitle, parentCommand=None):
         super().__init__(parentCommand)
@@ -37,14 +37,14 @@ class RenameNoteCommand( QUndoCommand ):
         self.data = dataObject
         self.domainModel = self.data.getManager()
         self.fromTitle = fromTitle
-        self.toTitle   = toTitle
+        self.toTitle = toTitle
 
-        self.setText( "Rename Note: " + self.fromTitle )
+        self.setText("Rename Note: " + self.fromTitle)
 
     def redo(self):
-        self.domainModel.renameNote( self.fromTitle, self.toTitle )
+        self.domainModel.renameNote(self.fromTitle, self.toTitle)
         self.data.notesChanged.emit()
 
     def undo(self):
-        self.domainModel.renameNote( self.toTitle, self.fromTitle )
+        self.domainModel.renameNote(self.toTitle, self.fromTitle)
         self.data.notesChanged.emit()

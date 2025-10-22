@@ -48,7 +48,7 @@ from hanlendar.domainmodel.local.task import LocalTask
 ## ============================= main section ===================================
 
 
-if __name__ != '__main__':
+if __name__ != "__main__":
     sys.exit(0)
 
 
@@ -64,20 +64,20 @@ task1.title = "Task 1"
 task1.description = "Description"
 task1.completed = 50
 task1.priority = 5
-task1.setDefaultDateTime( datetime.today() )
-tasksList.append( task1 )
+task1.setDefaultDateTime(datetime.today())
+tasksList.append(task1)
 
 task2 = LocalTask()
 task2.title = "Task 2"
 task2.description = "Description"
 task2.completed = 0
 task2.priority = 3
-task2.setDefaultDateTime( datetime.today() + timedelta( hours=2 ) )
-tasksList.append( task2 )
+task2.setDefaultDateTime(datetime.today() + timedelta(hours=2))
+tasksList.append(task2)
 
 task = LocalTask()
 task.title = "Default constructed task"
-tasksList.append( task )
+tasksList.append(task)
 
 dataObject = DataObject()
 manager = dataObject.getManager()
@@ -86,11 +86,11 @@ manager.tasks = tasksList
 setup_interrupt_handling()
 
 widget = TaskTable()
-widget.resize( 1024, 768 )
-widget.connectData( dataObject )
+widget.resize(1024, 768)
+widget.connectData(dataObject)
 widget.show()
 
 # print( "Dialog return:", dialogCode )
 # print( "Created task:", dialog.task )
 
-sys.exit( app.exec_() )
+sys.exit(app.exec_())

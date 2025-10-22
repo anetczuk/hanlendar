@@ -43,134 +43,132 @@ from hanlendar.domainmodel.task import Task, TaskOccurrence
 _LOGGER = logging.getLogger(__name__)
 
 
-MIN_TASK_DRAW_HEIGHT_FACTOR = 1.0 / 24 * 45 / 60                ## minimal height -- 45 minutes
+MIN_TASK_DRAW_HEIGHT_FACTOR = 1.0 / 24 * 45 / 60  ## minimal height -- 45 minutes
 
 
-class DrawWidget( QWidget ):
+class DrawWidget(QWidget):
 
     def __init__(self, parentWidget=None):
-        super().__init__( parentWidget )
+        super().__init__(parentWidget)
 
         ## it seems to be redundant, but widget won't respect forcing sizing
         ## if it does not have layout and any child content
         hlayout = QHBoxLayout()
-        hlayout.setContentsMargins( 0, 0, 0, 0 )
-        self.setLayout( hlayout )
-        hlayout.addWidget( QWidget(self) )
+        hlayout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(hlayout)
+        hlayout.addWidget(QWidget(self))
 
 
-class DayTimeline( DrawWidget ):
+class DayTimeline(DrawWidget):
 
     itemClicked = pyqtSignal()
 
     def __init__(self, parentWidget=None):
-        super().__init__( parentWidget )
-        self.setFixedWidth( 30 )
+        super().__init__(parentWidget)
+        self.setFixedWidth(30)
 
     def paintEvent(self, event):
-        super().paintEvent( event )
+        super().paintEvent(event)
 
         painter = QPainter(self)
 
-        width  = self.width()
+        width = self.width()
         height = self.height()
 
-        bgColor = self.palette().color( self.backgroundRole() )
-        painter.fillRect( 0, 0, width, height, bgColor )
+        bgColor = self.palette().color(self.backgroundRole())
+        painter.fillRect(0, 0, width, height, bgColor)
 
         hourStep = height / 24
         hourStepInt = int(hourStep)
 
         pen = painter.pen()
-        pen.setColor( QColor("black") )
+        pen.setColor(QColor("black"))
         painter.setPen(pen)
-        painter.drawText( 0, 0, width - 6, hourStepInt, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, "0" )
+        painter.drawText(0, 0, width - 6, hourStepInt, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, "0")
 
         for h in range(0, 24):
             hourHeight = int(hourStep * h)
             text = str(h)
 
             pen = painter.pen()
-            pen.setColor( QColor("gray") )
+            pen.setColor(QColor("gray"))
             painter.setPen(pen)
-            painter.drawLine( 0, hourHeight, width, hourHeight )
+            painter.drawLine(0, hourHeight, width, hourHeight)
 
             pen = painter.pen()
-            pen.setColor( QColor("black") )
+            pen.setColor(QColor("black"))
             painter.setPen(pen)
-            painter.drawText( 0, hourHeight, width - 6, hourStepInt,
-                              Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight,
-                              text )
+            painter.drawText(
+                0, hourHeight, width - 6, hourStepInt, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, text
+            )
 
     def mousePressEvent(self, _event):
         self.itemClicked.emit()
 
 
-class DayItem( DrawWidget ):
+class DayItem(DrawWidget):
 
-    selectedItem       = pyqtSignal( DrawWidget )
-    itemDoubleClicked  = pyqtSignal( DrawWidget )
+    selectedItem = pyqtSignal(DrawWidget)
+    itemDoubleClicked = pyqtSignal(DrawWidget)
 
     def __init__(self, task: TaskOccurrence, day: date, parentWidget=None):
-        super().__init__( parentWidget )
+        super().__init__(parentWidget)
 
-        self.day                   = day
-        self.task: TaskOccurrence  = task
+        self.day = day
+        self.task: TaskOccurrence = task
 
-#         self.setStyleSheet( "background-color: red" )
+    #         self.setStyleSheet( "background-color: red" )
 
-    def resizeItem( self, lineRect: QRect ):
-        allowedWidth  = lineRect.width()
+    def resizeItem(self, lineRect: QRect):
+        allowedWidth = lineRect.width()
         allowedHeight = lineRect.height()
-        xOffset       = int(lineRect.x())
+        xOffset = int(lineRect.x())
 
-        daySpan = self.task.calculateTimeSpan( self.day )
+        daySpan = self.task.calculateTimeSpan(self.day)
         yOffset = int(allowedHeight * daySpan[0])
         self.move(xOffset, yOffset)
 
-        spanDuration = daySpan[1] - daySpan[0]                              ## in range [0..1]
-        spanDuration = max( spanDuration, MIN_TASK_DRAW_HEIGHT_FACTOR )
-        self.setFixedWidth( allowedWidth )
+        spanDuration = daySpan[1] - daySpan[0]  ## in range [0..1]
+        spanDuration = max(spanDuration, MIN_TASK_DRAW_HEIGHT_FACTOR)
+        self.setFixedWidth(allowedWidth)
         fixedWidth = int(allowedHeight * spanDuration)
-        self.setFixedHeight( fixedWidth )
+        self.setFixedHeight(fixedWidth)
 
     def paintEvent(self, event):
-        super().paintEvent( event )
+        super().paintEvent(event)
 
         painter = QPainter(self)
 
-        width  = self.width()
+        width = self.width()
         height = self.height()
 
         path = QPainterPath()
-        path.addRoundedRect( 2, 0, width - 4, height, 5, 5 )
+        path.addRoundedRect(2, 0, width - 4, height, 5, 5)
 
-#         taskBgColor = monthcalendar.get_task_bgcolor( self.task )
+        #         taskBgColor = monthcalendar.get_task_bgcolor( self.task )
         selected = self.isSelected()
-        taskBgColor = get_task_bgcolor( self.task, selected )               ## get task color
-        painter.fillPath( path, taskBgColor )
+        taskBgColor = get_task_bgcolor(self.task, selected)  ## get task color
+        painter.fillPath(path, taskBgColor)
 
-        pathPen = QPen( QColor("black") )
-        pathPen.setWidth( 2 )
-        painter.strokePath( path, pathPen )
+        pathPen = QPen(QColor("black"))
+        pathPen.setWidth(2)
+        painter.strokePath(path, pathPen)
 
         pen = painter.pen()
-        pen.setColor( QColor("black") )
+        pen.setColor(QColor("black"))
         painter.setPen(pen)
         if height < 32:
-            painter.drawText( 6, 0, width - 12, height,
-                              Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft,
-                              self.task.title )
+            painter.drawText(
+                6, 0, width - 12, height, Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft, self.task.title
+            )
         else:
-            painter.drawText( 6, 0, width - 12, 32,
-                              Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft,
-                              self.task.title )
+            painter.drawText(6, 0, width - 12, 32, Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft, self.task.title)
 
     def mousePressEvent(self, _event):
-        self.selectedItem.emit( self )
+        self.selectedItem.emit(self)
 
     def mouseDoubleClickEvent(self, _event):
-        self.itemDoubleClicked.emit( self )
+        self.itemDoubleClicked.emit(self)
 
     def isSelected(self):
         return self.parent().isSelected(self)
@@ -179,118 +177,118 @@ class DayItem( DrawWidget ):
 ##
 ## Container of items
 ##
-class DayListContentWidget( QWidget ):
+class DayListContentWidget(QWidget):
 
-    selectedTask       = pyqtSignal( int )
-    taskDoubleClicked  = pyqtSignal( int )
+    selectedTask = pyqtSignal(int)
+    taskDoubleClicked = pyqtSignal(int)
 
     def __init__(self, parentWidget=None):
-        super().__init__( parentWidget )
+        super().__init__(parentWidget)
 
         self.showCompleted = False
-        self.items         = []
-        self.currentIndex  = -1
+        self.items = []
+        self.currentIndex = -1
 
     def clear(self):
-        self.setCurrentIndex( -1 )
+        self.setCurrentIndex(-1)
         for w in self.items:
             w.deleteLater()
         self.items.clear()
 
     def setCurrentIndex(self, index):
         self.currentIndex = index
-        self.selectedTask.emit( index )
+        self.selectedTask.emit(index)
         self.update()
 
     def getCurrentTask(self) -> Task:
-        return self.getTask( self.currentIndex )
+        return self.getTask(self.currentIndex)
 
     def getTask(self, index) -> Task:
         if index < 0:
             return None
         if index >= len(self.items):
             return None
-        widget: DayItem = self.items[ index ]
+        widget: DayItem = self.items[index]
         taskOccurrence: TaskOccurrence = widget.task
         return taskOccurrence.task
 
-    def setTasks(self, occurrencesList, day: date ):
+    def setTasks(self, occurrencesList, day: date):
         self.clear()
 
         if self.showCompleted is False:
-            occurrencesList = [ task for task in occurrencesList if not task.isCompleted() ]
+            occurrencesList = [task for task in occurrencesList if not task.isCompleted()]
 
         for task in occurrencesList:
             item = DayItem(task, day, self)
-            item.selectedItem.connect( self.handleItemSelect )
-            item.itemDoubleClicked.connect( self.handleItemDoubleClick )
-            self.items.append( item )
+            item.selectedItem.connect(self.handleItemSelect)
+            item.itemDoubleClicked.connect(self.handleItemDoubleClick)
+            self.items.append(item)
             item.show()
 
         self._resizeItems()
         self.update()
 
     def paintEvent(self, event):
-        super().paintEvent( event )
+        super().paintEvent(event)
 
         painter = QPainter(self)
 
-        width  = self.width()
+        width = self.width()
         height = self.height()
 
         pen = painter.pen()
-        pen.setColor( QColor("gray") )
+        pen.setColor(QColor("gray"))
         painter.setPen(pen)
 
         hourStep = height / 24
         for h in range(0, 24):
             hourHeight = int(hourStep * h)
-            painter.drawLine( 0, hourHeight, width, hourHeight )
+            painter.drawLine(0, hourHeight, width, hourHeight)
 
         if self.currentIndex >= 0:
             ## paint background
-            lineRect = self._lineRect( self.currentIndex )
-            bgColor = self.palette().color( QPalette.Highlight )
-            painter.fillRect( lineRect, bgColor )
+            lineRect = self._lineRect(self.currentIndex)
+            bgColor = self.palette().color(QPalette.Highlight)
+            painter.fillRect(lineRect, bgColor)
 
     def resizeEvent(self, event):
         self._resizeItems()
-        return super().resizeEvent( event )
+        return super().resizeEvent(event)
 
     def _resizeItems(self):
         sItems = len(self.items)
         for i in range(0, sItems):
             widget = self.items[i]
-            lineRect = self._lineRect( i )
-            widget.resizeItem( lineRect )
+            lineRect = self._lineRect(i)
+            widget.resizeItem(lineRect)
 
     def _lineRect(self, index) -> QRect:
         sItems = len(self.items)
-        lineWidth  = max( 0, int( (self.width() - 16) / sItems) )
+        lineWidth = max(0, int((self.width() - 16) / sItems))
         lineHeight = self.height()
         xPos = lineWidth * index + 8
-        return QRect( xPos, 0, lineWidth, lineHeight)
+        return QRect(xPos, 0, lineWidth, lineHeight)
 
     def handleItemSelect(self, item: DayItem):
-        itemIndex = self.getItemIndex( item )
-        self.setCurrentIndex( itemIndex )
+        itemIndex = self.getItemIndex(item)
+        self.setCurrentIndex(itemIndex)
 
     def handleItemDoubleClick(self, item: DayItem):
-        itemIndex = self.getItemIndex( item )
-        self.taskDoubleClicked.emit( itemIndex )
+        itemIndex = self.getItemIndex(item)
+        self.taskDoubleClicked.emit(itemIndex)
 
     def getItemIndex(self, item: DayItem):
         try:
-            return self.items.index( item )
+            return self.items.index(item)
         except ValueError:
             _LOGGER.exception("item not found")
             return -1
 
     def mousePressEvent(self, _event):
-        self.setCurrentIndex( -1 )
+        self.setCurrentIndex(-1)
 
     def mouseDoubleClickEvent(self, _event):
-        self.taskDoubleClicked.emit( -1 )
+        self.taskDoubleClicked.emit(-1)
 
     def isSelected(self, item: DayItem):
         if self.currentIndex < 0:
@@ -302,41 +300,41 @@ class DayListContentWidget( QWidget ):
 ##
 ## widget wrapping container
 ##
-class DayListWidget( QWidget ):
+class DayListWidget(QWidget):
 
-    selectedTask    = pyqtSignal( Task )
-    taskUnselected  = pyqtSignal()
-    editTask        = pyqtSignal( Task )
+    selectedTask = pyqtSignal(Task)
+    taskUnselected = pyqtSignal()
+    editTask = pyqtSignal(Task)
 
     def __init__(self, parentWidget=None):
-        super().__init__( parentWidget )
+        super().__init__(parentWidget)
 
-#         self.setStyleSheet( "background-color: green" )
+        #         self.setStyleSheet( "background-color: green" )
 
         self.data = None
         self.currentDate: QDate = QDate.currentDate()
 
         hlayout = QHBoxLayout()
-        hlayout.setContentsMargins( 0, 0, 0, 0 )
-        hlayout.setSpacing( 0 )
-        self.setLayout( hlayout )
+        hlayout.setContentsMargins(0, 0, 0, 0)
+        hlayout.setSpacing(0)
+        self.setLayout(hlayout)
 
-        self.timeline = DayTimeline( self )
-        hlayout.addWidget( self.timeline )
+        self.timeline = DayTimeline(self)
+        hlayout.addWidget(self.timeline)
 
-        self.content = DayListContentWidget( self )
-        hlayout.addWidget( self.content )
+        self.content = DayListContentWidget(self)
+        hlayout.addWidget(self.content)
 
-        self.taskContextMenu = TaskContextMenu( self )
+        self.taskContextMenu = TaskContextMenu(self)
 
-        self.timeline.itemClicked.connect( self.unselectItem )
-        self.content.selectedTask.connect( self.handleSelectedTask )
-        self.content.taskDoubleClicked.connect( self.taskDoubleClicked )
+        self.timeline.itemClicked.connect(self.unselectItem)
+        self.content.selectedTask.connect(self.handleSelectedTask)
+        self.content.taskDoubleClicked.connect(self.taskDoubleClicked)
 
     def connectData(self, dataObject):
         self.data = dataObject
-        self.taskContextMenu.connectData( dataObject )
-        self.editTask.connect( dataObject.editTask )
+        self.taskContextMenu.connectData(dataObject)
+        self.editTask.connect(dataObject.editTask)
 
     def showCompletedTasks(self, show=True):
         self.content.showCompleted = show
@@ -348,8 +346,8 @@ class DayListWidget( QWidget ):
         if self.data is None:
             return
         currDate = self.currentDate.toPyDate()
-        occurrencesList = self.data.getTaskOccurrences( currDate )
-        self.setTasksOccurrences( occurrencesList, currDate )
+        occurrencesList = self.data.getTaskOccurrences(currDate)
+        self.setTasksOccurrences(occurrencesList, currDate)
         self.update()
 
     def setCurrentDate(self, currDate: QDate):
@@ -357,37 +355,37 @@ class DayListWidget( QWidget ):
         self.updateView()
 
     def getTask(self, index):
-        return self.content.getTask( index )
+        return self.content.getTask(index)
 
-    def setTasksOccurrences(self, occurrencesList, day: date ):
-        self.content.setTasks( occurrencesList, day )
+    def setTasksOccurrences(self, occurrencesList, day: date):
+        self.content.setTasks(occurrencesList, day)
 
-    def setTasks(self, tasksList, day: date ):
-        occurrencesList = [ task.currentOccurrence() for task in tasksList ]
-        self.content.setTasks( occurrencesList, day )
+    def setTasks(self, tasksList, day: date):
+        occurrencesList = [task.currentOccurrence() for task in tasksList]
+        self.content.setTasks(occurrencesList, day)
 
-    def contextMenuEvent( self, _event ):
+    def contextMenuEvent(self, _event):
         task: Task = self.content.getCurrentTask()
         newTaskDate: QDate = None
         if task is None:
             newTaskDate = self.currentDate
-        self.taskContextMenu.show( task, newTaskDate )
+        self.taskContextMenu.show(task, newTaskDate)
 
     def taskDoubleClicked(self, index):
-        task = self.content.getTask( index )
+        task = self.content.getTask(index)
         if task is None:
             return
-        self.editTask.emit( task )
+        self.editTask.emit(task)
 
     def unselectItem(self):
-        self.content.setCurrentIndex( -1 )
+        self.content.setCurrentIndex(-1)
 
     def handleSelectedTask(self, index):
-        task = self.content.getTask( index )
-        self.emitSelectedTask( task )
+        task = self.content.getTask(index)
+        self.emitSelectedTask(task)
 
-    def emitSelectedTask( self, task=None ):
+    def emitSelectedTask(self, task=None):
         if task is not None:
-            self.selectedTask.emit( task )
+            self.selectedTask.emit(task)
         else:
             self.taskUnselected.emit()

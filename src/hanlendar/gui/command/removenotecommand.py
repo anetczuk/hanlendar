@@ -30,7 +30,7 @@ from PyQt5.QtWidgets import QUndoCommand
 _LOGGER = logging.getLogger(__name__)
 
 
-class RemoveNoteCommand( QUndoCommand ):
+class RemoveNoteCommand(QUndoCommand):
 
     def __init__(self, dataObject, noteTitle, parentCommand=None):
         super().__init__(parentCommand)
@@ -40,14 +40,14 @@ class RemoveNoteCommand( QUndoCommand ):
         self.noteTitle = noteTitle
         self.notes = None
 
-        self.setText( "Remove Note: " + self.noteTitle )
+        self.setText("Remove Note: " + self.noteTitle)
 
     def redo(self):
         notesDict = self.domainModel.getNotes()
-        self.notes = copy.deepcopy( notesDict )
-        self.domainModel.removeNote( self.noteTitle )
+        self.notes = copy.deepcopy(notesDict)
+        self.domainModel.removeNote(self.noteTitle)
         self.data.notesChanged.emit()
 
     def undo(self):
-        self.domainModel.setNotes( self.notes )
+        self.domainModel.setNotes(self.notes)
         self.data.notesChanged.emit()

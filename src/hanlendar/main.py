@@ -43,7 +43,7 @@ from hanlendar.fqueue import put_to_queue
 
 
 script_dir = os.path.dirname(__file__)
-tmp_dir    = os.path.realpath( os.path.join( script_dir, os.pardir, os.pardir, 'tmp' ) )
+tmp_dir = os.path.realpath(os.path.join(script_dir, os.pardir, os.pardir, "tmp"))
 
 
 logger.configure()
@@ -55,17 +55,17 @@ def initializeQT():
     app.setApplicationName("Hanlendar")
     app.setOrganizationName("arnet")
     ### app.setOrganizationDomain("www.my-org.com")
-    app.setQuitOnLastWindowClosed( False )
+    app.setQuitOnLastWindowClosed(False)
 
     ## disable Alt key switching to application menu
-    app.setStyle( MenuStyle() )
+    app.setStyle(MenuStyle())
 
     setup_interrupt_handling()
 
     return app
 
 
-def run_app( args ):
+def run_app(args):
     ## GUI
     app = initializeQT()
 
@@ -90,29 +90,31 @@ def run_app( args ):
     return exitCode
 
 
-def create_parser( parser: argparse.ArgumentParser = None ):
+def create_parser(parser: argparse.ArgumentParser = None):
     if parser is None:
-        parser = argparse.ArgumentParser(description='Hanlendar')
-    parser.add_argument('--minimized', action='store_const', const=True, default=False, help='Start minimized' )
-    parser.add_argument('--blocksave', '-bs', action='store_const', const=True, default=None, help='Block save data' )
-    parser.add_argument('--caldav', action='store_const', const=True, default=None, help='Run in CalDAV mode' )
-    parser.add_argument('--exportlocal', action='store_const', const=True, default=None, help='Export local database to CalDAV server' )
+        parser = argparse.ArgumentParser(description="Hanlendar")
+    parser.add_argument("--minimized", action="store_const", const=True, default=False, help="Start minimized")
+    parser.add_argument("--blocksave", "-bs", action="store_const", const=True, default=None, help="Block save data")
+    parser.add_argument("--caldav", action="store_const", const=True, default=None, help="Run in CalDAV mode")
+    parser.add_argument(
+        "--exportlocal", action="store_const", const=True, default=None, help="Export local database to CalDAV server"
+    )
     return parser
 
 
-def start( args=None ):
+def start(args=None):
     if args is None:
         parser = create_parser()
         args = parser.parse_args()
 
-    _LOGGER.debug( "Starting the application" )
-    _LOGGER.debug( "Logger log file: %s", logger.log_file )
-    _LOGGER.debug( "Arguments: %s", sys.argv[1:] )
+    _LOGGER.debug("Starting the application")
+    _LOGGER.debug("Logger log file: %s", logger.log_file)
+    _LOGGER.debug("Arguments: %s", sys.argv[1:])
 
     exitCode = 1
 
     try:
-        exitCode = run_app( args )
+        exitCode = run_app(args)
 
     except BaseException:
         _LOGGER.exception("Exception occurred")
@@ -124,34 +126,34 @@ def start( args=None ):
     return exitCode
 
 
-def start_single( args=None ):
+def start_single(args=None):
     ## check if instance already running
-    pid_path = os.path.join( tmp_dir, 'hanlendar.pid' )
-    with pidfile.PidFile( pid_path ):
+    pid_path = os.path.join(tmp_dir, "hanlendar.pid")
+    with pidfile.PidFile(pid_path):
         ## first instance -- start
-        start( args )
+        start(args)
 
 
-def main( args=None ):
-    if len( sys.argv ) != 2:
+def main(args=None):
+    if len(sys.argv) != 2:
         ## run as usual
-        start_single( args )
+        start_single(args)
         return
 
     ## only one argument passed -- it should be *.ics file path
     file_path = sys.argv[1]
-    if os.path.isfile( file_path ) is False:
+    if os.path.isfile(file_path) is False:
         ## not file -- run as usual
-        start_single( args )
+        start_single(args)
         return
 
     ## file passed -- add to queue
     sys.argv = sys.argv[:1]
-    put_to_queue( "file", file_path )
+    put_to_queue("file", file_path)
 
     ## run application
-    start_single( args )
+    start_single(args)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

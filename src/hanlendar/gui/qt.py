@@ -2,7 +2,7 @@
 ##
 ##
 
-#TODO: remove skip
+# TODO: remove skip
 # pylint: skip-file
 
 import logging
@@ -43,24 +43,24 @@ except ImportError:
 
 def clearLayout(layout):
     for i in reversed(range(layout.count())):
-        item = layout.takeAt( i )
+        item = layout.takeAt(i)
         if item.widget() is not None:
             item.widget().deleteLater()
         if item.layout() is not None:
-            clearLayout( item.layout() )
+            clearLayout(item.layout())
 
 
-def printTree( qtObject: QObject, indent=0 ):
-    print( " " * indent + "object:", qtObject )
+def printTree(qtObject: QObject, indent=0):
+    print(" " * indent + "object:", qtObject)
     childList = qtObject.children()
     for child in childList:
-        printTree( child, indent + 4 )
+        printTree(child, indent + 4)
 
 
-def renderToPixmap( widget: QWidget, outputPath=None ):
+def renderToPixmap(widget: QWidget, outputPath=None):
     rectangle = widget.geometry()
-    pixmap = QPixmap( rectangle.size() )
-    widget.render( pixmap, QPoint(), QRegion(rectangle) )
+    pixmap = QPixmap(rectangle.size())
+    widget.render(pixmap, QPoint(), QRegion(rectangle))
     if outputPath is not None:
-        pixmap.save( outputPath )
+        pixmap.save(outputPath)
     return pixmap

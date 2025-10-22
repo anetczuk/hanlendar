@@ -52,47 +52,49 @@ from hanlendar.domainmodel.local.manager import Manager
 
 
 # pylint: disable=R0914, R0915
-def prepare_example_data( dataManager: Manager ):
-    taskDate = datetime.today() - timedelta( seconds=5 )
-    task1 = dataManager.addNewTaskDateTime( datetime.today() + timedelta( days=1 ), "task 1" )
+def prepare_example_data(dataManager: Manager):
+    taskDate = datetime.today() - timedelta(seconds=5)
+    task1 = dataManager.addNewTaskDateTime(datetime.today() + timedelta(days=1), "task 1")
     task1.completed = 50
-    task1.description = ("<a href=\"http://www.google.com\">xxx</a> <br> "
-                         "<a href=\"file:///media/E/bluetooth.txt\">yyy</a> <br> "
-                         "<a href=\"file:///media/E/Pani1.jpg\">zzz</a>")
-    task1.addSubItem( LocalTask("Subtask") )
+    task1.description = (
+        '<a href="http://www.google.com">xxx</a> <br> '
+        '<a href="file:///media/E/bluetooth.txt">yyy</a> <br> '
+        '<a href="file:///media/E/Pani1.jpg">zzz</a>'
+    )
+    task1.addSubItem(LocalTask("Subtask"))
 
-    completedTask = dataManager.addNewTaskDateTime( taskDate + timedelta( days=7 ), "completed task" )
+    completedTask = dataManager.addNewTaskDateTime(taskDate + timedelta(days=7), "completed task")
     completedTask.setCompleted()
 
     ## add far task
-    dataManager.addNewTaskDateTime( datetime.today() + timedelta( days=360 ), "far task" )
+    dataManager.addNewTaskDateTime(datetime.today() + timedelta(days=360), "far task")
 
-    recurrentDate = taskDate.replace( day=20, hour=12 )
-    recurrentTask = dataManager.addNewTaskDateTime( recurrentDate, "recurrent task 1" )
+    recurrentDate = taskDate.replace(day=20, hour=12)
+    recurrentTask = dataManager.addNewTaskDateTime(recurrentDate, "recurrent task 1")
     recurrentTask.recurrence = Recurrent()
     recurrentTask.recurrence.setDaily()
-    recurrentTask.recurrence.endDate = recurrentDate.date() + timedelta( days=2 )
+    recurrentTask.recurrence.endDate = recurrentDate.date() + timedelta(days=2)
     reminder = recurrentTask.addReminder()
-    reminder.setDays( 1 )
+    reminder.setDays(1)
 
-    task2 = dataManager.addNewTaskDateTime( recurrentTask.occurrenceStart.replace( hour=11 ), "task 2" )
-    task2.dueDateTime = task2.occurrenceDue.replace( hour=20 )
+    task2 = dataManager.addNewTaskDateTime(recurrentTask.occurrenceStart.replace(hour=11), "task 2")
+    task2.dueDateTime = task2.occurrenceDue.replace(hour=20)
 
     task3 = dataManager.addTask()
     task3.title = "task 3"
-    task3.dueDateTime = taskDate.replace( hour=20 ) + timedelta( days=90 )
-    task3.startDateTime = task3.dueDateTime - timedelta( days=1 )
+    task3.dueDateTime = taskDate.replace(hour=20) + timedelta(days=90)
+    task3.startDateTime = task3.dueDateTime - timedelta(days=1)
 
     subtask1 = task3.addSubTask()
     subtask1.title = "subtask 1"
-    subtask1.startDateTime = task3.startDateTime - timedelta( days=50 )
-    subtask1.dueDateTime   = task3.dueDateTime - timedelta( days=40 )
+    subtask1.startDateTime = task3.startDateTime - timedelta(days=50)
+    subtask1.dueDateTime = task3.dueDateTime - timedelta(days=40)
 
-    completedTask = dataManager.addNewTaskDateTime( task2.occurrenceStart - timedelta(hours=3), "completed task 2" )
+    completedTask = dataManager.addNewTaskDateTime(task2.occurrenceStart - timedelta(hours=3), "completed task 2")
     completedTask.setCompleted()
 
-    recurrentDate2 = datetime.today().replace( day=15 ) + timedelta( days=30 )
-    recurrentTask2 = dataManager.addNewTaskDateTime( recurrentDate2, "recurrent task 2" )
+    recurrentDate2 = datetime.today().replace(day=15) + timedelta(days=30)
+    recurrentTask2 = dataManager.addNewTaskDateTime(recurrentDate2, "recurrent task 2")
     recurrentTask2.setDeadline()
     recurrentTask2.recurrence = Recurrent()
     recurrentTask2.recurrence.setMonthly()
@@ -100,18 +102,18 @@ def prepare_example_data( dataManager: Manager ):
     recurrentSub = recurrentTask2.addSubTask()
     recurrentSub.title = "recurrent subtask 1"
     recurrentSub.setDeadline()
-    recurrentSub.dueDateTime = recurrentTask2.dueDateTime - timedelta( days=1 )
+    recurrentSub.dueDateTime = recurrentTask2.dueDateTime - timedelta(days=1)
     recurrentSub.recurrence = Recurrent()
     recurrentSub.recurrence.setMonthly()
 
-    deadlineDate = datetime.today() + timedelta( seconds=10 )
-    deadlineTaks = dataManager.addNewDeadlineDateTime( deadlineDate, "expired task 1" )
+    deadlineDate = datetime.today() + timedelta(seconds=10)
+    deadlineTaks = dataManager.addNewDeadlineDateTime(deadlineDate, "expired task 1")
     reminder = deadlineTaks.addReminder()
-    reminder.setMillis( 5000 )
+    reminder.setMillis(5000)
 
-    remindedTask = dataManager.addNewTaskDateTime( datetime.today() + timedelta( hours=2 ), "reminded task 1" )
+    remindedTask = dataManager.addNewTaskDateTime(datetime.today() + timedelta(hours=2), "reminded task 1")
     reminder = remindedTask.addReminder()
-    reminder.setDays( 30 )
+    reminder.setDays(30)
 
     todo1 = dataManager.addNewToDo("ToDo example A")
     todo1.description = "a description"
@@ -147,18 +149,18 @@ def prepare_example_data( dataManager: Manager ):
 ## ============================= main section ===================================
 
 
-if __name__ != '__main__':
+if __name__ != "__main__":
     sys.exit(0)
 
 
-parser = argparse.ArgumentParser(description='Hanlendar Example')
-parser.add_argument('-lud', '--loadUserData', action='store_const', const=True, default=False, help='Load user data' )
+parser = argparse.ArgumentParser(description="Hanlendar Example")
+parser.add_argument("-lud", "--loadUserData", action="store_const", const=True, default=False, help="Load user data")
 
 args = parser.parse_args()
 
 
 logFile = logger.get_logging_output_file()
-logger.configure( logFile )
+logger.configure(logFile)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,14 +173,14 @@ MainWindow.toolTip = MainWindow.toolTip + " Preview"
 
 window = MainWindow()
 window.disableSaving()
-window.setWindowTitle( window.windowTitle() + " Preview" )
+window.setWindowTitle(window.windowTitle() + " Preview")
 
 window.loadSettings()
 if args.loadUserData:
     window.loadData()
 else:
     manager = window.getManager()
-    prepare_example_data( manager )
+    prepare_example_data(manager)
     window.refreshView()
 
 window.show()
@@ -190,4 +192,4 @@ exitCode = app.exec_()
 if exitCode == 0:
     window.saveSettings()
 
-sys.exit( exitCode )
+sys.exit(exitCode)

@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import QUndoCommand
 _LOGGER = logging.getLogger(__name__)
 
 
-class RemoveTaskCommand( QUndoCommand ):
+class RemoveTaskCommand(QUndoCommand):
 
     def __init__(self, dataObject, task, parentCommand=None):
         super().__init__(parentCommand)
@@ -37,16 +37,16 @@ class RemoveTaskCommand( QUndoCommand ):
         self.data = dataObject
         self.domainModel = self.data.getManager()
         self.task = task
-        self.taskCoords = self.domainModel.getTaskCoords( task )
+        self.taskCoords = self.domainModel.getTaskCoords(task)
 
-        self.setText( "Remove Task: " + task.title )
+        self.setText("Remove Task: " + task.title)
 
     def redo(self):
-        removed = self.domainModel.removeTask( self.task )
+        removed = self.domainModel.removeTask(self.task)
         if removed is None:
-            _LOGGER.warning( "unable to remove task: %s", self.task )
+            _LOGGER.warning("unable to remove task: %s", self.task)
         self.data.tasksChanged.emit()
 
     def undo(self):
-        self.domainModel.insertTask( self.task, self.taskCoords )
+        self.domainModel.insertTask(self.task, self.taskCoords)
         self.data.tasksChanged.emit()

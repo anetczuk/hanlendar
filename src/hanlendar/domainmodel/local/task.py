@@ -36,7 +36,7 @@ from hanlendar.domainmodel.reminder import Reminder
 _LOGGER = logging.getLogger(__name__)
 
 
-class LocalTask( Task, persist.Versionable ):
+class LocalTask(Task, persist.Versionable):
     """Task is entity that lasts over time."""
 
     ## 1: _recurrentStartDate and _recurrentDueDate replaced with _recurrentOffset
@@ -47,24 +47,24 @@ class LocalTask( Task, persist.Versionable ):
     ## 6: added 'UID'
     _class_version = 6
 
-    def __init__(self, title="" ):
+    def __init__(self, title=""):
         super(LocalTask, self).__init__()
-        self._UID                           = generate_uid()
-        self._title                         = title
-        self._description                   = ""
-        self._completed                     = 0        ## in range [0..100]
-        self._priority                      = 5        ## lower number, greater priority
+        self._UID = generate_uid()
+        self._title = title
+        self._description = ""
+        self._completed = 0  ## in range [0..100]
+        self._priority = 5  ## lower number, greater priority
 
-        self._parent                        = None
-        self.subitems: list                 = None
-        self._startDate: datetime           = None
-        self._dueDate: datetime             = None
-        self._reminderList: List[Reminder]  = None
-        self._recurrence: Recurrent         = None
-        self._recurrentOffset               = 0
+        self._parent = None
+        self.subitems: list = None
+        self._startDate: datetime = None
+        self._dueDate: datetime = None
+        self._reminderList: List[Reminder] = None
+        self._recurrence: Recurrent = None
+        self._recurrentOffset = 0
 
-    def _convertstate_(self, dict_, dictVersion_ ):
-        _LOGGER.info( "converting object from version %s to %s", dictVersion_, self._class_version )
+    def _convertstate_(self, dict_, dictVersion_):
+        _LOGGER.info("converting object from version %s to %s", dictVersion_, self._class_version)
 
         if dictVersion_ is None:
             dictVersion_ = -1
@@ -79,7 +79,7 @@ class LocalTask( Task, persist.Versionable ):
             if recurrence is not None:
                 dueDate = dict_["_dueDate"].date()
                 targetDueDate = dict_["_recurrentDueDate"].date()
-                recurrentOffset = recurrence.findRecurrentOffset( dueDate, targetDueDate )
+                recurrentOffset = recurrence.findRecurrentOffset(dueDate, targetDueDate)
                 dict_["_recurrentOffset"] = recurrentOffset
             else:
                 ## set default value
@@ -93,20 +93,20 @@ class LocalTask( Task, persist.Versionable ):
 
         if dictVersion_ == 2:
             ## rename fields
-            dict_["_title"]       = dict_.pop( "title", "" )
-            dict_["_description"] = dict_.pop( "description", "" )
-            dict_["_priority"]    = dict_.pop( "priority", 10 )
+            dict_["_title"] = dict_.pop("title", "")
+            dict_["_description"] = dict_.pop("description", "")
+            dict_["_priority"] = dict_.pop("priority", 10)
             dictVersion_ = 3
 
         if dictVersion_ == 3:
             ## rename fields
-            dict_["_reminderList"] = dict_.pop( "reminderList", None )
+            dict_["_reminderList"] = dict_.pop("reminderList", None)
             dictVersion_ = 4
 
         if dictVersion_ == 4:
             ## rescale priority
-            priority = dict_.pop( "_priority", 10 )
-            dict_["_priority"] = int( priority / 2.0 )
+            priority = dict_.pop("_priority", 10)
+            dict_["_priority"] = int(priority / 2.0)
             dictVersion_ = 5
 
         if dictVersion_ == 5:
@@ -126,11 +126,11 @@ class LocalTask( Task, persist.Versionable ):
 
     ## return mutable reference
     ## overrided
-    def getSubitems( self ):
+    def getSubitems(self):
         return self.subitems
 
     ## overrided
-    def setSubitems( self, newList ):
+    def setSubitems(self, newList):
         self.subitems = newList
 
     ## ========================================================================
@@ -233,12 +233,18 @@ class LocalTask( Task, persist.Versionable ):
 
     ## overriden
     def addSubTask(self):
-        return self.addSubItem( LocalTask() )
+        return self.addSubItem(LocalTask())
 
     def __str__(self):
         reminderList = self._getReminderList()
         return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s ro:%s]" % (
-            self.title, self.description, self._completed, self.priority,
-            self.occurrenceStart, self.occurrenceDue,
-            reminderList, self._recurrence,
-            self._recurrentOffset )
+            self.title,
+            self.description,
+            self._completed,
+            self.priority,
+            self.occurrenceStart,
+            self.occurrenceDue,
+            reminderList,
+            self._recurrence,
+            self._recurrentOffset,
+        )

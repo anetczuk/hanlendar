@@ -29,4 +29,4 @@ def get_today():
 
 
 def print_today():
-    print( "today is", get_today() )
+    print("today is", get_today())

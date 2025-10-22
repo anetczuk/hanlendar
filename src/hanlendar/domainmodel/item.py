@@ -30,44 +30,44 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def generate_uid():
-    return str( uuid.uuid4() ) + "@hanlendar"
+    return str(uuid.uuid4()) + "@hanlendar"
 
 
-class Item():
+class Item:
     """Base class for Task and ToDo."""
 
     @abc.abstractmethod
     def getParent(self):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
     def setParent(self, parentItem=None):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     ## return mutable reference
     @abc.abstractmethod
-    def getSubitems( self ):
-        raise NotImplementedError('You need to define this method in derived class!')
+    def getSubitems(self):
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
-    def setSubitems( self, newList ):
-        raise NotImplementedError('You need to define this method in derived class!')
+    def setSubitems(self, newList):
+        raise NotImplementedError("You need to define this method in derived class!")
 
     ## ========================================================================
 
     @abc.abstractmethod
     def _getUID(self):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
     def _setUID(self, value):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     def getUID(self):
         return self._getUID()
 
     def setUID(self, value):
-        self._setUID( value )
+        self._setUID(value)
 
     @property
     def UID(self):
@@ -75,23 +75,23 @@ class Item():
 
     @UID.setter
     def UID(self, value):
-        self.setUID( value )
+        self.setUID(value)
 
     ## ========================================================================
 
     @abc.abstractmethod
     def _getTitle(self):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
     def _setTitle(self, value):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     def getTitle(self):
         return self._getTitle()
 
     def setTitle(self, value):
-        self._setTitle( value )
+        self._setTitle(value)
 
     @property
     def title(self):
@@ -99,23 +99,23 @@ class Item():
 
     @title.setter
     def title(self, value):
-        self.setTitle( value )
+        self.setTitle(value)
 
     ## ========================================================================
 
     @abc.abstractmethod
     def _getDescription(self):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
     def _setDescription(self, value):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     def getDescription(self):
         return self._getDescription()
 
     def setDescription(self, value):
-        self._setDescription( value )
+        self._setDescription(value)
 
     @property
     def description(self):
@@ -123,17 +123,17 @@ class Item():
 
     @description.setter
     def description(self, value):
-        self.setDescription( value )
+        self.setDescription(value)
 
     ## ========================================================================
 
     @abc.abstractmethod
     def _getCompleted(self):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
     def _setCompleted(self, value=100):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     def getCompleted(self):
         return self._getCompleted()
@@ -143,7 +143,7 @@ class Item():
             value = 0
         elif value > 100:
             value = 100
-        self._setCompleted( value )
+        self._setCompleted(value)
 
     @property
     def completed(self):
@@ -151,7 +151,7 @@ class Item():
 
     @completed.setter
     def completed(self, value):
-        self.setCompleted( value )
+        self.setCompleted(value)
 
     def isCompleted(self):
         if self.completed < 100:
@@ -168,11 +168,11 @@ class Item():
 
     @abc.abstractmethod
     def _getPriority(self):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod
     def _setPriority(self, value):
-        raise NotImplementedError('You need to define this method in derived class!')
+        raise NotImplementedError("You need to define this method in derived class!")
 
     def getPriority(self):
         return self._getPriority()
@@ -180,7 +180,7 @@ class Item():
     def setPriority(self, value):
         if value > 9:
             value = 9
-        self._setPriority( value )
+        self._setPriority(value)
 
     @property
     def priority(self):
@@ -188,7 +188,7 @@ class Item():
 
     @priority.setter
     def priority(self, value):
-        self.setPriority( value )
+        self.setPriority(value)
 
     ## ========================================================================
     ## ========================================================================
@@ -198,9 +198,9 @@ class Item():
         visitedItems = set()
         while True:
             if currItem in visitedItems:
-                _LOGGER.warning( "cycle detected -- unable to find root item" )
+                _LOGGER.warning("cycle detected -- unable to find root item")
                 return None
-            visitedItems.add( currItem )
+            visitedItems.add(currItem)
             currParent = currItem.getParent()
             if currParent is None:
                 return currItem
@@ -211,108 +211,108 @@ class Item():
         subitems = self.getSubitems()
         if subitems is None:
             return list()
-        return Item.getAllSubItemsFromList( subitems )
+        return Item.getAllSubItemsFromList(subitems)
 
     def getChildCoords(self, item):
         subitems = self.getSubitems()
-        return Item.getItemCoords( subitems, item )
+        return Item.getItemCoords(subitems, item)
 
     def getChildFromCoords(self, coords):
         subitems = self.getSubitems()
-        return Item.getItemFromCoords( subitems, coords )
+        return Item.getItemFromCoords(subitems, coords)
 
     def detachChildByCoords(self, coords):
         subitems = self.getSubitems()
-        return Item.detachItemByCoords( subitems, coords )
+        return Item.detachItemByCoords(subitems, coords)
 
-    def addSubItem(self, item: 'Item', index=-1):
+    def addSubItem(self, item: "Item", index=-1):
         subitems = self.getSubitems()
         if subitems is None:
             subitems = list()
-            self.setSubitems( subitems )
+            self.setSubitems(subitems)
         if index < 0:
-            subitems.append( item )
-            item.setParent( self )
+            subitems.append(item)
+            item.setParent(self)
         else:
-            subitems.insert( index, item )
-            item.setParent( self )
+            subitems.insert(index, item)
+            item.setParent(self)
         return item
 
     def removeSubItem(self, item):
         subitems = self.getSubitems()
         if subitems is None:
             return None
-        return Item.removeSubItemFromList( subitems, item )
+        return Item.removeSubItemFromList(subitems, item)
 
-    def replaceSubItem( self, oldItem, newItem ):
+    def replaceSubItem(self, oldItem, newItem):
         subitems = self.getSubitems()
         if subitems is None:
             return False
-        return Item.replaceSubItemInList( subitems, oldItem, newItem )
+        return Item.replaceSubItemInList(subitems, oldItem, newItem)
 
-#     def __str__(self):
-#         return "[t:%s d:%s c:%s p:%s]" % ( self.title, self.description, self._completed, self.priority )
+    #     def __str__(self):
+    #         return "[t:%s d:%s c:%s p:%s]" % ( self.title, self.description, self._completed, self.priority )
 
     ## ==============================================================
 
     @staticmethod
-    def getAllSubItemsFromList( itemList ):
+    def getAllSubItemsFromList(itemList):
         """Return all sub items from tree."""
         if itemList is None:
             return list()
         retList = list()
         for item in itemList:
-            retList.append( item )
+            retList.append(item)
             retList += item.getAllSubItems()
         return retList
 
     @staticmethod
-    def removeSubItemFromList( itemList, item ):
+    def removeSubItemFromList(itemList, item):
         if itemList is None:
             return None
         for i, _ in enumerate(itemList):
             currItem = itemList[i]
             if currItem == item:
-                popped = itemList.pop( i )
-                popped.setParent( None )
+                popped = itemList.pop(i)
+                popped.setParent(None)
                 return popped
-            removed = currItem.removeSubItem( item )
+            removed = currItem.removeSubItem(item)
             if removed is not None:
                 return removed
         return None
 
     @staticmethod
-    def replaceSubItemInList( itemList, oldItem, newItem ):
+    def replaceSubItemInList(itemList, oldItem, newItem):
         if itemList is None:
             return None
         for i, _ in enumerate(itemList):
             currItem = itemList[i]
             if currItem == oldItem:
-                newItem.setParent( oldItem.getParent() )
+                newItem.setParent(oldItem.getParent())
                 itemList[i] = newItem
                 return True
-            if currItem.replaceSubItem( oldItem, newItem ) is True:
+            if currItem.replaceSubItem(oldItem, newItem) is True:
                 return True
         return False
 
     @staticmethod
-    def getItemCoords( itemsList, item ):
+    def getItemCoords(itemsList, item):
         if itemsList is None:
             return None
         if not itemsList:
             return None
         lSize = len(itemsList)
-        for i in range( lSize ):
+        for i in range(lSize):
             currItem = itemsList[i]
             if currItem == item:
                 return [i]
-            ret = currItem.getChildCoords( item )
+            ret = currItem.getChildCoords(item)
             if ret is not None:
                 return [i] + ret
         return None
 
     @staticmethod
-    def getItemFromCoords( itemsList, coords ):
+    def getItemFromCoords(itemsList, coords):
         if itemsList is None:
             return None
         if not itemsList:
@@ -321,17 +321,17 @@ class Item():
             return None
         if not coords:
             return None
-        itemCoords = list( coords )
+        itemCoords = list(coords)
         elemIndex = itemCoords.pop(0)
         if elemIndex >= len(itemsList):
             return None
-        item = itemsList[ elemIndex ]
+        item = itemsList[elemIndex]
         if not itemCoords:
             return item
-        return item.getChildFromCoords( itemCoords )
+        return item.getChildFromCoords(itemCoords)
 
     @staticmethod
-    def detachItemByCoords( itemsList, coords ):
+    def detachItemByCoords(itemsList, coords):
         if itemsList is None:
             return None
         if not itemsList:
@@ -340,16 +340,16 @@ class Item():
             return None
         if not coords:
             return None
-        itemCoords = list( coords )
+        itemCoords = list(coords)
         elemIndex = itemCoords.pop(0)
         if elemIndex >= len(itemsList):
             return None
-        item = itemsList[ elemIndex ]
+        item = itemsList[elemIndex]
         if not itemCoords:
-            itemsList.pop( elemIndex )
+            itemsList.pop(elemIndex)
             return item
-        return item.detachChildByCoords( itemCoords )
+        return item.detachChildByCoords(itemCoords)
 
     @staticmethod
-    def sortByPriority( item ):
+    def sortByPriority(item):
         return item.priority
