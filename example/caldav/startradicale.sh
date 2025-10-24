@@ -17,4 +17,4 @@ echo "Server config: $config_file"
 echo "Starting server. Available at: http://localhost:5232/"
 echo "User: bob password: bob"
 
-python3 -m radicale --storage-filesystem-folder=$base_dir --config=$config_file
+python3 -m radicale --storage-filesystem-folder="${base_dir}" --config="${config_file}"

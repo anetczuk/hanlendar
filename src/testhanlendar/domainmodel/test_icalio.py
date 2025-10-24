@@ -177,7 +177,7 @@ END:VCALENDAR
         tasks = manager.getTasksAll()
         self.assertEqual(len(tasks), 0)
 
-        _, dangling_children = import_icalendar_content(manager, content)
+        _item, dangling_children = import_icalendar_content(manager, content)
         fix_dangling_tasks(manager, dangling_children)
 
         newTasks = manager.getTasksAll()
@@ -195,15 +195,15 @@ END:VCALENDAR
         calendar: icalendar.cal.Calendar = icalendar.cal.Calendar()
         ievent = icalendar.cal.Event()
         event_data_list = [1, 2, 4, 3]
-        icalio.set_ical_list(ievent, "XXX", event_data_list)
+        icalio.set_ical_list(ievent, "XXX", event_data_list)  # type: ignore[arg-type]
         calendar.add_component(ievent)
         calendar_string = calendar.to_ical()
         calendar_string = calendar_string.decode("utf-8")
 
-        calendar: icalendar.cal.Calendar = icalendar.cal.Calendar.from_ical(calendar_string)
+        calendar = icalendar.cal.Calendar.from_ical(calendar_string)  # type: ignore[arg-type]
         events = calendar.walk("VEVENT")
         event = events[0]
-        data_list = icalio.get_ical_list(event, "XXX")
+        data_list = icalio.get_ical_list(event, "XXX")  # type: ignore[arg-type]
 
         self.assertEqual(data_list, ["1", "2", "4", "3"])
 
@@ -211,15 +211,15 @@ END:VCALENDAR
         calendar: icalendar.cal.Calendar = icalendar.cal.Calendar()
         ievent = icalendar.cal.Event()
         event_data_list = ["1,11", "2,22", "3,33", "4,44"]
-        icalio.set_ical_list(ievent, "XXX", event_data_list)
+        icalio.set_ical_list(ievent, "XXX", event_data_list)  # type: ignore[arg-type]
         calendar.add_component(ievent)
         calendar_string = calendar.to_ical()
         calendar_string = calendar_string.decode("utf-8")
 
-        calendar: icalendar.cal.Calendar = icalendar.cal.Calendar.from_ical(calendar_string)
+        calendar = icalendar.cal.Calendar.from_ical(calendar_string)
         events = calendar.walk("VEVENT")
         event = events[0]
-        data_list = icalio.get_ical_list(event, "XXX")
+        data_list = icalio.get_ical_list(event, "XXX")  # type: ignore[arg-type]
 
         self.assertEqual(data_list, event_data_list)
 
@@ -227,16 +227,16 @@ END:VCALENDAR
         calendar: icalendar.cal.Calendar = icalendar.cal.Calendar()
         ievent = icalendar.cal.Event()
         event_data_dict = {"aaa": "1", "bbb": "2"}
-        icalio.set_ical_dict(ievent, "XXX", 5, event_data_dict)
+        icalio.set_ical_dict(ievent, "XXX", 5, event_data_dict)  # type: ignore[arg-type]
         calendar.add_component(ievent)
         calendar_string = calendar.to_ical()
         calendar_string = calendar_string.decode("utf-8")
 
-        calendar: icalendar.cal.Calendar = icalendar.cal.Calendar.from_ical(calendar_string)
+        calendar = icalendar.cal.Calendar.from_ical(calendar_string)
         events = calendar.walk("VEVENT")
         event = events[0]
-        data_value = icalio.get_ical_value(event, "XXX")
-        data_dict = icalio.get_ical_dict(event, "XXX")
+        data_value = icalio.get_ical_value(event, "XXX")  # type: ignore[arg-type]
+        data_dict = icalio.get_ical_dict(event, "XXX")  # type: ignore[arg-type]
 
         self.assertEqual(data_value, "5")
         self.assertEqual(data_dict, {"AAA": "1", "BBB": "2"})

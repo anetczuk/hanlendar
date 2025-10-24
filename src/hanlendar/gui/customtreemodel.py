@@ -37,25 +37,26 @@ _LOGGER = logging.getLogger(__name__)
 class CustomTreeModel(QtCore.QAbstractItemModel):
 
     ## for invalid parent returns number of elements in root list
-    def rowCount(self, parent: QModelIndex):
+    def rowCount(self, parent):
         parentItem = self.getItem(parent)
         children = self.getChildren(parentItem)
         if children is None:
             return 0
         return len(children)
 
-    def columnCount(self, _):
+    def columnCount(self, _item):
         labels = self.headerLabels()
         return len(labels)
 
     def headerData(self, col, orientation, role):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:  # type: ignore[attr-defined]
+
             labels = self.headerLabels()
             return labels[col]
         return None
 
     ## for invalid parent return elements form root list
-    def index(self, row, column, parent: QModelIndex):
+    def index(self, row, column, parent):
         if not self.hasIndex(row, column, parent):
             return QModelIndex()
         parentItem = self.getItem(parent)  ## None allowed
@@ -67,7 +68,7 @@ class CustomTreeModel(QtCore.QAbstractItemModel):
             return QModelIndex()
         return self.createIndex(row, column, childItem)
 
-    def parent(self, index: QModelIndex):
+    def parent(self, index):
         if not index.isValid():
             return QModelIndex()
         indexItem = self.getItem(index)
@@ -86,14 +87,14 @@ class CustomTreeModel(QtCore.QAbstractItemModel):
 
     def flags(self, index: QModelIndex):
         if not index.isValid():
-            return super().flags(index) | Qt.ItemIsDropEnabled
-        return super().flags(index) | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+            return super().flags(index) | Qt.ItemIsDropEnabled  # type: ignore[attr-defined]
+        return super().flags(index) | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled  # type: ignore[attr-defined]
 
     def supportedDropActions(self):
-        return Qt.MoveAction
+        return Qt.MoveAction  # type: ignore[attr-defined]
 
     def supportedDragActions(self):
-        return Qt.MoveAction
+        return Qt.MoveAction  # type: ignore[attr-defined]
 
     def canDropMimeData(self, data, action, row, column, parent):
         if row != -1:
@@ -106,7 +107,7 @@ class CustomTreeModel(QtCore.QAbstractItemModel):
 
     def mimeData(self, indexes):
         encodedData = QtCore.QByteArray()
-        stream = QtCore.QDataStream(encodedData, QtCore.QIODevice.WriteOnly)
+        stream = QtCore.QDataStream(encodedData, QtCore.QIODevice.WriteOnly)  # type: ignore[attr-defined]
         for ind in indexes:
             if ind.column() != 0:
                 continue
@@ -118,13 +119,13 @@ class CustomTreeModel(QtCore.QAbstractItemModel):
         mimeObject.setData(self.internalMoveMimeType(), encodedData)
         return mimeObject
 
-    def dropMimeData(self, data, action, row, _, parent):
-        if action == Qt.IgnoreAction:
+    def dropMimeData(self, data, action, row, _item, parent):
+        if action == Qt.IgnoreAction:  # type: ignore[attr-defined]
             return True
         if not data.hasFormat(self.internalMoveMimeType()):
             return False
 
-        if action != Qt.MoveAction:
+        if action != Qt.MoveAction:  # type: ignore[attr-defined]
             _LOGGER.warning("unhandled action: %s", action)
             return False
 
@@ -133,7 +134,7 @@ class CustomTreeModel(QtCore.QAbstractItemModel):
         ## adding child to parent
         targetParent = parent.internalPointer()
         encodedData = data.data(self.internalMoveMimeType())
-        stream = QtCore.QDataStream(encodedData, QtCore.QIODevice.ReadOnly)
+        stream = QtCore.QDataStream(encodedData, QtCore.QIODevice.ReadOnly)  # type: ignore[attr-defined]
         while not stream.atEnd():
             value = QtCore.QVariant()
             # pylint: disable=W0104

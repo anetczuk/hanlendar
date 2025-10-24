@@ -82,7 +82,7 @@ class TrayIcon(QSystemTrayIcon):
         timeout = 10000
         ## under xfce4 there is problem with balloon icon -- it changes tray icon, so
         ## it cannot be changed back to proper one. Workaround is to use NoIcon parameter
-        self.showMessage("Hanlendar", message, QSystemTrayIcon.NoIcon, timeout)
+        self.showMessage("Hanlendar", message, QSystemTrayIcon.NoIcon, timeout)  # type: ignore[attr-defined]
 
     def drawNumber(self, number, numColor=QColor("red")):
         icon = self.icon()
@@ -130,20 +130,20 @@ class TrayIcon(QSystemTrayIcon):
     def _toggleParent(self):
         parent = self.parent()
         self.updateLabel()
-        if parent.isHidden() is False:
+        if parent.isHidden() is False:  # type: ignore[attr-defined]
             ## hide window
-            parent.hide()
+            parent.hide()  # type: ignore[attr-defined]
             return
         ## show
-        if parent.isMinimized():
-            parent.showNormal()
+        if parent.isMinimized():  # type: ignore[attr-defined]
+            parent.showNormal()  # type: ignore[attr-defined]
         else:
-            parent.show()
-        QApplication.setActiveWindow(parent)  ## fix for KDE
+            parent.show()  # type: ignore[attr-defined]
+        QApplication.setActiveWindow(parent)  # type: ignore[arg-type]  ## fix for KDE
 
     def updateLabel(self):
         parent = self.parent()
-        if parent.isHidden():
+        if parent.isHidden():  # type: ignore[attr-defined]
             self.toggle_window_action.setText("Show")
         else:
             self.toggle_window_action.setText("Hide")

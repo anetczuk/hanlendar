@@ -93,7 +93,13 @@ class SettingsObject(QObject):
         ## store in home directory
         orgName = qApp.organizationName()
         appName = qApp.applicationName()
-        settings = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, orgName, appName, self)
+        settings = QtCore.QSettings(
+            QtCore.QSettings.IniFormat,  # type: ignore[attr-defined]
+            QtCore.QSettings.UserScope,  # type: ignore[attr-defined]
+            orgName,
+            appName,
+            self,
+        )
         return settings
 
     def getDataPath(self):

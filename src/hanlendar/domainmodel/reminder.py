@@ -51,7 +51,7 @@ class Notification:
     def __init__(self):
         self.notifyTime: datetime = None  ## time given in seconds since epoch
         self.message: str = None
-        self.task: "Task" = None  # noqa: F821
+        self.task: "Task" = None  # type: ignore[name-defined]  # noqa: F821
 
     def remainingSeconds(self) -> float:
         timeDiff = self.remainingTime()

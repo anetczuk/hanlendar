@@ -11,7 +11,7 @@ pip3 install --upgrade 'pip>=18.0' --break-system-packages
 
 
 ## install requirements
-pip3 install -r $SCRIPT_DIR/requirements.txt --break-system-packages
+pip3 install -r "${SCRIPT_DIR}"/requirements.txt --break-system-packages
 
 
 echo -e "\ninstallation done\n"

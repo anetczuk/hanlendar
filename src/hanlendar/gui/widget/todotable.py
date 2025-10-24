@@ -51,23 +51,23 @@ class ToDoTreeModel(ItemTreeModel):
         self.dataObject = dataObject
         self.endResetModel()
 
-    def data(self, index: QModelIndex, role):
-        if role == QtCore.Qt.SizeHintRole:
+    def data(self, index, role):
+        if role == QtCore.Qt.SizeHintRole:  # type: ignore[attr-defined]
             return QtCore.QSize(10, 30)
 
         item: LocalToDo = self.getItem(index)
         if item is None:
             return None
 
-        if role == Qt.TextAlignmentRole:
+        if role == Qt.TextAlignmentRole:  # type: ignore[attr-defined]
             attrIndex = index.column()
             if attrIndex > 0:
-                return Qt.AlignHCenter | Qt.AlignVCenter
+                return Qt.AlignHCenter | Qt.AlignVCenter  # type: ignore[attr-defined]
 
-        if role == Qt.ForegroundRole:
+        if role == Qt.ForegroundRole:  # type: ignore[attr-defined]
             return get_todo_fgcolor(item)
 
-        if role == QtCore.Qt.DisplayRole:
+        if role == QtCore.Qt.DisplayRole:  # type: ignore[attr-defined]
             attrIndex = index.column()
             attrName = self._getAttrName(attrIndex)
             if attrName is None:
@@ -128,8 +128,8 @@ class ToDoSortFilterProxyModel(QtCore.QSortFilterProxyModel):
         return item.isCompleted() is False
 
     def lessThan(self, left: QModelIndex, right: QModelIndex):
-        leftData = self.sourceModel().data(left, QtCore.Qt.DisplayRole)
-        rightData = self.sourceModel().data(right, QtCore.Qt.DisplayRole)
+        leftData = self.sourceModel().data(left, QtCore.Qt.DisplayRole)  # type: ignore[attr-defined]
+        rightData = self.sourceModel().data(right, QtCore.Qt.DisplayRole)  # type: ignore[attr-defined]
         return leftData < rightData
 
 
@@ -169,7 +169,7 @@ class ToDoTable(QtWidgets.QTreeView):
         self.setModel(self.proxyModel)
 
         header = self.header()
-        header.setDefaultAlignment(Qt.AlignCenter)
+        header.setDefaultAlignment(Qt.AlignCenter)  # type: ignore[attr-defined]
         header.setHighlightSections(False)
         header.setStretchLastSection(False)
         header.setSectionResizeMode(0, QHeaderView.Stretch)

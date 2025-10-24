@@ -50,7 +50,7 @@ class Manager:
 
     @abc.abstractmethod
     def storeData(self):
-        """retrun bool: True if new data saved, otherwise False"""
+        """Return bool: True if new data saved, otherwise False."""
         raise NotImplementedError("You need to define this method in derived class!")
 
     @abc.abstractmethod

@@ -84,7 +84,8 @@ class DayTimeline(DrawWidget):
         pen = painter.pen()
         pen.setColor(QColor("black"))
         painter.setPen(pen)
-        painter.drawText(0, 0, width - 6, hourStepInt, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, "0")
+        flags = Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight  # type: ignore[attr-defined]
+        painter.drawText(0, 0, width - 6, hourStepInt, flags, "0")
 
         for h in range(0, 24):
             hourHeight = int(hourStep * h)
@@ -99,7 +100,12 @@ class DayTimeline(DrawWidget):
             pen.setColor(QColor("black"))
             painter.setPen(pen)
             painter.drawText(
-                0, hourHeight, width - 6, hourStepInt, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, text
+                0,
+                hourHeight,
+                width - 6,
+                hourStepInt,
+                Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight,  # type: ignore[attr-defined]
+                text,
             )
 
     def mousePressEvent(self, _event):
@@ -159,10 +165,22 @@ class DayItem(DrawWidget):
         painter.setPen(pen)
         if height < 32:
             painter.drawText(
-                6, 0, width - 12, height, Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft, self.task.title
+                6,
+                0,
+                width - 12,
+                height,
+                Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft,  # type: ignore[attr-defined]
+                self.task.title,
             )
         else:
-            painter.drawText(6, 0, width - 12, 32, Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft, self.task.title)
+            painter.drawText(
+                6,
+                0,
+                width - 12,
+                32,
+                Qt.TextSingleLine | Qt.AlignVCenter | Qt.AlignLeft,  # type: ignore[attr-defined]
+                self.task.title,
+            )
 
     def mousePressEvent(self, _event):
         self.selectedItem.emit(self)
@@ -171,7 +189,7 @@ class DayItem(DrawWidget):
         self.itemDoubleClicked.emit(self)
 
     def isSelected(self):
-        return self.parent().isSelected(self)
+        return self.parent().isSelected(self)  # type: ignore[attr-defined]
 
 
 ##

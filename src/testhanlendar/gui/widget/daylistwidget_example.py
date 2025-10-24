@@ -67,14 +67,14 @@ task1.priority = 5
 task1.startDateTime = taskDate
 task1.dueDateTime = task1.startDateTime + timedelta(hours=4)
 
-task2 = Task()
+task2 = Task()  # type: ignore[abstract]
 task2.title = "Task 1"
 task2.description = "Description"
 task2.completed = 0
 task2.priority = 3
 task2.setDefaultDateTime(taskDate + timedelta(hours=6))
 
-task3 = Task()
+task3 = Task()  # type: ignore[abstract]
 task3.title = "Full Day Task"
 task3.description = "Description"
 task3.completed = 0

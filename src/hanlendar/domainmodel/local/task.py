@@ -57,8 +57,8 @@ class LocalTask(Task, persist.Versionable):
 
         self._parent = None
         self.subitems: list = None
-        self._startDate: datetime = None
-        self._dueDate: datetime = None
+        self._startDate: datetime.datetime = None
+        self._dueDate: datetime.datetime = None
         self._reminderList: List[Reminder] = None
         self._recurrence: Recurrent = None
         self._recurrentOffset = 0

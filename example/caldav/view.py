@@ -21,7 +21,9 @@ import caldav  # pylint: disable=C0413
 ## tests/conf_private.py (see tests/conf_private.py.EXAMPLE).
 caldav_url = "http://localhost:5232/"
 username = "bob"
+# ruff: noqa: S105
 password = "bob"
+
 # caldav_url = 'https://calendar.example.com/dav'
 # username = 'somebody'
 # password = 'hunter2'
@@ -61,7 +63,7 @@ my_new_calendar = my_principal.calendar(name="test")
 all_events = my_new_calendar.events()
 
 for event in all_events:
-    summary = event.vobject_instance.vevent.summary.value
+    summary = event.vobject_instance.vevent.summary.value  # type: ignore[attr-defined]
     #     summary2 = event.icalendar_instance.subcomponents[0]['summary']
     print("event:", event, event.props, summary)
     print(event.data)

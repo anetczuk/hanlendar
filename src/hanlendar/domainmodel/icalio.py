@@ -172,7 +172,7 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar):
                 reccurEnd = convert_to_date(reccurEnd)
                 task.recurrence = Recurrent(reccurMode, reccurStep, reccurEnd)
                 task.recurrentOffset = get_ical_value_int(component, TaskField.RECURRENCE, 0)
-            except Exception:  # pylint: disable=W0718
+            except Exception:  # pylint: disable=W0718 # nosec
                 pass
 
             try:
@@ -263,10 +263,7 @@ def get_ical_dict(component, field: TaskField, _value_converter=None):
         return None
     if len(raw_params) < 1:
         return None
-    ret_dict = {}
-    for key, val in raw_params.items():
-        ret_dict[key] = val
-    return ret_dict
+    return dict(raw_params.items())
 
 
 ###
@@ -295,7 +292,7 @@ def get_ical_value_int(component, field: TaskField, defaultValue):
     try:
         value_str = get_ical_str(component, field)
         return int(value_str)
-    except Exception:  # pylint: disable=W0718
+    except Exception:  # pylint: disable=W0718 # nosec
         pass
     return defaultValue
 

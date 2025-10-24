@@ -170,7 +170,7 @@ class Recurrent:
         offset = self.getDateOffset()
         return find_multiplication(referenceDate, targetDate, offset)
 
-    def __eq__(self, other: "Recurrent"):
+    def __eq__(self, other):
         if not isinstance(other, Recurrent):
             ## don't attempt to compare against unrelated types
             return NotImplemented

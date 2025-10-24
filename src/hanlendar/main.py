@@ -100,11 +100,7 @@ def create_parser(parser: argparse.ArgumentParser = None):
     return parser
 
 
-def start(args=None):
-    if args is None:
-        parser = create_parser()
-        args = parser.parse_args()
-
+def start(args):
     _LOGGER.debug("Starting the application")
     _LOGGER.debug("Logger log file: %s", logger.log_file)
     _LOGGER.debug("Arguments: %s", sys.argv[1:])
@@ -125,6 +121,10 @@ def start(args=None):
 
 
 def start_single(args=None):
+    if args is None:
+        parser = create_parser()
+        args = parser.parse_args()
+
     ## check if instance already running
     pid_path = os.path.join(tmp_dir, "hanlendar.pid")
     with pidfile.PidFile(pid_path):

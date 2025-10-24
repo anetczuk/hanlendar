@@ -53,8 +53,8 @@ class TaskTreeModel(ItemTreeModel):
         self.dataObject = dataObject
         self.endResetModel()
 
-    def data(self, index: QModelIndex, role):
-        if role == QtCore.Qt.SizeHintRole:
+    def data(self, index, role):
+        if role == QtCore.Qt.SizeHintRole:  # type: ignore[attr-defined]
             return QtCore.QSize(10, 30)
 
         task = self.getItem(index)
@@ -64,25 +64,25 @@ class TaskTreeModel(ItemTreeModel):
         if item is None:
             return None
 
-        if role == Qt.UserRole:
+        if role == Qt.UserRole:  # type: ignore[attr-defined]
             return task
 
-        if role == Qt.TextAlignmentRole:
+        if role == Qt.TextAlignmentRole:  # type: ignore[attr-defined]
             attrIndex = index.column()
             if attrIndex > 0:
-                return Qt.AlignHCenter | Qt.AlignVCenter
+                return Qt.AlignHCenter | Qt.AlignVCenter  # type: ignore[attr-defined]
 
-        if role == Qt.ForegroundRole:
+        if role == Qt.ForegroundRole:  # type: ignore[attr-defined]
             return get_task_fgcolor(item)
 
-        if role == Qt.BackgroundRole:
+        if role == Qt.BackgroundRole:  # type: ignore[attr-defined]
             nowDate = date.today()
             if item.isInMonth(nowDate):
                 return QColor("beige")
             if item.isInPastMonths(nowDate):
                 return QColor("moccasin")
 
-        if role == QtCore.Qt.DisplayRole:
+        if role == QtCore.Qt.DisplayRole:  # type: ignore[attr-defined]
             attrIndex = index.column()
             if attrIndex == 0:
                 return item.title
@@ -149,8 +149,8 @@ class TaskSortFilterProxyModel(QtCore.QSortFilterProxyModel):
         return item.isCompleted() is False
 
     def lessThan(self, left: QModelIndex, right: QModelIndex):
-        leftData = self.sourceModel().data(left, QtCore.Qt.DisplayRole)
-        rightData = self.sourceModel().data(right, QtCore.Qt.DisplayRole)
+        leftData = self.sourceModel().data(left, QtCore.Qt.DisplayRole)  # type: ignore[attr-defined]
+        rightData = self.sourceModel().data(right, QtCore.Qt.DisplayRole)  # type: ignore[attr-defined]
         return leftData < rightData
 
 
@@ -196,7 +196,7 @@ class TaskTable(QtWidgets.QTreeView):
         self.setModel(self.proxyModel)
 
         header = self.header()
-        header.setDefaultAlignment(Qt.AlignCenter)
+        header.setDefaultAlignment(Qt.AlignCenter)  # type: ignore[attr-defined]
         header.setHighlightSections(False)
         header.setStretchLastSection(False)
         header.setSectionResizeMode(0, QHeaderView.Stretch)
@@ -240,7 +240,7 @@ class TaskTable(QtWidgets.QTreeView):
         proxyIndex = self.proxyModel.mapFromSource(modelIndex)
         return proxyIndex
 
-    def getTask(self, itemIndex: QModelIndex) -> TaskOccurrence:
+    def getTask(self, itemIndex: QModelIndex) -> Task:
         sourceIndex = self.proxyModel.mapToSource(itemIndex)
         return self.itemsModel.getItem(sourceIndex)
 
@@ -278,7 +278,7 @@ class TaskTable(QtWidgets.QTreeView):
             self.expandAll()
 
     def drawBranches(self, painter, rect, index):
-        bgcolor = index.data(Qt.BackgroundRole)
+        bgcolor = index.data(Qt.BackgroundRole)  # type: ignore[attr-defined]
         if bgcolor is not None:
             painter.fillRect(rect, bgcolor)
         super().drawBranches(painter, rect, index)

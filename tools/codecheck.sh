@@ -133,6 +133,7 @@ run_ruff() {
     if [[ ${FIX_ERROR} -ne 0 ]]; then
         RUFF_ARGS+=(--fix)
     fi
+    #RUFF_ARGS+=(--statistics)
 
     ignore_errors=()
     ignore_errors+=(ANN001)     ## ANN001 Missing type annotation for function argument
@@ -155,7 +156,7 @@ run_ruff() {
     ignore_errors+=(RUF100)     ## RUF100 [*] Unused `noqa` directive (unused: `F811`)
     ignore_errors+=(TRY400)     ## TRY400 Use `logging.exception` instead of `logging.error`
 
-    ## TODO: fix    
+    ## TODO: fix
     ignore_errors+=(DTZ007)     ## DTZ007 Naive datetime constructed using `datetime.datetime.strptime()` without %z
     ignore_errors+=(DTZ011)     ## DTZ011 `datetime.date.today()` used
     ignore_errors+=(I001)       ## I001 [*] Import block is un-sorted or un-formatted
@@ -170,6 +171,89 @@ run_ruff() {
     ignore_errors+=(PTH122)     ## PTH122 `os.path.splitext()` should be replaced by `Path.suffix`, `Path.stem`, and `Path.parent`
     ignore_errors+=(PTH123)     ## PTH123 `open()` should be replaced by `Path.open()
     ignore_errors+=(PTH208)     ## PTH208 Use `pathlib.Path.iterdir()` instead.
+
+    ## TODO: fix
+    ignore_errors+=(N802)       ## N802 Function name `test_findName_object` should be lowercase
+    ignore_errors+=(N803)       ## N803 Argument name `rePattern` should be lowercase
+    ignore_errors+=(N804)       ## N804 First argument of a class method should be named `cls`
+    ignore_errors+=(N806)       ## N806 Variable `testObject` in function should be lowercase
+    ignore_errors+=(N815)       ## N815    [ ] mixed-case-variable-in-class-scope
+    ignore_errors+=(N816)       ## N816 Variable `revCrcTmpDir` in global scope should not be mixedCase
+    ignore_errors+=(LOG001)     ## LOG001 Use `logging.getLogger()` to instantiate loggers
+    ignore_errors+=(DTZ001)     ## DTZ001 `datetime.datetime()` called without a `tzinfo` argument
+    ignore_errors+=(DTZ002)     ## DTZ002 `datetime.datetime.today()` used
+    ignore_errors+=(T201)       ## T201 `print` found
+    ignore_errors+=(PTH110)     ## PTH110 `os.path.exists()` should be replaced by `Path.exists()`
+    ignore_errors+=(S603)       ## S603 `subprocess` call: check for execution of untrusted input
+    ignore_errors+=(S607)       ## S607 Starting a process with a partial executable path
+    ignore_errors+=(COM812)     ## COM812 [*] Trailing comma missing
+    ignore_errors+=(SLF001)     ## SLF001 Private member accessed: `_testMethodName`
+    ignore_errors+=(FLY002)     ## FLY002 Consider f-string instead of string join
+    ignore_errors+=(RET504)     ## RET504 Unnecessary assignment to `MockedDatetime` before `return` statement
+    ignore_errors+=(ANN206)     ## ANN206 Missing return type annotation for classmethod `utcnow`
+    ignore_errors+=(FIX002)     ## FIX002 Line contains TODO, consider resolving the issue
+    ignore_errors+=(TD002)      ## TD002 Missing author in TODO; try: `# TODO(<author_name>): ...` or `# TODO @<author_name>: ...`
+    ignore_errors+=(TD003)      ## TD003 Missing issue link for this TODO
+    ignore_errors+=(TD004)      ## TD004 Missing colon in TODO
+    ignore_errors+=(TD006)      ## TD006 [*] Invalid TODO capitalization: `todo` should be `TODO`
+    ignore_errors+=(F401)       ## F401 `__init__` imported but unused; consider using `importlib.util.find_spec` to test for availability
+    ignore_errors+=(SIM105)     ## SIM105 Use `contextlib.suppress(ImportError)` instead of `try`-`except`-`pass`
+    ignore_errors+=(S108)       ## S108 Probable insecure usage of temporary file or directory: "/tmp/taskdialog-big.png"
+    ignore_errors+=(PLR0915)    ## PLR0915 Too many statements (70 > 50)
+    ignore_errors+=(TC001)      ## TC001 Move application import `hanlendar.domainmodel.local.task.LocalTask` into a type-checking block
+    ignore_errors+=(RUF005)     ## RUF005 Consider `[task, *items]` instead of concatenation
+    ignore_errors+=(UP006)      ## UP006 Use `list` instead of `List` for type annotation
+    ignore_errors+=(EM101)      ## EM101    [ ] raw-string-in-exception
+    ignore_errors+=(D105)       ## D105     [ ] undocumented-magic-method
+    ignore_errors+=(PIE808)     ## PIE808   [*] unnecessary-range-start
+    ignore_errors+=(FBT002)     ## FBT002   [ ] boolean-default-value-positional-argument
+    ignore_errors+=(ANN205)     ## ANN205   [ ] missing-return-type-static-method
+    ignore_errors+=(SIM103)     ## SIM103   [ ] needless-bool
+    ignore_errors+=(TID252)     ## TID252   [ ] relative-imports
+    ignore_errors+=(PGH003)     ## PGH003   [ ] blanket-type-ignore
+    ignore_errors+=(UP035)      ## UP035    [ ] deprecated-import
+    ignore_errors+=(BLE001)     ## BLE001   [ ] blind-except
+    ignore_errors+=(PLR0911)    ## PLR0911  [ ] too-many-return-statements
+    ignore_errors+=(PTH104)     ## PTH104   [ ] os-rename
+    ignore_errors+=(ANN002)     ## ANN002   [ ] missing-type-args
+    ignore_errors+=(C901)       ## C901     [ ] complex-structure
+    ignore_errors+=(FBT003)     ## FBT003   [ ] boolean-positional-value-in-call
+    ignore_errors+=(SIM108)     ## SIM108   [ ] if-else-block-instead-of-if-exp
+    ignore_errors+=(D212)       ## D212     [*] multi-line-summary-first-line
+    ignore_errors+=(PTH107)     ## PTH107   [ ] os-remove
+    ignore_errors+=(PTH119)     ## PTH119 `os.path.basename()` should be replaced by `Path.name`
+    ignore_errors+=(TRY003)     ## TRY003   [ ] raise-vanilla-args
+    ignore_errors+=(D401)       ## D401     [ ] non-imperative-mood
+    ignore_errors+=(EXE002)     ## EXE002   [ ] shebang-missing-executable-file
+    ignore_errors+=(LOG015)     ## LOG015   [ ] root-logger-call
+    ignore_errors+=(PLR0912)    ## PLR0912  [ ] too-many-branches
+    ignore_errors+=(S301)       ## S301 `pickle` and modules that wrap it can be unsafe when used to deserialize untrusted data, possible security issue
+    ignore_errors+=(PLW0603)    ## PLW0603 Using the global statement to update `log_file` is discouraged
+    ignore_errors+=(RUF012)     ## RUF012 Mutable class attributes should be annotated with `typing.ClassVar`
+    ignore_errors+=(S101)       ## S101 Use of `assert` detected
+    ignore_errors+=(UP031)      ## UP031 Use format specifiers instead of percent format
+    ignore_errors+=(B008)       ## B008 Do not perform function call `QColor` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+    ignore_errors+=(ANN003)     ## ANN003 Missing type annotation for `**kwargs`
+    ignore_errors+=(PLR1722)    ## PLR1722 Use `sys.exit()` instead of `exit`
+    ignore_errors+=(TC003)      ## TC003 Move standard library import `datetime` into a type-checking block
+    ignore_errors+=(UP015)      ## UP015 [*] Unnecessary mode argument
+    ignore_errors+=(PTH111)     ## PTH111 `os.path.expanduser()` should be replaced by `Path.expanduser()`
+    ignore_errors+=(UP015)      ## UP015 [*] Unnecessary mode argument`
+    ignore_errors+=(RUF010)     ## RUF010 [*] Use explicit conversion flag
+    ignore_errors+=(PGH004)     ## PGH004 Use specific rule codes when using `noqa`
+    ignore_errors+=(PLR1730)    ## PLR1730 [*] Replace `if` statement with `retOffset = max(retOffset, currOffset)`
+    ignore_errors+=(TRY300)     ## TRY300 Consider moving this statement to an `else` block
+    ignore_errors+=(UP037)      ## UP037 [*] Remove quotes from type annotation
+    ignore_errors+=(PLW1641)    ## PLW1641 Object does not implement `__hash__` method
+    ignore_errors+=(SIM102)     ## SIM102 Use a single `if` statement instead of nested `if` statements
+    ignore_errors+=(SIM114)     ## SIM114 [*] Combine `if` branches using logical `or` operator
+    ignore_errors+=(SIM300)     ## SIM300 [*] Yoda condition detected
+    ignore_errors+=(D415)       ## D415 First line should end with a period, question mark, or exclamation point
+    ignore_errors+=(D403)       ## D403 [*] First word of the docstring should be capitalized: `retrun` -> `Retrun`
+    ignore_errors+=(D400)       ## D400 First line should end with a period
+    ignore_errors+=(PTH207)     ## PTH207 Replace `glob` with `Path.glob` or `Path.rglob`
+    ignore_errors+=(SIM110)     ## SIM110 Use `return all(sub.isCompleted() is not False for sub in subitems)` instead of `for` loop
+    ignore_errors+=(S110)       ## S110 `try`-`except`-`pass` detected, consider logging the exception
 
     ignore_string="${ignore_errors[*]}"
     ignore_string="${ignore_string//${IFS:0:1}/,}"

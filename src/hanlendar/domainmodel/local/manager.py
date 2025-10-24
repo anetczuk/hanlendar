@@ -95,7 +95,6 @@ class LocalManager(Manager):
     _class_version = 7
 
     def __init__(self, ioDir=None):
-        """Constructor."""
         self._tasks = []
         self._todos = []
         self.notes = {"notes": ""}  ## default notes

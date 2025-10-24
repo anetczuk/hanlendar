@@ -21,7 +21,9 @@ import caldav  # pylint: disable=C0413
 ## tests/conf_private.py (see tests/conf_private.py.EXAMPLE).
 caldav_url = "http://localhost:5232/"
 username = "bob"
+# ruff: noqa: S105
 password = "bob"
+
 # caldav_url = 'https://calendar.example.com/dav'
 # username = 'somebody'
 # password = 'hunter2'
@@ -58,10 +60,10 @@ else:
 try:
     ## This will raise a NotFoundError if calendar does not exist
     my_new_calendar = my_principal.calendar(name="Test calendar")
-    assert my_new_calendar
+    assert my_new_calendar  # nosec
     ## calendar did exist, probably it was made on an earlier run
     ## of this script
-except caldav.error.NotFoundError:
+except caldav.error.NotFoundError:  # type: ignore[attr-defined]
     ## Let's create a calendar
     my_new_calendar = my_principal.make_calendar(name="Test calendar")
 
@@ -89,7 +91,7 @@ event = events_fetched[0]
 ## The caldav library has always been supporting vobject out of the box, but icalendar is more popular.
 ## event.instance will as of version 0.x yield a vobject instance, but this may change in future versions.
 ## Both event.vobject_instance and event.icalendar_instance works from 0.7.
-event.vobject_instance.vevent.summary.value = "Norwegian national day celebratiuns"
+event.vobject_instance.vevent.summary.value = "Norwegian national day celebratiuns"  # type: ignore[attr-defined]
 event.icalendar_instance.subcomponents[0]["summary"] = event.icalendar_instance.subcomponents[0]["summary"].replace(
     "celebratiuns", "celebrations"
 )
@@ -115,17 +117,18 @@ all_objects = the_same_calendar.objects()
 
 ## since we have only added events (and neither todos nor journals), those
 ## should be equal ... except, all_objects is an iterator and not a list.
-assert len(all_events) == len(list(all_objects))
+assert len(all_events) == len(list(all_objects))  # nosec
 
 ## Let's check that the summary got right
-assert all_events[0].vobject_instance.vevent.summary.value.startswith("Norwegian")
-assert all_events[0].vobject_instance.vevent.summary.value.endswith("celebrations")
+vevent = all_events[0].vobject_instance.vevent  # type: ignore[attr-defined]
+assert vevent.summary.value.startswith("Norwegian")  # nosec
+assert vevent.summary.value.endswith("celebrations")  # nosec
 
 ## This calendar should as a minimum support VEVENTs ... most likely
 ## it also supports VTODOs and maybe even VJOURNALs.  We can query the
 ## server what it can accept:
 acceptable_component_types = my_new_calendar.get_supported_components()
-assert "VEVENT" in acceptable_component_types
+assert "VEVENT" in acceptable_component_types  # nosec
 
 ## Clean up - remove the new calendar
 my_new_calendar.delete()
@@ -145,14 +148,14 @@ my_new_tasklist.add_todo(
 
 ## Fetch the tasks
 todos = my_new_tasklist.todos()
-assert len(todos) == 1
-assert "FREQ=YEARLY" in todos[0].data
+assert len(todos) == 1  # nosec
+assert "FREQ=YEARLY" in todos[0].data  # nosec
 
 print("Here is some more icalendar data:")
 print(todos[0].data)
 
 ## date_search also works on task lists, but one has to be explicit to get them
-todos_found = my_new_tasklist.date_search(
+todos_found = my_new_tasklist.date_search(  # type: ignore[call-overload]
     start=datetime(2021, 1, 1), end=datetime(2024, 1, 1), compfilter="VTODO", expand=True
 )
 if not todos_found:
@@ -172,11 +175,11 @@ todos[0].complete()
 ## library, but as for now ... completing the task will cause the task
 ## list to be emptied.
 todos = my_new_tasklist.todos()
-assert len(todos) == 0
+assert len(todos) == 0  # nosec
 
 ## It's possible to fetch historic tasks too
 todos = my_new_tasklist.todos(include_completed=True)
-assert len(todos) == 1
+assert len(todos) == 1  # nosec
 
 ## and it's possible to delete tasks completely
 todos[0].delete()

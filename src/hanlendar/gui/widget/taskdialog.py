@@ -68,7 +68,7 @@ class TaskDialog(QtBaseClass):  # type: ignore
             if self.task.occurrenceDue is None:
                 self.task.dueDateTime = self.task.occurrenceStart + timedelta(hours=1)
 
-        self.ui.descriptionEdit.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.descriptionEdit.setContextMenuPolicy(Qt.CustomContextMenu)  # type: ignore[attr-defined]
 
         self.ui.uidText.setText(self.task.UID)
         taskParent = self.task.getParent()
@@ -105,7 +105,8 @@ class TaskDialog(QtBaseClass):  # type: ignore
     ## done "manually", because other methods does not work
     def keyPressEvent(self, event):
         event_key = event.key()
-        if event_key == Qt.Key_V and event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier):
+        flags = Qt.ControlModifier | Qt.ShiftModifier  # type: ignore[attr-defined]
+        if event_key == Qt.Key_V and event.modifiers() == flags:  # type: ignore[attr-defined]
             self._pasteUnformattedToDescription()
             event.accept()  ## do not propagate event to parents
         super().keyPressEvent(event)

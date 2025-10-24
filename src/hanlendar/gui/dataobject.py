@@ -24,6 +24,7 @@
 import os
 import logging
 from datetime import date
+from typing import Any, Dict
 
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtCore import QDate
@@ -241,7 +242,7 @@ class DataObject(QObject):
 
 
 def import_xfce_notes():
-    newNotes = {}
+    newNotes: Dict[Any, Any] = {}
 
     notesDir = os.path.expanduser("~/.local/share/notes")
     for groupName in os.listdir(notesDir):

@@ -75,7 +75,6 @@ class ReminderWidget(QtBaseClass):  # type: ignore
         self._activateWidget()
 
     def _removeReminder(self):
-        assert self.task.reminderList is not None
         reminder = self._getCurrentReminder()
         self.task.reminderList.remove(reminder)
         self.refreshWidget()

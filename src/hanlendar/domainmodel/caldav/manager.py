@@ -79,7 +79,7 @@ class CalDAVConnector:
             return self._calendar
         try:
             return self._initCalendar(self._calendarName)
-        except caldav.lib.error.NotFoundError as ex:
+        except caldav.lib.error.NotFoundError as ex:  # type: ignore[attr-defined]
             _LOGGER.warning("unable to get calendar: %s", ex)
             return None
 
@@ -95,7 +95,6 @@ class CalDAVManager(Manager):
     """Root class for domain data structure."""
 
     def __init__(self, connector, ioDir=None):
-        """Constructor."""
         self._connector: CalDAVConnector = connector
         self._localManager = LocalManager(ioDir)
 
@@ -149,7 +148,7 @@ class CalDAVManager(Manager):
         try:
             calendar = self._connector._initCalendar(self._connector._calendarName)
             calendar.delete()
-        except caldav.lib.error.NotFoundError as ex:
+        except caldav.lib.error.NotFoundError as ex:  # type: ignore[attr-defined]
             _LOGGER.warning("unable to get calendar: %s", ex)
             calendar = None
 
@@ -160,9 +159,9 @@ class CalDAVManager(Manager):
         for component in ical.walk():
             if component.name == "VEVENT":
                 ## caldav requires events to be wrapped in 'VCALENDAR' component
-                calendar: icalendar.cal.Calendar = icalendar.cal.Calendar()
-                calendar.add_component(component)
-                newCalendar.save_event(calendar)
+                ical_item: icalendar.cal.Calendar = icalendar.cal.Calendar()
+                ical_item.add_component(component)  # type: ignore[attr-defined]
+                newCalendar.save_event(ical_item)  # type: ignore[arg-type]
 
         _LOGGER.info("export done")
 

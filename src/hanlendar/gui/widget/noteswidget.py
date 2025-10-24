@@ -57,7 +57,7 @@ class SinglePageWidget(QWidget):
         vlayout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(vlayout)
         self.textEdit = QTextEdit(self)
-        self.textEdit.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.textEdit.setContextMenuPolicy(Qt.CustomContextMenu)  # type: ignore[attr-defined]
 
         #         self.textEdit.setStyleSheet( "background-color: #f7ec9d;" )
         self.setStyleSheet(

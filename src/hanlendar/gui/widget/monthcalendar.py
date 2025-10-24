@@ -62,7 +62,7 @@ class MonthCalendar(QCalendarWidget):
         self.setCurrentPage(todayDate.year, todayDate.month)
         self.setSelectedDate(todayDate)
 
-        self.taskColor = QColor(self.palette().color(QPalette.Highlight))
+        self.taskColor = QColor(self.palette().color(QPalette.Highlight))  # type: ignore[attr-defined]
         self.taskColor.setAlpha(64)
 
         self.cellsTable = self.findChild(QTableView)
@@ -111,7 +111,7 @@ class MonthCalendar(QCalendarWidget):
         taskOccurrence = tasksList[taskIndex]
         return taskOccurrence.task
 
-    def paintCell(self, painter, rect, date: QDate):
+    def paintCell(self, painter, rect, date):
         self.dateToCellRect[date] = rect
 
         painter.save()
@@ -123,9 +123,11 @@ class MonthCalendar(QCalendarWidget):
             pen = painter.pen()
             pen.setColor(QColor("red"))
             painter.setPen(pen)
-            painter.drawText(rect, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, str(date.day()))
+            flags = Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight  # type: ignore[attr-defined]
+            painter.drawText(rect, flags, str(date.day()))
         else:
-            painter.drawText(rect, Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight, str(date.day()))
+            flags = Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight  # type: ignore[attr-defined]
+            painter.drawText(rect, flags, str(date.day()))
 
         if self.data is not None:
             selectedDay = self.selectedDate() == date
@@ -160,7 +162,7 @@ class MonthCalendar(QCalendarWidget):
             rect.y() + itemOffset,
             rect.width() - 12,
             16,
-            Qt.TextSingleLine | Qt.AlignTop | Qt.AlignLeft,
+            Qt.TextSingleLine | Qt.AlignTop | Qt.AlignLeft,  # type: ignore[attr-defined]
             text,
         )
 

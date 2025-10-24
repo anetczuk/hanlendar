@@ -93,9 +93,9 @@ class WatcherBlocker:
     def __enter__(self):
         if self.watcher is None:
             return
-        self.oldEnabled = self.watcher.setEnabled(False)
+        self.oldEnabled = self.watcher.setEnabled(False)  # type: ignore[attr-defined]
         _LOGGER.debug("disabling sysfs watcher, prev state: %s", self.oldEnabled)
-        self.watcher.ignoreNextEvent()
+        self.watcher.ignoreNextEvent()  # type: ignore[attr-defined]
 
     def __exit__(self, exceptionType, value, traceback):
         _LOGGER.debug("restoring sysfs watcher state to %s", self.oldEnabled)

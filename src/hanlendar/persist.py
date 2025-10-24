@@ -165,7 +165,7 @@ class Versionable(metaclass=abc.ABCMeta):
     def __setstate__(self, dict_):
         version_present_in_pickle = dict_.pop("_class_version", None)
         # pylint: disable=E1101
-        if version_present_in_pickle == self._class_version:
+        if version_present_in_pickle == self._class_version:  # type: ignore[attr-defined]
             # pylint: disable=W0201
             self.__dict__ = dict_
         else:
