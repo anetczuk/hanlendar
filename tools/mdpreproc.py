@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2024, Arkadiusz Netczuk <dev.arnet@gmail.com>
+# Copyright (c) 2025, Arkadiusz Netczuk <dev.arnet@gmail.com>
 # All rights reserved.
 #
 # This source code is licensed under the BSD 3-Clause license found in the
@@ -15,12 +15,15 @@
 # For more advanced Markdown preprocessing see https://github.com/amyreese/markdown-pp
 #
 
+import argparse
+import logging
 import os
 import re
 
-import argparse
-
 import xmltodict
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MDPreprocessor:
@@ -36,9 +39,9 @@ class MDPreprocessor:
         self._input_content = content
 
         self._find_tags()
-        print("items:", self._items)
+        _LOGGER.info("items: %s", self._items)
         replace_list = self._find_replace_list()
-        print("replace list:", replace_list)
+        _LOGGER.info("replace list: %s", replace_list)
 
         if len(replace_list) > 0:
             replace_list = sorted(replace_list, key=lambda item: item[0].start())
@@ -49,7 +52,8 @@ class MDPreprocessor:
                     continue
                 curr_start = replace_pair[1].start()
                 if curr_start < last_end:
-                    raise RuntimeError("unsupported case: nested placeholders")
+                    message = "unsupported case: nested placeholders"
+                    raise RuntimeError(message)
 
         # we are sure that there is no nested placeholders
         self._output_content = content
@@ -57,11 +61,11 @@ class MDPreprocessor:
         for replace_pair in replace_list:
             self._replace(*replace_pair)
 
-        # print(f"new content:\n{self._output_content}")
+        # _LOGGER.info("new content:\n%s", self._output_content)
         save_content(md_path, self._output_content)
 
     def _replace(self, start_item, end_item):
-        print("handling pair:", start_item, end_item)
+        _LOGGER.info("handling pair: %s %s", start_item, end_item)
         # convert HTML comment to valid XML tag
         tag_text = start_item.group()
         tag_text = tag_text.replace("<!--", "")
@@ -70,7 +74,7 @@ class MDPreprocessor:
         tag_text = f"<insertstart {tag_text}></insertstart>"
         attr_dict = xmltodict.parse(tag_text)
         attr_dict = attr_dict.get("insertstart", {})
-        print("found attributes:", attr_dict)
+        _LOGGER.info("found attributes: %s", attr_dict)
 
         include_path = attr_dict.get("@include")
         pre_content = attr_dict.get("@pre", "")
@@ -121,8 +125,7 @@ class MDPreprocessor:
     def _find_tags(self):
         tag_list = []
         start_pattern = re.compile("<!--.*?(insertstart|insertend).*?-->", re.MULTILINE | re.DOTALL)
-        for match_object in start_pattern.finditer(self._input_content):
-            tag_list.append(match_object)
+        tag_list = list(start_pattern.finditer(self._input_content))  ## copy list
         self._items = sorted(tag_list, key=lambda item: item.start())
 
 
@@ -130,7 +133,7 @@ class MDPreprocessor:
 
 
 def load_content(file_path):
-    with open(file_path, "r", encoding="utf-8") as file:
+    with open(file_path, encoding="utf-8") as file:
         return file.read()
 
 
@@ -141,7 +144,8 @@ def save_content(file_path, content):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Markdown preprocessor", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        description="Markdown preprocessor",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("mdpath", action="store", help="Path to Markdowo file")
 
@@ -153,7 +157,7 @@ def main():
     processor = MDPreprocessor()
     processor.process(md_path)
 
-    print("preprocessing completed")
+    _LOGGER.info("preprocessing completed")
 
 
 ## ========================================

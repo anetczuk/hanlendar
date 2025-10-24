@@ -66,7 +66,7 @@ python3 -m venv "$VENV_DIR"
 ### creating venv start script
 
 # shellcheck disable=SC2016
-SCRIPT_CONTENT='#!/bin/bash
+ACTIVATE_VENV_CONTENT='#!/bin/bash
 
 ##
 ## File was generated automatically. Any change will be lost. 
@@ -116,11 +116,10 @@ rm $tmpfile
 '
 
 # shellcheck disable=SC2016
-SCRIPT_CONTENT="${SCRIPT_CONTENT//'$VENV_ROOT_DIR'/$VENV_DIR}"
-SCRIPT_PATH="$VENV_DIR/activatevenv.sh"
-START_VENV_SCRIPT_PATH="$SCRIPT_PATH"
-echo "$SCRIPT_CONTENT" > "$SCRIPT_PATH"
-chmod +x "$SCRIPT_PATH"
+ACTIVATE_VENV_CONTENT="${ACTIVATE_VENV_CONTENT//'$VENV_ROOT_DIR'/$VENV_DIR}"
+ACTIVATE_VENV_PATH="$VENV_DIR/activatevenv.sh"
+echo "$ACTIVATE_VENV_CONTENT" > "$ACTIVATE_VENV_PATH"
+chmod +x "$ACTIVATE_VENV_PATH"
 
 
 ## create shortcut script inside venv directory
@@ -148,12 +147,27 @@ set -eu
 
 
 ### creating project start script
-create_venv_shortcut "$VENV_DIR/activatevenv.sh \"set -eu; $SRC_DIR/testhanlendar/runtests.py \$@; exit\"" "$VENV_DIR/runtests.py"
+pushd "${SRC_DIR}" > /dev/null
+# shellcheck disable=SC2010,SC2035
+TEST_DIRS=$(ls -d */ | grep test)
+popd > /dev/null
+TEST_DIRS_NUM=$(echo "${TEST_DIRS}" | wc -l)
+if [[ ${TEST_DIRS_NUM} -ne 1 ]]; then
+    echo "unable to determine tests directory - exiting"
+    exit 1
+fi
+TEST_SCRIPT="${SRC_DIR}/${TEST_DIRS}runtests.py"
+create_venv_shortcut "$VENV_DIR/activatevenv.sh \"set -eu; ${TEST_SCRIPT} \$@; exit\"" "$VENV_DIR/runtests.py"
 
 
 ### install required packages
+
+#### installing package does not work - fails running tests under nodejs 
+##echo "Installing package"
+##$ACTIVATE_VENV_PATH "$SCRIPT_DIR/../src/install-package.sh --system; exit"
+
 echo "Installing dependencies"
-$START_VENV_SCRIPT_PATH "$SCRIPT_DIR/../src/install-deps.sh; exit"
+$ACTIVATE_VENV_PATH "$SCRIPT_DIR/../src/install-deps.sh; exit"
 
 
 echo "to activate environment run: $VENV_DIR/activatevenv.sh"

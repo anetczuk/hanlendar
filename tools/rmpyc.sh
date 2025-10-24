@@ -5,8 +5,7 @@
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 
 
-src_dir=$SCRIPT_DIR/../src
+src_dir="$SCRIPT_DIR/../src"
 
 
-find $src_dir -name "*.pyc" -exec rm -f {} \;
-
+find "$src_dir" -name "*.pyc" -exec rm -f {} \;
