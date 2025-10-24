@@ -42,7 +42,7 @@ class LocalToDo(Item, persist.Versionable):
     _class_version = 4
 
     def __init__(self, title=""):
-        super(LocalToDo, self).__init__()
+        super().__init__()
         self._UID = generate_uid()
         self._title = title
         self._description = ""
@@ -95,7 +95,7 @@ class LocalToDo(Item, persist.Versionable):
         subitems = self.getSubitems()
         if subitems is not None:
             subLen = len(subitems)
-        return "[t:%s d:%s c:%s p:%s subs: %s]" % (self.title, self.description, self._completed, self.priority, subLen)
+        return f"[t:{self.title} d:{self.description} c:{self._completed} p:{self.priority} subs:{subLen}]"
 
     ## overrided
     def getParent(self):

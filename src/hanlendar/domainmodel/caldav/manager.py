@@ -21,22 +21,17 @@
 # SOFTWARE.
 #
 
-from datetime import date, datetime
+# pylint: disable=W0212
 
 import logging
 
-import glob
-from icalendar import cal
 import caldav
 import icalendar
-import requests
 
 from hanlendar.domainmodel.manager import Manager
-from hanlendar.domainmodel.item import Item
 
 # from hanlendar.domainmodel.caldav.task import CalDAVTask
 from hanlendar.domainmodel.local.manager import LocalManager
-from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.icalio import import_icalendar, export_icalendar, fix_dangling_tasks
 
 # from hanlendar import persist

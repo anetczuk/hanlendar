@@ -23,13 +23,7 @@
 
 import unittest
 
-import datetime
-from datetime import timedelta
-
 from hanlendar.domainmodel.recurrent import RepeatType
-
-from hanlendar.domainmodel.local.manager import LocalManager as Manager
-from hanlendar.domainmodel.local.task import LocalTask as Task
 
 
 class RepeatTypeTest(unittest.TestCase):

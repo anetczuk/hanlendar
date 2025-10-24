@@ -41,7 +41,7 @@ import datetime
 from datetime import timedelta
 
 import hanlendar
-import hanlendar.logger as logger
+from hanlendar import logger
 from hanlendar.gui.qt import QApplication, renderToPixmap
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.dataobject import DataObject

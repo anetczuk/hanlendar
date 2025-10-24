@@ -24,7 +24,7 @@
 
 import unittest
 
-import hanlendar.persist as persist
+from hanlendar import persist
 
 
 class FileMock:

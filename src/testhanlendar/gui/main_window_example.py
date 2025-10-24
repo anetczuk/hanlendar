@@ -40,7 +40,7 @@ import argparse
 
 from datetime import datetime, timedelta
 
-import hanlendar.logger as logger
+from hanlendar import logger
 
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling

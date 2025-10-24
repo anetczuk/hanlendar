@@ -21,24 +21,18 @@
 # SOFTWARE.
 #
 
-from datetime import date, datetime
-
 import os
 import logging
 from typing import List
 
 import glob
-from icalendar import cal
 
 from hanlendar import persist
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.item import Item
 from hanlendar.domainmodel.task import Task
-from hanlendar.domainmodel.reminder import Notification
-from hanlendar.domainmodel.task import TaskOccurrence
 from hanlendar.domainmodel.local.task import LocalTask
 from hanlendar.domainmodel.local.todo import LocalToDo
-import icalendar
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,8 +96,8 @@ class LocalManager(Manager):
 
     def __init__(self, ioDir=None):
         """Constructor."""
-        self._tasks = list()
-        self._todos = list()
+        self._tasks = []
+        self._todos = []
         self.notes = {"notes": ""}  ## default notes
 
         self._ioDir = ioDir  ## do not persist
@@ -116,7 +110,7 @@ class LocalManager(Manager):
     def storeData(self):
         if self._ioDir is None:
             _LOGGER.warning("unable to store data -- no root directory given")
-            return
+            return False
 
         outputDir = self._ioDir
 
@@ -168,12 +162,12 @@ class LocalManager(Manager):
         inputFile = os.path.join(inputDir, "tasks.obj")
         self.tasks = persist.load_object(inputFile, class_mapper=mapperObject)
         if self.tasks is None:
-            self.tasks = list()
+            self.tasks = []
 
         inputFile = os.path.join(inputDir, "todos.obj")
         self.todos = persist.load_object(inputFile, class_mapper=mapperObject)
         if self.todos is None:
-            self.todos = list()
+            self.todos = []
 
         inputFile = os.path.join(inputDir, "notes.obj")
         self.notes = persist.load_object(inputFile, class_mapper=mapperObject)
@@ -202,7 +196,7 @@ class LocalManager(Manager):
         if index <= 0:
             storedZipFile = os.path.join(outputDir, "data.zip")
         else:
-            storedZipFile = os.path.join(outputDir, "data.zip.%s" % index)
+            storedZipFile = os.path.join(outputDir, f"data.zip.{index}")
 
         hist_data_raw = persist.load_backup(storedZipFile)
 
@@ -217,22 +211,22 @@ class LocalManager(Manager):
         tasks_raw = hist_data_raw.get("tasks.obj", None)
         tasks = persist.load_data(tasks_raw, class_mapper=mapperObject)
         if tasks is None:
-            tasks = list()
+            tasks = []
 
         todos_raw = hist_data_raw.get("todos.obj", None)
         todos = persist.load_data(todos_raw, class_mapper=mapperObject)
         if todos is None:
-            todos = list()
+            todos = []
 
         notes_raw = hist_data_raw.get("notes.obj", None)
         notes = persist.load_data(notes_raw, class_mapper=mapperObject)
         if notes is None:
-            notes = list()
+            notes = []
 
         ret_dict = {"file": storedZipFile, "version": mngrVersion, "tasks": tasks, "todos": todos, "notes": notes}
         return ret_dict
 
-    def restoreTaskByTitle(self, history_index, task_title):
+    def restoreTaskByTitle(self, _history_index, task_title):
         data_dict = self.loadHistory(160)
         tasks: List[Task] = data_dict.get("tasks", [])
         found_task = self.findTaskByTitle(tasks, task_title)

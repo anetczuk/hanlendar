@@ -60,6 +60,5 @@ class ToDoDetails(QtBaseClass):  # type: ignore
         self.ui.completionLabel.setText(str(todo.completed) + "%")
         self.ui.priorityBox.setValue(todo.priority)
 
-    # pylint: disable=R0201
     def _openLink(self, link):
         QDesktopServices.openUrl(link)

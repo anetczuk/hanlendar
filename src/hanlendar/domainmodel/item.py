@@ -178,8 +178,7 @@ class Item:
         return self._getPriority()
 
     def setPriority(self, value):
-        if value > 9:
-            value = 9
+        value = min(value, 9)
         self._setPriority(value)
 
     @property
@@ -210,7 +209,7 @@ class Item:
         """Return all sub items from tree."""
         subitems = self.getSubitems()
         if subitems is None:
-            return list()
+            return []
         return Item.getAllSubItemsFromList(subitems)
 
     def getChildCoords(self, item):
@@ -228,7 +227,7 @@ class Item:
     def addSubItem(self, item: "Item", index=-1):
         subitems = self.getSubitems()
         if subitems is None:
-            subitems = list()
+            subitems = []
             self.setSubitems(subitems)
         if index < 0:
             subitems.append(item)
@@ -259,8 +258,8 @@ class Item:
     def getAllSubItemsFromList(itemList):
         """Return all sub items from tree."""
         if itemList is None:
-            return list()
-        retList = list()
+            return []
+        retList = []
         for item in itemList:
             retList.append(item)
             retList += item.getAllSubItems()

@@ -92,8 +92,7 @@ class Recurrent:
             mode = RepeatType.NEVER
         if every is None:
             every = 0
-        if every < 0:
-            every = 0
+        every = max(every, 0)
 
         self.mode: RepeatType = mode
         self.every: int = every
@@ -179,8 +178,7 @@ class Recurrent:
         return self.mode == other.mode and self.every == other.every and self.endDate == other.endDate
 
     def __repr__(self):
-        return "Recurrent( mode=%s, every=%s, endDate=%s )" % (self.mode, self.every, self.endDate)
-        ## return "[m:%s e:%s ed:%s]" % ( self.mode, self.every, self.endDate )
+        return f"Recurrent( mode={self.mode}, every={self.every}, endDate={self.endDate} )"
 
 
 def find_multiplication(startDate: date, endDate: date, offset: relativedelta) -> int:

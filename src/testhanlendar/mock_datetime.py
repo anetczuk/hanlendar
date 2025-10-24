@@ -29,11 +29,11 @@
 
 
 import datetime
-import unittest.mock as mock
+from unittest import mock
 
 
-real_date_class = datetime.date
-real_datetime_class = datetime.datetime
+real_date_class = datetime.date  # pylint: disable=C0103
+real_datetime_class = datetime.datetime  # pylint: disable=C0103
 
 
 def mock_date_meta(target):

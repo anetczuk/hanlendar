@@ -4,14 +4,14 @@
 ###
 ###
 
-from datetime import datetime, date
 import sys
 
 ## We'll try to use the local caldav library, not the system-installed
 sys.path.insert(0, "..")
 sys.path.insert(0, ".")
 
-import caldav
+import caldav  # pylint: disable=C0413
+
 
 ## DO NOT name your file calendar.py or caldav.py!  We've had several
 ## issues filed, things break because the wrong files are imported.
@@ -48,9 +48,9 @@ if calendars:
     ## Some calendar servers will include all calendars you have
     ## access to in this list, and not only the calendars owned by
     ## this principal.
-    print("your principal has %i calendars:" % len(calendars))
+    print(f"your principal has {len(calendars)} calendars:")
     for c in calendars:
-        print("    Name: %-20s  URL: %s" % (c.name, c.url))
+        print(f"    Name: {c.name:<20}  URL: {c.url}")
 else:
     print("your principal has no calendars")
 
@@ -107,7 +107,8 @@ for event in all_events:
 # ## event.instance will as of version 0.x yield a vobject instance, but this may change in future versions.
 # ## Both event.vobject_instance and event.icalendar_instance works from 0.7.
 # event.vobject_instance.vevent.summary.value = 'Norwegian national day celebratiuns'
-# event.icalendar_instance.subcomponents[0]['summary'] = event.icalendar_instance.subcomponents[0]['summary'].replace('celebratiuns', 'celebrations')
+# event.icalendar_instance.subcomponents[0]['summary'] =
+#    event.icalendar_instance.subcomponents[0]['summary'].replace('celebratiuns', 'celebrations')
 # event.save()
 #
 # ## Please note that the proper way to save new icalendar data

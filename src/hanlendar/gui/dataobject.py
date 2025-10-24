@@ -235,7 +235,7 @@ class DataObject(QObject):
 
     def importICalendar(self, file_path, silent=False):
         _LOGGER.info("importing iCalendar from %s", file_path)
-        with open(file_path, "r") as cal_file:
+        with open(file_path, "r", encoding="utf-8") as cal_file:
             content = cal_file.read()
             self.undoStack.push(ImportICalendarCommand(self, content, silent))
 
@@ -248,7 +248,7 @@ def import_xfce_notes():
         groupDir = notesDir + "/" + groupName
         for noteName in os.listdir(groupDir):
             notePath = groupDir + "/" + noteName
-            with open(notePath, "r") as file:
+            with open(notePath, "r", encoding="utf-8") as file:
                 data = file.read()
                 if noteName in newNotes:
                     ## the same note name in different groups -- append notes

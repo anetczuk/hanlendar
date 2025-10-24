@@ -135,7 +135,7 @@ class NotesWidget(QtBaseClass):  # type: ignore
         self.addTab("notes")
 
     def getNotes(self):
-        notes = dict()
+        notes = {}
         notesSize = self.ui.notes_tabs.count()
         for tabIndex in range(0, notesSize):
             title = self.ui.notes_tabs.tabText(tabIndex)

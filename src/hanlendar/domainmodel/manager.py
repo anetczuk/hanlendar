@@ -28,10 +28,6 @@ import logging
 import abc
 from typing import List
 
-import glob
-
-import icalendar
-
 from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.task import Task, TaskOccurrence
 from hanlendar.domainmodel.item import Item
@@ -68,7 +64,7 @@ class Manager:
         self._setTasks(tasks)
         todos = manager._getToDos()
         self._setToDos(todos)
-        notes = manager._getNotes()
+        notes = manager._getNotes()  # pylint: disable=W0212
         self._setNotes(notes)
 
     @abc.abstractmethod
@@ -156,7 +152,7 @@ class Manager:
         return None
 
     def getTaskOccurrencesForDate(self, taskDate: date, includeCompleted=True):
-        retList = list()
+        retList = []
         allTasks = self.getTasksAll()
         for task in allTasks:
             entry = task.getTaskOccurrenceForDate(taskDate)
@@ -183,7 +179,7 @@ class Manager:
         return retTask
 
     def getDeadlinedTasks(self):
-        retTasks = list()
+        retTasks = []
         allTasks = self.getTasksAll()
         for task in allTasks:
             occurrence: TaskOccurrence = task.currentOccurrence()
@@ -194,7 +190,7 @@ class Manager:
         return retTasks
 
     def getRemindedTasks(self):
-        retTasks = list()
+        retTasks = []
         allTasks = self.getTasksAll()
         for task in allTasks:
             occurrence: TaskOccurrence = task.currentOccurrence()
@@ -313,9 +309,8 @@ class Manager:
         return eventTask
 
     def getNotificationList(self) -> List[Notification]:
-        ret = list()
-        for i in range(0, len(self.tasks)):
-            task = self.tasks[i]
+        ret = []
+        for task in self.tasks:
             notifs = task.getNotifications()
             ret.extend(notifs)
         ret.sort(key=Notification.sortByTime)

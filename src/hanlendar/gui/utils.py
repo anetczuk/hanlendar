@@ -26,7 +26,7 @@ from PyQt5.QtCore import QObject
 
 
 def get_label_url(url: str):
-    return '<a href="%s">%s</a>' % (url, url)
+    return f"""<a href="{url}">{url}</a>"""
 
 
 def set_label_url(label: QtWidgets.QLabel, url: str):

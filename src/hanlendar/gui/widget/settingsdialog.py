@@ -27,9 +27,9 @@ import copy
 
 from enum import Enum, unique, auto
 
-from hanlendar.domainmodel.caldav.manager import CalDAVConnector
-
 from PyQt5.QtWidgets import QRadioButton, QMessageBox
+
+from hanlendar.domainmodel.caldav.manager import CalDAVConnector
 
 from ..qt import pyqtSignal
 from .. import uiloader
@@ -173,8 +173,7 @@ class SettingsDialog(QtBaseClass):  # type: ignore
 
     def _getDatabaseModeIndex(self):
         gbChildren = self.ui.databaseGB.findChildren(QRadioButton)
-        for index in range(0, len(gbChildren)):
-            item = gbChildren[index]
+        for index, item in enumerate(gbChildren):
             if item.isChecked():
                 return index
         return -1
@@ -188,7 +187,7 @@ class SettingsDialog(QtBaseClass):  # type: ignore
         try:
             connector = CalDAVConnector()
             connector.connectToServer(serverURL, serverUser, serverPassword)
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=W0718
             _LOGGER.warning("unable to connect to server: %s", ex)
             message = str(ex)
             QMessageBox.critical(self, "Connection test", "Connection problem:\n" + message)
@@ -196,7 +195,7 @@ class SettingsDialog(QtBaseClass):  # type: ignore
         try:
             connector.connectToCalendar(calendarName, allow_throw=True)
             QMessageBox.information(self, "Connection test", "Successfully connected to calendar")
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=W0718
             _LOGGER.warning("unable to get calendar: %s", ex)
             QMessageBox.information(
                 self, "Connection test", "Successfully connected to server. New calendar will be created."
@@ -211,7 +210,7 @@ class SettingsDialog(QtBaseClass):  # type: ignore
         try:
             connector = CalDAVConnector()
             connector.connectToServer(serverURL, serverUser, serverPassword)
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=W0718
             _LOGGER.warning("unable to connect to server: %s", ex)
             message = str(ex)
             QMessageBox.critical(self, "Connection test", "Connection problem:\n" + message)
@@ -238,7 +237,7 @@ class SettingsDialog(QtBaseClass):  # type: ignore
 
 
 def load_keys_to_dict(settings):
-    state = dict()
+    state = {}
     for key in settings.childKeys():
         value = settings.value(key, "", type=str)
         if value:

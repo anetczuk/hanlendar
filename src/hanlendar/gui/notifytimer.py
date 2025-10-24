@@ -40,7 +40,7 @@ class NotificationTimer(QObject):
     def __init__(self, *args):
         QObject.__init__(self, *args)
         self.timer = QTimer(self)
-        self.notifs: List[Notification] = list()
+        self.notifs: List[Notification] = []
         self.nextNotif: Notification = None
         self.timer.timeout.connect(self.handleTimeout)
 

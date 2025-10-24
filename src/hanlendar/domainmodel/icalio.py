@@ -22,14 +22,12 @@
 #
 
 import logging
-import re
-
+import datetime
 import icalendar
 
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.task import TaskField, Task
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType, RecurrentField
-import datetime
 from hanlendar.domainmodel.reminder import Reminder
 
 
@@ -46,7 +44,8 @@ ICAL_TASK_FIELD_DICT = {
     # TaskField.LOCATION:      'location',
     TaskField.DTSTART: "dtstart",
     TaskField.DTEND: "dtend",
-    TaskField.COMPLETED: "x-hanlendar-completedx",  ## 'completed:' substring is converted in all fields in caldav, so it has to be postfixed prevent conversion
+    ## 'completed:' substring is converted in all fields in caldav, so it has to be postfixed prevent conversion
+    TaskField.COMPLETED: "x-hanlendar-completedx",
     TaskField.PRIORITY: "priority",
     TaskField.GROUP_PARENT: "x-hanlendar-parent",  ## uuid
     TaskField.RECURRENCE: "x-hanlendar-reccur",
@@ -173,12 +172,12 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar):
                 reccurEnd = convert_to_date(reccurEnd)
                 task.recurrence = Recurrent(reccurMode, reccurStep, reccurEnd)
                 task.recurrentOffset = get_ical_value_int(component, TaskField.RECURRENCE, 0)
-            except Exception:  # as ex:
+            except Exception:  # pylint: disable=W0718
                 pass
 
             try:
                 task.reminderList = get_ical_list(
-                    component, TaskField.REMINDERS, value_converter=lambda raw: Reminder.from_timedelta_string(raw)
+                    component, TaskField.REMINDERS, value_converter=Reminder.from_timedelta_string
                 )
                 if task.reminderList is not None:
                     task.reminderList = [item for item in task.reminderList if item is not None]
@@ -252,10 +251,8 @@ def extract_ical(content: str):
 
 
 ###
-def get_ical_dict(component, field: TaskField, value_converter=None):
-    field_name = field
-    if field in ICAL_TASK_FIELD_DICT:
-        field_name = ICAL_TASK_FIELD_DICT[field]
+def get_ical_dict(component, field: TaskField, _value_converter=None):
+    field_name = ICAL_TASK_FIELD_DICT.get(field, field)
     if component.has_key(field_name) is False:
         return None
     raw_list = component.get(field_name)
@@ -274,9 +271,7 @@ def get_ical_dict(component, field: TaskField, value_converter=None):
 
 ###
 def get_ical_list(component, field: TaskField, value_converter=None):
-    field_name = field
-    if field in ICAL_TASK_FIELD_DICT:
-        field_name = ICAL_TASK_FIELD_DICT[field]
+    field_name = ICAL_TASK_FIELD_DICT.get(field, field)
     if component.has_key(field_name) is False:
         return None
     raw_list = component.get_inline(field_name)
@@ -300,7 +295,7 @@ def get_ical_value_int(component, field: TaskField, defaultValue):
     try:
         value_str = get_ical_str(component, field)
         return int(value_str)
-    except Exception:  # as ex:
+    except Exception:  # pylint: disable=W0718
         pass
     return defaultValue
 
@@ -315,7 +310,7 @@ def convert_to_date(value_string: str):
     try:
         date_time_obj = datetime.datetime.strptime(value_string, "%Y-%m-%d")
         return date_time_obj.date()
-    except Exception:
+    except Exception:  # pylint: disable=W0718
         return None
 
 
@@ -332,9 +327,7 @@ def get_ical_value_dt(component, field: TaskField):
 
 ###
 def get_ical_str(component, field: TaskField):
-    field_name = field
-    if field in ICAL_TASK_FIELD_DICT:
-        field_name = ICAL_TASK_FIELD_DICT[field]
+    field_name = ICAL_TASK_FIELD_DICT.get(field, field)
     val = component.get(field_name)
     if val is None:
         return None
@@ -343,21 +336,17 @@ def get_ical_str(component, field: TaskField):
 
 ###
 def get_ical_value(component, field: TaskField):
-    field_name = field
-    if field in ICAL_TASK_FIELD_DICT:
-        field_name = ICAL_TASK_FIELD_DICT[field]
+    field_name = ICAL_TASK_FIELD_DICT.get(field, field)
     return component.get(field_name)
 
 
 ###
-def set_ical_dict(component, field: TaskField, value, values_dict, value_extractor=None):
+def set_ical_dict(component, field: TaskField, value, values_dict, _value_extractor=None):
     if values_dict is None:
         return
     if len(values_dict) < 1:
         return
-    field_name = field
-    if field in ICAL_TASK_FIELD_DICT:
-        field_name = ICAL_TASK_FIELD_DICT[field]
+    field_name = ICAL_TASK_FIELD_DICT.get(field, field)
     component.add(field_name, value, parameters=values_dict)
 
 
@@ -375,9 +364,7 @@ def set_ical_list(component, field: TaskField, values_list, value_extractor=None
             value = value_extractor(value)
         data_list.append(value)
 
-    field_name = field
-    if field in ICAL_TASK_FIELD_DICT:
-        field_name = ICAL_TASK_FIELD_DICT[field]
+    field_name = ICAL_TASK_FIELD_DICT.get(field, field)
     component.set_inline(field_name, data_list)
 
 
@@ -385,9 +372,7 @@ def set_ical_list(component, field: TaskField, values_list, value_extractor=None
 def set_ical_value(component, field: TaskField, value):
     if value is None:
         return
-    field_name = field
-    if field in ICAL_TASK_FIELD_DICT:
-        field_name = ICAL_TASK_FIELD_DICT[field]
+    field_name = ICAL_TASK_FIELD_DICT.get(field, field)
     component.add(field_name, value)
 
 

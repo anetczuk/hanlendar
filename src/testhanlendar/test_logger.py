@@ -27,7 +27,7 @@ import unittest
 import logging
 import io
 
-import hanlendar.logger as logger
+from hanlendar import logger
 
 
 class LoggerTest(unittest.TestCase):

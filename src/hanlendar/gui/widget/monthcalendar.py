@@ -119,7 +119,7 @@ class MonthCalendar(QCalendarWidget):
         ## header
         painter.fillRect(rect.x(), rect.y(), rect.width(), 16, QColor("lightGray"))
         weekDay = date.dayOfWeek()
-        if weekDay == 6 or weekDay == 7:
+        if weekDay in (6, 7):
             pen = painter.pen()
             pen.setColor(QColor("red"))
             painter.setPen(pen)

@@ -108,7 +108,7 @@ class ToDoDialog(QtBaseClass):  # type: ignore
         urlText = self.ui.urlEdit.text()
         if len(urlText) < 1:
             return
-        hrefText = '<a href="%s">%s</a> ' % (urlText, urlText)
+        hrefText = f"""<a href="{urlText}">{urlText}</a> """
         self.ui.descriptionEdit.insertHtml(hrefText)
         self.ui.urlEdit.setText("")
 
@@ -116,5 +116,5 @@ class ToDoDialog(QtBaseClass):  # type: ignore
         self.ui.urlEdit.setText(link.toLocalFile())
         QDesktopServices.openUrl(link)
 
-    def _finished(self, _):
+    def _finished(self, _status):
         self.todo.completed = self.completed

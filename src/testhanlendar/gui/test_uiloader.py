@@ -24,7 +24,7 @@
 
 import unittest
 
-import hanlendar.gui.uiloader as uiloader
+from hanlendar.gui import uiloader
 
 
 class UiLoaderTest(unittest.TestCase):

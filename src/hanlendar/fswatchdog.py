@@ -66,7 +66,7 @@ class FSWatcher:
         try:
             while True:
                 time.sleep(5)
-        except:  # noqa
+        except:  # noqa # pylint: disable=W0702
             self.observer.stop()
             print("Error")
 
@@ -88,16 +88,17 @@ class WatcherBlocker:
 
     def __init__(self, watcher: FSWatcher):
         self.watcher: FSWatcher = watcher
+        self.oldEnabled = None
 
     def __enter__(self):
         if self.watcher is None:
             return
         self.oldEnabled = self.watcher.setEnabled(False)
-        _LOGGER.debug("disabling sysfs watcher, prev state: %s" % self.oldEnabled)
+        _LOGGER.debug("disabling sysfs watcher, prev state: %s", self.oldEnabled)
         self.watcher.ignoreNextEvent()
 
     def __exit__(self, exceptionType, value, traceback):
-        _LOGGER.debug("restoring sysfs watcher state to %s" % self.oldEnabled)
+        _LOGGER.debug("restoring sysfs watcher state to %s", self.oldEnabled)
         if self.watcher is None:
             return False  ## do not suppress exceptions
         if self.oldEnabled is None:
@@ -115,7 +116,7 @@ class FSHandler(FileSystemEventHandler):
     def on_created(self, event):
         # Take any action here when a file is first created.
         if self.callback is None:
-            print("Received created event - %s." % event.src_path)
+            print(f"Received created event - {event.src_path}.")
             return
         if self.ignore:
             return

@@ -24,10 +24,9 @@
 import unittest
 
 import datetime
-from datetime import timedelta
 import icalendar
 
-import hanlendar.domainmodel.icalio as icalio
+from hanlendar.domainmodel import icalio
 from hanlendar.domainmodel.icalio import import_icalendar_content, export_icalendar_content, fix_dangling_tasks
 
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType

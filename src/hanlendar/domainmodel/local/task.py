@@ -48,7 +48,7 @@ class LocalTask(Task, persist.Versionable):
     _class_version = 6
 
     def __init__(self, title=""):
-        super(LocalTask, self).__init__()
+        super().__init__()
         self._UID = generate_uid()
         self._title = title
         self._description = ""
@@ -69,9 +69,7 @@ class LocalTask(Task, persist.Versionable):
         if dictVersion_ is None:
             dictVersion_ = -1
 
-        if dictVersion_ < 0:
-            ## do nothing
-            dictVersion_ = 0
+        dictVersion_ = max(dictVersion_, 0)
 
         if dictVersion_ == 0:
             ## replace _recurrentStartDate and _recurrentDueDate with _recurrentOffset
@@ -237,14 +235,8 @@ class LocalTask(Task, persist.Versionable):
 
     def __str__(self):
         reminderList = self._getReminderList()
-        return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s ro:%s]" % (
-            self.title,
-            self.description,
-            self._completed,
-            self.priority,
-            self.occurrenceStart,
-            self.occurrenceDue,
-            reminderList,
-            self._recurrence,
-            self._recurrentOffset,
+        return (
+            f"[t:{self.title} d:{self.description} c:{self._completed} p:{self.priority}"
+            f" sd:{self.occurrenceStart} dd:{self.occurrenceDue} rem:{reminderList}"
+            f" rec:{self._recurrence} ro:{self._recurrentOffset}]"
         )

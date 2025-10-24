@@ -25,7 +25,7 @@ import os
 import logging
 
 import pqueue
-from filelock import Timeout, FileLock
+from filelock import FileLock
 
 
 # script_dir = os.path.dirname(__file__)

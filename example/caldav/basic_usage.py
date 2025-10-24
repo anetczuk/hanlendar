@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, "..")
 sys.path.insert(0, ".")
 
-import caldav
+import caldav  # pylint: disable=C0413
 
 ## DO NOT name your file calendar.py or caldav.py!  We've had several
 ## issues filed, things break because the wrong files are imported.
@@ -48,9 +48,9 @@ if calendars:
     ## Some calendar servers will include all calendars you have
     ## access to in this list, and not only the calendars owned by
     ## this principal.
-    print("your principal has %i calendars:" % len(calendars))
+    print("your principal has {len(calendars)} calendars:")
     for c in calendars:
-        print("    Name: %-20s  URL: %s" % (c.name, c.url))
+        print(f"    Name: {c.name:<20}  URL: {c.url}")
 else:
     print("your principal has no calendars")
 
@@ -78,7 +78,7 @@ print("Here is some icalendar data:")
 try:
     events_fetched = my_new_calendar.date_search(start=datetime(2021, 5, 16), end=datetime(2024, 1, 1), expand=True)
     print(events_fetched[0].data)
-except:
+except:  # noqa: E722    # pylint: disable=W0702
     print("Your calendar server does apparently not support expanded search")
     events_fetched = my_new_calendar.date_search(start=datetime(2020, 5, 16), end=datetime(2024, 1, 1), expand=False)
     print(events_fetched[0].data)

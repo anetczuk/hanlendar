@@ -90,7 +90,7 @@ class DateRange:
         return False
 
     def __str__(self):
-        return "[s:%s e:%s]" % (self.start, self.end)
+        return f"[s:{self.start} e:{self.end}]"
 
 
 ## ========================================================================
@@ -171,7 +171,7 @@ class DateTimeRange:
         return False
 
     def __str__(self):
-        return "[s:%s e:%s]" % (self.start, self.end)
+        return f"[s:{self.start} e:{self.end}]"
 
 
 ## ========================================================================
@@ -317,7 +317,7 @@ class TaskOccurrence:
         return [0, 1]
 
     def __str__(self):
-        return "[t:%s %s off:%s range:%s]" % (self.task.title, self.task.occurrenceDue, self.offset, self.dateRange)
+        return f"[t:{self.task.title} {self.task.occurrenceDue} off:{self.offset} range:{self.dateRange}]"
 
     @staticmethod
     def sortByDates(entry):
@@ -370,9 +370,6 @@ class TaskField(Enum):
 
 class Task(Item):
     """Task is entity that lasts over time."""
-
-    def __init__(self):
-        super(Task, self).__init__()
 
     @abc.abstractmethod
     def _getStartDateTime(self) -> datetime:
@@ -512,8 +509,8 @@ class Task(Item):
     def subOccurences(self) -> List[TaskOccurrence]:
         subitems = self.getSubitems()
         if subitems is None:
-            return list()
-        ret = list()
+            return []
+        ret = []
         for currItem in subitems:
             currOccurrence = currItem.currentOccurrence()
             ret.append(currOccurrence)
@@ -606,7 +603,7 @@ class Task(Item):
     def addReminder(self, reminder=None):
         reminderList = self._getReminderList()
         if reminderList is None:
-            reminderList = list()
+            reminderList = []
             self._setReminderList(reminderList)
         if reminder is None:
             reminder = Reminder()
@@ -647,14 +644,14 @@ class Task(Item):
 
     def getNotifications(self) -> List[Notification]:
         if self.occurrenceDue is None:
-            return list()
+            return []
         currTime = datetime.today()
-        ret: List[Notification] = list()
+        ret: List[Notification] = []
         if self.occurrenceDue > currTime:
             notif = Notification()
             notif.notifyTime = self.occurrenceDue
             notif.task = self
-            notif.message = "task '%s' reached deadline" % self.title
+            notif.message = f"task '{self.title}' reached deadline"
             ret.append(notif)
 
         reminderList = self._getReminderList()
@@ -667,7 +664,7 @@ class Task(Item):
                 notif = Notification()
                 notif.notifyTime = notifTime
                 notif.task = self
-                notif.message = "task '%s': %s" % (self.title, reminder.printPretty())
+                notif.message = f"task '{self.title}': {reminder.printPretty()}"
                 ret.append(notif)
 
         ret.sort(key=Notification.sortByTime)
@@ -740,7 +737,7 @@ def calc_time_span(entryDate: date, start: datetime, end: datetime):
         startDate = start.date()
         if entryDate < startDate:
             return None
-        elif entryDate == startDate:
+        if entryDate == startDate:
             midnight = datetime.combine(entryDate, datetime.min.time())
             startDiff = start - midnight
             daySecs = timedelta(days=1).total_seconds()
@@ -750,7 +747,7 @@ def calc_time_span(entryDate: date, start: datetime, end: datetime):
         endDate = end.date()
         if entryDate > endDate:
             return None
-        elif entryDate == endDate:
+        if entryDate == endDate:
             midnight = datetime.combine(entryDate, datetime.min.time())
             startDiff = end - midnight
             daySecs = timedelta(days=1).total_seconds()

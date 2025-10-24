@@ -138,8 +138,7 @@ class ReminderWidget(QtBaseClass):  # type: ignore
         self.ui.reminderList.setEnabled(True)
 
         self.ui.reminderList.clear()
-        for i in range(0, len(self.task.reminderList)):
-            rem = self.task.reminderList[i]
+        for i, rem in enumerate(self.task.reminderList):
             item = QListWidgetItem(rem.printPretty())
             self.ui.reminderList.insertItem(i, item)
 

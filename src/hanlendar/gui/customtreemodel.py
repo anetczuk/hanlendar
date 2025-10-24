@@ -89,11 +89,9 @@ class CustomTreeModel(QtCore.QAbstractItemModel):
             return super().flags(index) | Qt.ItemIsDropEnabled
         return super().flags(index) | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
 
-    # pylint: disable=R0201
     def supportedDropActions(self):
         return Qt.MoveAction
 
-    # pylint: disable=R0201
     def supportedDragActions(self):
         return Qt.MoveAction
 
@@ -146,7 +144,6 @@ class CustomTreeModel(QtCore.QAbstractItemModel):
         self.endResetModel()
         return True
 
-    # pylint: disable=R0201
     def getItem(self, itemIndex: QModelIndex):
         if itemIndex.isValid():
             return itemIndex.internalPointer()

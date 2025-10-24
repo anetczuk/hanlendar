@@ -27,13 +27,10 @@ import logging
 import argparse
 from typing import List
 
-from hanlendar.main import initializeQT
+from hanlendar.main import initialize_qt
 from hanlendar.domainmodel.local.manager import LocalManager
 from hanlendar.gui.main_window import SettingsObject
 from hanlendar.domainmodel.task import Task
-import datetime
-from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
-from hanlendar.domainmodel.reminder import Reminder
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +81,7 @@ def handle_history(localManager: LocalManager, args):
             print_data(data, detailed)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="History read")
     parser.add_argument("-la", "--logall", action="store_true", help="Log all messages")
     parser.add_argument("-i", "--index", action="store", required=False, default=None, help="Log all messages")
@@ -98,7 +95,7 @@ if __name__ == "__main__":
     else:
         logging.getLogger().setLevel(logging.WARNING)
 
-    app = initializeQT()
+    initialize_qt()
     settings = SettingsObject()
 
     localManager: LocalManager = settings.createLocalManager()
@@ -111,3 +108,7 @@ if __name__ == "__main__":
     #         exit(1)
 
     handle_history(localManager, args)
+
+
+if __name__ == "__main__":
+    main()

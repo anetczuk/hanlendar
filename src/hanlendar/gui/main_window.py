@@ -30,7 +30,6 @@ from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QDialog, QMessageBox
 from PyQt5.QtWidgets import QFileDialog
 
-from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.caldav.manager import CalDAVManager, CalDAVConnector
 from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.task import Task
@@ -82,9 +81,6 @@ class DataHighlightModel(NavCalendarHighlightModel):
 
 ##
 class SettingsObject(QObject):
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
 
     def getSettings(self):
         #         ## store in app directory
@@ -220,7 +216,7 @@ class MainWindow(QtBaseClass):  # type: ignore
         try:
             connector = CalDAVConnector()
             connector.connectToServer(serverURL, serverUser, serverPassword)
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=W0718
             _LOGGER.warning("unable to connect to server: %s", ex)
             return None
         connector.connectToCalendar(calendarName)
@@ -466,16 +462,15 @@ class MainWindow(QtBaseClass):  # type: ignore
         self.hide()
         self.trayIcon.show()
 
-    def showEvent(self, _):
+    def showEvent(self, _event):
         self.trayIcon.updateLabel()
 
-    def hideEvent(self, _):
+    def hideEvent(self, _event):
         self.trayIcon.updateLabel()
 
     ## ====================================================================
 
     ## slot
-    # pylint: disable=R0201
     def closeApplication(self):
         ##self.close()
         qApp.quit()

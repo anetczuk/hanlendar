@@ -96,6 +96,5 @@ class TaskDetails(QtBaseClass):  # type: ignore
         else:
             self.ui.recurrentWidget.setEnabled(True)
 
-    # pylint: disable=R0201
     def _openLink(self, link):
         QDesktopServices.openUrl(link)

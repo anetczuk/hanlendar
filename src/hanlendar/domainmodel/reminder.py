@@ -35,12 +35,12 @@ _LOGGER = logging.getLogger(__name__)
 @unique
 class TimePointType(Enum):
     #     Start = ()
-    Due = ()
+    Due = ()  # pylint: disable=C0103
 
 
 @unique
 class RemainderDirectionType(Enum):
-    Before = ()
+    Before = ()  # pylint: disable=C0103
 
 
 #     After  = ()
@@ -51,7 +51,7 @@ class Notification:
     def __init__(self):
         self.notifyTime: datetime = None  ## time given in seconds since epoch
         self.message: str = None
-        self.task: Task = None
+        self.task: "Task" = None  # noqa: F821
 
     def remainingSeconds(self) -> float:
         timeDiff = self.remainingTime()
@@ -63,7 +63,7 @@ class Notification:
         return timeDiff
 
     def __str__(self):
-        return "[nt:%s m:%s t:%s]" % (self.notifyTime, self.message, self.task.title)
+        return f"[nt:{self.notifyTime} m:{self.message} t:{self.task.title}]"  # pylint: disable=E1101
 
     @staticmethod
     def sortByTime(notification):
@@ -118,11 +118,7 @@ class Reminder:
         return output
 
     def __repr__(self):
-        return "Reminder( timeOffset=%s, timePoint=%s, direction=%s )" % (
-            repr(self.timeOffset),
-            self.timePoint,
-            self.direction,
-        )
+        return f"Reminder( timeOffset={repr(self.timeOffset)}, timePoint={self.timePoint}, direction={self.direction} )"
 
     #         return "[t:%s p:%s d:%s]" % ( self.timeOffset, self.timePoint, self.direction )
 
@@ -157,17 +153,17 @@ def print_timedelta(value: timedelta):
     if secs != 0 or days == 0:
         mm, ss = divmod(secs, 60)
         hh, mm = divmod(mm, 60)
-        s = "%d:%02d:%02d" % (hh, mm, ss)
+        s = f"{hh}:{mm:02d}:{ss:02d}"
     if days:
 
         def plural(n):
-            return n, abs(n) != 1 and "s" or ""
+            return "s" if abs(n) != 1 else ""
 
         if s != "":
-            s = ("%d day%s, " % plural(days)) + s
+            s = f"{days} day{plural(days)}, {s}"
         else:
-            s = ("%d day%s" % plural(days)) + s
+            s = f"{days} day{plural(days)}"
     micros = value.microseconds
     if micros:
-        s = s + ".%06d" % micros
+        s = s + f".{micros:06d}"
     return s

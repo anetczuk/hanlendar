@@ -86,16 +86,16 @@ class TaskTreeModel(ItemTreeModel):
             attrIndex = index.column()
             if attrIndex == 0:
                 return item.title
-            elif attrIndex == 1:
+            if attrIndex == 1:
                 return item.priority
-            elif attrIndex == 2:
+            if attrIndex == 2:
                 return item.completed
-            elif attrIndex == 3:
+            if attrIndex == 3:
                 dateString = "---"
                 if item.startCurrent is not None:
                     dateString = item.startCurrent.strftime("%Y-%m-%d %H:%M")
                 return dateString
-            elif attrIndex == 4:
+            if attrIndex == 4:
                 dateString = "---"
                 if item.dueCurrent is not None:
                     dateString = item.dueCurrent.strftime("%Y-%m-%d %H:%M")

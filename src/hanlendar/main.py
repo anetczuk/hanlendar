@@ -32,10 +32,8 @@ import logging
 
 import pidfile
 
-import hanlendar.logger as logger
-
+from hanlendar import logger
 from hanlendar.gui.main_window import MainWindow
-
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.widget.menustyle import MenuStyle
@@ -50,7 +48,7 @@ logger.configure()
 _LOGGER = logging.getLogger(__name__)
 
 
-def initializeQT():
+def initialize_qt():
     app = QApplication(sys.argv)
     app.setApplicationName("Hanlendar")
     app.setOrganizationName("arnet")
@@ -67,7 +65,7 @@ def initializeQT():
 
 def run_app(args):
     ## GUI
-    app = initializeQT()
+    app = initialize_qt()
 
     window = MainWindow()
     if args.blocksave is True:

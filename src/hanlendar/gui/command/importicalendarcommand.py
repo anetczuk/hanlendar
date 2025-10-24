@@ -54,7 +54,7 @@ class ImportICalendarCommand(QUndoCommand):
 
         message = "Added tasks:"
         for item in self.newTasks:
-            message += "\n%s: %s" % (str(item.startDateTime), item.title)
+            message += f"\n{str(item.startDateTime)}: {item.title}"  # pylint: disable=E1101
         _LOGGER.info("import iCalendar: %s", message)
 
         if self.silent is False:

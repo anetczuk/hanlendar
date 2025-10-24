@@ -74,9 +74,8 @@ def load_data(content, defaultValue=None, class_mapper=None):
     try:
         if class_mapper is None:
             return pickle.loads(content)
-        else:
-            stream_str = io.BytesIO(content)
-            return RenamingUnpickler(stream_str, class_mapper).load()
+        stream_str = io.BytesIO(content)
+        return RenamingUnpickler(stream_str, class_mapper).load()
     except FileNotFoundError:
         _LOGGER.exception("failed to load")
         return defaultValue
@@ -111,11 +110,10 @@ def store_object(inputObject, outputFile):
 def backup_files(inputFiles, outputArchive):
     ## create zip
     tmpZipFile = outputArchive + "_tmp"
-    zipf = zipfile.ZipFile(tmpZipFile, "w", zipfile.ZIP_DEFLATED)
-    for file in inputFiles:
-        zipEntry = os.path.basename(file)
-        zipf.write(file, zipEntry)
-    zipf.close()
+    with zipfile.ZipFile(tmpZipFile, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file in inputFiles:
+            zipEntry = os.path.basename(file)
+            zipf.write(file, zipEntry)
 
     ## compare content
     storedZipFile = outputArchive
@@ -133,15 +131,15 @@ def backup_files(inputFiles, outputArchive):
 
     ## rename files
     counter = 1
-    nextFile = "%s.%s" % (storedZipFile, counter)
+    nextFile = f"{storedZipFile}.{counter}"
     while os.path.isfile(nextFile):
         counter += 1
-        nextFile = "%s.%s" % (storedZipFile, counter)
+        nextFile = f"{storedZipFile}.{counter}"
     _LOGGER.info("found backup slot: %s", nextFile)
 
     currFile = storedZipFile
     while counter > 1:
-        currFile = "%s.%s" % (storedZipFile, counter - 1)
+        currFile = f"{storedZipFile}.{counter - 1}"
         os.rename(currFile, nextFile)
         nextFile = currFile
         counter -= 1
@@ -151,8 +149,8 @@ def backup_files(inputFiles, outputArchive):
 
 
 def load_backup(outputArchive):
-    input_zip = zipfile.ZipFile(outputArchive)
-    return {name: input_zip.read(name) for name in input_zip.namelist()}
+    with zipfile.ZipFile(outputArchive) as input_zip:
+        return {name: input_zip.read(name) for name in input_zip.namelist()}
 
 
 ##
@@ -160,9 +158,9 @@ class Versionable(metaclass=abc.ABCMeta):
 
     def __getstate__(self):
         if not hasattr(self, "_class_version"):
-            raise Exception("Your class must define _class_version class variable")
+            raise RuntimeError("Your class must define _class_version class variable")
         # pylint: disable=E1101
-        return dict(_class_version=self._class_version, **self.__dict__)
+        return {"_class_version": self._class_version, **self.__dict__}
 
     def __setstate__(self, dict_):
         version_present_in_pickle = dict_.pop("_class_version", None)

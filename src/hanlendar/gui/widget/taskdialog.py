@@ -171,7 +171,7 @@ class TaskDialog(QtBaseClass):  # type: ignore
         urlText = self.ui.urlEdit.text()
         if len(urlText) < 1:
             return
-        hrefText = '<a href="%s">%s</a> ' % (urlText, urlText)
+        hrefText = f"""<a href="{urlText}">{urlText}</a> """
         self.ui.descriptionEdit.insertHtml(hrefText)
         self.ui.urlEdit.setText("")
 

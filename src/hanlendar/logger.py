@@ -24,7 +24,7 @@
 import os
 import sys
 import logging
-import logging.handlers as handlers
+from logging import handlers
 
 
 script_dir = os.path.dirname(__file__)
