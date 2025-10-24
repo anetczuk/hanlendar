@@ -1,3 +1,4 @@
+```
 usage: startcalendar [-h] [--minimized] [--blocksave] [--caldav]
                      [--exportlocal]
 
@@ -9,3 +10,4 @@ options:
   --blocksave, -bs  Block save data
   --caldav          Run in CalDAV mode
   --exportlocal     Export local database to CalDAV server
+```

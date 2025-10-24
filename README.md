@@ -59,8 +59,7 @@ In addition application can be added to system menu and autostart by followings 
 
 Application accepts following parameters:
 
-<!-- insertstart include="doc/cmdargs.txt" pre="\n\n```\n" post="```\n\n" -->
-
+<!-- insertstart include="doc/cmdargs.txt" pre="\n" post="\n" -->
 ```
 usage: startcalendar [-h] [--minimized] [--blocksave] [--caldav]
                      [--exportlocal]
