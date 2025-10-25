@@ -22,6 +22,7 @@
 #
 
 import logging
+from typing import ClassVar
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal, QModelIndex
@@ -40,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class ToDoTreeModel(ItemTreeModel):
 
-    attrList = ["title", "priority", "completed"]
+    attrList: ClassVar = ["title", "priority", "completed"]
 
     def __init__(self, parent, *args):
         super().__init__(parent, *args)
@@ -116,7 +117,7 @@ class ToDoSortFilterProxyModel(QtCore.QSortFilterProxyModel):
         super().__init__(parentObject)
         self._showCompleted = False
 
-    def showCompleted(self, show=True):
+    def showCompleted(self, *, show=True):
         self._showCompleted = show
         self.invalidateFilter()
 
@@ -187,7 +188,7 @@ class ToDoTable(QtWidgets.QTreeView):
         self.markCompleted.connect(dataObject.markToDoCompleted)
 
     def showCompletedItems(self, show):
-        self.proxyModel.showCompleted(show)
+        self.proxyModel.showCompleted(show=show)
         self.updateView()
 
     def updateView(self):

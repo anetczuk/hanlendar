@@ -23,7 +23,8 @@
 
 import unittest
 
-from hanlendar.domainmodel.recurrent import RepeatType
+import datetime
+from hanlendar.domainmodel.recurrent import RepeatType, Recurrent
 
 
 class RepeatTypeTest(unittest.TestCase):
@@ -38,3 +39,32 @@ class RepeatTypeTest(unittest.TestCase):
     def test_serialize(self):
         mode = RepeatType.DAILY
         self.assertEqual(mode.name, "DAILY")
+
+
+## =========================================================
+
+
+class RecurrentTest(unittest.TestCase):
+    def test_equal001(self):
+        obj1 = Recurrent()
+        self.assertEqual(obj1, obj1)
+
+    def test_equal002(self):
+        obj1 = Recurrent()
+        obj2 = Recurrent()
+        self.assertEqual(obj1, obj2)
+
+    def test_equal003(self):
+        obj1 = Recurrent()
+        obj2 = Recurrent(RepeatType.DAILY)
+        self.assertNotEqual(obj1, obj2)
+
+    def test_equal004(self):
+        obj1 = Recurrent()
+        obj2 = Recurrent(every=3)
+        self.assertNotEqual(obj1, obj2)
+
+    def test_equal005(self):
+        obj1 = Recurrent()
+        obj2 = Recurrent(endDate=datetime.date.today())
+        self.assertNotEqual(obj1, obj2)

@@ -21,6 +21,8 @@
 # SOFTWARE.
 #
 
+# ruff: noqa: T201 (`print` found)
+
 import datetime
 
 

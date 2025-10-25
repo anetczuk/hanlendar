@@ -44,13 +44,10 @@ queue_lock = os.path.join("/tmp", "hanlendar.spool.lock")
 os.makedirs(queue_path, exist_ok=True)
 
 
-def get_from_queue(nowait=False):
+def get_from_queue(*, nowait=False):
     with FileLock(queue_lock):
         quene = pqueue.Queue(queue_path)
-        if nowait:
-            message = quene.get()
-        else:
-            message = quene.get_nowait()
+        message = quene.get() if nowait else quene.get_nowait()
         quene.task_done()
         return message
     return None
@@ -60,5 +57,5 @@ def put_to_queue(message_type, value):
     with FileLock(queue_lock):
         quene = pqueue.Queue(queue_path)
         message = (message_type, value)
-        print("adding to queue:", message)
+        _LOGGER.info("adding to queue: %s", message)
         quene.put(message)

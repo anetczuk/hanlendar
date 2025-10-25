@@ -38,30 +38,36 @@ class Item:
 
     @abc.abstractmethod
     def getParent(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def setParent(self, parentItem=None):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def setParent(self, _parentItem=None):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     ## return mutable reference
     @abc.abstractmethod
     def getSubitems(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def setSubitems(self, newList):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def setSubitems(self, _newList):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     ## ========================================================================
 
     @abc.abstractmethod
     def _getUID(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setUID(self, value):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def _setUID(self, _value):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     def getUID(self):
         return self._getUID()
@@ -81,11 +87,13 @@ class Item:
 
     @abc.abstractmethod
     def _getTitle(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setTitle(self, value):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def _setTitle(self, _value):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     def getTitle(self):
         return self._getTitle()
@@ -105,11 +113,13 @@ class Item:
 
     @abc.abstractmethod
     def _getDescription(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
     def _setDescription(self, value):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     def getDescription(self):
         return self._getDescription()
@@ -129,11 +139,13 @@ class Item:
 
     @abc.abstractmethod
     def _getCompleted(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setCompleted(self, value=100):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def _setCompleted(self, _value=100):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     def getCompleted(self):
         return self._getCompleted()
@@ -159,20 +171,19 @@ class Item:
         subitems = self.getSubitems()
         if not subitems:
             return True
-        for sub in subitems:
-            if sub.isCompleted() is False:
-                return False
-        return True
+        return all(sub.isCompleted() is not False for sub in subitems)
 
     ## ========================================================================
 
     @abc.abstractmethod
     def _getPriority(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setPriority(self, value):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def _setPriority(self, _value):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     def getPriority(self):
         return self._getPriority()
@@ -307,7 +318,7 @@ class Item:
                 return [i]
             ret = currItem.getChildCoords(item)
             if ret is not None:
-                return [i] + ret
+                return [i, *ret]
         return None
 
     @staticmethod

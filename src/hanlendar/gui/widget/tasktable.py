@@ -22,6 +22,7 @@
 #
 
 import logging
+from typing import ClassVar
 
 from datetime import datetime, date, timedelta
 
@@ -42,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class TaskTreeModel(ItemTreeModel):
 
-    attrList = ["title", "priority", "completed", "start", "due"]
+    attrList: ClassVar = ["title", "priority", "completed", "start", "due"]
 
     def __init__(self, parent, *args):
         super().__init__(parent, *args)
@@ -53,6 +54,7 @@ class TaskTreeModel(ItemTreeModel):
         self.dataObject = dataObject
         self.endResetModel()
 
+    # ruff: noqa: PLR0912
     def data(self, index, role):
         if role == QtCore.Qt.SizeHintRole:  # type: ignore[attr-defined]
             return QtCore.QSize(10, 30)
@@ -137,7 +139,7 @@ class TaskSortFilterProxyModel(QtCore.QSortFilterProxyModel):
         super().__init__(parentObject)
         self._showCompleted = False
 
-    def showCompleted(self, show=True):
+    def showCompleted(self, *, show=True):
         self._showCompleted = show
         self.invalidateFilter()
 
@@ -216,8 +218,8 @@ class TaskTable(QtWidgets.QTreeView):
         self.setRowCount(0)
         self.emitSelectedTask()
 
-    def showCompletedItems(self, show):
-        self.proxyModel.showCompleted(show)
+    def showCompletedItems(self, *, show: bool):
+        self.proxyModel.showCompleted(show=show)
         self.updateView()
 
     def expandAllItems(self, expand):
@@ -237,8 +239,7 @@ class TaskTable(QtWidgets.QTreeView):
         modelIndex = self.itemsModel.getIndex(task)
         if modelIndex is None:
             return None
-        proxyIndex = self.proxyModel.mapFromSource(modelIndex)
-        return proxyIndex
+        return self.proxyModel.mapFromSource(modelIndex)
 
     def getTask(self, itemIndex: QModelIndex) -> Task:
         sourceIndex = self.proxyModel.mapToSource(itemIndex)

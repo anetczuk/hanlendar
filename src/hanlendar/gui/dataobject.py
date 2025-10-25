@@ -24,7 +24,7 @@
 import os
 import logging
 from datetime import date
-from typing import Any, Dict
+from typing import Any
 
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtCore import QDate
@@ -96,8 +96,8 @@ class DataObject(QObject):
     def storeData(self):
         return self.domainModel.storeData()
 
-    def getTaskOccurrences(self, taskDate: date, includeCompleted=True):
-        return self.domainModel.getTaskOccurrencesForDate(taskDate, includeCompleted)
+    def getTaskOccurrences(self, taskDate: date, *, includeCompleted=True):
+        return self.domainModel.getTaskOccurrencesForDate(taskDate, includeCompleted=includeCompleted)
 
     ## ==============================================================
 
@@ -234,22 +234,22 @@ class DataObject(QObject):
             return
         self.undoStack.push(ImportXfceNotesCommand(self, newNotes))
 
-    def importICalendar(self, file_path, silent=False):
+    def importICalendar(self, file_path, *, silent=False):
         _LOGGER.info("importing iCalendar from %s", file_path)
-        with open(file_path, "r", encoding="utf-8") as cal_file:
+        with open(file_path, encoding="utf-8") as cal_file:
             content = cal_file.read()
             self.undoStack.push(ImportICalendarCommand(self, content, silent))
 
 
 def import_xfce_notes():
-    newNotes: Dict[Any, Any] = {}
+    newNotes: dict[Any, Any] = {}
 
     notesDir = os.path.expanduser("~/.local/share/notes")
     for groupName in os.listdir(notesDir):
         groupDir = notesDir + "/" + groupName
         for noteName in os.listdir(groupDir):
             notePath = groupDir + "/" + noteName
-            with open(notePath, "r", encoding="utf-8") as file:
+            with open(notePath, encoding="utf-8") as file:
                 data = file.read()
                 if noteName in newNotes:
                     ## the same note name in different groups -- append notes

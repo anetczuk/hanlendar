@@ -87,7 +87,7 @@ class DayTimeline(DrawWidget):
         flags = Qt.TextSingleLine | Qt.AlignTop | Qt.AlignRight  # type: ignore[attr-defined]
         painter.drawText(0, 0, width - 6, hourStepInt, flags, "0")
 
-        for h in range(0, 24):
+        for h in range(24):
             hourHeight = int(hourStep * h)
             text = str(h)
 
@@ -153,7 +153,7 @@ class DayItem(DrawWidget):
 
         #         taskBgColor = monthcalendar.get_task_bgcolor( self.task )
         selected = self.isSelected()
-        taskBgColor = get_task_bgcolor(self.task, selected)  ## get task color
+        taskBgColor = get_task_bgcolor(self.task, isSelected=selected)  ## get task color
         painter.fillPath(path, taskBgColor)
 
         pathPen = QPen(QColor("black"))
@@ -259,7 +259,7 @@ class DayListContentWidget(QWidget):
         painter.setPen(pen)
 
         hourStep = height / 24
-        for h in range(0, 24):
+        for h in range(24):
             hourHeight = int(hourStep * h)
             painter.drawLine(0, hourHeight, width, hourHeight)
 
@@ -275,7 +275,7 @@ class DayListContentWidget(QWidget):
 
     def _resizeItems(self):
         sItems = len(self.items)
-        for i in range(0, sItems):
+        for i in range(sItems):
             widget = self.items[i]
             lineRect = self._lineRect(i)
             widget.resizeItem(lineRect)
@@ -354,7 +354,7 @@ class DayListWidget(QWidget):
         self.taskContextMenu.connectData(dataObject)
         self.editTask.connect(dataObject.editTask)
 
-    def showCompletedTasks(self, show=True):
+    def showCompletedTasks(self, *, show=True):
         self.content.showCompleted = show
         self.updateView()
 

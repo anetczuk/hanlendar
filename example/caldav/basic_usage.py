@@ -4,6 +4,8 @@
 ###
 ###
 
+# ruff: noqa: T201 (`print` found)
+
 from datetime import datetime, date
 import sys
 
@@ -60,6 +62,7 @@ else:
 try:
     ## This will raise a NotFoundError if calendar does not exist
     my_new_calendar = my_principal.calendar(name="Test calendar")
+    # ruff: noqa: S101
     assert my_new_calendar  # nosec
     ## calendar did exist, probably it was made on an earlier run
     ## of this script
@@ -71,7 +74,10 @@ except caldav.error.NotFoundError:  # type: ignore[attr-defined]
 ## (This usage pattern is new from v0.9.
 ## Earlier save_event would only accept some ical data)
 my_event = my_new_calendar.save_event(
-    dtstart=datetime(2020, 5, 17, 8), dtend=datetime(2020, 5, 18, 1), summary="Do the needful", rrule={"FREQ": "YEARLY"}
+    dtstart=datetime(2020, 5, 17, 8),
+    dtend=datetime(2020, 5, 18, 1),
+    summary="Do the needful",
+    rrule={"FREQ": "YEARLY"},
 )
 
 ## Let's search for the newly added event.
@@ -93,7 +99,8 @@ event = events_fetched[0]
 ## Both event.vobject_instance and event.icalendar_instance works from 0.7.
 event.vobject_instance.vevent.summary.value = "Norwegian national day celebratiuns"  # type: ignore[attr-defined]
 event.icalendar_instance.subcomponents[0]["summary"] = event.icalendar_instance.subcomponents[0]["summary"].replace(
-    "celebratiuns", "celebrations"
+    "celebratiuns",
+    "celebrations",
 )
 event.save()
 
@@ -117,17 +124,21 @@ all_objects = the_same_calendar.objects()
 
 ## since we have only added events (and neither todos nor journals), those
 ## should be equal ... except, all_objects is an iterator and not a list.
+# ruff: noqa: S101
 assert len(all_events) == len(list(all_objects))  # nosec
 
 ## Let's check that the summary got right
 vevent = all_events[0].vobject_instance.vevent  # type: ignore[attr-defined]
+# ruff: noqa: S101
 assert vevent.summary.value.startswith("Norwegian")  # nosec
+# ruff: noqa: S101
 assert vevent.summary.value.endswith("celebrations")  # nosec
 
 ## This calendar should as a minimum support VEVENTs ... most likely
 ## it also supports VTODOs and maybe even VJOURNALs.  We can query the
 ## server what it can accept:
 acceptable_component_types = my_new_calendar.get_supported_components()
+# ruff: noqa: S101
 assert "VEVENT" in acceptable_component_types  # nosec
 
 ## Clean up - remove the new calendar
@@ -148,7 +159,9 @@ my_new_tasklist.add_todo(
 
 ## Fetch the tasks
 todos = my_new_tasklist.todos()
+# ruff: noqa: S101
 assert len(todos) == 1  # nosec
+# ruff: noqa: S101
 assert "FREQ=YEARLY" in todos[0].data  # nosec
 
 print("Here is some more icalendar data:")
@@ -156,7 +169,10 @@ print(todos[0].data)
 
 ## date_search also works on task lists, but one has to be explicit to get them
 todos_found = my_new_tasklist.date_search(  # type: ignore[call-overload]
-    start=datetime(2021, 1, 1), end=datetime(2024, 1, 1), compfilter="VTODO", expand=True
+    start=datetime(2021, 1, 1),
+    end=datetime(2024, 1, 1),
+    compfilter="VTODO",
+    expand=True,
 )
 if not todos_found:
     print("Apparently your calendar server does not support searching for future instances of reoccurring tasks")
@@ -179,6 +195,7 @@ assert len(todos) == 0  # nosec
 
 ## It's possible to fetch historic tasks too
 todos = my_new_tasklist.todos(include_completed=True)
+# ruff: noqa: S101
 assert len(todos) == 1  # nosec
 
 ## and it's possible to delete tasks completely

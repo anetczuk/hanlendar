@@ -29,8 +29,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QMenu, QInputDialog
 from PyQt5.QtWidgets import QLineEdit
-
-from .. import uiloader
+from hanlendar.gui import uiloader
 
 
 UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
@@ -61,12 +60,11 @@ class SinglePageWidget(QWidget):
 
         #         self.textEdit.setStyleSheet( "background-color: #f7ec9d;" )
         self.setStyleSheet(
-            """
-            QTextEdit {
-                background: %s;
-            }
-            """
-            % NOTES_BG_COLOR
+            f"""
+            QTextEdit {{
+                background: {NOTES_BG_COLOR};
+            }}
+            """,
         )
 
         vlayout.addWidget(self.textEdit)
@@ -105,7 +103,7 @@ class SinglePageWidget(QWidget):
         self.createToDo.emit(selectedText)
 
 
-class NotesWidget(QtBaseClass):  # type: ignore
+class NotesWidget(QtBaseClass):  # type: ignore[valid-type,misc]
 
     addNote = pyqtSignal(str)
     renameNote = pyqtSignal(str, str)
@@ -120,15 +118,14 @@ class NotesWidget(QtBaseClass):  # type: ignore
         self.ui.setupUi(self)
 
         self.ui.notes_tabs.setStyleSheet(
-            """
-            QTabWidget {
-                background: %s;
-            }
-            QTabBar {
-                background: %s;
-            }
-            """
-            % (NOTES_BG_COLOR, NOTES_BG_COLOR)
+            f"""
+            QTabWidget {{
+                background: {NOTES_BG_COLOR};
+            }}
+            QTabBar {{
+                background: {NOTES_BG_COLOR};
+            }}
+            """,
         )
 
         self.ui.notes_tabs.clear()
@@ -137,7 +134,7 @@ class NotesWidget(QtBaseClass):  # type: ignore
     def getNotes(self):
         notes = {}
         notesSize = self.ui.notes_tabs.count()
-        for tabIndex in range(0, notesSize):
+        for tabIndex in range(notesSize):
             title = self.ui.notes_tabs.tabText(tabIndex)
             pageWidget = self.ui.notes_tabs.widget(tabIndex)
             text = pageWidget.getText()

@@ -23,9 +23,10 @@
 # SOFTWARE.
 #
 
+# ruff: noqa: T201 (`print` found)
+
 import logging
 import argparse
-from typing import List
 
 from hanlendar.main import initialize_qt
 from hanlendar.domainmodel.local.manager import LocalManager
@@ -36,9 +37,9 @@ from hanlendar.domainmodel.task import Task
 _LOGGER = logging.getLogger(__name__)
 
 
-def print_data(data_dict, detailed=False):
+def print_data(data_dict, *, detailed=False):
     print("archive:", data_dict.get("file", None))
-    tasks: List[Task] = data_dict.get("tasks", [])
+    tasks: list[Task] = data_dict.get("tasks", [])
     all_tasks = get_tasks_all(tasks)
     all_tasks.sort(reverse=True, key=lambda task: task.occurrenceDue)
 
@@ -55,11 +56,11 @@ def print_data(data_dict, detailed=False):
 
 
 # Zapłacić podatek za wynajem Woli
-def get_tasks_all(tasks_list: List[Task]):
-    ret_list: List[Task] = []
+def get_tasks_all(tasks_list: list[Task]):
+    ret_list: list[Task] = []
     for task in tasks_list:
         items = task.getAllSubItems()
-        ret_list += [task] + items
+        ret_list += [task, *items]
     return ret_list
 
 
@@ -70,7 +71,7 @@ def handle_history(localManager: LocalManager, args):
         index = int(args.index)
         data = localManager.loadHistory(index)
         if data is not None:
-            print_data(data, detailed)
+            print_data(data, detailed=detailed)
     else:
         index = -1
         while True:
@@ -78,7 +79,7 @@ def handle_history(localManager: LocalManager, args):
             data = localManager.loadHistory(index)
             if data is None:
                 break
-            print_data(data, detailed)
+            print_data(data, detailed=detailed)
 
 
 def main():

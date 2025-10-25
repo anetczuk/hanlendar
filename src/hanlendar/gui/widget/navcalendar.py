@@ -37,12 +37,14 @@ from PyQt5.QtWidgets import QMenu
 class NavCalendarHighlightModel:
 
     @abc.abstractmethod
-    def isHighlighted(self, date: QDate):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def isHighlighted(self, _date: QDate):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def isOccupied(self, date: QDate):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def isOccupied(self, _date: QDate):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
 
 class NavCalendar(QCalendarWidget):

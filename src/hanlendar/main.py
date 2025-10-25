@@ -95,14 +95,18 @@ def create_parser(parser: argparse.ArgumentParser = None):
     parser.add_argument("--blocksave", "-bs", action="store_const", const=True, default=None, help="Block save data")
     parser.add_argument("--caldav", action="store_const", const=True, default=None, help="Run in CalDAV mode")
     parser.add_argument(
-        "--exportlocal", action="store_const", const=True, default=None, help="Export local database to CalDAV server"
+        "--exportlocal",
+        action="store_const",
+        const=True,
+        default=None,
+        help="Export local database to CalDAV server",
     )
     return parser
 
 
 def start(args):
     _LOGGER.debug("Starting the application")
-    _LOGGER.debug("Logger log file: %s", logger.log_file)
+    _LOGGER.debug("Logger log file: %s", logger.output_file)
     _LOGGER.debug("Arguments: %s", sys.argv[1:])
 
     exitCode = 1

@@ -1,5 +1,4 @@
-"""
-Handling Ctrl+C inside PyQt.
+"""Handling Ctrl+C inside PyQt.
 
 The code is taken from:
                https://coldfix.eu/2016/11/08/pyqt-boilerplate/
@@ -20,15 +19,15 @@ _LOGGER = logging.getLogger(__name__)
 # Define this as a global function to make sure it is not garbage
 # collected when going out of scope:
 # def _interrupt_handler(signum, frame):
-def _interrupt_handler(signum, _):
+def _interrupt_handler(signum, _item):
     """Handle KeyboardInterrupt: quit application."""
     _LOGGER.debug("Interrupt received: %s", signum)
     QApplication.exit(2)
 
 
+# ruff: noqa: ANN003
 def safe_timer(timeout, func, *args, **kwargs):
-    """
-    Create a timer that is safe against garbage collection and overlapping calls.
+    """Create a timer that is safe against garbage collection and overlapping calls.
 
     See: http://ralsina.me/weblog/posts/BB974.html
     """

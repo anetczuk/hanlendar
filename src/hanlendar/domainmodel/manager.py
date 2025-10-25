@@ -26,7 +26,6 @@ from datetime import date, datetime
 import logging
 
 import abc
-from typing import List
 
 from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.task import Task, TaskOccurrence
@@ -51,11 +50,13 @@ class Manager:
     @abc.abstractmethod
     def storeData(self):
         """Return bool: True if new data saved, otherwise False."""
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
     def loadData(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     ## ======================================================================
 
@@ -69,16 +70,19 @@ class Manager:
 
     @abc.abstractmethod
     def _getTasks(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setTasks(self, value):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def _setTasks(self, _value):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def getTasksAll(self) -> List[Task]:
+    def getTasksAll(self) -> list[Task]:
         """Return tasks and all subtasks from tree."""
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     ## return shallow copy (of list)
     def getTasks(self):
@@ -95,23 +99,27 @@ class Manager:
 
     @abc.abstractmethod
     def createEmptyTask(self) -> Task:
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
     def _getToDos(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setToDos(self, value):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def _setToDos(self, _value):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
     def getTodosAll(self):
         """Return tasks and all subtasks from tree."""
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     ## return shallow copy (of list)
-    def getToDos(self, includeCompleted=True):
+    def getToDos(self, *, includeCompleted=True):
         if includeCompleted:
             return list(self.todos)  ## shallow copy of list
         return [item for item in self.todos if not item.isCompleted()]
@@ -126,15 +134,18 @@ class Manager:
 
     @abc.abstractmethod
     def createEmptyToDo(self) -> LocalToDo:
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
     def _getNotes(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setNotes(self, value):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def _setNotes(self, _value):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     def getNotes(self):
         return self._getNotes()
@@ -147,20 +158,19 @@ class Manager:
     def findTaskByUID(self, uid) -> Task:
         allTasks = self.getTasksAll()
         for task in allTasks:
-            if task.UID == uid:
+            if uid == task.UID:
                 return task
         return None
 
-    def getTaskOccurrencesForDate(self, taskDate: date, includeCompleted=True):
+    def getTaskOccurrencesForDate(self, taskDate: date, *, includeCompleted=True):
         retList = []
         allTasks = self.getTasksAll()
         for task in allTasks:
             entry = task.getTaskOccurrenceForDate(taskDate)
             if entry is None:
                 continue
-            if includeCompleted is False:
-                if entry.isCompleted():
-                    continue
+            if includeCompleted is False and entry.isCompleted():
+                continue
             retList.append(entry)
         return retList
 
@@ -172,9 +182,7 @@ class Manager:
                 continue
             if task.occurrenceDue is None:
                 continue
-            if retTask is None:
-                retTask = task
-            elif task.occurrenceDue < retTask.occurrenceDue:
+            if retTask is None or task.occurrenceDue < retTask.occurrenceDue:
                 retTask = task
         return retTask
 
@@ -296,7 +304,7 @@ class Manager:
     def printTasks(self):
         retStr = ""
         tSize = len(self.tasks)
-        for i in range(0, tSize):
+        for i in range(tSize):
             task = self.tasks[i]
             retStr += str(task) + "\n"
         return retStr
@@ -308,7 +316,7 @@ class Manager:
         self.addTask(eventTask)
         return eventTask
 
-    def getNotificationList(self) -> List[Notification]:
+    def getNotificationList(self) -> list[Notification]:
         ret = []
         for task in self.tasks:
             notifs = task.getNotifications()
@@ -387,8 +395,7 @@ class Manager:
 
 
 def replace_in_list(aList, oldObject, newObject):
-    for i, _ in enumerate(aList):
-        entry = aList[i]
+    for i, entry in enumerate(aList):
         if entry == oldObject:
             aList[i] = newObject
             break

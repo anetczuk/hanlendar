@@ -23,7 +23,6 @@
 
 import logging
 import datetime
-from typing import List
 
 from PyQt5.QtCore import QObject, QTimer, pyqtSignal
 
@@ -40,11 +39,11 @@ class NotificationTimer(QObject):
     def __init__(self, *args):
         QObject.__init__(self, *args)
         self.timer = QTimer(self)
-        self.notifs: List[Notification] = []
+        self.notifs: list[Notification] = []
         self.nextNotif: Notification = None
         self.timer.timeout.connect(self.handleTimeout)
 
-    def setNotifications(self, notifList: List[Notification]):
+    def setNotifications(self, notifList: list[Notification]):
         self.notifs = notifList
         self.processNotifs()
 

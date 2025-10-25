@@ -29,8 +29,7 @@ from PyQt5.QtCore import QUrl
 from PyQt5.QtGui import QDesktopServices
 
 from hanlendar.domainmodel.local.todo import LocalToDo
-
-from .. import uiloader
+from hanlendar.gui import uiloader
 
 
 UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
@@ -39,7 +38,7 @@ UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
 _LOGGER = logging.getLogger(__name__)
 
 
-class ToDoDialog(QtBaseClass):  # type: ignore
+class ToDoDialog(QtBaseClass):  # type: ignore[valid-type,misc]
 
     def __init__(self, todoObject, parentWidget=None):
         super().__init__(parentWidget)

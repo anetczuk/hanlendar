@@ -31,8 +31,6 @@ import logging
 import unittest
 import re
 import argparse
-import cProfile
-import subprocess
 
 import tempfile
 
@@ -75,7 +73,7 @@ def match_test_suites(testsList, rePattern: str):
         if isinstance(testObject, unittest.TestCase):
             classobj = testObject.__class__
             # pylint: disable=W0212,
-            testCaseFullName = ".".join([classobj.__module__, classobj.__name__, testObject._testMethodName])
+            testCaseFullName = f"{classobj.__module__}.{classobj.__name__}.{testObject._testMethodName}"
             matched = re.search(rePattern, testCaseFullName)
             if matched is not None:
                 ## _LOGGER.info("test case matched: %s", testCaseFullName )
@@ -101,12 +99,15 @@ if __name__ == "__main__":
         help="Module with tests, e.g. module.submodule.test_file.test_class.test_method, wildcard * allowed",
     )
     parser.add_argument(
-        "-r", "--repeat", action="store", type=int, default=0, help="Repeat tests given number of times"
+        "-r",
+        "--repeat",
+        action="store",
+        type=int,
+        default=0,
+        help="Repeat tests given number of times",
     )
     parser.add_argument("-ut", "--untilfailure", action="store_true", help="Run tests in loop until failure")
     parser.add_argument("-cov", "--coverage", action="store_true", help="Measure code coverage")
-    parser.add_argument("--profile", action="store_true", help="Profile the code")
-    parser.add_argument("--pfile", action="store", default=None, help="Profile the code and output data to file")
 
     args = parser.parse_args()
 
@@ -119,11 +120,11 @@ if __name__ == "__main__":
         try:
             import coverage
         except ImportError:
-            print("Missing coverage module. Try running 'pip install coverage'")
-            print("Python info:", sys.version)
+            _LOGGER.info("Missing coverage module. Try running 'pip install coverage'")
+            _LOGGER.info("Python info: %s", sys.version)
             raise
 
-        print("Executing code coverage")
+        _LOGGER.info("Executing code coverage")
         currScript = os.path.realpath(__file__)
         coverageData = coverage.Coverage(branch=True, omit=currScript)
         ##coverageData.load()
@@ -138,52 +139,28 @@ if __name__ == "__main__":
 
     testsRepeats = int(args.repeat)
 
-    profiler = None
-
     try:
-        ## start code profiler
-        profiler_outfile = args.pfile
-        if args.profile is True or profiler_outfile is not None:
-            print("Starting profiler")
-            profiler = cProfile.Profile()
-            profiler.enable()
-
         ## run proper tests
         if args.untilfailure is True:
             counter = 1
             while True:
-                print("Tests iteration:", counter)
+                _LOGGER.info("Tests iteration: %s", counter)
                 counter += 1
                 testResult = unittest.TextTestRunner().run(suite)
                 if testResult.wasSuccessful() is False:
                     break
-                print("\n")
+                _LOGGER.info("\n")
         elif testsRepeats > 0:
             for counter in range(1, testsRepeats + 1):
-                print("Tests iteration:", counter)
+                _LOGGER.info("Tests iteration: %s", counter)
                 testResult = unittest.TextTestRunner().run(suite)
                 if testResult.wasSuccessful() is False:
                     break
-                print("\n")
+                _LOGGER.info("\n")
         else:
             unittest.TextTestRunner().run(suite)
 
     finally:
-        ## stop profiler
-        if profiler is not None:
-            profiler.disable()
-            if profiler_outfile is None:
-                print("Generating profiler data")
-                profiler.print_stats(1)
-            else:
-                print("Storing profiler data to", profiler_outfile)
-                profiler.dump_stats(profiler_outfile)
-
-            if profiler_outfile is not None:
-                ##pyprof2calltree -i $PROF_FILE -k
-                print(f"Launching: pyprof2calltree -i {profiler_outfile} -k")
-                subprocess.call(["pyprof2calltree", "-i", profiler_outfile, "-k"])
-
         ## prepare coverage results
         if coverageData is not None:
             ## convert results to html
@@ -196,4 +173,4 @@ if __name__ == "__main__":
             coverageData.stop()
             coverageData.save()
             coverageData.html_report(directory=htmlcovdir)
-            print("\nCoverage HTML output:", (htmlcovdir + "/index.html"))
+            _LOGGER.info("\nCoverage HTML output: %s", (htmlcovdir + "/index.html"))

@@ -98,12 +98,24 @@ class Recurrent:
         self.every: int = every
         self.endDate: date = endDate
 
+    def _key(self):
+        return (self.mode, self.every, self.endDate)
+
+    def __hash__(self):
+        return hash(self._key())
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._key() == other._key()
+
+    def __repr__(self):
+        return f"Recurrent( mode={self.mode}, every={self.every}, endDate={self.endDate} )"
+
     def isValid(self):
         if self.mode == RepeatType.NEVER:
             return False
-        if self.every < 1:
-            return False
-        return True
+        return self.every > 0
 
     def isAsParent(self):
         return self.mode == RepeatType.ASPARENT
@@ -149,9 +161,7 @@ class Recurrent:
             return False
         if self.endDate is None:
             return False
-        if currDate > self.endDate:
-            return True
-        return False
+        return currDate > self.endDate
 
     def nextDateTime(self, currDate: datetime) -> datetime:
         if currDate is None:
@@ -169,16 +179,6 @@ class Recurrent:
     def findRecurrentOffset(self, referenceDate: date, targetDate: date) -> int:
         offset = self.getDateOffset()
         return find_multiplication(referenceDate, targetDate, offset)
-
-    def __eq__(self, other):
-        if not isinstance(other, Recurrent):
-            ## don't attempt to compare against unrelated types
-            return NotImplemented
-
-        return self.mode == other.mode and self.every == other.every and self.endDate == other.endDate
-
-    def __repr__(self):
-        return f"Recurrent( mode={self.mode}, every={self.every}, endDate={self.endDate} )"
 
 
 def find_multiplication(startDate: date, endDate: date, offset: relativedelta) -> int:

@@ -21,6 +21,8 @@
 # SOFTWARE.
 #
 
+# ruff: noqa: T201 (`print` found)
+
 import logging
 import time
 
@@ -50,7 +52,7 @@ class FSWatcher:
         self.observer.event_queue.queue.clear()
         self.event_handler.ignore = False
 
-    def start(self, path, callback=None, recursive=True):
+    def start(self, path, callback=None, *, recursive=True):
         _LOGGER.info("starting file system watchdog on %s", path)
         self.event_handler = FSHandler(callback)
         self.observer.schedule(self.event_handler, path, recursive=recursive)
@@ -66,7 +68,7 @@ class FSWatcher:
         try:
             while True:
                 time.sleep(5)
-        except:  # noqa # pylint: disable=W0702
+        except:  # noqa: E722  # pylint: disable=W0702
             self.observer.stop()
             print("Error")
 
@@ -80,8 +82,7 @@ class FSWatcher:
 
 
 class WatcherBlocker:
-    """
-    Context guard.
+    """Context guard.
 
     Disables watcher callbacks in "with" scope.
     """

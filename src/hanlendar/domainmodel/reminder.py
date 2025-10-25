@@ -51,6 +51,7 @@ class Notification:
     def __init__(self):
         self.notifyTime: datetime = None  ## time given in seconds since epoch
         self.message: str = None
+        # ruff: noqa: UP037
         self.task: "Task" = None  # type: ignore[name-defined]  # noqa: F821
 
     def remainingSeconds(self) -> float:
@@ -59,8 +60,7 @@ class Notification:
 
     def remainingTime(self) -> timedelta:
         currTime = datetime.today()
-        timeDiff = self.notifyTime - currTime
-        return timeDiff
+        return self.notifyTime - currTime
 
     def __str__(self):
         return f"[nt:{self.notifyTime} m:{self.message} t:{self.task.title}]"  # pylint: disable=E1101
@@ -114,11 +114,10 @@ class Reminder:
         offsetTime = self.timeOffset
         if offsetTime is None:
             offsetTime = timedelta()
-        output = print_timedelta(offsetTime) + " before due time"
-        return output
+        return print_timedelta(offsetTime) + " before due time"
 
     def __repr__(self):
-        return f"Reminder( timeOffset={repr(self.timeOffset)}, timePoint={self.timePoint}, direction={self.direction} )"
+        return f"Reminder( timeOffset={self.timeOffset!r}, timePoint={self.timePoint}, direction={self.direction} )"
 
     #         return "[t:%s p:%s d:%s]" % ( self.timeOffset, self.timePoint, self.direction )
 
@@ -138,12 +137,15 @@ class Reminder:
             timePart = datetime.strptime(timeField, "%H:%M:%S")
             retObj = Reminder()
             retObj.timeOffset = timedelta(
-                days=days, hours=timePart.hour, minutes=timePart.minute, seconds=timePart.second
+                days=days,
+                hours=timePart.hour,
+                minutes=timePart.minute,
+                seconds=timePart.second,
             )
-            return retObj
         except ValueError as ex:
             _LOGGER.error("unable to load reminder from '%s' reason: %s", timeField, ex)
             return None
+        return retObj
 
 
 def print_timedelta(value: timedelta):
@@ -159,10 +161,7 @@ def print_timedelta(value: timedelta):
         def plural(n):
             return "s" if abs(n) != 1 else ""
 
-        if s != "":
-            s = f"{days} day{plural(days)}, {s}"
-        else:
-            s = f"{days} day{plural(days)}"
+        s = f"{days} day{plural(days)}, {s}" if s != "" else f"{days} day{plural(days)}"
     micros = value.microseconds
     if micros:
         s = s + f".{micros:06d}"

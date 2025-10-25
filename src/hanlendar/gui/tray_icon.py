@@ -84,7 +84,9 @@ class TrayIcon(QSystemTrayIcon):
         ## it cannot be changed back to proper one. Workaround is to use NoIcon parameter
         self.showMessage("Hanlendar", message, QSystemTrayIcon.NoIcon, timeout)  # type: ignore[attr-defined]
 
-    def drawNumber(self, number, numColor=QColor("red")):
+    def drawNumber(self, number, numColor: QColor = None):
+        if numColor is None:
+            numColor = QColor("red")
         icon = self.icon()
 
         pixmap = icon.pixmap(512, 512)

@@ -22,7 +22,6 @@
 #
 
 import datetime
-from typing import List, Tuple
 from dateutil.relativedelta import relativedelta
 
 from PyQt5.QtWidgets import QCalendarWidget
@@ -83,7 +82,7 @@ class MonthCalendar(QCalendarWidget):
         self.taskContextMenu.connectData(dataObject)
         self.editTask.connect(dataObject.editTask)
 
-    def showCompletedTasks(self, show=True):
+    def showCompletedTasks(self, *, show=True):
         self.showCompleted = show
         self.updateCells()
 
@@ -95,7 +94,7 @@ class MonthCalendar(QCalendarWidget):
         self.setMaximumDate(maxDate)
         super().setCurrentPage(year, month)
 
-    def getTasks(self, date: QDate) -> List[TaskOccurrence]:
+    def getTasks(self, date: QDate) -> list[TaskOccurrence]:
         pyDate = date.toPyDate()
         tasksList = self.data.getTaskOccurrences(pyDate, self.showCompleted)
         tasksList.sort(key=TaskOccurrence.sortByDates)
@@ -135,10 +134,10 @@ class MonthCalendar(QCalendarWidget):
             entriesSize = len(tasksList)
             itemsCapacity = int(rect.height() / self.cellItemHeight)
             entriesSize = min(entriesSize, itemsCapacity)
-            for index in range(0, entriesSize):
+            for index in range(entriesSize):
                 item: TaskOccurrence = tasksList[index]
                 selectedTask = selectedDay and (self.currentTaskIndex == index)
-                bgColor = get_task_bgcolor(item, selectedTask)
+                bgColor = get_task_bgcolor(item, isSelected=selectedTask)
                 self.drawItem(painter, rect, index, item.title, bgColor)
 
         painter.restore()
@@ -187,7 +186,7 @@ class MonthCalendar(QCalendarWidget):
     #             days += 7                       # there is always one row
     #         return days
 
-    def contextMenuEvent(self, _):
+    def contextMenuEvent(self, _event):
         globalPos = QCursor.pos()
         pos = self.mapFromGlobal(globalPos)
         contextDate = self.findDateByPos(pos)
@@ -220,7 +219,7 @@ class MonthCalendar(QCalendarWidget):
             return
         self.editTask.emit(task)
 
-    def clickedTaskIndex(self, date) -> Tuple[int, Task]:
+    def clickedTaskIndex(self, date) -> tuple[int, Task]:
         tasksList = self.getTasks(date)
         if len(tasksList) < 1:
             return (-1, None)
@@ -238,8 +237,7 @@ class MonthCalendar(QCalendarWidget):
         pos = self.mapFromGlobal(globalPos)
         cellRect = self.dateToCellRect[date]
         cellRel = pos - cellRect.topLeft()
-        rowIndex = int(cellRel.y() / self.cellItemHeight)
-        return rowIndex
+        return int(cellRel.y() / self.cellItemHeight)
 
     def findDateByPos(self, relativePos):
         for date, rect in self.dateToCellRect.items():
@@ -254,7 +252,7 @@ class MonthCalendar(QCalendarWidget):
             self.taskUnselected.emit()
 
 
-def get_task_bgcolor(task: TaskOccurrence, isSelected=False) -> QColor:
+def get_task_bgcolor(task: TaskOccurrence, *, isSelected=False) -> QColor:
     bgColor = get_task_base_bgcolor(task)
     if isSelected:
         red = min(255, bgColor.red() + 40)

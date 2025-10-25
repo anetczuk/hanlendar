@@ -23,7 +23,6 @@
 
 import os
 import logging
-from typing import List
 
 from PyQt5.QtCore import QDate
 from PyQt5.QtCore import QObject
@@ -93,14 +92,13 @@ class SettingsObject(QObject):
         ## store in home directory
         orgName = qApp.organizationName()
         appName = qApp.applicationName()
-        settings = QtCore.QSettings(
+        return QtCore.QSettings(
             QtCore.QSettings.IniFormat,  # type: ignore[attr-defined]
             QtCore.QSettings.UserScope,  # type: ignore[attr-defined]
             orgName,
             appName,
             self,
         )
-        return settings
 
     def getDataPath(self):
         settings = self.getSettings()
@@ -117,7 +115,7 @@ class SettingsObject(QObject):
 
 
 ##
-class MainWindow(QtBaseClass):  # type: ignore
+class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
 
     logger: logging.Logger = None
     toolTip = "Hanlendar"
@@ -232,8 +230,7 @@ class MainWindow(QtBaseClass):  # type: ignore
         dataPath = self.qtSettings.getDataPath()
         dataPath = os.path.join(dataPath, "caldav")
         os.makedirs(dataPath, exist_ok=True)
-        manager = CalDAVManager(connector, dataPath)
-        return manager
+        return CalDAVManager(connector, dataPath)
 
     def setCalDAVManager(self):
         self.appSettings.databaseMode = DatabaseMode.CALDAV
@@ -281,7 +278,7 @@ class MainWindow(QtBaseClass):  # type: ignore
             _LOGGER.info("saving data is disabled")
 
         _LOGGER.info("disabling saving data")
-        self._saveData = save_data_mock  # type: ignore
+        self._saveData = save_data_mock  # type: ignore[method-assign]
 
     ## ===============================================================
 
@@ -326,7 +323,7 @@ class MainWindow(QtBaseClass):  # type: ignore
     ## ====================================================================
 
     def updateNotificationTimer(self):
-        notifs: List[Notification] = self.data.getManager().getNotificationList()
+        notifs: list[Notification] = self.data.getManager().getNotificationList()
         self.notifsTimer.setNotifications(notifs)
 
     def handleNotification(self, notification: Notification):
@@ -378,7 +375,9 @@ class MainWindow(QtBaseClass):  # type: ignore
 
     def importXfceNotes(self):
         retButton = QMessageBox.question(
-            self, "Import Notes", "Do you want to import Xfce Notes (previous notes will be lost)?"
+            self,
+            "Import Notes",
+            "Do you want to import Xfce Notes (previous notes will be lost)?",
         )
         if retButton == QMessageBox.Yes:
             self.data.importXfceNotes()
@@ -394,7 +393,7 @@ class MainWindow(QtBaseClass):  # type: ignore
 
     def _handleNextMessage(self):
         with self.messagesQueueWatchdog.ignoreEvents():
-            message = get_from_queue(True)
+            message = get_from_queue(nowait=True)
 
         if message is None:
             _LOGGER.warning("received None message")
@@ -417,11 +416,7 @@ class MainWindow(QtBaseClass):  # type: ignore
         nextToDo = self.data.getManager().getNextToDo()
         if nextToDo is not None:
             toolTip += "\n" + "Next ToDo: " + nextToDo.title
-        if toolTip:
-            # not empty
-            toolTip = self.toolTip + "\n" + toolTip
-        else:
-            toolTip = self.toolTip
+        toolTip = self.toolTip + "\n" + toolTip if toolTip else self.toolTip
         self.trayIcon.setToolTip(toolTip)
 
     def setIconTheme(self, theme: tray_icon.TrayIconTheme):

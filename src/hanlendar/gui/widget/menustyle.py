@@ -22,7 +22,8 @@
 #
 
 import logging
-from ..qt import QtWidgets
+
+from hanlendar.gui.qt import QtWidgets
 
 
 _LOGGER = logging.getLogger(__name__)

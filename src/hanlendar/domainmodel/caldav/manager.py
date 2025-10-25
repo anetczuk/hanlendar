@@ -57,7 +57,7 @@ class CalDAVConnector:
     #         self._client.headers[ "Connection" ] = "Keep-Alive"
     #         self._client.headers[ "Keep-Alive" ] = "timeout=60, max=1000"
 
-    def connectToCalendar(self, calendar_name, allow_throw=False):
+    def connectToCalendar(self, calendar_name, *, allow_throw=False):
         if allow_throw is False:
             self._calendarName = calendar_name
             self._calendar = None
@@ -133,13 +133,13 @@ class CalDAVManager(Manager):
 
         if len(dangling_children) > 0:
             _LOGGER.warning("not all children could be handled properly")
-            print("dangling children:")
+            _LOGGER.info("dangling children:")
             for item in dangling_children:
                 child, parent_uuid = item
-                print("item:", child.UID, child.title, parent_uuid)
-            print("tasks:")
+                _LOGGER.info("item: %s %s %s", child.UID, child.title, parent_uuid)
+            _LOGGER.info("tasks:")
             for task in self._localManager.getTasksAll():
-                print("item:", task.UID, task.title)
+                _LOGGER.info("item: %s %s", task.UID, task.title)
 
     def saveToServer(self):
         _LOGGER.info("saving local data to server")

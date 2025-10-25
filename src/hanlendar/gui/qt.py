@@ -4,7 +4,9 @@
 
 # TODO: remove skip
 # pylint: skip-file
+# ruff: noqa: F401
 
+import sys
 import logging
 
 
@@ -34,8 +36,9 @@ try:
 
 except ImportError:
     ### No module named <name>
-    logging.exception("Exception while importing")
-    exit(1)
+    _LOGGER = logging.getLogger(__name__)
+    _LOGGER.exception("Exception while importing")
+    sys.exit(1)
 
 
 ## ====================================================
@@ -51,6 +54,7 @@ def clearLayout(layout):
 
 
 def printTree(qtObject: QObject, indent=0):
+    # ruff: noqa: T201 (`print` found)
     print(" " * indent + "object:", qtObject)
     childList = qtObject.children()
     for child in childList:

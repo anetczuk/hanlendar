@@ -4,6 +4,8 @@
 ###
 ###
 
+# ruff: noqa: T201 (`print` found)
+
 import sys
 
 ## We'll try to use the local caldav library, not the system-installed

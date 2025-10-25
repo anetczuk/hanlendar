@@ -32,7 +32,8 @@ try:
     from PyQt5 import uic
 except ImportError:
     ### No module named <name>
-    logging.exception("Exception while importing")
+    _LOGGER = logging.getLogger(__name__)
+    _LOGGER.exception("Exception while importing")
     sys.exit(1)
 
 
@@ -52,6 +53,7 @@ def load_ui(uiFilename):
         ui_path = os.path.join(MAIN_MODULE_DIR, "ui", uiFilename)
         return uic.loadUiType(ui_path)
     except Exception as e:
+        # ruff: noqa: T201 (`print` found)
         print("Exception while loading UI file:", uiFilename, e)
         raise
 
@@ -63,4 +65,5 @@ def load_ui_from_class_name(uiFilename):
 
 def printsyspath():
     for p in sys.path:
+        # ruff: noqa: T201 (`print` found)
         print("path:", p)

@@ -24,8 +24,6 @@
 import logging
 import datetime
 
-from typing import List
-
 from hanlendar import persist
 from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.item import generate_uid
@@ -59,19 +57,19 @@ class LocalTask(Task, persist.Versionable):
         self.subitems: list = None
         self._startDate: datetime.datetime = None
         self._dueDate: datetime.datetime = None
-        self._reminderList: List[Reminder] = None
+        self._reminderList: list[Reminder] = None
         self._recurrence: Recurrent = None
         self._recurrentOffset = 0
 
-    def _convertstate_(self, dict_, dictVersion_):
-        _LOGGER.info("converting object from version %s to %s", dictVersion_, self._class_version)
+    def _convertstate_(self, dict_, dict_version_):
+        _LOGGER.info("converting object from version %s to %s", dict_version_, self._class_version)
 
-        if dictVersion_ is None:
-            dictVersion_ = -1
+        if dict_version_ is None:
+            dict_version_ = -1
 
-        dictVersion_ = max(dictVersion_, 0)
+        dict_version_ = max(dict_version_, 0)
 
-        if dictVersion_ == 0:
+        if dict_version_ == 0:
             ## replace _recurrentStartDate and _recurrentDueDate with _recurrentOffset
             recurrence = dict_["_recurrence"]
             if recurrence is not None:
@@ -82,34 +80,34 @@ class LocalTask(Task, persist.Versionable):
             else:
                 ## set default value
                 dict_["_recurrentOffset"] = 0
-            dictVersion_ = 1
+            dict_version_ = 1
 
-        if dictVersion_ == 1:
+        if dict_version_ == 1:
             ## add field
             dict_["subitems"] = None
-            dictVersion_ = 2
+            dict_version_ = 2
 
-        if dictVersion_ == 2:
+        if dict_version_ == 2:
             ## rename fields
             dict_["_title"] = dict_.pop("title", "")
             dict_["_description"] = dict_.pop("description", "")
             dict_["_priority"] = dict_.pop("priority", 10)
-            dictVersion_ = 3
+            dict_version_ = 3
 
-        if dictVersion_ == 3:
+        if dict_version_ == 3:
             ## rename fields
             dict_["_reminderList"] = dict_.pop("reminderList", None)
-            dictVersion_ = 4
+            dict_version_ = 4
 
-        if dictVersion_ == 4:
+        if dict_version_ == 4:
             ## rescale priority
             priority = dict_.pop("_priority", 10)
             dict_["_priority"] = int(priority / 2.0)
-            dictVersion_ = 5
+            dict_version_ = 5
 
-        if dictVersion_ == 5:
+        if dict_version_ == 5:
             dict_["_UID"] = generate_uid()
-            dictVersion_ = 6
+            dict_version_ = 6
 
         # pylint: disable=W0201
         self.__dict__ = dict_

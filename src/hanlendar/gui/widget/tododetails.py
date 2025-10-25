@@ -26,8 +26,7 @@ import logging
 from PyQt5.QtGui import QDesktopServices
 
 from hanlendar.domainmodel.local.todo import LocalToDo
-
-from .. import uiloader
+from hanlendar.gui import uiloader
 
 
 UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
@@ -36,7 +35,7 @@ UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
 _LOGGER = logging.getLogger(__name__)
 
 
-class ToDoDetails(QtBaseClass):  # type: ignore
+class ToDoDetails(QtBaseClass):  # type: ignore[valid-type,misc]
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)

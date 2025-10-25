@@ -23,7 +23,6 @@
 
 import os
 import logging
-from typing import List
 
 import glob
 
@@ -182,14 +181,13 @@ class LocalManager(Manager):
     def loadHistory(self, index=-1):
         if index < 0:
             self.loadData()
-            ret_dict = {
+            return {
                 "file": None,
                 "version": self._class_version,
                 "tasks": self.tasks,
                 "todos": self.todos,
                 "notes": self.notes,
             }
-            return ret_dict
 
         outputDir = self._ioDir
         if index <= 0:
@@ -222,12 +220,11 @@ class LocalManager(Manager):
         if notes is None:
             notes = []
 
-        ret_dict = {"file": storedZipFile, "version": mngrVersion, "tasks": tasks, "todos": todos, "notes": notes}
-        return ret_dict
+        return {"file": storedZipFile, "version": mngrVersion, "tasks": tasks, "todos": todos, "notes": notes}
 
     def restoreTaskByTitle(self, _history_index, task_title):
         data_dict = self.loadHistory(160)
-        tasks: List[Task] = data_dict.get("tasks", [])
+        tasks: list[Task] = data_dict.get("tasks", [])
         found_task = self.findTaskByTitle(tasks, task_title)
         if found_task is not None:
             self.addTask(found_task)

@@ -28,8 +28,7 @@ from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtGui import QDesktopServices
 
 from hanlendar.domainmodel.task import Task
-
-from .. import uiloader
+from hanlendar.gui import uiloader
 
 
 UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
@@ -38,7 +37,7 @@ UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
 _LOGGER = logging.getLogger(__name__)
 
 
-class TaskDetails(QtBaseClass):  # type: ignore
+class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -85,7 +84,7 @@ class TaskDetails(QtBaseClass):  # type: ignore
         remLen = 0
         if task.reminderList is not None:
             remLen = len(task.reminderList)
-        for i in range(0, remLen):
+        for i in range(remLen):
             rem = task.reminderList[i]
             item = QListWidgetItem(rem.printPretty())
             self.ui.reminderList.insertItem(i, item)

@@ -124,10 +124,10 @@ def import_icalendar_content(manager: Manager, content: str):
             if len(task.reminderList) > 0:
                 continue
             task.addReminderDays(1)
-        return tasks, dangling_children
     except ValueError as ex:
         _LOGGER.warning("unable to import calendar data: %s", ex)
-    return None
+        return None
+    return tasks, dangling_children
 
 
 def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar):
@@ -172,17 +172,20 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar):
                 reccurEnd = convert_to_date(reccurEnd)
                 task.recurrence = Recurrent(reccurMode, reccurStep, reccurEnd)
                 task.recurrentOffset = get_ical_value_int(component, TaskField.RECURRENCE, 0)
+            # ruff: noqa: S110
             except Exception:  # pylint: disable=W0718 # nosec
                 pass
 
             try:
                 task.reminderList = get_ical_list(
-                    component, TaskField.REMINDERS, value_converter=Reminder.from_timedelta_string
+                    component,
+                    TaskField.REMINDERS,
+                    value_converter=Reminder.from_timedelta_string,
                 )
                 if task.reminderList is not None:
                     task.reminderList = [item for item in task.reminderList if item is not None]
             except Exception:  # as ex:
-                print("unable to import remainder list:", task.title, task.dueDateTime)
+                _LOGGER.warning("unable to import remainder list: %s %s", task.title, task.dueDateTime)
                 raise
 
             parentUID = get_ical_str(component, TaskField.GROUP_PARENT)
@@ -292,6 +295,7 @@ def get_ical_value_int(component, field: TaskField, defaultValue):
     try:
         value_str = get_ical_str(component, field)
         return int(value_str)
+    # ruff: noqa: S110
     except Exception:  # pylint: disable=W0718 # nosec
         pass
     return defaultValue
@@ -318,8 +322,7 @@ def get_ical_value_dt(component, field: TaskField):
         return None
     valueDate = value_raw.dt
     valueDate = valueDate.astimezone()  ## convert to local timezone
-    valueDate = valueDate.replace(tzinfo=None)
-    return valueDate
+    return valueDate.replace(tzinfo=None)
 
 
 ###

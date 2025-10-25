@@ -23,7 +23,6 @@
 
 import logging
 import abc
-from typing import List
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QModelIndex
@@ -169,32 +168,38 @@ class CustomTreeModel(QtCore.QAbstractItemModel):
     ## ==================================================================
 
     @abc.abstractmethod
-    def headerLabels(self) -> List[str]:
-        raise NotImplementedError("You need to define this method in derived class!")
+    def headerLabels(self) -> list[str]:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
     def internalMoveMimeType(self) -> str:
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def getChildren(self, parent: object):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def getChildren(self, _parent: object):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def getParent(self, item: object):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def getParent(self, _item: object):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def getItemId(self, item: object):
+    def getItemId(self, _item: object):
         """Return object's identifier.
 
         It could be unique number or item's coordinates in objects tree.
         """
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def moveItem(self, itemId, targetItem: object, targetIndex):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def moveItem(self, _itemId, _targetItem: object, _targetIndex):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
 
 ## ====================================================================
@@ -220,8 +225,7 @@ class ItemTreeModel(CustomTreeModel):
         return self.getRootList()
 
     def getParent(self, item):
-        parent = item.getParent()
-        return parent
+        return item.getParent()
 
     def getItemId(self, item: object):
         itemsList = self.getRootList()
@@ -231,7 +235,8 @@ class ItemTreeModel(CustomTreeModel):
 
     @abc.abstractmethod
     def getRootList(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
 
 #     @abc.abstractmethod

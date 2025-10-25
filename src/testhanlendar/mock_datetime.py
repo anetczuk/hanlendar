@@ -56,8 +56,7 @@ def mock_date_meta(target):
             return target
 
     # Python2 & Python3 compatible metaclass
-    MockedDate = DateSubclassMeta("date", (BaseMockedDate,), {})
-    return MockedDate
+    return DateSubclassMeta("date", (BaseMockedDate,), {})
 
 
 def get_mock_date(value, module=datetime):
@@ -96,8 +95,7 @@ def mock_datetime_meta(value):
             return value
 
     # Python2 & Python3 compatible metaclass
-    MockedDatetime = DatetimeSubclassMeta("datetime", (BaseMockedDatetime,), {})
-    return MockedDatetime
+    return DatetimeSubclassMeta("datetime", (BaseMockedDatetime,), {})
 
 
 def get_mock_datetime(value, module=datetime):

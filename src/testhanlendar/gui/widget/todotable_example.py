@@ -23,16 +23,17 @@
 # SOFTWARE.
 #
 
+import contextlib
 
-try:
+with contextlib.suppress(ImportError):
     ## following import success only when file is directly executed from command line
     ## otherwise will throw exception when executing as parameter for "python -m"
-    # pylint: disable=W0611
+    # pylint: disable=E0401,W0611
+    # ruff: noqa: F401
     import __init__
-except ImportError:
+
     ## when import fails then it means that the script was executed indirectly
     ## in this case __init__ is already loaded
-    pass
 
 import sys
 
@@ -71,40 +72,40 @@ todo2.completed = 0
 todo2.priority = 3
 todosList.append(todo2)
 
-todo = ToDo()
-todo.title = "ToDo 3"
-todo.description = "Description"
-todo.completed = 30
-todo.priority = 11
-todosList.append(todo)
+todoItem = ToDo()
+todoItem.title = "ToDo 3"
+todoItem.description = "Description"
+todoItem.completed = 30
+todoItem.priority = 11
+todosList.append(todoItem)
 
-todo = ToDo()
-todo.title = "ToDo 4"
-todo.description = "Description"
-todo.completed = 0
-todo.priority = 12
-todosList.append(todo)
+todoItem = ToDo()
+todoItem.title = "ToDo 4"
+todoItem.description = "Description"
+todoItem.completed = 0
+todoItem.priority = 12
+todosList.append(todoItem)
 
-todo = ToDo()
-todo.title = "Completed ToDo"
-todo.description = "Description"
-todo.completed = 100
-todo.priority = 14
-todosList.append(todo)
+todoItem = ToDo()
+todoItem.title = "Completed ToDo"
+todoItem.description = "Description"
+todoItem.completed = 100
+todoItem.priority = 14
+todosList.append(todoItem)
 
-todo = ToDo()
-todo.title = "ToDo Tree"
-todo.description = "Description"
-todo.completed = 0
-todo.priority = 14
-todosList.append(todo)
+todoItem = ToDo()
+todoItem.title = "ToDo Tree"
+todoItem.description = "Description"
+todoItem.completed = 0
+todoItem.priority = 14
+todosList.append(todoItem)
 
 todoLeaf = ToDo()
 todoLeaf.title = "ToDo Leaf 1"
 todoLeaf.description = "Description"
 todoLeaf.completed = 0
 todoLeaf.priority = 16
-todo.addSubtodo(todoLeaf)
+todoItem.addSubtodo(todoLeaf)
 
 todoLeaf = ToDo()
 todoLeaf.title = "ToDo Leaf 2"
@@ -112,8 +113,8 @@ todoLeaf.description = "Description"
 todoLeaf.completed = 0
 todoLeaf.priority = 15
 todoLeaf.addSubtodo(ToDo()).title = "xxx"
-todo.addSubtodo(todoLeaf)
-# todo.subtodos.append( todoLeaf )
+todoItem.addSubtodo(todoLeaf)
+# todoItem.subtodos.append( todoLeaf )
 
 dataObject = DataObject()
 manager = dataObject.getManager()

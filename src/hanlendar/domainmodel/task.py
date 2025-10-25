@@ -25,7 +25,6 @@ import logging
 from enum import Enum, unique, auto
 import abc
 
-from typing import List
 from datetime import date, time, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
@@ -50,7 +49,8 @@ class DateRange:
             return self.start
         if arg == 1:
             return self.end
-        raise IndexError("bad index: 0 or 1 allowed")
+        message = "bad index: 0 or 1 allowed"
+        raise IndexError(message)
 
     ## + (plus) operator
     def __add__(self, dateOffset):
@@ -66,16 +66,12 @@ class DateRange:
     def __contains__(self, entryDate: date):
         if self.start is not None and entryDate < self.start:
             return False
-        if entryDate > self.end:
-            return False
-        return True
+        return not entryDate > self.end
 
     def isNormalized(self):
         if self.start is None:
             return False
-        if self.end is None:
-            return False
-        return True
+        return self.end is not None
 
     def normalize(self):
         if self.start is None:
@@ -85,9 +81,7 @@ class DateRange:
         currDate = self.start
         if currDate is None:
             currDate = self.end
-        if currDate.year == monthDate.year and currDate.month == monthDate.month:
-            return True
-        return False
+        return currDate.year == monthDate.year and currDate.month == monthDate.month
 
     def __str__(self):
         return f"[s:{self.start} e:{self.end}]"
@@ -108,7 +102,8 @@ class DateTimeRange:
             return self.start
         if arg == 1:
             return self.end
-        raise IndexError("bad index: 0 or 1 allowed")
+        message = "bad index: 0 or 1 allowed"
+        raise IndexError(message)
 
     ## + (plus) operator
     def __add__(self, dateOffset):
@@ -124,9 +119,7 @@ class DateTimeRange:
     def __contains__(self, entryDate: datetime):
         if self.start is not None and entryDate < self.start:
             return False
-        if self.end is not None and entryDate > self.end:
-            return False
-        return True
+        return not (self.end is not None and entryDate > self.end)
 
     def dateRange(self) -> DateRange:
         start = None
@@ -140,9 +133,7 @@ class DateTimeRange:
     def isNormalized(self):
         if self.start is None:
             return False
-        if self.end is None:
-            return False
-        return True
+        return self.end is not None
 
     def normalize(self):
         if self.start is None:
@@ -154,9 +145,7 @@ class DateTimeRange:
             currDate = self.end
         if currDate is None:
             return False
-        if currDate.year == monthDate.year and currDate.month == monthDate.month:
-            return True
-        return False
+        return currDate.year == monthDate.year and currDate.month == monthDate.month
 
     def isInPastMonths(self, monthDate: datetime):
         currDate = self.start
@@ -166,9 +155,7 @@ class DateTimeRange:
             return False
         if currDate.year < monthDate.year:
             return True
-        if currDate.year == monthDate.year and currDate.month < monthDate.month:
-            return True
-        return False
+        return currDate.year == monthDate.year and currDate.month < monthDate.month
 
     def __str__(self):
         return f"[s:{self.start} e:{self.end}]"
@@ -192,9 +179,7 @@ class TaskOccurrence:
         self._dateRange: DateTimeRange = None  ## cache
 
     def isValid(self):
-        if self.dateRange is None:
-            return False
-        return True
+        return self.dateRange is not None
 
     @property
     def title(self):
@@ -236,10 +221,7 @@ class TaskOccurrence:
         for currItem in subOccurrences:
             if currItem.due is None:
                 continue
-            if retDate is None:
-                retDate = currItem.due
-            else:
-                retDate = min(currItem.due, retDate)
+            retDate = currItem.due if retDate is None else min(currItem.due, retDate)
         return retDate
 
     def isCompleted(self):
@@ -261,9 +243,7 @@ class TaskOccurrence:
             return False
         currTime = datetime.today()
         notifTime = self.dateRange.end - retOffset
-        if notifTime > currTime:
-            return False
-        return True
+        return not notifTime > currTime
 
     @property
     def dateRange(self):
@@ -373,11 +353,13 @@ class Task(Item):
 
     @abc.abstractmethod
     def _getStartDateTime(self) -> datetime:
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setStartDateTime(self, value: datetime):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def _setStartDateTime(self, _value: datetime):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @property
     def startDateTime(self) -> datetime:
@@ -393,11 +375,13 @@ class Task(Item):
 
     @abc.abstractmethod
     def _getDueDateTime(self) -> datetime:
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setDueDateTime(self, value: datetime):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def _setDueDateTime(self, _value: datetime):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @property
     def dueDateTime(self) -> datetime:
@@ -452,11 +436,13 @@ class Task(Item):
 
     @abc.abstractmethod
     def _getRecurrence(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setRecurrence(self, value):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def _setRecurrence(self, _value):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @property
     def recurrence(self) -> Recurrent:
@@ -484,11 +470,13 @@ class Task(Item):
 
     @abc.abstractmethod
     def _getRecurrentOffset(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setRecurrentOffset(self, value):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def _setRecurrentOffset(self, _value):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @property
     def recurrentOffset(self):
@@ -506,7 +494,7 @@ class Task(Item):
         recOffset = self._getRecurrentOffset()
         return TaskOccurrence(self, recOffset)
 
-    def subOccurences(self) -> List[TaskOccurrence]:
+    def subOccurences(self) -> list[TaskOccurrence]:
         subitems = self.getSubitems()
         if subitems is None:
             return []
@@ -586,11 +574,13 @@ class Task(Item):
 
     @abc.abstractmethod
     def _getReminderList(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setReminderList(self, values):
-        raise NotImplementedError("You need to define this method in derived class!")
+    def _setReminderList(self, _values):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @property
     def reminderList(self):
@@ -636,17 +626,16 @@ class Task(Item):
                 retOffset = reminder.getOffset()
                 continue
             currOffset = reminder.getOffset()
-            if currOffset > retOffset:
-                retOffset = currOffset
+            retOffset = max(retOffset, currOffset)
         return retOffset
 
     ## ========================================================================
 
-    def getNotifications(self) -> List[Notification]:
+    def getNotifications(self) -> list[Notification]:
         if self.occurrenceDue is None:
             return []
         currTime = datetime.today()
-        ret: List[Notification] = []
+        ret: list[Notification] = []
         if self.occurrenceDue > currTime:
             notif = Notification()
             notif.notifyTime = self.occurrenceDue
@@ -672,7 +661,8 @@ class Task(Item):
 
     @abc.abstractmethod
     def addSubTask(self):
-        raise NotImplementedError("You need to define this method in derived class!")
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     def printNextRecurrence(self) -> str:
         recurr = self.getAppliedRecurrence()
@@ -682,8 +672,7 @@ class Task(Item):
         nextRepeat = recurr.nextDateTime(refDate)
         if nextRepeat is None:
             return "None"
-        dateText = nextRepeat.strftime("%Y-%m-%d %H:%M")
-        return dateText
+        return nextRepeat.strftime("%Y-%m-%d %H:%M")
 
     #     def __str__(self):
     #         reminderList = self._getReminderList()
@@ -712,8 +701,7 @@ class Task(Item):
         relativeDate = self._getRecurrenceRelative(offset)
         if relativeDate is None:
             return None
-        recurrentDate = aDate + relativeDate
-        return recurrentDate
+        return aDate + relativeDate
 
     def _getRecurrenceRelative(self, offset: int = 0) -> relativedelta:
         recurr: Recurrent = self.getAppliedRecurrence()
@@ -752,8 +740,7 @@ def calc_time_span(entryDate: date, start: datetime, end: datetime):
             startDiff = end - midnight
             daySecs = timedelta(days=1).total_seconds()
             dueFactor = startDiff.total_seconds() / daySecs
-    ret = [startFactor, dueFactor]
-    return ret
+    return [startFactor, dueFactor]
 
 
 def ensure_date_time(value):

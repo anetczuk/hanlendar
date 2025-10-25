@@ -30,10 +30,8 @@ from enum import Enum, unique, auto
 from PyQt5.QtWidgets import QRadioButton, QMessageBox
 
 from hanlendar.domainmodel.caldav.manager import CalDAVConnector
-
-from ..qt import pyqtSignal
-from .. import uiloader
-from .. import tray_icon
+from hanlendar.gui import uiloader, tray_icon
+from hanlendar.gui.qt import pyqtSignal
 
 
 @unique
@@ -115,7 +113,7 @@ UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
 _LOGGER = logging.getLogger(__name__)
 
 
-class SettingsDialog(QtBaseClass):  # type: ignore
+class SettingsDialog(QtBaseClass):  # type: ignore[valid-type,misc]
 
     iconThemeChanged = pyqtSignal(tray_icon.TrayIconTheme)
     exportLocal = pyqtSignal(CalDAVConnector)
@@ -198,7 +196,9 @@ class SettingsDialog(QtBaseClass):  # type: ignore
         except Exception as ex:  # pylint: disable=W0718
             _LOGGER.warning("unable to get calendar: %s", ex)
             QMessageBox.information(
-                self, "Connection test", "Successfully connected to server. New calendar will be created."
+                self,
+                "Connection test",
+                "Successfully connected to server. New calendar will be created.",
             )
 
     def _exportLocalData(self):

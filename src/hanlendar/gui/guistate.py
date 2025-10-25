@@ -34,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=R0915,R0912
+# ruff: noqa: PLR0912
 def load_state(window: QMainWindow, settings: QSettings):
     settings.beginGroup(window.objectName())
     geometry = settings.value("geometry")
@@ -99,7 +100,7 @@ def load_state(window: QMainWindow, settings: QSettings):
         wmodel = w.model()
         if wmodel is not None:
             colsNum = wmodel.columnCount()
-        for c in range(0, colsNum):
+        for c in range(colsNum):
             state = settings.value("column" + str(c))
             if state is not None:
                 currWidth = int(state)
@@ -123,7 +124,7 @@ def load_state(window: QMainWindow, settings: QSettings):
     for w, wKey in widgetsList:
         settings.beginGroup(wKey)
         colsNum = w.columnCount()
-        for c in range(0, colsNum):
+        for c in range(colsNum):
             state = settings.value("column" + str(c))
             if state is not None:
                 currWidth = int(state)
@@ -139,7 +140,7 @@ def load_state(window: QMainWindow, settings: QSettings):
     for w, wKey in widgetsList:
         settings.beginGroup(wKey)
         colsNum = w.header().count()
-        for c in range(0, colsNum):
+        for c in range(colsNum):
             state = settings.value("column" + str(c))
             if state is not None:
                 currWidth = int(state)
@@ -198,7 +199,7 @@ def save_state(window: QMainWindow, settings: QSettings):
     for w, wKey in widgetsList:
         settings.beginGroup(wKey)
         colsNum = w.model().columnCount()
-        for c in range(0, colsNum):
+        for c in range(colsNum):
             settings.setValue("column" + str(c), w.columnWidth(c))
         header = w.horizontalHeader()
         sortColumn = header.sortIndicatorSection()
@@ -214,7 +215,7 @@ def save_state(window: QMainWindow, settings: QSettings):
     for w, wKey in widgetsList:
         settings.beginGroup(wKey)
         colsNum = w.columnCount()
-        for c in range(0, colsNum):
+        for c in range(colsNum):
             settings.setValue("column" + str(c), w.columnWidth(c))
         header = w.horizontalHeader()
         sortColumn = header.sortIndicatorSection()
@@ -229,7 +230,7 @@ def save_state(window: QMainWindow, settings: QSettings):
         settings.beginGroup(wKey)
         header = w.header()
         colsNum = header.count()
-        for c in range(0, colsNum):
+        for c in range(colsNum):
             settings.setValue("column" + str(c), w.columnWidth(c))
         sortColumn = header.sortIndicatorSection()
         settings.setValue("sortColumn", sortColumn)
