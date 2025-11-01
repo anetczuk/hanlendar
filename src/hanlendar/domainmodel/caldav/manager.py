@@ -36,7 +36,6 @@ from hanlendar.domainmodel.icalio import import_icalendar, export_icalendar, fix
 
 # from hanlendar import persist
 # from hanlendar.domainmodel.reminder import Notification
-# from hanlendar.domainmodel.task import TaskOccurrence
 # from hanlendar.domainmodel.local.todo import LocalToDo
 
 

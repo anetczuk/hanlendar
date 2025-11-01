@@ -34,7 +34,6 @@ from hanlendar.domainmodel.local.todo import LocalToDo
 
 # from hanlendar import persist
 # from hanlendar.domainmodel.item import Item
-# from hanlendar.domainmodel.task import TaskOccurrence
 # from hanlendar.domainmodel.local.todo import LocalToDo
 
 
@@ -162,6 +161,7 @@ class Manager:
                 return task
         return None
 
+    ## return TaskOccurence list for given date
     def getTaskOccurrencesForDate(self, taskDate: date, *, includeCompleted=True):
         retList = []
         allTasks = self.getTasksAll()

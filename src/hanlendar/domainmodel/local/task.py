@@ -25,7 +25,7 @@ import logging
 import datetime
 
 from hanlendar import persist
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.task import Task, DateTimeRange
 from hanlendar.domainmodel.item import generate_uid
 from hanlendar.domainmodel.recurrent import Recurrent
 from hanlendar.domainmodel.reminder import Reminder
@@ -50,12 +50,15 @@ class LocalTask(Task, persist.Versionable):
         self._UID = generate_uid()
         self._title = title
         self._description = ""
-        self._completed = 0  ## in range [0..100]
+        self._completed = 0  ## task completion percentage, in range [0..100]
         self._priority = 5  ## lower number, greater priority
 
         self._parent = None
         self.subitems: list = None
+        
+        ## current task start time (updated every time recurrent task is completed)
         self._startDate: datetime.datetime = None
+        ## current task due time (updated every time recurrent task is completed)
         self._dueDate: datetime.datetime = None
         self._reminderList: list[Reminder] = None
         self._recurrence: Recurrent = None
@@ -182,19 +185,19 @@ class LocalTask(Task, persist.Versionable):
     ## ========================================================================
 
     ## overriden
-    def _getStartDateTime(self):
+    def _getStartDateTime(self) -> datetime.datetime:
         return self._startDate
 
     ## overriden
-    def _setStartDateTime(self, value):
+    def _setStartDateTime(self, value: datetime.datetime):
         self._startDate = value
 
     ## overriden
-    def _getDueDateTime(self):
+    def _getDueDateTime(self) -> datetime.datetime:
         return self._dueDate
 
     ## overriden
-    def _setDueDateTime(self, value):
+    def _setDueDateTime(self, value: datetime.datetime):
         self._dueDate = value
 
     ## ========================================================================
@@ -210,19 +213,19 @@ class LocalTask(Task, persist.Versionable):
     ## =====================================================================
 
     ## overriden
-    def _getRecurrence(self):
+    def _getRecurrence(self) -> Recurrent:
         return self._recurrence
 
     ## overriden
-    def _setRecurrence(self, value):
+    def _setRecurrence(self, value: Recurrent):
         self._recurrence = value
 
     ## overriden
-    def _getRecurrentOffset(self):
+    def _getRecurrentOffset(self) -> int:
         return self._recurrentOffset
 
     ## overriden
-    def _setRecurrentOffset(self, value):
+    def _setRecurrentOffset(self, value: int):
         self._recurrentOffset = value
 
     ## ========================================================================

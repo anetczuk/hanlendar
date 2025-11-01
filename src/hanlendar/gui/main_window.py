@@ -67,13 +67,13 @@ class DataHighlightModel(NavCalendarHighlightModel):
     def isHighlighted(self, date: QDate):
         entryDate = date.toPyDate()
         manager = self.dataObject.getManager()
-        occurrencesList = manager.getTaskOccurrencesForDate(entryDate, False)
+        occurrencesList = manager.getTaskOccurrencesForDate(entryDate, includeCompleted=False)
         return len(occurrencesList) > 0
 
     def isOccupied(self, date: QDate):
         entryDate = date.toPyDate()
         manager = self.dataObject.getManager()
-        occurrencesList = manager.getTaskOccurrencesForDate(entryDate, True)
+        occurrencesList = manager.getTaskOccurrencesForDate(entryDate, includeCompleted=True)
         occurrencesList = [task for task in occurrencesList if task.isCompleted()]
         return len(occurrencesList) > 0
 
