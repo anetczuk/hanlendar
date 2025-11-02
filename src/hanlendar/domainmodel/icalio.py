@@ -48,13 +48,18 @@ ICAL_TASK_FIELD_DICT = {
     TaskField.COMPLETED: "x-hanlendar-completedx",
     TaskField.PRIORITY: "priority",
     TaskField.GROUP_PARENT: "x-hanlendar-parent",  ## uuid
-    TaskField.RECURRENCE: "x-hanlendar-reccur",
-    TaskField.RECCUR_OFFSET: "x-hanlendar-reccur-offset",
+    TaskField.RECURRENCE: "x-hanlendar-recurrence",
+    TaskField.OCCURRENCE_START: "x-hanlendar-occurrence-start",
+    TaskField.OCCURRENCE_DUE: "x-hanlendar-occurrence-due",
     TaskField.REMINDERS: "x-hanlendar-reminders",  ## comma separated list of 'timedelta' values
 }
 
 
-ICAL_RECURR_FIELD_DICT = {RecurrentField.MODE: "mode", RecurrentField.STEP: "step", RecurrentField.ENDDATE: "enddate"}
+ICAL_RECURR_FIELD_DICT = {
+    RecurrentField.MODE: "x-hanlendar-recurrence-mode",
+    RecurrentField.STEP: "x-hanlendar-recurrence-step",
+    RecurrentField.ENDDATE: "x-hanlendar-recurrence-end-date",
+}
 
 
 def export_icalendar_content(manager: Manager) -> str:
@@ -75,7 +80,7 @@ def export_icalendar(manager: Manager) -> icalendar.cal.Calendar:
     for task in allTasks:
         _LOGGER.info("exporting task: %s %s", task.UID, task.title)
 
-        ievent = icalendar.cal.Event()
+        ievent: icalendar.cal.Component = icalendar.cal.Event()
 
         set_ical_value(ievent, TaskField.UID, task.UID)
         set_ical_value(ievent, TaskField.SUMMARY, task.title)
@@ -95,13 +100,14 @@ def export_icalendar(manager: Manager) -> icalendar.cal.Calendar:
         if taskParent is not None:
             set_ical_value(ievent, TaskField.GROUP_PARENT, taskParent.UID)
 
-        reccurence = task.recurrence
-        if reccurence is not None:
-            recurrent_dict = {}
-            recurrent_dict[ICAL_RECURR_FIELD_DICT[RecurrentField.MODE]] = str(reccurence.mode.name)
-            recurrent_dict[ICAL_RECURR_FIELD_DICT[RecurrentField.STEP]] = str(reccurence.every)
-            recurrent_dict[ICAL_RECURR_FIELD_DICT[RecurrentField.ENDDATE]] = str(reccurence.endDate)
-            set_ical_dict(ievent, TaskField.RECURRENCE, task.recurrentOffset, recurrent_dict)
+        recurrence = task.recurrence
+        if recurrence is not None:
+            ievent[ICAL_RECURR_FIELD_DICT[RecurrentField.MODE]] = str(recurrence.mode.name)
+            ievent[ICAL_RECURR_FIELD_DICT[RecurrentField.STEP]] = str(recurrence.every)
+            ievent[ICAL_RECURR_FIELD_DICT[RecurrentField.ENDDATE]] = str(recurrence.endDate)
+
+            ievent[ICAL_TASK_FIELD_DICT[TaskField.OCCURRENCE_START]] = task.occurrenceStart
+            ievent[ICAL_TASK_FIELD_DICT[TaskField.OCCURRENCE_DUE]] = task.occurrenceDue
 
         reminderList = task.reminderList
         set_ical_list(ievent, TaskField.REMINDERS, reminderList, value_extractor=lambda rem: str(rem.timeOffset))
@@ -163,15 +169,27 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar):
             task.completed = get_ical_value_int(component, TaskField.COMPLETED, 0)
 
             try:
-                recurr_dict = get_ical_dict(component, TaskField.RECURRENCE)
-                reccurMode = recurr_dict[get_field(ICAL_RECURR_FIELD_DICT, RecurrentField.MODE)]
-                reccurMode = RepeatType.findByName(reccurMode)
-                reccurStep = recurr_dict[get_field(ICAL_RECURR_FIELD_DICT, RecurrentField.STEP)]
-                reccurStep = int(reccurStep)
-                reccurEnd = recurr_dict[get_field(ICAL_RECURR_FIELD_DICT, RecurrentField.ENDDATE)]
-                reccurEnd = convert_to_date(reccurEnd)
-                task.recurrence = Recurrent(reccurMode, reccurStep, reccurEnd)
-                task.recurrentOffset = get_ical_value_int(component, TaskField.RECURRENCE, 0)
+                recurrMode = component.get(ICAL_RECURR_FIELD_DICT[RecurrentField.MODE])
+                recurrMode = RepeatType.findByName(recurrMode)
+
+                recurrStep = component.get(ICAL_RECURR_FIELD_DICT[RecurrentField.STEP])
+                recurrStep = int(recurrStep)
+
+                recurrEnd = component.get(ICAL_RECURR_FIELD_DICT[RecurrentField.ENDDATE])
+                recurrEnd = convert_to_date(recurrEnd)
+
+                task.recurrence = Recurrent(recurrMode, recurrStep, recurrEnd)
+
+                occurStart = component.get(ICAL_TASK_FIELD_DICT[TaskField.OCCURRENCE_START])
+                occurStart = convert_to_datetime(occurStart)
+                # task.occurrenceStart = occurStart
+
+                occurDue = component.get(ICAL_TASK_FIELD_DICT[TaskField.OCCURRENCE_DUE])
+                occurDue = convert_to_datetime(occurDue)
+                # task.occurrenceDue = occurDue
+
+                task.setOccurrence(occurStart, occurDue)
+
             # ruff: noqa: S110
             except Exception:  # pylint: disable=W0718 # nosec
                 pass
@@ -233,7 +251,7 @@ def fix_dangling_tasks(manager: Manager, dangling_children):
 
         ## add remaining dangling children as regular tasks
         for item in dangling_children:
-            child, _ = item
+            child, _other = item
             manager.addTask(child)
         break
 
@@ -309,8 +327,17 @@ def get_ical_value_date(component, field: TaskField):
 
 def convert_to_date(value_string: str):
     try:
+        ## format: https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
         date_time_obj = datetime.datetime.strptime(value_string, "%Y-%m-%d")
         return date_time_obj.date()
+    except Exception:  # pylint: disable=W0718
+        return None
+
+
+def convert_to_datetime(value_string: str):
+    try:
+        ## format: https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
+        return datetime.datetime.strptime(value_string, "%Y-%m-%d %H:%M:%S")
     except Exception:  # pylint: disable=W0718
         return None
 
@@ -341,7 +368,7 @@ def get_ical_value(component, field: TaskField):
 
 
 ###
-def set_ical_dict(component, field: TaskField, value, values_dict, _value_extractor=None):
+def set_ical_dict(component: icalendar.cal.Component, field: TaskField, value, values_dict, _value_extractor=None):
     if values_dict is None:
         return
     if len(values_dict) < 1:
@@ -373,6 +400,13 @@ def set_ical_value(component, field: TaskField, value):
     if value is None:
         return
     field_name = ICAL_TASK_FIELD_DICT.get(field, field)
+    component.add(field_name, value)
+
+
+###
+def set_ical_value_raw(component, field_name, value):
+    if value is None:
+        return
     component.add(field_name, value)
 
 

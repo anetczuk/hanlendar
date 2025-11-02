@@ -121,6 +121,20 @@ class DateTimeRange:
             return False
         return not (self.end is not None and entryDate > self.end)
 
+    def _key(self):
+        return (self.start, self.end)
+
+    def __hash__(self):
+        return hash(self._key())
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._key() == other._key()
+
+    def get_raw(self):
+        return (self.start, self.end)
+
     def dateRange(self) -> DateRange:
         start = None
         if self.start is not None:
@@ -160,6 +174,9 @@ class DateTimeRange:
     def __str__(self):
         return f"[s:{self.start} e:{self.end}]"
 
+    def __repr__(self):
+        return f"[DTR {self.start} {self.end}]"
+
 
 ## ========================================================================
 
@@ -171,13 +188,13 @@ class TaskOccurrence:
     Recurrent tasks has many occurrences.
     """
 
-    def __init__(self, task, date_range: DateTimeRange = None):
+    def __init__(self, task, datetime_range: DateTimeRange = None):
         if task is None:
             raise TypeError
         self.task = task
-        if date_range is None:
-            date_range = task.getOccurenceDateTimeRange(0)
-        self._dateRange = date_range
+        if datetime_range is None:
+            datetime_range = task.getOccurrenceDateTimeRange(0)
+        self._dateRange = datetime_range
 
     def isValid(self):
         return self.dateRange is not None
@@ -200,7 +217,7 @@ class TaskOccurrence:
 
     @property
     def startCurrent(self):
-        subOccurrences = self.task.subOccurences()
+        subOccurrences = self.task.subOccurrences()
         retDate = self.start
         for currItem in subOccurrences:
             if currItem.start is None:
@@ -217,7 +234,7 @@ class TaskOccurrence:
 
     @property
     def dueCurrent(self):
-        subOccurrences = self.task.subOccurences()
+        subOccurrences = self.task.subOccurrences()
         retDate = self.due
         for currItem in subOccurrences:
             if currItem.due is None:
@@ -271,16 +288,16 @@ class TaskOccurrence:
         recurrence = self.task.getAppliedRecurrence()
         if recurrence is None:
             return [0, 1]
-        recurrentOffset: relativedelta = recurrence.getDateOffset()
-        if recurrentOffset is None:
+        recurrentDateOffset: relativedelta = recurrence.getDateOffset()
+        if recurrentDateOffset is None:
             return [0, 1]
 
-        multiplicator = recurrent.find_multiplication_after(endDate.date(), entryDate, recurrentOffset)
+        multiplicator = recurrent.find_multiplication_after(endDate.date(), entryDate, recurrentDateOffset)
         if multiplicator < 0:
             return [0, 1]
-        endDate += recurrentOffset * multiplicator
+        endDate += recurrentDateOffset * multiplicator
         if startDate is not None:
-            startDate += recurrentOffset * multiplicator
+            startDate += recurrentDateOffset * multiplicator
         ret = calc_time_span(entryDate, startDate, endDate)
         if ret is not None:
             return ret
@@ -315,7 +332,8 @@ class TaskField(Enum):
     GROUP_PARENT = auto()
 
     RECURRENCE = auto()
-    RECCUR_OFFSET = auto()
+    OCCURRENCE_START = auto()
+    OCCURRENCE_DUE = auto()
 
     REMINDERS = auto()
 
@@ -385,6 +403,18 @@ class Task(Item):
 
     ## ========================================================================
 
+    @abc.abstractmethod
+    def _getCompletedList(self) -> list[DateTimeRange]:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @property
+    def completedList(self) -> list[DateTimeRange]:
+        return self._getCompletedList()
+
+    ## ========================================================================
+
+    # TODO: remove - not needed anymore
     @property
     def occurrenceStart(self) -> datetime:
         startDate = self._getStartDateTime()
@@ -393,6 +423,7 @@ class Task(Item):
             return recurrenceDate
         return startDate
 
+    # TODO: remove - not needed anymore
     @occurrenceStart.setter
     def occurrenceStart(self, value: datetime):
         relativeDate = self._getRecurrenceRelative()
@@ -404,6 +435,7 @@ class Task(Item):
 
     ## ========================================================================
 
+    # TODO: remove - not needed anymore
     @property
     def occurrenceDue(self) -> datetime:
         dueDate = self._getDueDateTime()
@@ -412,6 +444,7 @@ class Task(Item):
             return recurrenceDate
         return dueDate
 
+    # TODO: remove - not needed anymore
     @occurrenceDue.setter
     def occurrenceDue(self, value: datetime):
         relativeDate = self._getRecurrenceRelative()
@@ -422,7 +455,7 @@ class Task(Item):
         diff = value - relativeDate
         self._setDueDateTime(diff)
 
-    def getOccurenceDateTimeRange(self, offset: int) -> DateTimeRange:
+    def getOccurrenceDateTimeRange(self, offset: int = 0) -> DateTimeRange:
         dateRange: DateTimeRange = self.getDateTimeRange()
         if dateRange is None:
             return DateTimeRange()
@@ -432,6 +465,12 @@ class Task(Item):
                 recurrenceOffset = recurrence.getDateOffset()
                 dateRange += recurrenceOffset * offset
         return dateRange
+
+    def setOccurrence(self, _start: datetime, due: datetime):
+        if self.recurrence is None:
+            return
+        due_offset = self.recurrence.findRecurrentOffset(self.dueDateTime, due)
+        self._setRecurrentOffset(due_offset)
 
     ## ========================================================================
 
@@ -479,24 +518,14 @@ class Task(Item):
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
-    @property
-    def recurrentOffset(self) -> int:
-        return self._getRecurrentOffset()
-
-    @recurrentOffset.setter
-    def recurrentOffset(self, value: int):
-        if value is None:
-            value = 0
-        self._setRecurrentOffset(value)
-
     ## ========================================================================
 
     def currentOccurrence(self) -> TaskOccurrence:
         recOffset = self._getRecurrentOffset()
-        dateRange = self.getOccurenceDateTimeRange(recOffset)
-        return TaskOccurrence(self, date_range=dateRange)
+        dateRange = self.getOccurrenceDateTimeRange(recOffset)
+        return TaskOccurrence(self, datetime_range=dateRange)
 
-    def subOccurences(self) -> list[TaskOccurrence]:
+    def subOccurrences(self) -> list[TaskOccurrence]:
         subitems = self.getSubitems()
         if subitems is None:
             return []
@@ -506,7 +535,7 @@ class Task(Item):
             ret.append(currOccurrence)
         return ret
 
-    ## return TaskOccurence for given date
+    ## return TaskOccurrence for given date
     ## returns None if no occurrence in given date
     def getTaskOccurrenceForDate(self, entryDate: date) -> TaskOccurrence:
         startDueRange: DateTimeRange = self.getDateTimeRange()
@@ -523,17 +552,27 @@ class Task(Item):
 
         if recurr.endDate is not None and recurr.endDate < entryDate:
             return None
-        recurrentOffset: relativedelta = recurr.getDateOffset()
-        if recurrentOffset is None:
+
+        completedList = self.completedList
+        for item in completedList:
+            itemRange: DateRange = item.dateRange()
+            itemRange.normalize()
+            if itemRange.isNormalized() is False:
+                return None
+            if entryDate in itemRange:
+                return TaskOccurrence(self, datetime_range=item)
+
+        recurrentDateOffset: relativedelta = recurr.getDateOffset()
+        if recurrentDateOffset is None:
             return None
 
-        multiplicator = recurrent.find_multiplication_after(dateRange.end, entryDate, recurrentOffset)
+        multiplicator = recurrent.find_multiplication_after(dateRange.end, entryDate, recurrentDateOffset)
         if multiplicator < 1:
             return None
-        dateRange += recurrentOffset * multiplicator
+        dateRange += recurrentDateOffset * multiplicator
         if entryDate in dateRange:
-            dateRange = self.getOccurenceDateTimeRange(multiplicator)
-            return TaskOccurrence(self, date_range=dateRange)
+            datetime_range = self.getOccurrenceDateTimeRange(multiplicator)
+            return TaskOccurrence(self, datetime_range=datetime_range)
 
         return None
 
@@ -680,14 +719,6 @@ class Task(Item):
             return "None"
         return nextRepeat.strftime("%Y-%m-%d %H:%M")
 
-    #     def __str__(self):
-    #         reminderList = self._getReminderList()
-    #         return "[t:%s d:%s c:%s p:%s sd:%s dd:%s rem:%s rec:%s ro:%s]" % (
-    #             self.title, self.description, self._completed, self.priority,
-    #             self.occurrenceStart, self.occurrenceDue,
-    #             reminderList, self._recurrence,
-    #             self._recurrentOffset )
-
     def _progressRecurrence(self) -> bool:
         recurr = self.getAppliedRecurrence()
         if recurr is None:
@@ -709,6 +740,7 @@ class Task(Item):
             return None
         return aDate + relativeDate
 
+    ## return relative time between current occurrence and start of task
     def _getRecurrenceRelative(self, offset: int = 0) -> relativedelta:
         recurr: Recurrent = self.getAppliedRecurrence()
         if recurr is None or recurr.isValid() is False:

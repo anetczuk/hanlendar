@@ -244,7 +244,7 @@ END:VCALENDAR
     def test_io_task_empty(self):
         manager = Manager()
         self.assertEqual(len(manager.getTasksAll()), 0)
-        newManager = execute_io(manager)
+        newManager = execute_ical_io(manager)
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 0)
 
@@ -262,7 +262,7 @@ END:VCALENDAR
         task.dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45)
         self.assertEqual(task.occurrenceDue, task.dueDateTime)
 
-        newManager = execute_io(manager)
+        newManager = execute_ical_io(manager)
 
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 1)
@@ -287,7 +287,7 @@ END:VCALENDAR
         task.startDateTime = None
         task.dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45)
 
-        newManager = execute_io(manager)
+        newManager = execute_ical_io(manager)
 
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 1)
@@ -297,7 +297,7 @@ END:VCALENDAR
         self.assertEqual(newTask.startDateTime, task.startDateTime)
         self.assertEqual(newTask.dueDateTime, task.dueDateTime)
 
-    def test_io_task_reccurence(self):
+    def test_io_task_recurrence(self):
         manager = Manager()
         task: Task = manager.createEmptyTask()
         manager.addTask(task)
@@ -306,9 +306,9 @@ END:VCALENDAR
         task.title = "title example"
         task.dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45)
         task.recurrence = Recurrent(RepeatType.DAILY, 3, datetime.date(year=2023, month=9, day=18))
-        task.recurrentOffset = 6
+        task.setCompleted()  ## progress recurrence
 
-        newManager = execute_io(manager)
+        newManager = execute_ical_io(manager)
 
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 1)
@@ -317,7 +317,6 @@ END:VCALENDAR
         self.assertEqual(newTask.UID, task.UID)
         self.assertEqual(newTask.title, task.title)
         self.assertEqual(newTask.dueDateTime, task.dueDateTime)
-        self.assertEqual(newTask.recurrentOffset, task.recurrentOffset)
         self.assertEqual(newTask.recurrence, task.recurrence)
         self.assertEqual(newTask.occurrenceDue, task.occurrenceDue)
 
@@ -331,7 +330,7 @@ END:VCALENDAR
 
         self.assertEqual(len(manager.getTasksAll()), 2)
 
-        newManager = execute_io(manager)
+        newManager = execute_ical_io(manager)
 
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 2)
@@ -353,7 +352,7 @@ END:VCALENDAR
 
         self.assertEqual(len(manager.getTasksAll()), 1)
 
-        newManager = execute_io(manager)
+        newManager = execute_ical_io(manager)
 
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 1)
@@ -374,7 +373,7 @@ END:VCALENDAR
 
         self.assertEqual(len(manager.getTasksAll()), 1)
 
-        newManager = execute_io(manager)
+        newManager = execute_ical_io(manager)
 
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 1)
@@ -388,7 +387,7 @@ END:VCALENDAR
 
 
 ##
-def execute_io(manager: Manager):
+def execute_ical_io(manager: Manager):
     content = export_icalendar_content(manager)
     new_manager = Manager()
     import_icalendar_content(new_manager, content)

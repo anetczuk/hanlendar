@@ -161,7 +161,7 @@ class Manager:
                 return task
         return None
 
-    ## return TaskOccurence list for given date
+    ## return TaskOccurrence list for given date
     def getTaskOccurrencesForDate(self, taskDate: date, *, includeCompleted=True):
         retList = []
         allTasks = self.getTasksAll()

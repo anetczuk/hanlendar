@@ -29,7 +29,7 @@ from datetime import timedelta
 from hanlendar.domainmodel.reminder import Reminder
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
 from hanlendar.domainmodel.local.task import LocalTask as Task
-from hanlendar.domainmodel.task import TaskOccurrence
+from hanlendar.domainmodel.task import TaskOccurrence, DateTimeRange
 
 
 class TaskTest(unittest.TestCase):
@@ -61,38 +61,104 @@ class TaskTest(unittest.TestCase):
         self.assertEqual(task.occurrenceStart.date(), datetime.date(2020, 5, 18))
         self.assertEqual(task.occurrenceDue.date(), datetime.date(2020, 5, 18))
 
-    #TODO: activate
-    # def test_setCompleted_recurrent_change(self):
-    #     taskDate = datetime.date(2020, 5, 3)
-    #     task = Task()
-    #     task.recurrence = Recurrent()
-    #     task.recurrence.setWeekly()
-    #     task.setDefaultDate(taskDate)
-    #
-    #     task.setCompleted(50)
-    #     self.assertEqual(task.completed, 50)
-    #     self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 3))
-    #     self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 3))
-    #     self.assertEqual(task.printNextRecurrence(), "2020-05-10 10:00")
-    #
-    #     ## yes, complete twice
-    #     task.setCompleted()
-    #     task.setCompleted()
-    #
-    #     self.assertEqual(task.completed, 0)
-    #     self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 17))
-    #     self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 17))
-    #     self.assertEqual(task.occurrenceStart.date(), datetime.date(2020, 5, 17))
-    #     self.assertEqual(task.occurrenceDue.date(), datetime.date(2020, 5, 17))
-    #     self.assertEqual(task.printNextRecurrence(), "2020-05-24 10:00")
-    #
-    #     ## change recurrence
-    #     task.recurrence.setDaily()
-    #     self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 17))
-    #     self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 17))
-    #     self.assertEqual(task.occurrenceStart.date(), datetime.date(2020, 5, 17))
-    #     self.assertEqual(task.occurrenceDue.date(), datetime.date(2020, 5, 17))
-    #     self.assertEqual(task.printNextRecurrence(), "2020-05-18 10:00")
+    def test_setCompleted_recurrent_change(self):
+        taskDate = datetime.date(2020, 5, 3)
+        task = Task()
+        task.recurrence = Recurrent()
+        task.recurrence.setWeekly()
+        task.setDefaultDate(taskDate)
+
+        task.setCompleted(50)
+        self.assertEqual(task.completed, 50)
+        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 3))
+        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 3))
+        self.assertEqual(task.printNextRecurrence(), "2020-05-10 10:00")
+
+        ## yes, complete twice
+        task.setCompleted()
+        task.setCompleted()
+
+        self.assertEqual(task.completed, 0)
+        # self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 17))
+        # self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 17))
+        self.assertEqual(task.occurrenceStart.date(), datetime.date(2020, 5, 17))
+        self.assertEqual(task.occurrenceDue.date(), datetime.date(2020, 5, 17))
+        self.assertEqual(task.printNextRecurrence(), "2020-05-24 10:00")
+
+        ## change recurrence
+        task.recurrence.setDaily()
+        # self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 17))
+        # self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 17))
+        self.assertEqual(task.occurrenceStart.date(), datetime.date(2020, 5, 5))
+        self.assertEqual(task.occurrenceDue.date(), datetime.date(2020, 5, 5))
+        self.assertEqual(task.printNextRecurrence(), "2020-05-06 10:00")
+
+    def test_setCompleted_history_001(self):
+        taskDate = datetime.date(2020, 5, 2)
+        task = Task()
+        task.recurrence = Recurrent()
+        task.recurrence.setDaily()
+        task.setDefaultDate(taskDate)
+
+        task.setCompleted()
+        task.setCompleted()
+
+        self.assertListEqual(
+            task.completedList,
+            [
+                DateTimeRange(datetime.datetime(2020, 5, 2, 10), datetime.datetime(2020, 5, 2, 11)),
+                DateTimeRange(datetime.datetime(2020, 5, 3, 10), datetime.datetime(2020, 5, 3, 11)),
+            ],
+        )
+        self.assertEqual(task.occurrenceStart.date(), datetime.date(2020, 5, 4))
+        self.assertEqual(task.occurrenceDue.date(), datetime.date(2020, 5, 4))
+
+    def test_setCompleted_history_002(self):
+        taskDate = datetime.date(2020, 5, 2)
+        task = Task()
+        task.recurrence = Recurrent()
+        task.setDefaultDate(taskDate)
+
+        task.recurrence.setDaily()
+        task.setCompleted()
+        task.setCompleted()
+
+        task.recurrence.setWeekly()
+        task.setCompleted()
+
+        self.assertListEqual(
+            task.completedList,
+            [
+                DateTimeRange(datetime.datetime(2020, 5, 2, 10), datetime.datetime(2020, 5, 2, 11)),
+                DateTimeRange(datetime.datetime(2020, 5, 3, 10), datetime.datetime(2020, 5, 3, 11)),
+                DateTimeRange(datetime.datetime(2020, 5, 16, 10), datetime.datetime(2020, 5, 16, 11)),
+            ],
+        )
+        self.assertEqual(task.occurrenceStart.date(), datetime.date(2020, 5, 23))
+        self.assertEqual(task.occurrenceDue.date(), datetime.date(2020, 5, 23))
+
+    def test_deserialize_complete_list_v6(self):
+        ## test deserialization of Task version 6 and restore of "_completedList"
+        task = Task()
+        obj_dict = {
+            "_startDate": datetime.datetime(2020, 5, 2, 10),
+            "_dueDate": datetime.datetime(2020, 5, 2, 11),
+            "_completed": 0,
+            "_recurrence": Recurrent(RepeatType.DAILY, 1),
+            "_recurrentOffset": 3,
+        }
+        task._convertstate_(obj_dict, 6)  # pylint: disable=W0212
+
+        self.assertListEqual(
+            task.completedList,
+            [
+                DateTimeRange(datetime.datetime(2020, 5, 2, 10), datetime.datetime(2020, 5, 2, 11)),
+                DateTimeRange(datetime.datetime(2020, 5, 3, 10), datetime.datetime(2020, 5, 3, 11)),
+                DateTimeRange(datetime.datetime(2020, 5, 4, 10), datetime.datetime(2020, 5, 4, 11)),
+            ],
+        )
+        self.assertEqual(task.occurrenceStart.date(), datetime.date(2020, 5, 5))
+        self.assertEqual(task.occurrenceDue.date(), datetime.date(2020, 5, 5))
 
     def test_getTaskOccurrenceForDate(self):
         taskDate = datetime.datetime(2020, 5, 17)
@@ -109,7 +175,8 @@ class TaskTest(unittest.TestCase):
         task.recurrence = Recurrent()
         task.recurrence.setDaily(1)
 
-        entry: TaskOccurrence = task.getTaskOccurrenceForDate(taskDate.date() + timedelta(days=2))
+        find_date = taskDate.date() + timedelta(days=2)
+        entry: TaskOccurrence = task.getTaskOccurrenceForDate(find_date)
         self.assertEqual(entry.task, task)
 
     def test_getTaskOccurrenceForDate_recurrent_far(self):

@@ -61,14 +61,14 @@ def mock_date_meta(target):
 
 def get_mock_date(value, module=datetime):
     MockedDate = mock_date_meta(value)
-    ## moduke/object, attribute, new value
+    ## module/object, attribute, new value
     ## more info: https://docs.python.org/3/library/unittest.mock.html#patch-object
     return mock.patch.object(module, "date", MockedDate)
 
 
 def mock_date(value, module=datetime):
     MockedDate = mock_date_meta(value)
-    ## moduke/object, attribute, new value
+    ## module/object, attribute, new value
     ## more info: https://docs.python.org/3/library/unittest.mock.html#patch-object
     obj = mock.patch.object(module, "date", MockedDate)
     obj.start()
@@ -100,14 +100,14 @@ def mock_datetime_meta(value):
 
 def get_mock_datetime(value, module=datetime):
     MockedDatetime = mock_datetime_meta(value)
-    ## moduke/object, attribute, new value
+    ## module/object, attribute, new value
     ## more info: https://docs.python.org/3/library/unittest.mock.html#patch-object
     return mock.patch.object(module, "datetime", MockedDatetime)
 
 
 def mock_datetime(value, module=datetime):
     MockedDatetime = mock_datetime_meta(value)
-    ## moduke/object, attribute, new value
+    ## module/object, attribute, new value
     ## more info: https://docs.python.org/3/library/unittest.mock.html#patch-object
     obj = mock.patch.object(module, "datetime", MockedDatetime)
     obj.start()

@@ -163,13 +163,13 @@ class Recurrent:
             return False
         return currDate > self.endDate
 
-    def nextDateTime(self, currDate: datetime) -> datetime:
+    def nextDateTime(self, currDate: datetime, offset: int = 1) -> datetime:
         if currDate is None:
             return None
         dateOffset = self.getDateOffset()
         if dateOffset is None:
             return None
-        nextDate = currDate + dateOffset
+        nextDate = currDate + dateOffset * offset
         if self.endDate is None:
             return nextDate
         if nextDate.date() > self.endDate:

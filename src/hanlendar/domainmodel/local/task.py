@@ -43,7 +43,8 @@ class LocalTask(Task, persist.Versionable):
     ## 4: rename: 'reminderList' to '_reminderList'
     ## 5: rescaled 'priority'
     ## 6: added 'UID'
-    _class_version = 6
+    ## 7: added '_completedList'
+    _class_version = 7
 
     def __init__(self, title=""):
         super().__init__()
@@ -55,15 +56,19 @@ class LocalTask(Task, persist.Versionable):
 
         self._parent = None
         self.subitems: list = None
-        
+
         ## current task start time (updated every time recurrent task is completed)
         self._startDate: datetime.datetime = None
         ## current task due time (updated every time recurrent task is completed)
         self._dueDate: datetime.datetime = None
+        ## include completed 'self._startDate' and 'self._dueDate' (even for non recurrent tasks)
+        self._completedList: list[DateTimeRange] = []
+
         self._reminderList: list[Reminder] = None
         self._recurrence: Recurrent = None
         self._recurrentOffset = 0
 
+    # ruff: noqa: PLR0912
     def _convertstate_(self, dict_, dict_version_):
         _LOGGER.info("converting object from version %s to %s", dict_version_, self._class_version)
 
@@ -111,6 +116,31 @@ class LocalTask(Task, persist.Versionable):
         if dict_version_ == 5:
             dict_["_UID"] = generate_uid()
             dict_version_ = 6
+
+        if dict_version_ == 6:
+            completed_list = []
+            completed = dict_["_completed"]
+            recurrence = dict_["_recurrence"]
+            if recurrence is None:
+                if completed == 100:
+                    ## already completed - add start, due date
+                    dt_range = DateTimeRange(dict_["_startDate"], dict_["_dueDate"])
+                    completed_list.append(dt_range)
+            else:
+                recurrence_offset = dict_["_recurrentOffset"]
+                if recurrence_offset > 0:
+                    ## already completed - add start, due date
+                    dt_range = DateTimeRange(dict_["_startDate"], dict_["_dueDate"])
+                    completed_list.append(dt_range)
+                start_date = dict_["_startDate"]
+                due_date = dict_["_dueDate"]
+                for offset in range(1, recurrence_offset):
+                    completed_start = recurrence.nextDateTime(start_date, offset)
+                    completed_due = recurrence.nextDateTime(due_date, offset)
+                    dt_range = DateTimeRange(completed_start, completed_due)
+                    completed_list.append(dt_range)
+            dict_["_completedList"] = completed_list
+            dict_version_ = 7
 
         # pylint: disable=W0201
         self.__dict__ = dict_
@@ -168,6 +198,13 @@ class LocalTask(Task, persist.Versionable):
             value = 0
         elif value > 100:
             value = 100
+        if value == 100:
+            if self._recurrentOffset == 0:
+                dt_range = DateTimeRange(self.startDateTime, self.dueDateTime)
+                self._completedList.append(dt_range)
+            else:
+                dt_range = DateTimeRange(self.occurrenceStart, self.occurrenceDue)
+                self._completedList.append(dt_range)
         if value == 100 and self._progressRecurrence() is True:
             # completed -- next occurrence
             self._completed = 0
@@ -199,6 +236,12 @@ class LocalTask(Task, persist.Versionable):
     ## overriden
     def _setDueDateTime(self, value: datetime.datetime):
         self._dueDate = value
+
+    ## overriden
+    def _getCompletedList(self) -> list[DateTimeRange]:
+        if self._completedList is None:
+            return []
+        return self._completedList
 
     ## ========================================================================
 
