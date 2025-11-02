@@ -41,16 +41,16 @@ def print_data(data_dict, *, detailed=False):
     print("archive:", data_dict.get("file", None))
     tasks: list[Task] = data_dict.get("tasks", [])
     all_tasks = get_tasks_all(tasks)
-    all_tasks.sort(reverse=True, key=lambda task: task.occurrenceDue)
+    all_tasks.sort(reverse=True, key=lambda task: task.dueDateTime)
 
     for task in all_tasks:
         if detailed is False:
-            due = str(task.occurrenceDue)
+            due = str(task.dueDateTime)
             completed = task.isCompleted()
             data = due + " " + task.getTitle() + " " + str(completed)
             print(data)
         else:
-            due = str(task.occurrenceDue)
+            due = str(task.dueDateTime)
             data = due + " " + task.getTitle() + "\n" + str(task.__dict__)
             print(data)
 

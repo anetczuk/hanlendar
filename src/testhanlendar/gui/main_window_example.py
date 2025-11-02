@@ -78,20 +78,23 @@ def prepare_example_data(dataManager: Manager):
     reminder = recurrentTask.addReminder()
     reminder.setDays(1)
 
-    task2 = dataManager.addNewTaskDateTime(recurrentTask.occurrenceStart.replace(hour=11), "task 2")
-    task2.dueDateTime = task2.occurrenceDue.replace(hour=20)
+    task2 = dataManager.addNewTaskDateTime(recurrentTask.startDateTime.replace(hour=11), "task 2")
+    dueDateTime = task2.dueDateTime.replace(hour=20)
+    task2.setOccurrenceDue(dueDateTime)
 
     task3 = dataManager.addTask()
     task3.title = "task 3"
-    task3.dueDateTime = taskDate.replace(hour=20) + timedelta(days=90)
-    task3.startDateTime = task3.dueDateTime - timedelta(days=1)
+    dueDateTime = taskDate.replace(hour=20) + timedelta(days=90)
+    startDateTime = dueDateTime - timedelta(days=1)
+    task3.setOccurrence(startDateTime, dueDateTime)
 
     subtask1 = task3.addSubTask()
     subtask1.title = "subtask 1"
-    subtask1.startDateTime = task3.startDateTime - timedelta(days=50)
-    subtask1.dueDateTime = task3.dueDateTime - timedelta(days=40)
+    startDateTime = task3.startDateTime - timedelta(days=50)
+    dueDateTime = task3.dueDateTime - timedelta(days=40)
+    subtask1.setOccurrence(startDateTime, dueDateTime)
 
-    completedTask = dataManager.addNewTaskDateTime(task2.occurrenceStart - timedelta(hours=3), "completed task 2")
+    completedTask = dataManager.addNewTaskDateTime(task2.startDateTime - timedelta(hours=3), "completed task 2")
     completedTask.setCompleted()
 
     recurrentDate2 = datetime.today().replace(day=15) + timedelta(days=30)
@@ -103,7 +106,8 @@ def prepare_example_data(dataManager: Manager):
     recurrentSub = recurrentTask2.addSubTask()
     recurrentSub.title = "recurrent subtask 1"
     recurrentSub.setDeadline()
-    recurrentSub.dueDateTime = recurrentTask2.dueDateTime - timedelta(days=1)
+    dueDateTime = recurrentTask2.dueDateTime - timedelta(days=1)
+    recurrentSub.setOccurrenceDue(dueDateTime)
     recurrentSub.recurrence = Recurrent()
     recurrentSub.recurrence.setMonthly()
 

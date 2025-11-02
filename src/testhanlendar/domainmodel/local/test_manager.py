@@ -63,7 +63,7 @@ class LocalManagerTest(unittest.TestCase):
         task = manager.addTask()
         todayDate = datetime.datetime.today()
         dueDate = todayDate.replace(day=1, hour=12)
-        task.dueDateTime = dueDate
+        task.setOccurrenceDue(dueDate)
         task.recurrence = Recurrent()
         task.recurrence.setWeekly()
         task.setCompleted()  ## mark first occurrence completed

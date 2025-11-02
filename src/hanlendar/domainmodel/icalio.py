@@ -49,8 +49,6 @@ ICAL_TASK_FIELD_DICT = {
     TaskField.PRIORITY: "priority",
     TaskField.GROUP_PARENT: "x-hanlendar-parent",  ## uuid
     TaskField.RECURRENCE: "x-hanlendar-recurrence",
-    TaskField.OCCURRENCE_START: "x-hanlendar-occurrence-start",
-    TaskField.OCCURRENCE_DUE: "x-hanlendar-occurrence-due",
     TaskField.REMINDERS: "x-hanlendar-reminders",  ## comma separated list of 'timedelta' values
 }
 
@@ -106,9 +104,6 @@ def export_icalendar(manager: Manager) -> icalendar.cal.Calendar:
             ievent[ICAL_RECURR_FIELD_DICT[RecurrentField.STEP]] = str(recurrence.every)
             ievent[ICAL_RECURR_FIELD_DICT[RecurrentField.ENDDATE]] = str(recurrence.endDate)
 
-            ievent[ICAL_TASK_FIELD_DICT[TaskField.OCCURRENCE_START]] = task.occurrenceStart
-            ievent[ICAL_TASK_FIELD_DICT[TaskField.OCCURRENCE_DUE]] = task.occurrenceDue
-
         reminderList = task.reminderList
         set_ical_list(ievent, TaskField.REMINDERS, reminderList, value_extractor=lambda rem: str(rem.timeOffset))
 
@@ -163,8 +158,7 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar):
 
             if start_date == end_date:
                 start_date = None
-            task.startDateTime = start_date
-            task.dueDateTime = end_date
+            task.setOccurrence(start_date, end_date)
 
             task.completed = get_ical_value_int(component, TaskField.COMPLETED, 0)
 
@@ -179,16 +173,6 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar):
                 recurrEnd = convert_to_date(recurrEnd)
 
                 task.recurrence = Recurrent(recurrMode, recurrStep, recurrEnd)
-
-                occurStart = component.get(ICAL_TASK_FIELD_DICT[TaskField.OCCURRENCE_START])
-                occurStart = convert_to_datetime(occurStart)
-                # task.occurrenceStart = occurStart
-
-                occurDue = component.get(ICAL_TASK_FIELD_DICT[TaskField.OCCURRENCE_DUE])
-                occurDue = convert_to_datetime(occurDue)
-                # task.occurrenceDue = occurDue
-
-                task.setOccurrence(occurStart, occurDue)
 
             # ruff: noqa: S110
             except Exception:  # pylint: disable=W0718 # nosec

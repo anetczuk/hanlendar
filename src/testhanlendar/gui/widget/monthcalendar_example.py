@@ -89,42 +89,49 @@ dataObject = DataObject(None)
 todayDate = datetime.datetime.today().replace(hour=6)
 task1 = dataObject.addTask()
 task1.title = "Task 1"
-task1.startDateTime = todayDate + timedelta(hours=5)
-task1.dueDateTime = task1.startDateTime + timedelta(hours=5)
+startDateTime = todayDate + timedelta(hours=5)
+dueDateTime = startDateTime + timedelta(hours=5)
+task1.setOccurrence(startDateTime, dueDateTime)
 
 refDate = todayDate + timedelta(days=1)
 task1 = dataObject.addTask()
 task1.title = "Task 2"
-task1.startDateTime = refDate + timedelta(hours=5)
-task1.dueDateTime = task1.startDateTime + timedelta(hours=5)
+startDateTime = refDate + timedelta(hours=5)
+dueDateTime = startDateTime + timedelta(hours=5)
+task1.setOccurrence(startDateTime, dueDateTime)
 
 task1 = dataObject.addTask()
 task1.title = "Task 3"
-task1.startDateTime = refDate + timedelta(hours=8)
-task1.dueDateTime = task1.startDateTime + timedelta(hours=5)
+startDateTime = refDate + timedelta(hours=8)
+dueDateTime = startDateTime + timedelta(hours=5)
+task1.setOccurrence(startDateTime, dueDateTime)
 
 task1 = dataObject.addTask()
 task1.title = "Expired task 1"
-task1.startDateTime = refDate - timedelta(days=2)
-task1.dueDateTime = task1.startDateTime + timedelta(hours=5)
+startDateTime = refDate - timedelta(days=2)
+dueDateTime = startDateTime + timedelta(hours=5)
+task1.setOccurrence(startDateTime, dueDateTime)
 
 task1 = dataObject.addTask()
 task1.title = "Completed task 1"
-task1.startDateTime = refDate - timedelta(days=2)
-task1.dueDateTime = task1.startDateTime + timedelta(hours=5)
+startDateTime = refDate - timedelta(days=2)
+dueDateTime = startDateTime + timedelta(hours=5)
+task1.setOccurrence(startDateTime, dueDateTime)
 task1.setCompleted()
 
 recurrentDate = refDate.replace(day=20) + timedelta(hours=2)
 recurrentTask = dataObject.addTask()
 recurrentTask.title = "Recurrent task 1"
-recurrentTask.dueDateTime = recurrentDate
+dueDateTime = recurrentDate
+recurrentTask.setOccurrenceDue(dueDateTime)
 recurrentTask.recurrence = Recurrent()
 recurrentTask.recurrence.setDaily()
 recurrentTask.recurrence.endDate = recurrentDate + timedelta(days=3)
 
 recurrentTask = dataObject.addTask()
 recurrentTask.title = "Recurrent task 2"
-recurrentTask.dueDateTime = refDate.replace(day=1, hour=22)
+dueDateTime = refDate.replace(day=1, hour=22)
+recurrentTask.setOccurrenceDue(dueDateTime)
 recurrentTask.recurrence = Recurrent()
 recurrentTask.recurrence.setWeekly()
 recurrentTask.setCompleted()  ## mark first occurrence completed

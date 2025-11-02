@@ -56,16 +56,18 @@ class TaskDialog(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.reminderWidget.setTask(self.task)
         self.ui.recurrentWidget.setTask(self.task)
 
-        if self.task.occurrenceStart is None:
+        if self.task.startDateTime is None:
             self.ui.deadlineBox.setChecked(True)
-            if self.task.occurrenceDue is None:
-                self.task.dueDateTime = datetime.today()
-            self.ui.startDateTime.setDateTime(self.task.occurrenceDue)
+            if self.task.dueDateTime is None:
+                dueDateTime = datetime.today()
+                self.task.setOccurrenceDue(dueDateTime)
+            self.ui.startDateTime.setDateTime(self.task.dueDateTime)
         else:
             self.ui.deadlineBox.setChecked(False)
-            self.ui.startDateTime.setDateTime(self.task.occurrenceStart)
-            if self.task.occurrenceDue is None:
-                self.task.dueDateTime = self.task.occurrenceStart + timedelta(hours=1)
+            self.ui.startDateTime.setDateTime(self.task.startDateTime)
+            if self.task.dueDateTime is None:
+                dueDateTime = self.task.startDateTime + timedelta(hours=1)
+                self.task.setOccurrence(self.task.startDateTime, dueDateTime)
 
         self.ui.descriptionEdit.setContextMenuPolicy(Qt.CustomContextMenu)  # type: ignore[attr-defined]
 
@@ -80,7 +82,7 @@ class TaskDialog(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.descriptionEdit.setText(self.task.description)
         self.ui.completionSlider.setValue(self.task.completed)
         self.ui.priorityBox.setValue(self.task.priority)
-        self.ui.dueDateTime.setDateTime(self.task.occurrenceDue)
+        self.ui.dueDateTime.setDateTime(self.task.dueDateTime)
 
         self.ui.titleEdit.textChanged.connect(self._titleChanged)
         self.ui.descriptionEdit.textChanged.connect(self._descriptionChanged)
@@ -130,21 +132,21 @@ class TaskDialog(QtBaseClass):  # type: ignore[valid-type,misc]
             self.task.setDeadline()
         else:
             startDateTime = self.ui.startDateTime.dateTime()
-            self.task.occurrenceStart = startDateTime.toPyDateTime()
+            self.task.startDateTime = startDateTime.toPyDateTime()
         self.ui.recurrentWidget.refreshWidget()
 
     def _startChanged(self, newValue):
         startDateTime = newValue.toPyDateTime()
-        self.task.occurrenceStart = startDateTime.replace(second=0)
-        if self.task.occurrenceStart > self.task.occurrenceDue:
-            self.ui.dueDateTime.setDateTime(self.task.occurrenceStart)
+        self.task.startDateTime = startDateTime.replace(second=0)
+        if self.task.startDateTime > self.task.dueDateTime:
+            self.ui.dueDateTime.setDateTime(self.task.startDateTime)
         self.ui.recurrentWidget.refreshWidget()
 
     def _dueChanged(self, newValue):
         dueDateTime = newValue.toPyDateTime()
-        self.task.occurrenceDue = dueDateTime.replace(second=0)
-        if self.task.occurrenceStart is not None and self.task.occurrenceDue < self.task.occurrenceStart:
-            self.ui.startDateTime.setDateTime(self.task.occurrenceDue)
+        self.task.dueDateTime = dueDateTime.replace(second=0)
+        if self.task.startDateTime is not None and self.task.dueDateTime < self.task.startDateTime:
+            self.ui.startDateTime.setDateTime(self.task.dueDateTime)
         self.ui.recurrentWidget.refreshWidget()
 
     def _openLocalFile(self):

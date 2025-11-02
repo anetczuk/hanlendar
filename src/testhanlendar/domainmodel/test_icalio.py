@@ -258,9 +258,10 @@ END:VCALENDAR
         task.description = "description example"
         task.completed = 66
         task.priority = 5
-        task.startDateTime = datetime.datetime(year=2022, month=6, day=16, hour=12, minute=34)
-        task.dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45)
-        self.assertEqual(task.occurrenceDue, task.dueDateTime)
+        startDateTime = datetime.datetime(year=2022, month=6, day=16, hour=12, minute=34)
+        dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45)
+        task.setOccurrence(startDateTime, dueDateTime)
+        self.assertEqual(task.dueDateTime, task.dueDateTime)
 
         newManager = execute_ical_io(manager)
 
@@ -275,7 +276,7 @@ END:VCALENDAR
         self.assertEqual(newTask.priority, task.priority)
         self.assertEqual(newTask.startDateTime, task.startDateTime)
         self.assertEqual(newTask.dueDateTime, task.dueDateTime)
-        self.assertEqual(newTask.occurrenceDue, task.occurrenceDue)
+        self.assertEqual(newTask.dueDateTime, task.dueDateTime)
 
     def test_io_task_dtstart_none(self):
         manager = Manager()
@@ -284,8 +285,8 @@ END:VCALENDAR
         self.assertEqual(len(manager.getTasksAll()), 1)
 
         task.title = "title example"
-        task.startDateTime = None
-        task.dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45)
+        dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45)
+        task.setOccurrenceDue(dueDateTime)
 
         newManager = execute_ical_io(manager)
 
@@ -304,7 +305,8 @@ END:VCALENDAR
         self.assertEqual(len(manager.getTasksAll()), 1)
 
         task.title = "title example"
-        task.dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45)
+        dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45)
+        task.setOccurrenceDue(dueDateTime)
         task.recurrence = Recurrent(RepeatType.DAILY, 3, datetime.date(year=2023, month=9, day=18))
         task.setCompleted()  ## progress recurrence
 
@@ -318,7 +320,7 @@ END:VCALENDAR
         self.assertEqual(newTask.title, task.title)
         self.assertEqual(newTask.dueDateTime, task.dueDateTime)
         self.assertEqual(newTask.recurrence, task.recurrence)
-        self.assertEqual(newTask.occurrenceDue, task.occurrenceDue)
+        self.assertEqual(newTask.dueDateTime, task.dueDateTime)
 
     def test_io_task_subitems(self):
         manager = Manager()

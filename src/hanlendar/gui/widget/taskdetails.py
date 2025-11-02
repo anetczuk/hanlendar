@@ -66,16 +66,16 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.descriptionEdit.setText(task.description)
         self.ui.completionLabel.setText(str(task.completed) + "%")
         self.ui.priorityBox.setValue(task.priority)
-        if task.occurrenceStart is None:
+        if task.startDateTime is None:
             self.ui.deadlineBox.setChecked(True)
-            if task.occurrenceDue is not None:
-                self.ui.startDateTime.setDateTime(task.occurrenceDue)
+            if task.dueDateTime is not None:
+                self.ui.startDateTime.setDateTime(task.dueDateTime)
         else:
             self.ui.deadlineBox.setChecked(False)
-            self.ui.startDateTime.setDateTime(task.occurrenceStart)
-        if task.occurrenceDue is not None:
+            self.ui.startDateTime.setDateTime(task.startDateTime)
+        if task.dueDateTime is not None:
             self.ui.dueDateTime.setEnabled(True)
-            self.ui.dueDateTime.setDateTime(task.occurrenceDue)
+            self.ui.dueDateTime.setDateTime(task.dueDateTime)
         else:
             self.ui.dueDateTime.setEnabled(False)
         self.ui.reminderList.clear()

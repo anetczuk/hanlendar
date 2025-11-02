@@ -30,7 +30,7 @@ from hanlendar import persist
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.item import Item
 from hanlendar.domainmodel.task import Task
-from hanlendar.domainmodel.local.task import LocalTask
+from hanlendar.domainmodel.local.task import LocalTask, fill_completed_list, update_start_due_date
 from hanlendar.domainmodel.local.todo import LocalToDo
 
 
@@ -91,7 +91,8 @@ class LocalManager(Manager):
     ## 5 - renamed class from 'hanlendar.domainmodel.local.task.Task' to 'hanlendar.domainmodel.local.task.LocalTask'
     ## 6 - moved data to 'local' subdirectory
     ## 7 - renamed class from 'hanlendar.domainmodel.local.todo.ToDo' to 'hanlendar.domainmodel.local.todo.LocalToDo'
-    _class_version = 7
+    ## 8 - removed "_recurrentOffset" from LocalTask
+    _class_version = 8
 
     def __init__(self, ioDir=None):
         self._tasks = []
@@ -173,6 +174,41 @@ class LocalManager(Manager):
             self.notes = {"notes": ""}
 
         self.fixData()
+
+        if mngrVersion < 8:
+            all_tasks = self.getTasksAll()
+            for task in all_tasks:
+                if hasattr(task, "_fix_completedList_") and task._fix_completedList_:  # pylint: disable=W0212
+                    start_date, due_date, recurr_offset = task._fix_completedList_  # pylint: disable=W0212
+                    recurrence = task.getAppliedRecurrence()
+                    if recurrence is not None:
+                        fill_completed_list(start_date, due_date, recurr_offset, recurrence)
+                    del task._fix_completedList_
+
+                if hasattr(task, "_fix_recurrentOffset_") and task._fix_recurrentOffset_:  # pylint: disable=W0212
+                    start_date, due_date, recurr_offset = task._fix_recurrentOffset_  # pylint: disable=W0212
+                    recurrence = task.getAppliedRecurrence()
+                    if recurrence is not None:
+                        next_start_date, next_due_date = update_start_due_date(
+                            start_date,
+                            due_date,
+                            recurr_offset,
+                            recurrence,
+                        )
+                        if next_due_date is not None:
+                            task.setOccurrence(next_start_date, next_due_date)
+                    del task._fix_recurrentOffset_
+
+        ## check tasks validity
+        all_tasks = self.getTasksAll()
+        for task in all_tasks:
+            if task.recurrence is not None:
+                recurr = task.getAppliedRecurrence()
+                if recurr is None:
+                    _LOGGER.warning("task '%s' %s has invalid recurrence", task.title, task.dueDateTime)
+
+            if task.dueDateTime is None:
+                _LOGGER.warning("task '%s' has invalid occurrence due date", task.title)
 
     ## index meaning:
     ##    negative: current

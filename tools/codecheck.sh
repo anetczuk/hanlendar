@@ -184,6 +184,7 @@ run_ruff() {
 
     ## TODO: fix
     ignore_errors+=(TC001)      ## TC001 Move application import `hanlendar.domainmodel.local.task.LocalTask` into a type-checking block
+    ignore_errors+=(TC002)      ## TC002 Move third-party import `dateutil.relativedelta.relativedelta` into a type-checking block
     ignore_errors+=(TC003)      ## TC003 Move standard library import `datetime` into a type-checking block
 
     ignore_errors+=(FBT003)     ## FBT003   [ ] boolean-positional-value-in-call
@@ -202,6 +203,7 @@ run_ruff() {
     ignore_errors+=(SLF001)     ## SLF001 Private member accessed: `_testMethodName`
     ignore_errors+=(DTZ001)     ## DTZ001 `datetime.datetime()` called without a `tzinfo` argument
     ignore_errors+=(DTZ002)     ## DTZ002 `datetime.datetime.today()` used
+    ignore_errors+=(PLR0912)    ## Too many branches (16 > 12)
 
     ignore_errors+=(N802)       ## N802 Function name `test_findName_object` should be lowercase
     ignore_errors+=(N803)       ## N803 Argument name `rePattern` should be lowercase

@@ -180,9 +180,9 @@ class Manager:
         for task in allTasks:
             if task.isCompleted():
                 continue
-            if task.occurrenceDue is None:
+            if task.dueDateTime is None:
                 continue
-            if retTask is None or task.occurrenceDue < retTask.occurrenceDue:
+            if retTask is None or task.dueDateTime < retTask.dueDateTime:
                 retTask = task
         return retTask
 

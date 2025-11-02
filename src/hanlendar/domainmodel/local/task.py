@@ -44,7 +44,8 @@ class LocalTask(Task, persist.Versionable):
     ## 5: rescaled 'priority'
     ## 6: added 'UID'
     ## 7: added '_completedList'
-    _class_version = 7
+    ## 8: remove '_recurrentOffset' and use '_startDate' and '_dueDate'
+    _class_version = 8
 
     def __init__(self, title=""):
         super().__init__()
@@ -66,7 +67,6 @@ class LocalTask(Task, persist.Versionable):
 
         self._reminderList: list[Reminder] = None
         self._recurrence: Recurrent = None
-        self._recurrentOffset = 0
 
     # ruff: noqa: PLR0912
     def _convertstate_(self, dict_, dict_version_):
@@ -127,20 +127,35 @@ class LocalTask(Task, persist.Versionable):
                     dt_range = DateTimeRange(dict_["_startDate"], dict_["_dueDate"])
                     completed_list.append(dt_range)
             else:
-                recurrence_offset = dict_["_recurrentOffset"]
-                if recurrence_offset > 0:
-                    ## already completed - add start, due date
-                    dt_range = DateTimeRange(dict_["_startDate"], dict_["_dueDate"])
-                    completed_list.append(dt_range)
                 start_date = dict_["_startDate"]
                 due_date = dict_["_dueDate"]
-                for offset in range(1, recurrence_offset):
-                    completed_start = recurrence.nextDateTime(start_date, offset)
-                    completed_due = recurrence.nextDateTime(due_date, offset)
-                    dt_range = DateTimeRange(completed_start, completed_due)
-                    completed_list.append(dt_range)
+                recurrence_offset = dict_["_recurrentOffset"]
+                completed_list = fill_completed_list(start_date, due_date, recurrence_offset, recurrence)
+                if completed_list is None:
+                    dict_["_fix_completedList_"] = (start_date, due_date, recurrence_offset)
+                    completed_list = []
             dict_["_completedList"] = completed_list
             dict_version_ = 7
+
+        if dict_version_ == 7:
+            recurrence = dict_["_recurrence"]
+            if recurrence is not None:
+                start_date = dict_["_startDate"]
+                due_date = dict_["_dueDate"]
+                recurrence_offset = dict_["_recurrentOffset"]
+                next_start_date, next_due_date = update_start_due_date(
+                    start_date,
+                    due_date,
+                    recurrence_offset,
+                    recurrence,
+                )
+                if next_due_date is not None:
+                    dict_["_startDate"] = next_start_date
+                    dict_["_dueDate"] = next_due_date
+                else:
+                    dict_["_fix_recurrentOffset_"] = (start_date, due_date, recurrence_offset)
+            del dict_["_recurrentOffset"]
+            dict_version_ = 8
 
         # pylint: disable=W0201
         self.__dict__ = dict_
@@ -199,11 +214,11 @@ class LocalTask(Task, persist.Versionable):
         elif value > 100:
             value = 100
         if value == 100:
-            if self._recurrentOffset == 0:
+            if len(self._completedList) == 0:
                 dt_range = DateTimeRange(self.startDateTime, self.dueDateTime)
                 self._completedList.append(dt_range)
             else:
-                dt_range = DateTimeRange(self.occurrenceStart, self.occurrenceDue)
+                dt_range = DateTimeRange(self.startDateTime, self.dueDateTime)
                 self._completedList.append(dt_range)
         if value == 100 and self._progressRecurrence() is True:
             # completed -- next occurrence
@@ -263,14 +278,6 @@ class LocalTask(Task, persist.Versionable):
     def _setRecurrence(self, value: Recurrent):
         self._recurrence = value
 
-    ## overriden
-    def _getRecurrentOffset(self) -> int:
-        return self._recurrentOffset
-
-    ## overriden
-    def _setRecurrentOffset(self, value: int):
-        self._recurrentOffset = value
-
     ## ========================================================================
 
     ## overriden
@@ -281,6 +288,32 @@ class LocalTask(Task, persist.Versionable):
         reminderList = self._getReminderList()
         return (
             f"[t:{self.title} d:{self.description} c:{self._completed} p:{self.priority}"
-            f" sd:{self.occurrenceStart} dd:{self.occurrenceDue} rem:{reminderList}"
-            f" rec:{self._recurrence} ro:{self._recurrentOffset}]"
+            f" sd:{self.startDateTime} dd:{self.dueDateTime} rem:{reminderList}"
+            f" rec:{self._recurrence}]"
         )
+
+
+## ========================================================================
+
+
+def fill_completed_list(start_date, due_date, recurrence_offset, recurrence):
+    completed_list = []
+    if recurrence_offset > 0:
+        ## already completed - add start, due date
+        dt_range = DateTimeRange(start_date, due_date)
+        completed_list.append(dt_range)
+    for offset in range(1, recurrence_offset):
+        completed_start = recurrence.nextDateTime(start_date, offset)
+        completed_due = recurrence.nextDateTime(due_date, offset)
+        if completed_due is not None:
+            dt_range = DateTimeRange(completed_start, completed_due)
+            completed_list.append(dt_range)
+        else:
+            return None
+    return completed_list
+
+
+def update_start_due_date(start_date, due_date, recurrence_offset, recurrence):
+    next_start_date = recurrence.nextDateTime(start_date, recurrence_offset)
+    next_due_date = recurrence.nextDateTime(due_date, recurrence_offset)
+    return (next_start_date, next_due_date)

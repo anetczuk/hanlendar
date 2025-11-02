@@ -68,8 +68,8 @@ task1.title = "Completed Task"
 task1.description = "Description"
 task1.completed = 100
 task1.priority = 5
-task1.startDateTime = taskDate
-task1.dueDateTime = task1.startDateTime + timedelta(hours=4)
+dueDateTime = taskDate + timedelta(hours=4)
+task1.setOccurrence(taskDate, dueDateTime)
 
 task2 = Task()  # type: ignore[abstract]
 task2.title = "Task 1"
@@ -83,8 +83,9 @@ task3.title = "Full Day Task"
 task3.description = "Description"
 task3.completed = 0
 task3.priority = 3
-task3.startDateTime = taskDate - timedelta(days=2)
-task3.dueDateTime = task3.startDateTime + timedelta(days=4)
+startDateTime = taskDate - timedelta(days=2)
+dueDateTime = startDateTime + timedelta(days=4)
+task3.setOccurrence(startDateTime, dueDateTime)
 
 setup_interrupt_handling()
 
