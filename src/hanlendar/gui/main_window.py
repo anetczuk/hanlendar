@@ -206,7 +206,6 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
 
         self.ui.actionOptions.triggered.connect(self.openSettingsDialog)
 
-        self.applySettings()
         self.trayIcon.show()
 
         self.statusBar().showMessage("Ready", 10000)

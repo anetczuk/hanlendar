@@ -44,6 +44,7 @@ class MainWindowTest(unittest.TestCase):
     def setUp(self):
         ## Called before testfunction is executed
         self.widget = TestWidget()
+        self.widget.loadSettings()
 
     def tearDown(self):
         ## Called after testfunction was executed

@@ -139,7 +139,8 @@ class TaskSortFilterProxyModel(QtCore.QSortFilterProxyModel):
         super().__init__(parentObject)
         self._showCompleted = False
 
-    def showCompleted(self, *, show=True):
+    # ruff: noqa: FBT002
+    def showCompleted(self, show=True):
         self._showCompleted = show
         self.invalidateFilter()
 
@@ -218,7 +219,8 @@ class TaskTable(QtWidgets.QTreeView):
         self.setRowCount(0)
         self.emitSelectedTask()
 
-    def showCompletedItems(self, *, show: bool):
+    # ruff: noqa: FBT001
+    def showCompletedItems(self, show: bool):
         self.proxyModel.showCompleted(show=show)
         self.updateView()
 

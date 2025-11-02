@@ -70,12 +70,11 @@ def run_app(args):
     window = MainWindow()
     if args.blocksave is True:
         window.disableSaving()
-    window.loadSettings()
     if args.exportlocal is True:
         window.exportLocalToCalDAV()
     if args.caldav is True:
         window.setCalDAVManager()
-    window.loadData()
+    window.loadSettings()
 
     if args.minimized is False:
         window.show()
