@@ -7,14 +7,28 @@ set -eu
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 
 
-base_dir=$SCRIPT_DIR/../../tmp/radicale/collections
-config_file=$SCRIPT_DIR/radicale-config
+BASE_DIR="${SCRIPT_DIR}"/../../tmp/radicale
+CONFIG_FILE="${SCRIPT_DIR}"/radicale-config
+AUTH_PATH="${SCRIPT_DIR}"/auth.json
 
 
-echo "Server dir: $base_dir"
-echo "Server config: $config_file"
+caldav_user=$(cat "${AUTH_PATH}" | jq -r ".user")
+caldav_pass=$(cat "${AUTH_PATH}" | jq -r ".password")
 
+
+RADICALE_AUTH="/tmp/radicale_user"
+
+echo "${caldav_user}:${caldav_pass}" > "${RADICALE_AUTH}"
+
+
+echo "Server dir: ${BASE_DIR}"
+echo "Server config: ${CONFIG_FILE}"
+
+echo "User: ${caldav_user}"
+echo "Pass: ${caldav_pass}"
+
+echo
 echo "Starting server. Available at: http://localhost:5232/"
-echo "User: bob password: bob"
+echo
 
-python3 -m radicale --storage-filesystem-folder="${base_dir}" --config="${config_file}"
+python3 -m radicale --config="${CONFIG_FILE}" --storage-filesystem-folder="${BASE_DIR}"
