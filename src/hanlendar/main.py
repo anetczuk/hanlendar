@@ -68,13 +68,20 @@ def run_app(args):
     app = initialize_qt()
 
     window = MainWindow()
+    local_data_path = args.localdatadir
+    window.setLocalDataPath(local_data_path)
     if args.blocksave is True:
         window.disableSaving()
     if args.exportlocal is True:
         window.exportLocalToCalDAV()
+    window.loadSettings(apply=False)
     if args.caldav is True:
-        window.setCalDAVManager()
-    window.loadSettings()
+        caldav_address = args.caldavaddress
+        caldav_user = args.caldavuser
+        caldav_pass = args.caldavpass
+        caldav_calendar = args.caldavcalendar
+        window.setCalDAVManager(caldav_address, caldav_user, caldav_pass, caldav_calendar)
+    window.applySettings()
 
     if args.minimized is False:
         window.show()
@@ -92,7 +99,12 @@ def create_parser(parser: argparse.ArgumentParser = None):
         parser = argparse.ArgumentParser(description="Hanlendar")
     parser.add_argument("--minimized", action="store_const", const=True, default=False, help="Start minimized")
     parser.add_argument("--blocksave", "-bs", action="store_const", const=True, default=None, help="Block save data")
+    parser.add_argument("--localdatadir", action="store", default=None, help="Path to custom local data")
     parser.add_argument("--caldav", action="store_const", const=True, default=None, help="Run in CalDAV mode")
+    parser.add_argument("--caldavaddress", action="store", default=None, help="Address of CalDAV server")
+    parser.add_argument("--caldavuser", action="store", default=None, help="User for CalDAV connection")
+    parser.add_argument("--caldavpass", action="store", default=None, help="Password for CalDAV connection")
+    parser.add_argument("--caldavcalendar", action="store", default=None, help="CalDAV calendar name")
     parser.add_argument(
         "--exportlocal",
         action="store_const",

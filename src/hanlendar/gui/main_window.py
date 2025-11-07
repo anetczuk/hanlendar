@@ -128,6 +128,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.qtSettings = SettingsObject(self)
         self.appSettings = AppSettings()
 
+        self._data_custom_path = None
         self.data = DataObject(self)
         self.data.setManager(self.qtSettings.createLocalManager())
 
@@ -206,15 +207,29 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
 
         self.ui.actionOptions.triggered.connect(self.openSettingsDialog)
 
+        self._updateIconTheme(tray_icon.TrayIconTheme.WHITE)  ## set default icon
         self.trayIcon.show()
 
         self.statusBar().showMessage("Ready", 10000)
 
-    def createCalDAVConnector(self):
+    def setLocalDataPath(self, custom_path):
+        self._data_custom_path = custom_path
+
+    def createCalDAVConnector(self, caldav_address=None, caldav_user=None, caldav_pass=None, caldav_calendar=None):
         serverURL = self.appSettings.serverURL
+        if caldav_address is not None:
+            serverURL = caldav_address
         serverUser = self.appSettings.serverUser
+        if caldav_user is not None:
+            serverUser = caldav_user
         serverPassword = self.appSettings.serverPassword
+        if caldav_pass is not None:
+            serverPassword = caldav_pass
         calendarName = self.appSettings.calendarName
+        if caldav_calendar is not None:
+            calendarName = caldav_calendar
+
+        _LOGGER.info("connecting to CalDAV server: %s calendar: %s", serverURL, calendarName)
 
         try:
             connector = CalDAVConnector()
@@ -231,26 +246,30 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         os.makedirs(dataPath, exist_ok=True)
         return CalDAVManager(connector, dataPath)
 
-    def setCalDAVManager(self):
+    def setCalDAVManager(self, caldav_address=None, caldav_user=None, caldav_pass=None, caldav_calendar=None):
         self.appSettings.databaseMode = DatabaseMode.CALDAV
+        self.appSettings.serverURL = caldav_address
+        self.appSettings.serverUser = caldav_user
+        self.appSettings.serverPassword = caldav_pass
+        self.appSettings.calendarName = caldav_calendar
 
-        connector = self.createCalDAVConnector()
-        manager = self.createCalDAVManager(connector)
-        self.data.setManager(manager)
+        # connector = self.createCalDAVConnector(caldav_address, caldav_user, caldav_pass, caldav_calendar)
+        # manager = self.createCalDAVManager(connector)
+        # self.data.setManager(manager)
 
     def exportLocalToCalDAV(self):
         connector = self.createCalDAVConnector()
         self.exportLocalDB(connector)
 
     def exportLocalDB(self, connector: CalDAVConnector):
-        manager = self.qtSettings.createLocalManager()
-        manager.loadData()
+        manager: LocalManager = self.qtSettings.createLocalManager()
+        manager.loadFromDisk(self._data_custom_path)
         caldavManager = self.createCalDAVManager(connector)
         caldavManager.setData(manager)
         caldavManager.saveToServer()
 
     def loadData(self):
-        self.data.loadData()
+        self.data.loadData(custom_path=self._data_custom_path)
         self.refreshView()
 
     def triggerSaveTimer(self):
@@ -270,7 +289,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         _LOGGER.info("storing data")
         notes = self.ui.notesWidget.getNotes()
         self.data.getManager().setNotes(notes)
-        return self.data.storeData()
+        return self.data.storeData(custom_path=self._data_custom_path)
 
     def disableSaving(self):
         def save_data_mock():
@@ -495,6 +514,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.applySettings()
 
     def applySettings(self):
+        _LOGGER.info("applying settings")
         self.setIconTheme(self.appSettings.trayIcon)
 
         manager = self.qtSettings.createLocalManager()
@@ -510,12 +530,14 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.data.setManager(manager)
         self.loadData()
 
-    def loadSettings(self):
+    def loadSettings(self, *, apply=True):
         settings = self.qtSettings.getSettings()
         self.logger.debug("loading app state from %s", settings.fileName())
 
         self.appSettings.loadSettings(settings)
-        self.applySettings()
+
+        if apply:
+            self.applySettings()
 
         ## restore widget state and geometry
         settings.beginGroup(self.objectName())

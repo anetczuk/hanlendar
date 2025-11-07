@@ -101,12 +101,14 @@ class LocalManager(Manager):
 
         self._ioDir = ioDir  ## do not persist
 
-    def store(self, outputDir):
-        self._ioDir = outputDir
+    def storeToDisk(self, outputDir):
+        if outputDir:
+            self._ioDir = outputDir
         self.storeData()
 
     # override
     def storeData(self):
+        _LOGGER.info("storing data")
         if self._ioDir is None:
             _LOGGER.warning("unable to store data -- no root directory given")
             return False
@@ -138,8 +140,9 @@ class LocalManager(Manager):
 
         return changed
 
-    def load(self, inputDir):
-        self._ioDir = inputDir
+    def loadFromDisk(self, inputDir):
+        if inputDir:
+            self._ioDir = inputDir
         self.loadData()
 
     # override
@@ -150,29 +153,44 @@ class LocalManager(Manager):
 
         inputDir = self._ioDir
 
-        inputFile = os.path.join(inputDir, "version.obj")
-        mngrVersion = persist.load_object(inputFile)
-        if mngrVersion != self._class_version:
-            _LOGGER.info("converting object from version %s to %s", mngrVersion, self._class_version)
-            ## do nothing for now
+        mngrVersion = self._class_version
+        try:
+            inputFile = os.path.join(inputDir, "version.obj")
+            mngrVersion = persist.load_object(inputFile)
+            if mngrVersion != self._class_version:
+                _LOGGER.info("converting object from version %s to %s", mngrVersion, self._class_version)
+                ## do nothing for now
+        except FileNotFoundError:
+            _LOGGER.warning("unable to load file: %s", inputFile)
 
         mapperObject = ModuleMapper(mngrVersion)
 
-        inputFile = os.path.join(inputDir, "tasks.obj")
-        self.tasks = persist.load_object(inputFile, class_mapper=mapperObject)
-        if self.tasks is None:
+        try:
+            inputFile = os.path.join(inputDir, "tasks.obj")
+            self.tasks = persist.load_object(inputFile, class_mapper=mapperObject)
+            if self.tasks is None:
+                self.tasks = []
+        except FileNotFoundError:
+            _LOGGER.warning("unable to load file: %s", inputFile)
             self.tasks = []
 
-        inputFile = os.path.join(inputDir, "todos.obj")
-        self.todos = persist.load_object(inputFile, class_mapper=mapperObject)
-        if self.todos is None:
+        try:
+            inputFile = os.path.join(inputDir, "todos.obj")
+            self.todos = persist.load_object(inputFile, class_mapper=mapperObject)
+            if self.todos is None:
+                self.todos = []
+        except FileNotFoundError:
+            _LOGGER.warning("unable to load file: %s", inputFile)
             self.todos = []
 
-        inputFile = os.path.join(inputDir, "notes.obj")
-        self.notes = persist.load_object(inputFile, class_mapper=mapperObject)
-        if self.notes is None:
+        try:
+            inputFile = os.path.join(inputDir, "notes.obj")
+            self.notes = persist.load_object(inputFile, class_mapper=mapperObject)
+            if self.notes is None:
+                self.notes = {"notes": ""}
+        except FileNotFoundError:
+            _LOGGER.warning("unable to load file: %s", inputFile)
             self.notes = {"notes": ""}
-
         self.fixData()
 
         if mngrVersion < 8:

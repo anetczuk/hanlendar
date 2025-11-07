@@ -63,7 +63,7 @@ class NotificationTimer(QObject):
         millis = int(secs * 1000)
         ## 2147483647ms is ~24 days -- enough to skip
         if millis >= 2147483647:
-            _LOGGER.warning("unable to set timer for time delta %s", remainingTime)
+            _LOGGER.warning("skipping far notify for time delta %s", remainingTime)
             return
         self.timer.start(millis)  ## 2147483647 maximum accepted value
 

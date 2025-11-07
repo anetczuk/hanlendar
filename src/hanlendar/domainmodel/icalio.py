@@ -23,6 +23,8 @@
 
 import logging
 import datetime
+from datetime import timedelta
+import re
 import icalendar
 
 from hanlendar.domainmodel.manager import Manager
@@ -182,7 +184,7 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar):
                 task.reminderList = get_ical_list(
                     component,
                     TaskField.REMINDERS,
-                    value_converter=Reminder.from_timedelta_string,
+                    value_converter=reminder_from_string,
                 )
                 if task.reminderList is not None:
                     task.reminderList = [item for item in task.reminderList if item is not None]
@@ -206,6 +208,32 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar):
                 dangling_children.append((task, parentUID))
 
     return tasks, dangling_children
+
+
+def reminder_from_string(time_delta: str):
+    delta = timedelta_from_string(time_delta)
+    if delta is not None:
+        return Reminder(timeOffset=delta)
+
+    reminder = Reminder.from_timedelta_string(time_delta)
+    if reminder is not None:
+        return reminder
+
+    _LOGGER.warning("unable to convert time delta: '%s'", time_delta)
+    return None
+
+
+def timedelta_from_string(time_delta: str) -> timedelta:
+    if time_delta == "1 day":
+        return timedelta(days=1)
+
+    matched = re.search(r"(\d+)\s+days", time_delta)
+    if matched:
+        grp = matched.group(1)
+        days_number = int(grp)
+        return timedelta(days=days_number)
+
+    return None
 
 
 def fix_dangling_tasks(manager: Manager, dangling_children):

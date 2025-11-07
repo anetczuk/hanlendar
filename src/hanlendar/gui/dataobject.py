@@ -58,6 +58,7 @@ from hanlendar.gui.command.removenotecommand import RemoveNoteCommand
 from hanlendar.domainmodel.local.manager import LocalManager
 from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.local.todo import LocalToDo
+from hanlendar.domainmodel.manager import Manager
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,24 +77,25 @@ class DataObject(QObject):
         super().__init__(parent)
 
         self.parentWidget = parent
-        self.domainModel = LocalManager()
+        self.domainModel: Manager = LocalManager()
 
         self.undoStack = QUndoStack(self)
 
-    def getManager(self):
+    def getManager(self) -> Manager:
         return self.domainModel
 
-    def setManager(self, model):
+    def setManager(self, model: Manager):
         self.domainModel = model
 
-    # TODO: remove
-    def load(self, inputDir):
-        self.domainModel.load(inputDir)
-
-    def loadData(self):
+    def loadData(self, custom_path=None):
+        if hasattr(self.domainModel, "loadFromDisk"):
+            self.domainModel.loadFromDisk(custom_path)
+            return
         self.domainModel.loadData()
 
-    def storeData(self):
+    def storeData(self, custom_path=None):
+        if hasattr(self.domainModel, "storeToDisk"):
+            return self.domainModel.storeToDisk(custom_path)
         return self.domainModel.storeData()
 
     def getTaskOccurrences(self, taskDate: date, *, includeCompleted=True):

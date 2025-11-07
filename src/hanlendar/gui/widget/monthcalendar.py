@@ -61,7 +61,7 @@ class MonthCalendar(QCalendarWidget):
         self.setCurrentPage(todayDate.year, todayDate.month)
         self.setSelectedDate(todayDate)
 
-        self.taskColor = QColor(self.palette().color(QPalette.Highlight))  # type: ignore[attr-defined]
+        self.taskColor = QColor(self.palette().color(QPalette.Highlight))
         self.taskColor.setAlpha(64)
 
         self.cellsTable = self.findChild(QTableView)

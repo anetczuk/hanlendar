@@ -78,7 +78,7 @@ class CalDAVConnector:
             return self._calendar
         try:
             return self._initCalendar(self._calendarName)
-        except caldav.lib.error.NotFoundError as ex:  # type: ignore[attr-defined]
+        except caldav.lib.error.NotFoundError as ex:
             _LOGGER.warning("unable to get calendar: %s", ex)
             return None
 
@@ -99,6 +99,7 @@ class CalDAVManager(Manager):
 
     ## overriden
     def storeData(self):
+        _LOGGER.info("storing data")
         ret = self._localManager.storeData()
         self.saveToServer()
         return ret
@@ -115,6 +116,7 @@ class CalDAVManager(Manager):
 
         calendar: caldav.objects.Calendar = self._connector.getCalendar()
         if calendar is None:
+            _LOGGER.warning("could not get CalDAV calendar")
             return
 
         self._localManager.tasks.clear()
@@ -125,7 +127,7 @@ class CalDAVManager(Manager):
         ## event: caldav.objects.Event = None
         for event in all_events:
             iCalendar: icalendar.cal.Calendar = event.icalendar_instance
-            _, children = import_icalendar(self._localManager, iCalendar)
+            _item, children = import_icalendar(self._localManager, iCalendar)
             dangling_children.extend(children)
 
         fix_dangling_tasks(self._localManager, dangling_children)
@@ -147,7 +149,7 @@ class CalDAVManager(Manager):
         try:
             calendar = self._connector._initCalendar(self._connector._calendarName)
             calendar.delete()
-        except caldav.lib.error.NotFoundError as ex:  # type: ignore[attr-defined]
+        except caldav.lib.error.NotFoundError as ex:
             _LOGGER.warning("unable to get calendar: %s", ex)
             calendar = None
 
@@ -159,8 +161,8 @@ class CalDAVManager(Manager):
             if component.name == "VEVENT":
                 ## caldav requires events to be wrapped in 'VCALENDAR' component
                 ical_item: icalendar.cal.Calendar = icalendar.cal.Calendar()
-                ical_item.add_component(component)  # type: ignore[attr-defined]
-                newCalendar.save_event(ical_item)  # type: ignore[arg-type]
+                ical_item.add_component(component)
+                newCalendar.save_event(ical_item)
 
         _LOGGER.info("export done")
 

@@ -24,10 +24,16 @@
 import unittest
 
 import datetime
+from datetime import timedelta
 import icalendar
 
 from hanlendar.domainmodel import icalio
-from hanlendar.domainmodel.icalio import import_icalendar_content, export_icalendar_content, fix_dangling_tasks
+from hanlendar.domainmodel.icalio import (
+    import_icalendar_content,
+    export_icalendar_content,
+    fix_dangling_tasks,
+    timedelta_from_string,
+)
 
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
 from hanlendar.domainmodel.local.manager import LocalManager as Manager
@@ -200,7 +206,7 @@ END:VCALENDAR
         calendar_string = calendar.to_ical()
         calendar_string = calendar_string.decode("utf-8")
 
-        calendar = icalendar.cal.Calendar.from_ical(calendar_string)  # type: ignore[arg-type]
+        calendar = icalendar.cal.Calendar.from_ical(calendar_string)
         events = calendar.walk("VEVENT")
         event = events[0]
         data_list = icalio.get_ical_list(event, "XXX")  # type: ignore[arg-type]
@@ -386,6 +392,19 @@ END:VCALENDAR
         self.assertEqual(len(newTask.reminderList), 2)
         self.assertEqual(str(newTask.reminderList[0]), str(Reminder(days=2)))
         self.assertEqual(str(newTask.reminderList[1]), str(Reminder(days=5)))
+
+    def test_timedelta_from_string(self):
+        time_delta = timedelta_from_string("1 day")
+        self.assertTrue(time_delta is not None)
+        self.assertEqual(time_delta, timedelta(days=1))
+
+        time_delta = timedelta_from_string("3 days")
+        self.assertTrue(time_delta is not None)
+        self.assertEqual(time_delta, timedelta(days=3))
+
+        time_delta = timedelta_from_string("333 days")
+        self.assertTrue(time_delta is not None)
+        self.assertEqual(time_delta, timedelta(days=333))
 
 
 ##

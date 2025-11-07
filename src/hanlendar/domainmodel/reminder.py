@@ -72,9 +72,8 @@ class Notification:
 
 class Reminder:
 
-    def __init__(self, days=None, timeOffset=None, timePoint=None, direction=None):
+    def __init__(self, days=None, timeOffset: timedelta = None, direction=None):
         self.timeOffset: timedelta = timeOffset
-        self.timePoint: TimePointType = timePoint  ## not used?
         self.direction: RemainderDirectionType = direction  ## not used?
         if days is not None:
             self.setDays(days)
@@ -117,12 +116,10 @@ class Reminder:
         return print_timedelta(offsetTime) + " before due time"
 
     def __repr__(self):
-        return f"Reminder( timeOffset={self.timeOffset!r}, timePoint={self.timePoint}, direction={self.direction} )"
-
-    #         return "[t:%s p:%s d:%s]" % ( self.timeOffset, self.timePoint, self.direction )
+        return f"Reminder( timeOffset={self.timeOffset!r}, direction={self.direction} )"
 
     @staticmethod
-    def from_timedelta_string(value):
+    def from_timedelta_string(value) -> "Reminder":
         fields = value.split(",")
         days = 0
         timeField = None

@@ -1,13 +1,26 @@
 ```
-usage: startcalendar [-h] [--minimized] [--blocksave] [--caldav]
-                     [--exportlocal]
+usage: startcalendar [-h] [--minimized] [--blocksave]
+                     [--localdatadir LOCALDATADIR] [--caldav]
+                     [--caldavaddress CALDAVADDRESS] [--caldavuser CALDAVUSER]
+                     [--caldavpass CALDAVPASS]
+                     [--caldavcalendar CALDAVCALENDAR] [--exportlocal]
 
 Hanlendar
 
 options:
-  -h, --help        show this help message and exit
-  --minimized       Start minimized
-  --blocksave, -bs  Block save data
-  --caldav          Run in CalDAV mode
-  --exportlocal     Export local database to CalDAV server
+  -h, --help            show this help message and exit
+  --minimized           Start minimized
+  --blocksave, -bs      Block save data
+  --localdatadir LOCALDATADIR
+                        Path to custom local data
+  --caldav              Run in CalDAV mode
+  --caldavaddress CALDAVADDRESS
+                        Address of CalDAV server
+  --caldavuser CALDAVUSER
+                        User for CalDAV connection
+  --caldavpass CALDAVPASS
+                        Password for CalDAV connection
+  --caldavcalendar CALDAVCALENDAR
+                        CalDAV calendar name
+  --exportlocal         Export local database to CalDAV server
 ```
