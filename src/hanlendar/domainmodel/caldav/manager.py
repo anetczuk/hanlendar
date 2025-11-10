@@ -52,9 +52,7 @@ class CalDAVConnector:
 
     def connectToServer(self, caldav_url, username, password):
         self._client = caldav.DAVClient(url=caldav_url, username=username, password=password)
-
-    #         self._client.headers[ "Connection" ] = "Keep-Alive"
-    #         self._client.headers[ "Keep-Alive" ] = "timeout=60, max=1000"
+        self._principal = self._client.principal()
 
     def connectToCalendar(self, calendar_name, *, allow_throw=False):
         if allow_throw is False:
@@ -85,7 +83,6 @@ class CalDAVConnector:
     def _initCalendar(self, calendar_name):
         self._calendarName = calendar_name
         self._calendar = None
-        self._principal = self._client.principal()
         self._calendar = self._principal.calendar(name=self._calendarName)
         return self._calendar
 
@@ -148,21 +145,40 @@ class CalDAVManager(Manager):
         calendar: caldav.objects.Calendar = None
         try:
             calendar = self._connector._initCalendar(self._connector._calendarName)
-            calendar.delete()
+            ## erase calendar content
+            # calendar.delete()
+
+            for event_item in calendar.events():
+                event_item.delete()
+            for todo_item in calendar.todos():
+                todo_item.delete()
+            for journal_item in calendar.journals():
+                journal_item.delete()
+
         except caldav.lib.error.NotFoundError as ex:
             _LOGGER.warning("unable to get calendar: %s", ex)
-            calendar = None
-
-        _LOGGER.info("creating calendar: %s", self._connector._calendarName)
-        newCalendar: caldav.objects.Calendar = self._connector.createCalendar()
+            calendar = self._connector.createCalendar()
 
         ical: icalendar.cal.Calendar = export_icalendar(self._localManager)
+        ical_item: icalendar.cal.Calendar = None
         for component in ical.walk():
+            if component.name == "VCALENDAR":
+                ## skip
+                continue
             if component.name == "VEVENT":
                 ## caldav requires events to be wrapped in 'VCALENDAR' component
-                ical_item: icalendar.cal.Calendar = icalendar.cal.Calendar()
+                ical_item = icalendar.cal.Calendar()
                 ical_item.add_component(component)
-                newCalendar.save_event(ical_item)
+                calendar.save_event(ical_item)
+                continue
+            if component.name == "VTODO":
+                ## caldav requires events to be wrapped in 'VCALENDAR' component
+                ical_item = icalendar.cal.Calendar()
+                ical_item.add_component(component)
+                calendar.save_event(ical_item)
+                continue
+
+            _LOGGER.warning("unhandled icalendar type: %s", component.name)
 
         _LOGGER.info("export done")
 

@@ -1,246 +1,128 @@
-# # MIT License
-# #
-# # Copyright (c) 2020 Arkadiusz Netczuk <dev.arnet@gmail.com>
-# #
-# # Permission is hereby granted, free of charge, to any person obtaining a copy
-# # of this software and associated documentation files (the "Software"), to deal
-# # in the Software without restriction, including without limitation the rights
-# # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# # copies of the Software, and to permit persons to whom the Software is
-# # furnished to do so, subject to the following conditions:
-# #
-# # The above copyright notice and this permission notice shall be included in all
-# # copies or substantial portions of the Software.
-# #
-# # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# # SOFTWARE.
-# #
+# MIT License
 #
-# import unittest
+# Copyright (c) 2020 Arkadiusz Netczuk <dev.arnet@gmail.com>
 #
-# import datetime
-# from datetime import timedelta
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-# from hanlendar.domainmodel.caldav.manager import CalDAVManager, CalDAVConnector
-# from hanlendar.domainmodel.local.task import Task
-# from hanlendar.domainmodel.recurrent import Recurrent
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 #
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 #
-# class CalDAVManagerTest(unittest.TestCase):
-#
-#     def setUp(self):
-#         ## Called before testfunction is executed
-#         self.connector = CalDAVConnector()
-#         self.connector.createCalendar( calendar_name="test_cal" )
-#         self.manager   = CalDAVManager( self.connector )
-#
-#     def tearDown(self):
-#         ## Called after testfunction was executed
-#         self.connector.deleteCalendar()
-#
-# #     def test_getTaskOccurrences_entries(self):
-# #         manager = Manager()
-# #
-# #         taskDate1 = datetime.date( 2020, 5, 17 )
-# #         manager.addNewTask( taskDate1, "task1" )
-# #         taskDate2 = datetime.date( 2020, 5, 18 )
-# #         manager.addNewTask( taskDate2, "task2" )
-# #         eventDate1 = datetime.date( 2020, 5, 19 )
-# #         manager.addNewTask( eventDate1, "event1" )
-# #
-# #         entries = manager.getTaskOccurrences(taskDate2)
-# #         self.assertEqual( len(entries), 1 )
-# #         self.assertEqual( entries[0].title, "task2" )
-# #
-# #         entries = manager.getTaskOccurrences(eventDate1)
-# #         self.assertEqual( len(entries), 1 )
-# #         self.assertEqual( entries[0].title, "event1" )
-#
-#     def test_getTaskOccurrencesForDate_recurrent_completed(self):
-#         task = self.manager.addTask()
-#         todayDate = datetime.datetime.today()
-#         dueDate = todayDate.replace( day=1, hour=12 )
-#         task.dueDateTime = dueDate
-#         task.recurrence = Recurrent()
-#         task.recurrence.setWeekly()
-#         task.completed()                ## mark first occurrence completed
-#
-#         tasksList = self.manager.getTaskOccurrencesForDate( dueDate.date() )
-#         self.assertEqual( len( tasksList ), 1 )
-#
-#     def test_getTasks(self):
-#         self.manager.addNewTask( datetime.date.today(), "task1" )
-#         self.manager.addNewTask( datetime.date.today(), "task2" )
-#
-#         self.assertEqual( len( self.manager.getTasks() ), 2 )
-#
-#         tasksList = self.manager.getTasks()
-#         tasksList.clear()
-#         self.assertEqual( len( self.manager.getTasks() ), 2 )
-#
-#     def test_getTasksAll(self):
-#         task1 = self.manager.addTask( Task("task1") )
-#         task2 = self.manager.addTask( Task("task2") )
-#         subtask = task2.addSubItem( Task("subtask1") )
-#         subtask2 = subtask.addSubItem( Task("subtask2") )
-#
-#         allTasks = self.manager.getTasksAll()
-#         self.assertEqual( len( allTasks ), 4 )
-#         self.assertEqual( allTasks[0], task1 )
-#         self.assertEqual( allTasks[1], task2 )
-#         self.assertEqual( allTasks[2], subtask )
-#         self.assertEqual( allTasks[3], subtask2 )
-#
-#         allTasks.clear()
-#         self.assertEqual( len( self.manager.getTasksAll() ), 4 )
-#
-#     def test_getNextDeadline_None(self):
-#         self.manager.addTask( Task("task1") )
-#         self.manager.addTask( Task("task2") )
-#
-#         deadlineTask = self.manager.getNextDeadline()
-#         self.assertEqual( deadlineTask, None )
-#
-#     def test_getNextDeadline(self):
-#         taskDate = datetime.datetime.today()
-#         self.manager.addNewTaskDateTime( taskDate + timedelta(seconds=5), "task1" )
-#         self.manager.addNewTaskDateTime( taskDate, "task2" )
-#
-#         deadlineTask = self.manager.getNextDeadline()
-#         self.assertEqual( deadlineTask.title, "task2" )
-#
-#     def test_getNextDeadline_completed(self):
-#         taskDate = datetime.datetime.today()
-#         self.manager.addNewTaskDateTime( taskDate + timedelta(seconds=5), "task1" )
-#         task2 = self.manager.addNewTaskDateTime( taskDate, "task2" )
-#         task2.completed()
-#
-#         deadlineTask = self.manager.getNextDeadline()
-#         self.assertEqual( deadlineTask.title, "task1" )
-#
-#     def test_removeTask(self):
-#         taskDate1 = datetime.date( 2020, 5, 17 )
-#         task1 = self.manager.addNewTask( taskDate1, "task1" )
-#         taskDate2 = datetime.date( 2020, 5, 18 )
-#         self.manager.addNewTask( taskDate2, "task2" )
-#
-#         tasks = self.manager.getTasks()
-#         self.assertEqual( len(tasks), 2 )
-#
-#         self.manager.removeTask( task1 )
-#
-#         tasks = self.manager.getTasks()
-#         self.assertEqual( len(tasks), 1 )
-#         self.assertEqual( tasks[0].title, "task2" )
-#
-#     def test_replaceTask(self):
-#         taskDate1 = datetime.date( 2020, 5, 17 )
-#         task1 = self.manager.addNewTask( taskDate1, "task1" )
-#         task2 = Task()
-#         task2.title = "new task"
-#
-#         tasks = self.manager.getTasks()
-#         self.assertEqual( len(tasks), 1 )
-#
-#         self.manager.replaceTask( task1, task2 )
-#
-#         tasks = self.manager.getTasks()
-#         self.assertEqual( len(tasks), 1 )
-#         self.assertEqual( tasks[0].title, "new task" )
-#
-# #     def test_importICalendar(self):
-# #         content = """
-# # BEGIN:VCALENDAR
-# # PRODID:-//Flo Inc.//FloSoft//EN
-# # BEGIN:VEVENT
-# # DTSTART:20220414T132000Z
-# # DTEND:20220414T134000Z
-# # UID:1234__4321
-# # LOCATION:Remiza Warszawska 123
-# # DESCRIPTION;ENCODING=QUOTED-PRINTABLE:Zapraszamy na wizytę.=0D=0AŻyczymy miłego dnia.
-# # SUMMARY:Umówiona wizyta
-# # PRIORITY:3
-# # END:VEVENT
-# # END:VCALENDAR
-# # """
-# #
-# #         tasks = self.manager.getTasks()
-# #         self.assertEqual( len(tasks), 0 )
-# #
-# #         self.manager.importICalendar( content )
-# #
-# #         tasks = self.manager.getTasks()
-# #         self.assertEqual( len(tasks), 1 )
-# #
-# #         calTask = tasks[0]
-# #         self.assertEqual( calTask.title, "Umówiona wizyta, Remiza Warszawska 123" )
-# #         self.assertEqual( calTask.startDateTime, datetime.datetime(2022, 4, 14, 15, 20) )
-# #         self.assertEqual( calTask.dueDateTime, datetime.datetime(2022, 4, 14, 15, 40) )
-# #
-# #     def test_importICalendar_eml(self):
-# # #         with open( "/tmp/test.eml", 'r' ) as cal_file:
-# # #             content = cal_file.read()
-# #
-# #         content = """
-# # X-Account-Key: account3
-# # X-Mozilla-Status: 0001
-# # X-Mozilla-Status2: 00000000
-# #
-# # BEGIN:VCALENDAR
-# # PRODID:-//Flo Inc.//FloSoft//EN
-# # BEGIN:VEVENT
-# # DTSTART:20220414T132000Z
-# # DTEND:20220414T134000Z
-# # UID:1234__4321
-# # LOCATION:Remiza Warszawska 123
-# # DESCRIPTION;ENCODING=QUOTED-PRINTABLE:Zapraszamy na wizytę.=0D=0AŻyczymy miłego dnia.
-# # SUMMARY:Umówiona wizyta
-# # PRIORITY:3
-# # END:VEVENT
-# # END:VCALENDAR
-# #
-# #
-# # """
-# #
-# #         tasks = self.manager.getTasks()
-# #         self.assertEqual( len(tasks), 0 )
-# #
-# #         self.manager.importICalendar( content )
-# #
-# #         tasks = self.manager.getTasks()
-# #         self.assertEqual( len(tasks), 1 )
-# #
-# #         calTask = tasks[0]
-# #         self.assertEqual( calTask.title, "Umówiona wizyta, Remiza Warszawska 123" )
-# #         self.assertEqual( calTask.startDateTime, datetime.datetime(2022, 4, 14, 15, 20) )
-# #         self.assertEqual( calTask.dueDateTime, datetime.datetime(2022, 4, 14, 15, 40) )
-# #
-# #     def test_getNotificationList(self):
-# #         taskDate1 = datetime.datetime.today() + datetime.timedelta( seconds=60 )
-# #         self.manager.addNewDeadlineDateTime( taskDate1, "task1" )
-# #         taskDate2 = datetime.datetime.today() + datetime.timedelta( seconds=30 )
-# #         self.manager.addNewDeadlineDateTime( taskDate2, "task2" )
-# #
-# #         tasks = self.manager.getTasks()
-# #         self.assertEqual( len(tasks), 2 )
-# #
-# #         notifications = self.manager.getNotificationList()
-# #
-# #         self.assertEqual( len(notifications), 2 )
-# #         self.assertEqual( notifications[0].task.title, "task2" )
-# #         self.assertEqual( notifications[1].task.title, "task1" )
-# #
-# #     def test_getToDos(self):
-# #         self.manager.addToDo()
-# #         self.manager.addToDo()
-# #
-# #         self.assertEqual( len( self.manager.getToDos() ), 2 )
-# #
-# #         tasksList = self.manager.getToDos()
-# #         tasksList.clear()
-# #         self.assertEqual( len( self.manager.getToDos() ), 2 )
+
+import unittest
+
+import time
+import datetime
+import requests
+
+from hanlendar.domainmodel.caldav.manager import CalDAVManager, CalDAVConnector
+
+from testhanlendar.data import get_data_path
+from testhanlendar.domainmodel.caldav.radicalemock import RadicaleLocalServer
+
+
+class CalDAVManagerTest(unittest.TestCase):
+
+    RADICALE_USER = "bob"
+
+    def setUp(self):
+        ## Called before testfunction is executed
+        config_path = get_data_path("radicale.cfg")
+        self.radicale_server = RadicaleLocalServer(config_path, remove_storage=True)
+        self.radicale_server.start()
+
+        self.connector = self._connect()
+        self.assertTrue(self.connector is not None)
+
+        calendar = self.connector.createCalendar(calendar_name="test_calendar")
+        self.calendar_uuid = calendar.id
+        calendars_num = self.radicale_server.count_calendars(self.RADICALE_USER)
+        self.assertEqual(calendars_num, 1)
+
+        self.manager = CalDAVManager(self.connector)
+
+    def _connect(self) -> CalDAVConnector:
+        connector = CalDAVConnector()
+        local_address = self.radicale_server.get_local_address()
+        for _i in range(100):
+            try:
+                connector.connectToServer(f"http://{local_address}", self.RADICALE_USER, "bob")
+            # ruff: noqa: PERF203
+            except requests.exceptions.ConnectionError:
+                time.sleep(0.01)
+            else:
+                return connector
+        return None
+
+    def tearDown(self):
+        ## Called after testfunction was executed
+        self.radicale_server.stop()
+
+    def test_addTask(self):
+        taskDate = datetime.datetime(2025, 11, 22, 10, 20, 30)
+        new_task = self.manager.addNewTaskDateTime(taskDate, "task1")
+        new_task.UID = "1111-2222-3333-4444"
+        new_task._createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
+        self.manager.saveToServer()
+
+        calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)
+        self.assertEqual(calendar_items_num, 1)
+
+        content = self.radicale_server.get_item(new_task.UID)
+        self.assertEqual(
+            """\
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//PYVOBJECT//NONSGML Version 1//EN
+BEGIN:VEVENT
+UID:1111-2222-3333-4444
+DTSTART:20251122T102030
+DTEND:20251122T112030
+DESCRIPTION:
+DTSTAMP:20251122T092030Z
+SUMMARY:task1
+X-HANLENDAR-COMPLETEDX:0
+END:VEVENT
+END:VCALENDAR
+""",
+            content,
+        )
+
+    def test_addTodo(self):
+        new_todo = self.manager.addNewToDo("todo1")
+        new_todo.UID = "1111-2222-3333-4444"
+        new_todo._createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
+        self.manager.saveToServer()
+
+        calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)
+        self.assertEqual(calendar_items_num, 1)
+
+        content = self.radicale_server.get_item(new_todo.UID)
+        self.assertEqual(
+            """\
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//PYVOBJECT//NONSGML Version 1//EN
+BEGIN:VTODO
+DESCRIPTION:
+DTSTAMP:20251122T092030Z
+SUMMARY:todo1
+UID:1111-2222-3333-4444
+X-HANLENDAR-COMPLETEDX:0
+END:VTODO
+END:VCALENDAR
+""",
+            content,
+        )

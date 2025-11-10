@@ -60,31 +60,6 @@ class RepeatType(Enum):
         return -1
 
 
-@unique
-class RecurrentField(Enum):
-    MODE = auto()
-    STEP = auto()
-    ENDDATE = auto()
-
-    @classmethod
-    def findByName(cls, name, defaultValue=None):
-        for item in cls:
-            if item.name == name:
-                return item
-        return defaultValue
-
-    @classmethod
-    def indexOf(cls, key):
-        index = 0
-        for item in cls:
-            if item == key:
-                return index
-            if item.name == key:
-                return index
-            index = index + 1
-        return -1
-
-
 class Recurrent:
 
     def __init__(self, mode: RepeatType = None, every: int = None, endDate: date = None):

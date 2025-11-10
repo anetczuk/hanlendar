@@ -39,12 +39,13 @@ from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
 from hanlendar.domainmodel.local.manager import LocalManager as Manager
 from hanlendar.domainmodel.local.task import LocalTask as Task
 from hanlendar.domainmodel.reminder import Reminder
+from hanlendar.domainmodel.local.todo import LocalToDo
 
 
 class ICalIOTest(unittest.TestCase):
     def setUp(self):
         ## Called before testfunction is executed
-        pass
+        self.maxDiff = None
 
     def tearDown(self):
         ## Called after testfunction was executed
@@ -201,7 +202,7 @@ END:VCALENDAR
         calendar: icalendar.cal.Calendar = icalendar.cal.Calendar()
         ievent = icalendar.cal.Event()
         event_data_list = [1, 2, 4, 3]
-        icalio.set_ical_list(ievent, "XXX", event_data_list)  # type: ignore[arg-type]
+        icalio.set_ical_list(ievent, "XXX", event_data_list)
         calendar.add_component(ievent)
         calendar_string = calendar.to_ical()
         calendar_string = calendar_string.decode("utf-8")
@@ -209,7 +210,7 @@ END:VCALENDAR
         calendar = icalendar.cal.Calendar.from_ical(calendar_string)
         events = calendar.walk("VEVENT")
         event = events[0]
-        data_list = icalio.get_ical_list(event, "XXX")  # type: ignore[arg-type]
+        data_list = icalio.get_ical_list(event, "XXX")
 
         self.assertEqual(data_list, ["1", "2", "4", "3"])
 
@@ -217,7 +218,7 @@ END:VCALENDAR
         calendar: icalendar.cal.Calendar = icalendar.cal.Calendar()
         ievent = icalendar.cal.Event()
         event_data_list = ["1,11", "2,22", "3,33", "4,44"]
-        icalio.set_ical_list(ievent, "XXX", event_data_list)  # type: ignore[arg-type]
+        icalio.set_ical_list(ievent, "XXX", event_data_list)
         calendar.add_component(ievent)
         calendar_string = calendar.to_ical()
         calendar_string = calendar_string.decode("utf-8")
@@ -225,7 +226,7 @@ END:VCALENDAR
         calendar = icalendar.cal.Calendar.from_ical(calendar_string)
         events = calendar.walk("VEVENT")
         event = events[0]
-        data_list = icalio.get_ical_list(event, "XXX")  # type: ignore[arg-type]
+        data_list = icalio.get_ical_list(event, "XXX")
 
         self.assertEqual(data_list, event_data_list)
 
@@ -233,7 +234,7 @@ END:VCALENDAR
         calendar: icalendar.cal.Calendar = icalendar.cal.Calendar()
         ievent = icalendar.cal.Event()
         event_data_dict = {"aaa": "1", "bbb": "2"}
-        icalio.set_ical_dict(ievent, "XXX", 5, event_data_dict)  # type: ignore[arg-type]
+        icalio.set_ical_dict(ievent, "XXX", 5, event_data_dict)
         calendar.add_component(ievent)
         calendar_string = calendar.to_ical()
         calendar_string = calendar_string.decode("utf-8")
@@ -241,8 +242,8 @@ END:VCALENDAR
         calendar = icalendar.cal.Calendar.from_ical(calendar_string)
         events = calendar.walk("VEVENT")
         event = events[0]
-        data_value = icalio.get_ical_value(event, "XXX")  # type: ignore[arg-type]
-        data_dict = icalio.get_ical_dict(event, "XXX")  # type: ignore[arg-type]
+        data_value = icalio.get_ical_value(event, "XXX")
+        data_dict = icalio.get_ical_dict(event, "XXX")
 
         self.assertEqual(data_value, "5")
         self.assertEqual(data_dict, {"AAA": "1", "BBB": "2"})
@@ -405,6 +406,56 @@ END:VCALENDAR
         time_delta = timedelta_from_string("333 days")
         self.assertTrue(time_delta is not None)
         self.assertEqual(time_delta, timedelta(days=333))
+
+    def test_export_icalendar_task(self):
+        manager = Manager()
+        task: Task = manager.createEmptyTask()
+        task.UID = "1111-2222-3333-4444"
+        task._createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
+        manager.addTask(task)
+        task.title = "title example"
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        self.assertEqual(
+            """\
+BEGIN:VCALENDAR
+PRODID:-//Hanlendar//EN
+BEGIN:VEVENT
+SUMMARY:title example
+DTSTAMP:20251122T092030Z
+UID:1111-2222-3333-4444
+DESCRIPTION:
+X-HANLENDAR-COMPLETEDX:0
+END:VEVENT
+END:VCALENDAR
+""",
+            content,
+        )
+
+    def test_export_icalendar_todo(self):
+        manager = Manager()
+        todo: LocalToDo = manager.createEmptyToDo()
+        todo.UID = "1111-2222-3333-4444"
+        todo._createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
+        manager.addToDo(todo)
+        todo.title = "title example"
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        self.assertEqual(
+            """\
+BEGIN:VCALENDAR
+PRODID:-//Hanlendar//EN
+BEGIN:VTODO
+DESCRIPTION:
+DTSTAMP:20251122T092030Z
+SUMMARY:title example
+UID:1111-2222-3333-4444
+X-HANLENDAR-COMPLETEDX:0
+END:VTODO
+END:VCALENDAR
+""",
+            content,
+        )
 
 
 ##

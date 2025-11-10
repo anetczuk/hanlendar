@@ -30,7 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def generate_uid():
-    return str(uuid.uuid4()) + "@hanlendar"
+    return str(uuid.uuid4())
+    # return str(uuid.uuid4()) + "@hanlendar"
 
 
 class Item:

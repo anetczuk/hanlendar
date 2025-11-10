@@ -22,7 +22,6 @@
 #
 
 import logging
-from enum import Enum, unique, auto
 import abc
 
 from datetime import date, time, datetime, timedelta
@@ -318,44 +317,13 @@ class TaskOccurrence:
 ## ========================================================================
 
 
-@unique
-class TaskField(Enum):
-    UID = auto()
-    SUMMARY = auto()
-    DESCRIPTION = auto()
-    #     LOCATION      = auto()
-    DTSTART = auto()
-    DTEND = auto()
-    COMPLETED = auto()
-    PRIORITY = auto()
-
-    GROUP_PARENT = auto()
-
-    RECURRENCE = auto()
-
-    REMINDERS = auto()
-
-    @classmethod
-    def findByName(cls, name, defaultValue=None):
-        for item in cls:
-            if item.name == name:
-                return item
-        return defaultValue
-
-    @classmethod
-    def indexOf(cls, key):
-        index = 0
-        for item in cls:
-            if item == key:
-                return index
-            if item.name == key:
-                return index
-            index = index + 1
-        return -1
-
-
 class Task(Item):
     """Task is entity that lasts over time."""
+
+    @abc.abstractmethod
+    def _getCreateDateTime(self) -> datetime:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
 
     @abc.abstractmethod
     def _getStartDateTime(self) -> datetime:
@@ -376,6 +344,10 @@ class Task(Item):
     def _setDueDateTime(self, _value: datetime):
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
+
+    @property
+    def createDateTime(self) -> datetime:
+        return self._getCreateDateTime()
 
     @property
     def startDateTime(self) -> datetime:

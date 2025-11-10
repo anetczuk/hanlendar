@@ -22,6 +22,7 @@
 #
 
 import logging
+import datetime
 
 from hanlendar import persist
 
@@ -39,11 +40,13 @@ class LocalToDo(Item, persist.Versionable):
     ## 2: rename: 'title' to '_title', 'description' to '_description', 'priority' to '_priority'
     ## 3: rescaled 'priority'
     ## 4: added 'UID'
-    _class_version = 4
+    ## 5: added '_createDate'
+    _class_version = 5
 
     def __init__(self, title=""):
         super().__init__()
         self._UID = generate_uid()
+        self._createDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
         self._title = title
         self._description = ""
         self._completed = 0  ## in range [0..100]
@@ -87,6 +90,10 @@ class LocalToDo(Item, persist.Versionable):
             dict_["_UID"] = generate_uid()
             dict_version_ = 4
 
+        if dict_version_ == 4:
+            dict_["_createDate"] = datetime.datetime.now(datetime.timezone.utc)
+            dict_version_ = 5
+
         # pylint: disable=W0201
         self.__dict__ = dict_
 
@@ -123,6 +130,12 @@ class LocalToDo(Item, persist.Versionable):
     ## overriden
     def _setUID(self, value):
         self._UID = value
+
+    ## ========================================================================
+
+    @property
+    def createDateTime(self) -> datetime.datetime:
+        return self._createDate
 
     ## ========================================================================
 

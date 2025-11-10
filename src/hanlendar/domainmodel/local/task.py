@@ -45,7 +45,8 @@ class LocalTask(Task, persist.Versionable):
     ## 6: added 'UID'
     ## 7: added '_completedList'
     ## 8: remove '_recurrentOffset' and use '_startDate' and '_dueDate'
-    _class_version = 8
+    ## 9: added '_createDate'
+    _class_version = 9
 
     def __init__(self, title=""):
         super().__init__()
@@ -58,6 +59,7 @@ class LocalTask(Task, persist.Versionable):
         self._parent = None
         self.subitems: list = None
 
+        self._createDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
         ## current task start time (updated every time recurrent task is completed)
         self._startDate: datetime.datetime = None
         ## current task due time (updated every time recurrent task is completed)
@@ -157,6 +159,13 @@ class LocalTask(Task, persist.Versionable):
             del dict_["_recurrentOffset"]
             dict_version_ = 8
 
+        if dict_version_ == 8:
+            create_date = dict_["_startDate"]
+            if create_date is None:
+                create_date = dict_["_dueDate"]
+            dict_["_createDate"] = create_date
+            dict_version_ = 9
+
         # pylint: disable=W0201
         self.__dict__ = dict_
 
@@ -235,6 +244,10 @@ class LocalTask(Task, persist.Versionable):
         self._priority = value
 
     ## ========================================================================
+
+    ## overriden
+    def _getCreateDateTime(self) -> datetime.datetime:
+        return self._createDate
 
     ## overriden
     def _getStartDateTime(self) -> datetime.datetime:

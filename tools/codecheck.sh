@@ -212,6 +212,8 @@ run_ruff() {
     ignore_errors+=(N815)       ## N815    [ ] mixed-case-variable-in-class-scope
     ignore_errors+=(N816)       ## N816 Variable `revCrcTmpDir` in global scope should not be mixedCase
 
+    ignore_errors+=(FA100)      ## Add `from __future__ import annotations` to simplify `typing.Union`
+
     ignore_string="${ignore_errors[*]}"
     ignore_string="${ignore_string//${IFS:0:1}/,}"
 

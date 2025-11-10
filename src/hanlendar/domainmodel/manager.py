@@ -240,10 +240,10 @@ class Manager:
         self.addTask(task)
         return task
 
-    def addNewTaskDateTime(self, taskdate: datetime, title):
+    def addNewTaskDateTime(self, start_date: datetime, title) -> Task:
         task = self.createEmptyTask()
         task.title = title
-        task.setDefaultDateTime(taskdate)
+        task.setDefaultDateTime(start_date)
         self.addTask(task)
         return task
 
