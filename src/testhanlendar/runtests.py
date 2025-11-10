@@ -23,22 +23,32 @@
 # SOFTWARE.
 #
 
+# ruff: noqa: T201
 
-import sys
-import os
+import contextlib
 
-import logging
-import unittest
-import re
+with contextlib.suppress(ImportError):
+    ## following import success only when file is directly executed from command line
+    ## otherwise will throw exception when executing as parameter for "python -m"
+    # pylint: disable=E0401,W0611
+    # ruff: noqa: F401
+    import __init__
+
+    ## when import fails then it means that the script was executed indirectly
+    ## in this case __init__ is already loaded
+
 import argparse
+import logging
+import os
+import re
+import sys
+import unittest
 
-import tempfile
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-
-src_dir = os.path.abspath(os.path.join(script_dir, ".."))
-sys.path.insert(0, src_dir)
+# src_dir = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
+# sys.path.insert(0, src_dir)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,36 +61,45 @@ def match_tests(pattern: str):
         return loader.loadTestsFromName(pattern)
 
     ## wildcarded
-    rePattern = pattern
+    re_pattern = pattern
     # pylint: disable=W1401
-    rePattern = rePattern.replace(".", r"\.")
-    rePattern = rePattern.replace("*", ".*")
-    rePattern = rePattern.replace("/", ".")
-    ## rePattern = "^" + rePattern + "$"
-    _LOGGER.info("searching test cases with pattern: %s", rePattern)
+    re_pattern = re_pattern.replace("/", ".")
+    re_pattern = re_pattern.replace(".", r"\.")
+    re_pattern = re_pattern.replace("*", ".*")
+    ## re_pattern = "^" + re_pattern + "$"
+    _LOGGER.info("searching test cases with pattern: %s", re_pattern)
     loader = unittest.TestLoader()
-    testsSuite = loader.discover(script_dir)
-    return match_test_suites(testsSuite, rePattern)
+    tests_suite = loader.discover(SCRIPT_DIR)
+    return match_test_suites(tests_suite, re_pattern)
 
 
-def match_test_suites(testsList, rePattern: str):
-    retSuite = unittest.TestSuite()
-    for testObject in testsList:
-        if isinstance(testObject, unittest.TestSuite):
-            subTests = match_test_suites(testObject, rePattern)
-            retSuite.addTest(subTests)
+def match_test_suites(tests_list, re_pattern: str):
+    ret_suite = unittest.TestSuite()
+    for test_object in tests_list:
+        if isinstance(test_object, unittest.TestSuite):
+            sub_tests = match_test_suites(test_object, re_pattern)
+            ret_suite.addTest(sub_tests)
             continue
-        if isinstance(testObject, unittest.TestCase):
-            classobj = testObject.__class__
+        if isinstance(test_object, unittest.TestCase):
+            classobj = test_object.__class__
             # pylint: disable=W0212,
-            testCaseFullName = f"{classobj.__module__}.{classobj.__name__}.{testObject._testMethodName}"
-            matched = re.search(rePattern, testCaseFullName)
+            # ruff: noqa: SLF001
+            test_case_full_name = f"{classobj.__module__}.{classobj.__name__}.{test_object._testMethodName}"
+            matched = re.search(re_pattern, test_case_full_name)
             if matched is not None:
-                ## _LOGGER.info("test case matched: %s", testCaseFullName )
-                retSuite.addTest(testObject)
+                ## _LOGGER.info("test case matched: %s", test_case_full_name )
+                ret_suite.addTest(test_object)
             continue
-        _LOGGER.warning("unknown type: %s", type(testObject))
-    return retSuite
+        _LOGGER.warning("unknown type: %s", type(test_object))
+    return ret_suite
+
+
+def get_test_cases(run_test):
+    if run_test:
+        ## not empty
+        return match_tests(run_test)
+    tests_loader = unittest.TestLoader()
+    return tests_loader.discover(SCRIPT_DIR)
 
 
 ## ============================= main section ===================================
@@ -107,70 +126,43 @@ if __name__ == "__main__":
         help="Repeat tests given number of times",
     )
     parser.add_argument("-ut", "--untilfailure", action="store_true", help="Run tests in loop until failure")
-    parser.add_argument("-cov", "--coverage", action="store_true", help="Measure code coverage")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
 
+    logging.basicConfig()
     if args.logall is True:
-        logging.basicConfig(level=logging.DEBUG)
-
-    coverageData = None
-    ## start code coverage
-    if args.coverage is True:
-        try:
-            import coverage
-        except ImportError:
-            _LOGGER.info("Missing coverage module. Try running 'pip install coverage'")
-            _LOGGER.info("Python info: %s", sys.version)
-            raise
-
-        _LOGGER.info("Executing code coverage")
-        currScript = os.path.realpath(__file__)
-        coverageData = coverage.Coverage(branch=True, omit=currScript)
-        ##coverageData.load()
-        coverageData.start()
-
-    if args.run_test:
-        ## not empty
-        suite = match_tests(args.run_test)
+        logging.getLogger().setLevel(logging.DEBUG)
     else:
-        testsLoader = unittest.TestLoader()
-        suite = testsLoader.discover(script_dir)
+        logging.getLogger().setLevel(logging.ERROR)
 
-    testsRepeats = int(args.repeat)
+    verbosity = 1
+    if args.verbose:
+        verbosity = 2
 
-    try:
-        ## run proper tests
-        if args.untilfailure is True:
-            counter = 1
-            while True:
-                _LOGGER.info("Tests iteration: %s", counter)
-                counter += 1
-                testResult = unittest.TextTestRunner().run(suite)
-                if testResult.wasSuccessful() is False:
-                    break
-                _LOGGER.info("\n")
-        elif testsRepeats > 0:
-            for counter in range(1, testsRepeats + 1):
-                _LOGGER.info("Tests iteration: %s", counter)
-                testResult = unittest.TextTestRunner().run(suite)
-                if testResult.wasSuccessful() is False:
-                    break
-                _LOGGER.info("\n")
-        else:
-            unittest.TextTestRunner().run(suite)
+    tests_repeats = int(args.repeat)
 
-    finally:
-        ## prepare coverage results
-        if coverageData is not None:
-            ## convert results to html
-            tmprootdir = tempfile.gettempdir()
-            revCrcTmpDir = tmprootdir + "/revcrc"
-            if not os.path.exists(revCrcTmpDir):
-                os.makedirs(revCrcTmpDir)
-            htmlcovdir = revCrcTmpDir + "/htmlcov"
-
-            coverageData.stop()
-            coverageData.save()
-            coverageData.html_report(directory=htmlcovdir)
-            _LOGGER.info("\nCoverage HTML output: %s", (htmlcovdir + "/index.html"))
+    ## run proper tests
+    if args.untilfailure is True:
+        counter = 1
+        while True:
+            print("Tests iteration:", counter)
+            counter += 1
+            suite = get_test_cases(args.run_test)
+            test_result = unittest.TextTestRunner(verbosity=verbosity).run(suite)
+            if test_result.wasSuccessful() is False:
+                sys.exit(1)
+            print("\n")
+    elif tests_repeats > 0:
+        for counter in range(1, tests_repeats + 1):
+            print("Tests iteration:", counter)
+            suite = get_test_cases(args.run_test)
+            test_result = unittest.TextTestRunner(verbosity=verbosity).run(suite)
+            if test_result.wasSuccessful() is False:
+                sys.exit(1)
+            print("\n")
+    else:
+        suite = get_test_cases(args.run_test)
+        test_result = unittest.TextTestRunner(verbosity=verbosity).run(suite)
+        if test_result.wasSuccessful() is False:
+            sys.exit(1)
