@@ -29,7 +29,7 @@ import uuid
 _LOGGER = logging.getLogger(__name__)
 
 
-def generate_uid():
+def generate_uid() -> str:
     return str(uuid.uuid4())
     # return str(uuid.uuid4()) + "@hanlendar"
 
@@ -87,54 +87,140 @@ class Item:
     ## ========================================================================
 
     @abc.abstractmethod
-    def _getTitle(self):
+    def _getTitle(self) -> str:
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setTitle(self, _value):
+    def _setTitle(self, _value: str):
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
-    def getTitle(self):
+    def getTitle(self) -> str:
         return self._getTitle()
 
-    def setTitle(self, value):
+    def setTitle(self, value: str):
         self._setTitle(value)
 
     @property
-    def title(self):
+    def title(self) -> str:
         return self.getTitle()
 
     @title.setter
-    def title(self, value):
+    def title(self, value: str):
+        self.setTitle(value)
+
+    @property
+    def summary(self) -> str:
+        return self.getTitle()
+
+    @summary.setter
+    def summary(self, value: str):
         self.setTitle(value)
 
     ## ========================================================================
-
+    
     @abc.abstractmethod
-    def _getDescription(self):
+    def _getLocation(self) -> str:
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setDescription(self, value):
+    def _setLocation(self, _value: str):
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
-    def getDescription(self):
+    def getLocation(self) -> str:
+        return self._getLocation()
+
+    def setLocation(self, value: str):
+        self._setLocation(value)
+
+    @property
+    def location(self) -> str:
+        return self.getLocation()
+
+    @location.setter
+    def location(self, value: str):
+        self.setLocation(value)
+
+    ## ========================================================================
+    
+    @abc.abstractmethod
+    def _getURL(self) -> str:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
+    def _setURL(self, _value: str):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    def getURL(self) -> str:
+        return self._getURL()
+
+    def setURL(self, value: str):
+        self._setURL(value)
+
+    @property
+    def url(self) -> str:
+        return self.getURL()
+
+    @url.setter
+    def url(self, value: str):
+        self.setURL(value)
+    
+    ## ========================================================================
+
+    @abc.abstractmethod
+    def _getDescription(self) -> str:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
+    def _setDescription(self, value: str):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    def getDescription(self) -> str:
         return self._getDescription()
 
-    def setDescription(self, value):
+    def setDescription(self, value: str):
         self._setDescription(value)
 
     @property
-    def description(self):
+    def description(self) -> str:
         return self.getDescription()
 
     @description.setter
-    def description(self, value):
+    def description(self, value: str):
         self.setDescription(value)
+    
+    ## ========================================================================
+
+    @abc.abstractmethod
+    def _getSequence(self) -> int:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
+    def _setSequence(self, value: int):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    def getSequence(self) -> int:
+        return self._getSequence()
+
+    def setSequence(self, value: int):
+        self._setSequence(value)
+
+    @property
+    def sequence(self) -> int:
+        return self.getSequence()
+
+    @sequence.setter
+    def sequence(self, value: int):
+        self.setSequence(value)
 
     ## ========================================================================
 
@@ -281,7 +367,7 @@ class Item:
     def removeSubItemFromList(itemList, item):
         if itemList is None:
             return None
-        for i, _ in enumerate(itemList):
+        for i, _item in enumerate(itemList):
             currItem = itemList[i]
             if currItem == item:
                 popped = itemList.pop(i)
@@ -296,7 +382,7 @@ class Item:
     def replaceSubItemInList(itemList, oldItem, newItem):
         if itemList is None:
             return None
-        for i, _ in enumerate(itemList):
+        for i, _item in enumerate(itemList):
             currItem = itemList[i]
             if currItem == oldItem:
                 newItem.setParent(oldItem.getParent())

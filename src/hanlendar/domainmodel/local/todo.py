@@ -41,19 +41,28 @@ class LocalToDo(Item, persist.Versionable):
     ## 3: rescaled 'priority'
     ## 4: added 'UID'
     ## 5: added '_createDate'
+    ## 6: added '_location', '_url', '_sequence', '_lastModifiedDate
     _class_version = 5
 
     def __init__(self, title=""):
         super().__init__()
-        self._UID = generate_uid()
-        self._createDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
-        self._title = title
-        self._description = ""
-        self._completed = 0  ## in range [0..100]
-        self._priority = 5  ## lower number, greater priority
 
         self._parent = None
         self.subitems: list = None
+
+        self._UID: str = generate_uid()
+
+        self._title: str = title
+        self._location: str = ""
+        self._url: str = ""
+        self._description: str = ""
+
+        self._sequence = 0
+        self._completed = 0  ## in range [0..100]
+        self._priority = 5  ## lower number, greater priority
+
+        self._createDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
+        self._lastModifiedDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
 
     def _convertstate_(self, dict_, dict_version_):
         _LOGGER.info("converting object from version %s to %s", dict_version_, self._class_version)
@@ -71,28 +80,34 @@ class LocalToDo(Item, persist.Versionable):
             ## base class extracted, "subtodos" renamed to "subitems"
             dict_["subitems"] = dict_["subtodos"]
             dict_.pop("subtodos", None)
-            dict_version_ = 1
+            dict_version_ += 1
 
         if dict_version_ == 1:
             ## rename fields
             dict_["_title"] = dict_.pop("title", "")
             dict_["_description"] = dict_.pop("description", "")
             dict_["_priority"] = dict_.pop("priority", 10)
-            dict_version_ = 2
+            dict_version_ += 1
 
         if dict_version_ == 2:
             ## rescale priority
             priority = dict_.pop("_priority", 10)
             dict_["_priority"] = int(priority / 2.0)
-            dict_version_ = 3
+            dict_version_ += 1
 
         if dict_version_ == 3:
             dict_["_UID"] = generate_uid()
-            dict_version_ = 4
+            dict_version_ += 1
 
         if dict_version_ == 4:
             dict_["_createDate"] = datetime.datetime.now(datetime.timezone.utc)
-            dict_version_ = 5
+            dict_version_ += 1
+
+        if dict_version_ == 5:
+            dict_["_location"] = ""
+            dict_["_url"] = ""
+            dict_["_sequence"] = 0
+            dict_version_ += 1
 
         # pylint: disable=W0201
         self.__dict__ = dict_
@@ -121,6 +136,11 @@ class LocalToDo(Item, persist.Versionable):
     def setSubitems(self, newList):
         self.subitems = newList
 
+    def addSubtodo(self, todo=None, index=-1):
+        if todo is None:
+            todo = LocalToDo()
+        return self.addSubItem(todo, index)
+
     ## ========================================================================
 
     ## overriden
@@ -131,33 +151,45 @@ class LocalToDo(Item, persist.Versionable):
     def _setUID(self, value):
         self._UID = value
 
-    ## ========================================================================
-
-    @property
-    def createDateTime(self) -> datetime.datetime:
-        return self._createDate
-
-    ## ========================================================================
-
     ## overriden
-    def _getTitle(self):
+    def _getTitle(self) -> str:
         return self._title
 
     ## overriden
-    def _setTitle(self, value):
+    def _setTitle(self, value: str):
         self._title = value
 
-    ## ========================================================================
+    ## overriden
+    def _getLocation(self) -> str:
+        return self._location
 
     ## overriden
-    def _getDescription(self):
+    def _setLocation(self, value: str):
+        self._location = value
+
+    ## overriden
+    def _getURL(self) -> str:
+        return self._url
+
+    ## overriden
+    def _setURL(self, value: str):
+        self._url = value
+
+    ## overriden
+    def _getDescription(self) -> str:
         return self._description
 
     ## overriden
-    def _setDescription(self, value):
+    def _setDescription(self, value: str):
         self._description = value
 
-    ## ========================================================================
+    ## overriden
+    def _getSequence(self) -> int:
+        return self._sequence
+
+    ## overriden
+    def _setSequence(self, value: int):
+        self._sequence = value
 
     ## overrided
     def _getCompleted(self):
@@ -166,8 +198,6 @@ class LocalToDo(Item, persist.Versionable):
     ## overrided
     def _setCompleted(self, value=100):
         self._completed = value
-
-    ## ========================================================================
 
     ## overrided
     def _getPriority(self):
@@ -179,7 +209,10 @@ class LocalToDo(Item, persist.Versionable):
 
     ## ========================================================================
 
-    def addSubtodo(self, todo=None, index=-1):
-        if todo is None:
-            todo = LocalToDo()
-        return self.addSubItem(todo, index)
+    @property
+    def createDateTime(self) -> datetime.datetime:
+        return self._createDate
+
+    ## overriden
+    def _getLastModifiedDateTime(self) -> datetime.datetime:
+        return self._lastModifiedDate

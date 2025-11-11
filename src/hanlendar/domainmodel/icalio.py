@@ -23,7 +23,7 @@
 
 import logging
 from enum import Enum, unique
-from typing import Union
+from typing import Union, Any
 import datetime
 from datetime import timedelta
 import re
@@ -46,11 +46,17 @@ _LOGGER = logging.getLogger(__name__)
 class TaskField(Enum):
     UID = "uid"
     SUMMARY = "summary"
+    LOCATION = "location"
+    URL = "url"
     DESCRIPTION = "description"
-    #     LOCATION      = "location"
+
     DTSTAMP = "dtstamp"  ## create datetime
     DTSTART = "dtstart"
     DTEND = "dtend"
+    CREATED = "created"
+    LASTMODIFIED = "last-modified"
+    SEQUENCE = "sequence"
+
     ## 'completed:' substring is converted in all fields in caldav, so it has to be postfixed prevent conversion
     COMPLETED = "x-hanlendar-completedx"
     PRIORITY = "priority"
@@ -113,6 +119,7 @@ class ToDoField(Enum):
     DESCRIPTION = "description"
     #     LOCATION      = "location"
     DTSTAMP = "dtstamp"  ## create datetime
+    CREATED = "created"
     ## 'completed:' substring is converted in all fields in caldav, so it has to be postfixed prevent conversion
     COMPLETED = "x-hanlendar-completedx"
 
@@ -171,21 +178,46 @@ def export_icalendar(manager: Manager) -> icalendar.cal.Calendar:
 def convert_task_to_icalendar(task: Task) -> icalendar.cal.Event:
     ievent: icalendar.cal.Event = icalendar.cal.Event()
 
+    ievent.add("DTSTAMP", datetime.datetime.utcnow())
+
     set_ical_value(ievent, TaskField.UID, task.UID)
     set_ical_value(ievent, TaskField.SUMMARY, task.title)
-    ## no location
+    
+    if task.location:
+        set_ical_value(ievent, TaskField.LOCATION, task.location)
+    
+    if task.url:
+        set_ical_value(ievent, TaskField.URL, task.url)
+    
+    if task.description:
+        set_ical_value(ievent, TaskField.DESCRIPTION, task.description)
 
-    set_ical_value(ievent, TaskField.DTSTAMP, task.createDateTime)
+    if task.sequence > 0:
+        set_ical_value(ievent, TaskField.SEQUENCE, task.sequence)
 
+    value_dt = convert_to_ical_dt(task.createDateTime)
+    set_ical_value(ievent, TaskField.CREATED, value_dt)
+
+    value_dt = convert_to_ical_dt(task.lastModifiedDateTime)
+    set_ical_value(ievent, TaskField.LASTMODIFIED, value_dt)
+
+    start_date_time = None
     if task.startDateTime is not None:
-        set_ical_value(ievent, TaskField.DTSTART, task.startDateTime)
+        start_date_time = convert_to_ical_dt(task.startDateTime)
     else:
         ## DTSTART field cannot be None, so use end date
-        set_ical_value(ievent, TaskField.DTSTART, task.dueDateTime)
+        start_date_time = convert_to_ical_dt(task.dueDateTime)
 
-    set_ical_value(ievent, TaskField.DTEND, task.dueDateTime)
-    set_ical_value(ievent, TaskField.DESCRIPTION, task.description)
-    set_ical_value(ievent, TaskField.COMPLETED, task.completed)
+    end_date_time = convert_to_ical_dt(task.dueDateTime)
+    if task.isAllDay():
+        set_ical_value(ievent, TaskField.DTSTART, start_date_time.date())
+        set_ical_value(ievent, TaskField.DTEND, end_date_time.date())
+    else:
+        set_ical_value(ievent, TaskField.DTSTART, start_date_time)
+        set_ical_value(ievent, TaskField.DTEND, end_date_time)
+
+    if task.completed != 0:
+        set_ical_value(ievent, TaskField.COMPLETED, task.completed)
 
     taskParent = task.getParent()
     if taskParent is not None:
@@ -200,6 +232,10 @@ def convert_task_to_icalendar(task: Task) -> icalendar.cal.Event:
     reminderList = task.reminderList
     set_ical_list(ievent, TaskField.REMINDERS, reminderList, value_extractor=lambda rem: str(rem.timeOffset))
 
+    if task._unknown_props:
+        for key, item in task._unknown_props.items():
+            ievent.add(key, item)
+
     return ievent
 
 
@@ -210,7 +246,7 @@ def convert_todo_to_icalendar(todo: LocalToDo) -> icalendar.cal.Todo:
     itodo.add(ToDoField.SUMMARY.value, todo.title)
     ## no location
 
-    itodo.add(ToDoField.DTSTAMP.value, todo.createDateTime)
+    itodo.add(ToDoField.CREATED.value, todo.createDateTime)
 
     itodo.add(ToDoField.DESCRIPTION.value, todo.description)
     itodo.add(ToDoField.COMPLETED.value, todo.completed)
@@ -220,6 +256,13 @@ def convert_todo_to_icalendar(todo: LocalToDo) -> icalendar.cal.Todo:
         itodo.add(ToDoField.GROUP_PARENT.value, taskParent.UID)
 
     return itodo
+
+
+def convert_to_ical_dt(dt_value):
+    return dt_value
+
+
+## ===========================================================
 
 
 def import_icalendar_content(manager: Manager, content: str):
@@ -241,27 +284,42 @@ def import_icalendar_content(manager: Manager, content: str):
     return tasks, dangling_children
 
 
-def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar):
-    tasks = []
+def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar) -> (list[Task], list[Any]):
+    tasks: list[Task] = []
     dangling_children = []
     for component in calendar.walk():
         if component.name == "VEVENT":
             task: Task = manager.createEmptyTask()
 
-            # TODO: class, created, last-modified, sequence, transp
+            # TODO: class, transp
             task.UID = get_ical_str(component, TaskField.UID)
 
             summary = get_ical_str(component, TaskField.SUMMARY)
-            location = component.get("location")
-            if location is not None:
-                task.title = f"{summary}, {location}"
-            else:
+            if summary is not None:
                 task.title = f"{summary}"
+
+            location = component.get(TaskField.LOCATION.value)
+            if location is not None:
+                task.location = f"{location}"
+
+            url = component.get(TaskField.URL.value)
+            if url is not None:
+                task.url = f"{url}"
 
             task.description = get_ical_str(component, TaskField.DESCRIPTION)
             if task.description is None:
                 task.description = ""
             task.description = task.description.replace("=0D=0A", "\n")
+
+            sequence = component.get(TaskField.SEQUENCE.value)
+            if url is not None:
+                task.sequence = int(sequence)
+
+            created_date = get_ical_value_dt(component, TaskField.CREATED)
+            task._createDate = created_date
+
+            modified_date = get_ical_value_dt(component, TaskField.LASTMODIFIED)
+            task._lastModifiedDate = modified_date
 
             start_date = get_ical_value_dt(component, TaskField.DTSTART)
             end_date = get_ical_value_dt(component, TaskField.DTEND)
@@ -299,6 +357,15 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar):
             except Exception:  # as ex:
                 _LOGGER.warning("unable to import remainder list: %s %s", task.title, task.dueDateTime)
                 raise
+
+            unhandled_props = {}
+            for key, val in component.items():
+                unhandled_props[ key ] = val.to_ical()
+            for item in TaskField:
+                prop_name = item.value.upper()
+                if prop_name in unhandled_props:
+                    del unhandled_props[prop_name]
+            task._unknown_props = unhandled_props
 
             parentUID = get_ical_str(component, TaskField.GROUP_PARENT)
             if parentUID is None:
@@ -473,9 +540,18 @@ def get_ical_value_dt(component, field: TaskField):
     value_raw = component.get(field.value)
     if value_raw is None:
         return None
-    valueDate = value_raw.dt
-    valueDate = valueDate.astimezone()  ## convert to local timezone
-    return valueDate.replace(tzinfo=None)
+    value_type = value_raw.params.get("VALUE")
+    if value_type is None:
+        valueDate = value_raw.dt
+        valueDate = valueDate.astimezone()  ## convert to local timezone
+        return valueDate
+        #return valueDate.replace(tzinfo=None)
+    if value_type == "DATE":
+        value_date: datetime.date = value_raw.dt
+        value_dt = datetime.datetime(value_date.year, value_date.month, value_date.day)
+        return value_dt
+    _LOGGER.warning("unhandled ical date type: %s", value_type)
+    return None
 
 
 ###
@@ -550,3 +626,48 @@ def get_field(field_dict, key):
     value = field_dict[key]
     value = str(value)
     return value.upper()
+
+
+## ============================================================
+
+
+def replace_line(content, line_prefix, new_content):
+    lines = content.splitlines()
+    for i, line in enumerate(lines):
+        if line.startswith(line_prefix):
+            lines[i] = f"{line_prefix}{new_content}"
+    return "\n".join(lines) + "\n"
+
+
+def remove_line(content, line_prefix):
+    out_lines = []
+    lines = content.splitlines()
+    for line in lines:
+        if not line.startswith(line_prefix):
+            out_lines.append( line )
+    return "\n".join(out_lines) + "\n"
+
+
+def sort_ical_content(content):
+    lines = content.splitlines()
+    cal_index = lines.index("BEGIN:VCALENDAR")
+    cal_lines = lines[ cal_index + 1 : ]
+    item_start_index = find_starting_index(cal_lines, "BEGIN:")
+    item_end_index = find_starting_index(cal_lines, "END:")
+    item_lines = cal_lines[ item_start_index + 1 : item_end_index ]
+    item_lines.sort()
+    
+    out_lines = []
+    out_lines.extend( lines[ : cal_index + 1] )
+    out_lines.extend( cal_lines[ : item_start_index + 1] )
+    out_lines.extend( item_lines )
+    out_lines.extend( cal_lines[ item_end_index : ] )
+
+    return "\n".join(out_lines) + "\n"
+
+
+def find_starting_index(content_list, line_start):
+    for i, item in enumerate(content_list):
+        if item.startswith(line_start):
+            return i
+    return -1

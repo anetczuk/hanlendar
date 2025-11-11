@@ -326,6 +326,11 @@ class Task(Item):
         raise NotImplementedError(message)
 
     @abc.abstractmethod
+    def _getLastModifiedDateTime(self) -> datetime:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
     def _getStartDateTime(self) -> datetime:
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
@@ -350,11 +355,19 @@ class Task(Item):
         return self._getCreateDateTime()
 
     @property
+    def lastModifiedDateTime(self) -> datetime:
+        return self._getLastModifiedDateTime()
+
+    @property
     def startDateTime(self) -> datetime:
         return self._getStartDateTime()
 
     @property
     def dueDateTime(self) -> datetime:
+        return self._getDueDateTime()
+
+    @property
+    def endDateTime(self) -> datetime:
         return self._getDueDateTime()
 
     def setOccurrence(self, start: datetime, due: datetime):
@@ -382,6 +395,19 @@ class Task(Item):
 
     def setDeadlineDateTime(self, due: datetime):
         self.setOccurrenceDue(due)
+
+    def isAllDay(self) -> bool:
+        if self.startDateTime is None:
+            return False
+        if self.endDateTime is None:
+            return False
+        start_time = self.startDateTime.time()
+        if start_time.hour != 0 or start_time.minute != 0 or start_time.second != 0:
+            return False
+        end_time = self.endDateTime.time()
+        if end_time.hour != 0 or end_time.minute != 0 or end_time.second != 0:
+            return False
+        return True
 
     def getReferenceDateTime(self) -> datetime:
         if self.startDateTime is not None:

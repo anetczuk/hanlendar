@@ -32,7 +32,7 @@ from hanlendar.domainmodel.icalio import (
     import_icalendar_content,
     export_icalendar_content,
     fix_dangling_tasks,
-    timedelta_from_string,
+    timedelta_from_string, sort_ical_content, replace_line, remove_line,
 )
 
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
@@ -40,6 +40,8 @@ from hanlendar.domainmodel.local.manager import LocalManager as Manager
 from hanlendar.domainmodel.local.task import LocalTask as Task
 from hanlendar.domainmodel.reminder import Reminder
 from hanlendar.domainmodel.local.todo import LocalToDo
+from testhanlendar.data import get_data_path
+from testhanlendar.domainmodel.caldav.radicalemock import read_file
 
 
 class ICalIOTest(unittest.TestCase):
@@ -79,9 +81,10 @@ END:VCALENDAR
 
         calTask = tasks[0]
         self.assertEqual(calTask.UID, "1234__4321")
-        self.assertEqual(calTask.title, "Umówiona wizyta, Remiza Warszawska 123")
-        self.assertEqual(calTask.startDateTime, datetime.datetime(2022, 4, 14, 15, 20))
-        self.assertEqual(calTask.dueDateTime, datetime.datetime(2022, 4, 14, 15, 40))
+        self.assertEqual(calTask.title, "Umówiona wizyta")
+        self.assertEqual(calTask.location, "Remiza Warszawska 123")
+        self.assertEqual(calTask.startDateTime.replace(tzinfo=None), datetime.datetime(2022, 4, 14, 15, 20))
+        self.assertEqual(calTask.dueDateTime.replace(tzinfo=None), datetime.datetime(2022, 4, 14, 15, 40))
 
     def test_importICalendar_eml(self):
         manager = Manager()
@@ -120,9 +123,10 @@ END:VCALENDAR
 
         calTask = tasks[0]
         self.assertEqual(calTask.UID, "1234__4321")
-        self.assertEqual(calTask.title, "Umówiona wizyta, Remiza Warszawska 123")
-        self.assertEqual(calTask.startDateTime, datetime.datetime(2022, 4, 14, 15, 20))
-        self.assertEqual(calTask.dueDateTime, datetime.datetime(2022, 4, 14, 15, 40))
+        self.assertEqual(calTask.title, "Umówiona wizyta")
+        self.assertEqual(calTask.location, "Remiza Warszawska 123")
+        self.assertEqual(calTask.startDateTime.replace(tzinfo=None), datetime.datetime(2022, 4, 14, 15, 20))
+        self.assertEqual(calTask.dueDateTime.replace(tzinfo=None), datetime.datetime(2022, 4, 14, 15, 40))
 
     def test_importICalendar_completed(self):
         manager = Manager()
@@ -153,9 +157,10 @@ END:VCALENDAR
 
         calTask = tasks[0]
         self.assertEqual(calTask.UID, "1234__4321")
-        self.assertEqual(calTask.title, "Umówiona wizyta, Remiza Warszawska 123")
-        self.assertEqual(calTask.startDateTime, datetime.datetime(2022, 4, 14, 15, 20))
-        self.assertEqual(calTask.dueDateTime, datetime.datetime(2022, 4, 14, 15, 40))
+        self.assertEqual(calTask.title, "Umówiona wizyta")
+        self.assertEqual(calTask.location, "Remiza Warszawska 123")
+        self.assertEqual(calTask.startDateTime.replace(tzinfo=None), datetime.datetime(2022, 4, 14, 15, 20))
+        self.assertEqual(calTask.dueDateTime.replace(tzinfo=None), datetime.datetime(2022, 4, 14, 15, 40))
         self.assertEqual(calTask.completed, 100)
 
     def test_importICalendar_subitems_reverse(self):
@@ -197,6 +202,8 @@ END:VCALENDAR
         self.assertEqual(newSubTask.UID, "1212afc7-09c2-4ee5-88f6-2829e247e9d6@hanlendar")
         self.assertEqual(newSubTask.title, "a subtitle example")
         self.assertEqual(newSubTask.getParent(), newTask)
+
+    ## ===================================================================
 
     def test_io_list(self):
         calendar: icalendar.cal.Calendar = icalendar.cal.Calendar()
@@ -281,9 +288,8 @@ END:VCALENDAR
         self.assertEqual(newTask.description, task.description)
         self.assertEqual(newTask.completed, task.completed)
         self.assertEqual(newTask.priority, task.priority)
-        self.assertEqual(newTask.startDateTime, task.startDateTime)
-        self.assertEqual(newTask.dueDateTime, task.dueDateTime)
-        self.assertEqual(newTask.dueDateTime, task.dueDateTime)
+        self.assertEqual(newTask.startDateTime.replace(tzinfo=None), task.startDateTime)
+        self.assertEqual(newTask.dueDateTime.replace(tzinfo=None), task.dueDateTime)
 
     def test_io_task_dtstart_none(self):
         manager = Manager()
@@ -292,7 +298,7 @@ END:VCALENDAR
         self.assertEqual(len(manager.getTasksAll()), 1)
 
         task.title = "title example"
-        dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45)
+        dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45, tzinfo=datetime.timezone.utc)
         task.setOccurrenceDue(dueDateTime)
 
         newManager = execute_ical_io(manager)
@@ -312,7 +318,7 @@ END:VCALENDAR
         self.assertEqual(len(manager.getTasksAll()), 1)
 
         task.title = "title example"
-        dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45)
+        dueDateTime = datetime.datetime(year=2022, month=6, day=16, hour=13, minute=45, tzinfo=datetime.timezone.utc)
         task.setOccurrenceDue(dueDateTime)
         task.recurrence = Recurrent(RepeatType.DAILY, 3, datetime.date(year=2023, month=9, day=18))
         task.setCompleted()  ## progress recurrence
@@ -412,20 +418,22 @@ END:VCALENDAR
         task: Task = manager.createEmptyTask()
         task.UID = "1111-2222-3333-4444"
         task._createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
+        task._lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # pylint: disable=W0212
         manager.addTask(task)
         task.title = "title example"
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
+        content = replace_line(content, "DTSTAMP:", "20251111T190206Z")
         self.assertEqual(
             """\
 BEGIN:VCALENDAR
 PRODID:-//Hanlendar//EN
 BEGIN:VEVENT
 SUMMARY:title example
-DTSTAMP:20251122T092030Z
+DTSTAMP:20251111T190206Z
 UID:1111-2222-3333-4444
-DESCRIPTION:
-X-HANLENDAR-COMPLETEDX:0
+CREATED:20251122T092030Z
+LAST-MODIFIED:20251123T092030Z
 END:VEVENT
 END:VCALENDAR
 """,
@@ -446,14 +454,56 @@ END:VCALENDAR
 BEGIN:VCALENDAR
 PRODID:-//Hanlendar//EN
 BEGIN:VTODO
+CREATED:20251122T092030Z
 DESCRIPTION:
-DTSTAMP:20251122T092030Z
 SUMMARY:title example
 UID:1111-2222-3333-4444
 X-HANLENDAR-COMPLETEDX:0
 END:VTODO
 END:VCALENDAR
 """,
+            content,
+        )
+        
+    ## =======================================================================
+
+    def test_evolution_event_all_day_basic(self):
+        ## compatibility with evolution
+
+        event_path = get_data_path("evolution_all_day_event_basic.ics")
+        event_ical_content = read_file(event_path)
+        
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+        
+        self.assertEqual( 1, len(new_items) )
+        self.assertEqual( 0, len(dangling_items) )
+
+        new_event: Task = new_items[0]
+        self.assertEqual( "49c4245a00131e320f35c0b1ba360d7d23b0a0af", new_event.UID )
+        self.assertEqual( datetime.datetime(2025, 11, 11, 14, 3, 31), new_event.createDateTime.replace(tzinfo=None) )
+        self.assertEqual( datetime.datetime(2025, 11, 11, 15, 3, 31), new_event.lastModifiedDateTime.replace(tzinfo=None) )
+        self.assertEqual( datetime.datetime(2025, 11, 28, 0, 0), new_event.startDateTime )
+        self.assertEqual( datetime.datetime(2025, 11, 29, 0, 0), new_event.endDateTime )
+        self.assertEqual( "summary data", new_event.summary )
+        self.assertEqual( "location data", new_event.location )
+        self.assertEqual( "webpage data", new_event.url )
+        self.assertEqual( "description data", new_event.description )
+        self.assertEqual( 2, new_event.sequence )
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251106T211247Z")
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
+        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+        
+        self.assertEqual(
+            event_ical_content,
             content,
         )
 

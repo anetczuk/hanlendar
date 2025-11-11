@@ -226,7 +226,7 @@ class Manager:
         else:
             self.tasks.insert(listPos, task)
 
-    def addTask(self, task: Task = None):
+    def addTask(self, task: Task = None) -> Task:
         if task is None:
             task = self.createEmptyTask()
         self.tasks.append(task)

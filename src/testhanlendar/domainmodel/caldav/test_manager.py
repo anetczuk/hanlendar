@@ -31,6 +31,7 @@ from hanlendar.domainmodel.caldav.manager import CalDAVManager, CalDAVConnector
 
 from testhanlendar.data import get_data_path
 from testhanlendar.domainmodel.caldav.radicalemock import RadicaleLocalServer
+from hanlendar.domainmodel.icalio import replace_line
 
 
 class CalDAVManagerTest(unittest.TestCase):
@@ -75,12 +76,15 @@ class CalDAVManagerTest(unittest.TestCase):
         new_task = self.manager.addNewTaskDateTime(taskDate, "task1")
         new_task.UID = "1111-2222-3333-4444"
         new_task._createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
+        new_task._lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # pylint: disable=W0212
         self.manager.saveToServer()
 
         calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)
         self.assertEqual(calendar_items_num, 1)
 
         content = self.radicale_server.get_item(new_task.UID)
+        # replace 'now()' time with constant
+        content = replace_line(content, "DTSTAMP:", "20251121T092030Z")
         self.assertEqual(
             """\
 BEGIN:VCALENDAR
@@ -90,10 +94,10 @@ BEGIN:VEVENT
 UID:1111-2222-3333-4444
 DTSTART:20251122T102030
 DTEND:20251122T112030
-DESCRIPTION:
-DTSTAMP:20251122T092030Z
+CREATED:20251122T092030Z
+DTSTAMP:20251121T092030Z
+LAST-MODIFIED:20251123T092030Z
 SUMMARY:task1
-X-HANLENDAR-COMPLETEDX:0
 END:VEVENT
 END:VCALENDAR
 """,
@@ -110,14 +114,17 @@ END:VCALENDAR
         self.assertEqual(calendar_items_num, 1)
 
         content = self.radicale_server.get_item(new_todo.UID)
+        # replace 'now()' time with constant
+        content = replace_line(content, "DTSTAMP:", "20251110T152141Z")
         self.assertEqual(
             """\
 BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//PYVOBJECT//NONSGML Version 1//EN
 BEGIN:VTODO
+CREATED:20251122T092030Z
 DESCRIPTION:
-DTSTAMP:20251122T092030Z
+DTSTAMP:20251110T152141Z
 SUMMARY:todo1
 UID:1111-2222-3333-4444
 X-HANLENDAR-COMPLETEDX:0
