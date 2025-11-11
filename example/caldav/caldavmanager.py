@@ -195,6 +195,7 @@ def process_calitems(args):
                 todo.get_duration(),
                 todo.url,
             )
+            _LOGGER.info("    raw data: %s", todo.icalendar_component)  # type: ignore[attr-defined]
 
         _LOGGER.info("journals:")
         for journal in journals:
@@ -208,6 +209,7 @@ def process_calitems(args):
                 journal.get_duration(),
                 journal.url,
             )
+            _LOGGER.info("    raw data: %s", journal.icalendar_component)  # type: ignore[attr-defined]
 
     except error.NotFoundError:
         _LOGGER.error("calendar with given id '%s' does not exist", cal_id)

@@ -38,16 +38,16 @@ _LOGGER = logging.getLogger(__name__)
 class LocalTask(Task, persist.Versionable):
     """Task is entity that lasts over time."""
 
-    ## 1: _recurrentStartDate and _recurrentDueDate replaced with _recurrentOffset
-    ## 2: add base class Item
-    ## 3: rename: 'title' to '_title', 'description' to '_description', 'priority' to '_priority'
-    ## 4: rename: 'reminderList' to '_reminderList'
-    ## 5: rescaled 'priority'
-    ## 6: added 'UID'
-    ## 7: added '_completedList'
-    ## 8: remove '_recurrentOffset' and use '_startDate' and '_dueDate'
-    ## 9: added '_createDate'
-    ## 9: added '_location', '_url', '_sequence', '_lastModifiedDate', '_unknown_props'
+    ##  1: _recurrentStartDate and _recurrentDueDate replaced with _recurrentOffset
+    ##  2: add base class Item
+    ##  3: rename: 'title' to '_title', 'description' to '_description', 'priority' to '_priority'
+    ##  4: rename: 'reminderList' to '_reminderList'
+    ##  5: rescaled 'priority'
+    ##  6: added 'UID'
+    ##  7: added '_completedList'
+    ##  8: remove '_recurrentOffset' and use '_startDate' and '_dueDate'
+    ##  9: added '_createDate'
+    ## 10: added '_location', '_url', '_sequence', '_lastModifiedDate', '_unknown_props'
     _class_version = 10
 
     def __init__(self, title=""):
@@ -65,7 +65,13 @@ class LocalTask(Task, persist.Versionable):
 
         self._sequence = 0
         self._completed = 0  ## task completion percentage, in range [0..100]
-        self._priority = 5  ## lower number, greater priority
+        
+        ## Evolution priority meanings:
+        ##  missing: Undefined
+        ##  3: High
+        ##  5: Normal
+        ##  7: Low
+        self._priority: int = 5  ## lower number, greater priority
 
         self._createDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
         self._lastModifiedDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)

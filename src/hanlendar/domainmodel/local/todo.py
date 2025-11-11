@@ -27,6 +27,7 @@ import datetime
 from hanlendar import persist
 
 from hanlendar.domainmodel.item import Item, generate_uid
+from typing import Any
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +43,8 @@ class LocalToDo(Item, persist.Versionable):
     ## 4: added 'UID'
     ## 5: added '_createDate'
     ## 6: added '_location', '_url', '_sequence', '_lastModifiedDate
-    _class_version = 5
+    ## 7: added '_unknown_props'
+    _class_version = 7
 
     def __init__(self, title=""):
         super().__init__()
@@ -59,10 +61,19 @@ class LocalToDo(Item, persist.Versionable):
 
         self._sequence = 0
         self._completed = 0  ## in range [0..100]
-        self._priority = 5  ## lower number, greater priority
+        
+        ## Evolution priority meanings:
+        ##  missing: Undefined
+        ##  3: High
+        ##  5: Normal
+        ##  7: Low
+        self._priority: int = 5  ## lower number, greater priority
 
         self._createDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
         self._lastModifiedDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
+        
+        ## unknown icalendar properties
+        self._unknown_props: dict[Any, Any] = None
 
     def _convertstate_(self, dict_, dict_version_):
         _LOGGER.info("converting object from version %s to %s", dict_version_, self._class_version)
@@ -107,6 +118,10 @@ class LocalToDo(Item, persist.Versionable):
             dict_["_location"] = ""
             dict_["_url"] = ""
             dict_["_sequence"] = 0
+            dict_version_ += 1
+
+        if dict_version_ == 6:
+            dict_["_unknown_props"] = None
             dict_version_ += 1
 
         # pylint: disable=W0201
@@ -213,6 +228,6 @@ class LocalToDo(Item, persist.Versionable):
     def createDateTime(self) -> datetime.datetime:
         return self._createDate
 
-    ## overriden
-    def _getLastModifiedDateTime(self) -> datetime.datetime:
+    @property
+    def lastModifiedDateTime(self) -> datetime.datetime:
         return self._lastModifiedDate

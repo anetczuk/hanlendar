@@ -34,6 +34,7 @@ from hanlendar.domainmodel.task import Task
 from hanlendar.domainmodel.local.todo import LocalToDo
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
 from hanlendar.domainmodel.reminder import Reminder
+from icalendar.prop import TypesFactory
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,8 +121,12 @@ class ToDoField(Enum):
     #     LOCATION      = "location"
     DTSTAMP = "dtstamp"  ## create datetime
     CREATED = "created"
+    LASTMODIFIED = "last-modified"
+    SEQUENCE = "sequence"
+
     ## 'completed:' substring is converted in all fields in caldav, so it has to be postfixed prevent conversion
     COMPLETED = "x-hanlendar-completedx"
+    PRIORITY = "priority"
 
     GROUP_PARENT = "x-hanlendar-parent"  ## uuid
 
@@ -219,6 +224,9 @@ def convert_task_to_icalendar(task: Task) -> icalendar.cal.Event:
     if task.completed != 0:
         set_ical_value(ievent, TaskField.COMPLETED, task.completed)
 
+    if task.priority != 5:
+        ievent.add(TaskField.PRIORITY.value, task.priority)
+
     taskParent = task.getParent()
     if taskParent is not None:
         set_ical_value(ievent, TaskField.GROUP_PARENT, taskParent.UID)
@@ -233,8 +241,11 @@ def convert_task_to_icalendar(task: Task) -> icalendar.cal.Event:
     set_ical_list(ievent, TaskField.REMINDERS, reminderList, value_extractor=lambda rem: str(rem.timeOffset))
 
     if task._unknown_props:
+        factory = TypesFactory()
         for key, item in task._unknown_props.items():
-            ievent.add(key, item)
+            decoded_item = item.decode("utf-8")
+            desired_item = factory.from_ical(key, decoded_item)
+            ievent.add(key, desired_item)
 
     return ievent
 
@@ -242,18 +253,39 @@ def convert_task_to_icalendar(task: Task) -> icalendar.cal.Event:
 def convert_todo_to_icalendar(todo: LocalToDo) -> icalendar.cal.Todo:
     itodo: icalendar.cal.Todo = icalendar.cal.Todo()
 
+    itodo.add("DTSTAMP", datetime.datetime.utcnow())
+
     itodo.add(ToDoField.UID.value, todo.UID)
     itodo.add(ToDoField.SUMMARY.value, todo.title)
-    ## no location
 
-    itodo.add(ToDoField.CREATED.value, todo.createDateTime)
+    value_dt = convert_to_ical_dt(todo.createDateTime)
+    set_ical_value(itodo, ToDoField.CREATED, value_dt)
 
-    itodo.add(ToDoField.DESCRIPTION.value, todo.description)
-    itodo.add(ToDoField.COMPLETED.value, todo.completed)
+    value_dt = convert_to_ical_dt(todo.lastModifiedDateTime)
+    set_ical_value(itodo, ToDoField.LASTMODIFIED, value_dt)
+
+    if todo.description:
+        itodo.add(ToDoField.DESCRIPTION.value, todo.description)
+
+    if todo.sequence > 0:
+        set_ical_value(itodo, TaskField.SEQUENCE, todo.sequence)
+
+    if todo.completed != 0:
+        itodo.add(ToDoField.COMPLETED.value, todo.completed)
+
+    if todo.priority != 5:
+        itodo.add(ToDoField.PRIORITY.value, todo.priority)
 
     taskParent = todo.getParent()
     if taskParent is not None:
         itodo.add(ToDoField.GROUP_PARENT.value, taskParent.UID)
+
+    if todo._unknown_props:
+        factory = TypesFactory()
+        for key, item in todo._unknown_props.items():
+            decoded_item = item.decode("utf-8")
+            desired_item = factory.from_ical(key, decoded_item)
+            itodo.add(key, desired_item)
 
     return itodo
 
@@ -289,100 +321,212 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar) -> (lis
     dangling_children = []
     for component in calendar.walk():
         if component.name == "VEVENT":
-            task: Task = manager.createEmptyTask()
-
-            # TODO: class, transp
-            task.UID = get_ical_str(component, TaskField.UID)
-
-            summary = get_ical_str(component, TaskField.SUMMARY)
-            if summary is not None:
-                task.title = f"{summary}"
-
-            location = component.get(TaskField.LOCATION.value)
-            if location is not None:
-                task.location = f"{location}"
-
-            url = component.get(TaskField.URL.value)
-            if url is not None:
-                task.url = f"{url}"
-
-            task.description = get_ical_str(component, TaskField.DESCRIPTION)
-            if task.description is None:
-                task.description = ""
-            task.description = task.description.replace("=0D=0A", "\n")
-
-            sequence = component.get(TaskField.SEQUENCE.value)
-            if url is not None:
-                task.sequence = int(sequence)
-
-            created_date = get_ical_value_dt(component, TaskField.CREATED)
-            task._createDate = created_date
-
-            modified_date = get_ical_value_dt(component, TaskField.LASTMODIFIED)
-            task._lastModifiedDate = modified_date
-
-            start_date = get_ical_value_dt(component, TaskField.DTSTART)
-            end_date = get_ical_value_dt(component, TaskField.DTEND)
-
-            if start_date == end_date:
-                start_date = None
-            task.setOccurrence(start_date, end_date)
-
-            task.completed = get_ical_value_int(component, TaskField.COMPLETED, 0)
-
-            try:
-                recurrMode = component.get(RecurrentField.MODE.value)
-                recurrMode = RepeatType.findByName(recurrMode)
-
-                recurrStep = component.get(RecurrentField.STEP.value)
-                recurrStep = int(recurrStep)
-
-                recurrEnd = component.get(RecurrentField.ENDDATE.value)
-                recurrEnd = convert_to_date(recurrEnd)
-
-                task.recurrence = Recurrent(recurrMode, recurrStep, recurrEnd)
-
-            # ruff: noqa: S110
-            except Exception:  # pylint: disable=W0718 # nosec
-                pass
-
-            try:
-                task.reminderList = get_ical_list(
-                    component,
-                    TaskField.REMINDERS,
-                    value_converter=reminder_from_string,
-                )
-                if task.reminderList is not None:
-                    task.reminderList = [item for item in task.reminderList if item is not None]
-            except Exception:  # as ex:
-                _LOGGER.warning("unable to import remainder list: %s %s", task.title, task.dueDateTime)
-                raise
-
-            unhandled_props = {}
-            for key, val in component.items():
-                unhandled_props[ key ] = val.to_ical()
-            for item in TaskField:
-                prop_name = item.value.upper()
-                if prop_name in unhandled_props:
-                    del unhandled_props[prop_name]
-            task._unknown_props = unhandled_props
-
-            parentUID = get_ical_str(component, TaskField.GROUP_PARENT)
-            if parentUID is None:
-                ## regular task
-                addedTask = manager.addTask(task)
-                tasks.append(addedTask)
-                continue
-            taskParent: Task = manager.findTaskByUID(parentUID)
-            if taskParent is not None:
-                ## add as subitem
-                taskParent.addSubItem(task)
-                tasks.append(task)
-            else:
-                ## invalid case -- parent still not added
-                dangling_children.append((task, parentUID))
+            imported_tasks, imported_dangling_children = import_task_from_ical(component, manager)
+            tasks.extend(imported_tasks)
+            dangling_children.extend(imported_dangling_children)
+        if component.name == "VTODO":
+            imported_tasks, imported_dangling_children = import_todo_from_ical(component, manager)
+            tasks.extend(imported_tasks)
+            dangling_children.extend(imported_dangling_children)
 
     return tasks, dangling_children
+
+
+def import_task_from_ical(component, manager):
+    new_items = []
+    dangling_children = []
+
+    task: Task = manager.createEmptyTask()
+
+    # TODO: class, transp
+    task.UID = get_ical_str(component, TaskField.UID)
+
+    summary = get_ical_str(component, TaskField.SUMMARY)
+    if summary is not None:
+        task.title = f"{summary}"
+
+    location = component.get(TaskField.LOCATION.value)
+    if location is not None:
+        task.location = f"{location}"
+
+    url = component.get(TaskField.URL.value)
+    if url is not None:
+        task.url = f"{url}"
+
+    task.description = get_ical_str(component, TaskField.DESCRIPTION)
+    if task.description is None:
+        task.description = ""
+    task.description = task.description.replace("=0D=0A", "\n")
+
+    sequence = component.get(TaskField.SEQUENCE.value)
+    if sequence is not None:
+        task.sequence = int(sequence)
+
+    created_date = get_ical_value_dt(component, TaskField.CREATED)
+    task._createDate = created_date
+
+    modified_date = get_ical_value_dt(component, TaskField.LASTMODIFIED)
+    task._lastModifiedDate = modified_date
+
+    start_date = get_ical_value_dt(component, TaskField.DTSTART)
+    end_date = get_ical_value_dt(component, TaskField.DTEND)
+
+    if start_date == end_date:
+        start_date = None
+    task.setOccurrence(start_date, end_date)
+
+    task.completed = get_ical_value_int(component, TaskField.COMPLETED, 0)
+    task.priority = get_ical_value_int(component, TaskField.PRIORITY, 5)
+
+    try:
+        recurrMode = component.get(RecurrentField.MODE.value)
+        recurrMode = RepeatType.findByName(recurrMode)
+
+        recurrStep = component.get(RecurrentField.STEP.value)
+        recurrStep = int(recurrStep)
+
+        recurrEnd = component.get(RecurrentField.ENDDATE.value)
+        recurrEnd = convert_to_date(recurrEnd)
+
+        task.recurrence = Recurrent(recurrMode, recurrStep, recurrEnd)
+
+    # ruff: noqa: S110
+    except Exception:  # pylint: disable=W0718 # nosec
+        pass
+
+    try:
+        task.reminderList = get_ical_list(
+            component,
+            TaskField.REMINDERS,
+            value_converter=reminder_from_string,
+        )
+        if task.reminderList is not None:
+            task.reminderList = [item for item in task.reminderList if item is not None]
+    except Exception:  # as ex:
+        _LOGGER.warning("unable to import remainder list: %s %s", task.title, task.dueDateTime)
+        raise
+
+    unhandled_props = {}
+    for key, val in component.items():
+        unhandled_props[ key ] = val.to_ical()
+    for item in TaskField:
+        prop_name = item.value.upper()
+        if prop_name in unhandled_props:
+            del unhandled_props[prop_name]
+    task._unknown_props = unhandled_props
+
+    parentUID = get_ical_str(component, TaskField.GROUP_PARENT)
+    if parentUID is None:
+        ## regular task
+        addedTask = manager.addTask(task)
+        new_items.append(addedTask)
+        return (new_items, dangling_children)
+
+    taskParent: Task = manager.findTaskByUID(parentUID)
+    if taskParent is not None:
+        ## add as subitem
+        taskParent.addSubItem(task)
+        new_items.append(task)
+    else:
+        ## invalid case -- parent still not added
+        dangling_children.append((task, parentUID))
+        
+    return (new_items, dangling_children)
+
+
+def import_todo_from_ical(component, manager):
+    new_items = []
+    dangling_children = []
+
+    todo: LocalToDo = manager.createEmptyToDo()
+
+    # TODO: class, transp
+    todo.UID = get_ical_str(component, TaskField.UID)
+
+    summary = get_ical_str(component, TaskField.SUMMARY)
+    if summary is not None:
+        todo.title = f"{summary}"
+
+    location = component.get(TaskField.LOCATION.value)
+    if location is not None:
+        todo.location = f"{location}"
+
+    url = component.get(TaskField.URL.value)
+    if url is not None:
+        todo.url = f"{url}"
+
+    todo.description = get_ical_str(component, TaskField.DESCRIPTION)
+    if todo.description is None:
+        todo.description = ""
+    todo.description = todo.description.replace("=0D=0A", "\n")
+
+    sequence = component.get(TaskField.SEQUENCE.value)
+    if sequence is not None:
+        todo.sequence = int(sequence)
+
+    created_date = get_ical_value_dt(component, TaskField.CREATED)
+    todo._createDate = created_date
+
+    modified_date = get_ical_value_dt(component, TaskField.LASTMODIFIED)
+    todo._lastModifiedDate = modified_date
+
+    todo.completed = get_ical_value_int(component, TaskField.COMPLETED, 0)
+    todo.priority = get_ical_value_int(component, TaskField.PRIORITY, 5)
+
+    try:
+        recurrMode = component.get(RecurrentField.MODE.value)
+        recurrMode = RepeatType.findByName(recurrMode)
+
+        recurrStep = component.get(RecurrentField.STEP.value)
+        recurrStep = int(recurrStep)
+
+        recurrEnd = component.get(RecurrentField.ENDDATE.value)
+        recurrEnd = convert_to_date(recurrEnd)
+
+        todo.recurrence = Recurrent(recurrMode, recurrStep, recurrEnd)
+
+    # ruff: noqa: S110
+    except Exception:  # pylint: disable=W0718 # nosec
+        pass
+
+    try:
+        todo.reminderList = get_ical_list(
+            component,
+            TaskField.REMINDERS,
+            value_converter=reminder_from_string,
+        )
+        if todo.reminderList is not None:
+            todo.reminderList = [item for item in todo.reminderList if item is not None]
+    except Exception:  # as ex:
+        _LOGGER.warning("unable to import remainder list: %s %s", todo.title, todo.dueDateTime)
+        raise
+
+    unhandled_props = {}
+    for key, val in component.items():
+        unhandled_props[ key ] = val.to_ical()
+    for item in TaskField:
+        prop_name = item.value.upper()
+        if prop_name in unhandled_props:
+            del unhandled_props[prop_name]
+    todo._unknown_props = unhandled_props
+
+    parentUID = get_ical_str(component, TaskField.GROUP_PARENT)
+    if parentUID is None:
+        ## regular todo
+        added_item = manager.addToDo(todo)
+        new_items.append(added_item)
+        return (new_items, dangling_children)
+
+    taskParent: LocalToDo = manager.findTaskByUID(parentUID)
+    if taskParent is not None:
+        ## add as subitem
+        taskParent.addSubItem(todo)
+        new_items.append(todo)
+    else:
+        ## invalid case -- parent still not added
+        dangling_children.append((todo, parentUID))
+        
+    return (new_items, dangling_children)
 
 
 def reminder_from_string(time_delta: str):

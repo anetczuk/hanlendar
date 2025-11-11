@@ -449,16 +449,18 @@ END:VCALENDAR
         todo.title = "title example"
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
+        content = replace_line(content, "DTSTAMP:", "20251123T092030Z")
+        content = replace_line(content, "LAST-MODIFIED:", "20251123T092130Z")
         self.assertEqual(
             """\
 BEGIN:VCALENDAR
 PRODID:-//Hanlendar//EN
 BEGIN:VTODO
 CREATED:20251122T092030Z
-DESCRIPTION:
+DTSTAMP:20251123T092030Z
+LAST-MODIFIED:20251123T092130Z
 SUMMARY:title example
 UID:1111-2222-3333-4444
-X-HANLENDAR-COMPLETEDX:0
 END:VTODO
 END:VCALENDAR
 """,
@@ -500,6 +502,42 @@ END:VCALENDAR
         event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
         event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+        
+        self.assertEqual(
+            event_ical_content,
+            content,
+        )
+
+    def test_evolution_todo_basic(self):
+        ## compatibility with evolution
+
+        event_path = get_data_path("evolution_todo.ics")
+        event_ical_content = read_file(event_path)
+        
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+        
+        self.assertEqual( 1, len(new_items) )
+        self.assertEqual( 0, len(dangling_items) )
+
+        new_event: Task = new_items[0]
+        self.assertEqual( "7c72ab99414ca6dfe803be5765508d9055909706", new_event.UID )
+        self.assertEqual( datetime.datetime(2025, 11, 8, 1, 2, 51), new_event.createDateTime.replace(tzinfo=None) )
+        self.assertEqual( datetime.datetime(2025, 11, 8, 1, 2, 51), new_event.lastModifiedDateTime.replace(tzinfo=None) )
+        self.assertEqual( "evolution task sample", new_event.summary )
+        self.assertEqual( "", new_event.location )
+        self.assertEqual( "", new_event.url )
+        self.assertEqual( "", new_event.description )
+        self.assertEqual( 1, new_event.sequence )
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251104T195837Z")
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
         
         self.assertEqual(

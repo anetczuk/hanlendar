@@ -116,6 +116,7 @@ END:VCALENDAR
         content = self.radicale_server.get_item(new_todo.UID)
         # replace 'now()' time with constant
         content = replace_line(content, "DTSTAMP:", "20251110T152141Z")
+        content = replace_line(content, "LAST-MODIFIED:", "20251110T152241Z")
         self.assertEqual(
             """\
 BEGIN:VCALENDAR
@@ -123,11 +124,10 @@ VERSION:2.0
 PRODID:-//PYVOBJECT//NONSGML Version 1//EN
 BEGIN:VTODO
 CREATED:20251122T092030Z
-DESCRIPTION:
 DTSTAMP:20251110T152141Z
+LAST-MODIFIED:20251110T152241Z
 SUMMARY:todo1
 UID:1111-2222-3333-4444
-X-HANLENDAR-COMPLETEDX:0
 END:VTODO
 END:VCALENDAR
 """,
