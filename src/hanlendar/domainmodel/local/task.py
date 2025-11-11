@@ -65,7 +65,7 @@ class LocalTask(Task, persist.Versionable):
 
         self._sequence = 0
         self._completed = 0  ## task completion percentage, in range [0..100]
-        
+
         ## Evolution priority meanings:
         ##  missing: Undefined
         ##  3: High
@@ -84,12 +84,12 @@ class LocalTask(Task, persist.Versionable):
 
         self._reminderList: list[Reminder] = None
         self._recurrence: Recurrent = None
-        
+
         ## unknown icalendar properties
         self._unknown_props: dict[Any, Any] = None
 
     # ruff: noqa: PLR0912
-    def _convertstate_(self, dict_, dict_version_):
+    def _convertstate_(self, dict_, dict_version_):  # pylint: disable=R0915
         _LOGGER.info("converting object from version %s to %s", dict_version_, self._class_version)
 
         if dict_version_ is None:

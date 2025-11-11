@@ -119,7 +119,7 @@ class Item:
         self.setTitle(value)
 
     ## ========================================================================
-    
+
     @abc.abstractmethod
     def _getLocation(self) -> str:
         message = "You need to define this method in derived class!"
@@ -145,7 +145,7 @@ class Item:
         self.setLocation(value)
 
     ## ========================================================================
-    
+
     @abc.abstractmethod
     def _getURL(self) -> str:
         message = "You need to define this method in derived class!"
@@ -169,7 +169,7 @@ class Item:
     @url.setter
     def url(self, value: str):
         self.setURL(value)
-    
+
     ## ========================================================================
 
     @abc.abstractmethod
@@ -195,7 +195,7 @@ class Item:
     @description.setter
     def description(self, value: str):
         self.setDescription(value)
-    
+
     ## ========================================================================
 
     @abc.abstractmethod
@@ -367,10 +367,11 @@ class Item:
     def removeSubItemFromList(itemList, item):
         if itemList is None:
             return None
-        for i, _item in enumerate(itemList):
-            currItem = itemList[i]
+        items_num = len(itemList)
+        for index in range(items_num):
+            currItem = itemList[index]
             if currItem == item:
-                popped = itemList.pop(i)
+                popped = itemList.pop(index)
                 popped.setParent(None)
                 return popped
             removed = currItem.removeSubItem(item)
@@ -382,11 +383,12 @@ class Item:
     def replaceSubItemInList(itemList, oldItem, newItem):
         if itemList is None:
             return None
-        for i, _item in enumerate(itemList):
-            currItem = itemList[i]
+        items_num = len(itemList)
+        for index in range(items_num):
+            currItem = itemList[index]
             if currItem == oldItem:
                 newItem.setParent(oldItem.getParent())
-                itemList[i] = newItem
+                itemList[index] = newItem
                 return True
             if currItem.replaceSubItem(oldItem, newItem) is True:
                 return True

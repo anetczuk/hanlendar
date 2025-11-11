@@ -32,7 +32,8 @@ from hanlendar.domainmodel.manager import Manager
 
 # from hanlendar.domainmodel.caldav.task import CalDAVTask
 from hanlendar.domainmodel.local.manager import LocalManager
-from hanlendar.domainmodel.icalio import import_icalendar, export_icalendar, fix_dangling_tasks
+from hanlendar.domainmodel.icalio import import_icalendar, export_icalendar
+from hanlendar.domainmodel.task import Task
 
 # from hanlendar import persist
 # from hanlendar.domainmodel.reminder import Notification
@@ -223,3 +224,38 @@ class CalDAVManager(Manager):
     ## overriden
     def _setNotes(self, value):
         self._localManager._setNotes(value)
+
+
+## ================================================================
+
+
+def fix_dangling_tasks(manager: Manager, dangling_children):
+    ## handle dangling children
+    while len(dangling_children) > 0:
+        handled = False
+        for i in range(len(dangling_children) - 1, -1, -1):
+            child, parent_uid = dangling_children[i]
+            taskParent: Task = manager.findTaskByUID(parent_uid)
+            if taskParent is not None:
+                ## add as subitem
+                taskParent.addSubItem(child)
+                del dangling_children[i]
+                handled = True
+        if handled is True:
+            continue
+
+        #         _LOGGER.warning( "not all children could be handled properly" )
+        #
+        #         print( "dangling children:" )
+        #         for item in dangling_children:
+        #             child, parent_uuid = item
+        #             print( "item:", child.UID, parent_uuid )
+        #         print( "tasks:" )
+        #         for item in manager.getTasksAll():
+        #             print( "item:", item.UID )
+
+        ## add remaining dangling children as regular tasks
+        for item in dangling_children:
+            child, _other = item
+            manager.addTask(child)
+        break

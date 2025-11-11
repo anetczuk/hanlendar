@@ -405,9 +405,7 @@ class Task(Item):
         if start_time.hour != 0 or start_time.minute != 0 or start_time.second != 0:
             return False
         end_time = self.endDateTime.time()
-        if end_time.hour != 0 or end_time.minute != 0 or end_time.second != 0:
-            return False
-        return True
+        return not (end_time.hour != 0 or end_time.minute != 0 or end_time.second != 0)
 
     def getReferenceDateTime(self) -> datetime:
         if self.startDateTime is not None:

@@ -28,10 +28,10 @@ import datetime
 import requests
 
 from hanlendar.domainmodel.caldav.manager import CalDAVManager, CalDAVConnector
+from hanlendar.domainmodel.icalio import replace_line
 
 from testhanlendar.data import get_data_path
 from testhanlendar.domainmodel.caldav.radicalemock import RadicaleLocalServer
-from hanlendar.domainmodel.icalio import replace_line
 
 
 class CalDAVManagerTest(unittest.TestCase):
@@ -76,7 +76,7 @@ class CalDAVManagerTest(unittest.TestCase):
         new_task = self.manager.addNewTaskDateTime(taskDate, "task1")
         new_task.UID = "1111-2222-3333-4444"
         new_task._createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
-        new_task._lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # pylint: disable=W0212
+        new_task._lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
         self.manager.saveToServer()
 
         calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)

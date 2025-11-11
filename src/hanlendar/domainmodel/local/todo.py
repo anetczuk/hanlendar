@@ -23,11 +23,11 @@
 
 import logging
 import datetime
+from typing import Any
 
 from hanlendar import persist
 
 from hanlendar.domainmodel.item import Item, generate_uid
-from typing import Any
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ class LocalToDo(Item, persist.Versionable):
 
         self._sequence = 0
         self._completed = 0  ## in range [0..100]
-        
+
         ## Evolution priority meanings:
         ##  missing: Undefined
         ##  3: High
@@ -71,7 +71,7 @@ class LocalToDo(Item, persist.Versionable):
 
         self._createDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
         self._lastModifiedDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
-        
+
         ## unknown icalendar properties
         self._unknown_props: dict[Any, Any] = None
 

@@ -31,8 +31,10 @@ from hanlendar.domainmodel import icalio
 from hanlendar.domainmodel.icalio import (
     import_icalendar_content,
     export_icalendar_content,
-    fix_dangling_tasks,
-    timedelta_from_string, sort_ical_content, replace_line, remove_line,
+    timedelta_from_string,
+    sort_ical_content,
+    replace_line,
+    remove_line,
 )
 
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
@@ -40,6 +42,8 @@ from hanlendar.domainmodel.local.manager import LocalManager as Manager
 from hanlendar.domainmodel.local.task import LocalTask as Task
 from hanlendar.domainmodel.reminder import Reminder
 from hanlendar.domainmodel.local.todo import LocalToDo
+from hanlendar.domainmodel.caldav.manager import fix_dangling_tasks
+
 from testhanlendar.data import get_data_path
 from testhanlendar.domainmodel.caldav.radicalemock import read_file
 
@@ -249,7 +253,7 @@ END:VCALENDAR
         calendar = icalendar.cal.Calendar.from_ical(calendar_string)
         events = calendar.walk("VEVENT")
         event = events[0]
-        data_value = icalio.get_ical_value(event, "XXX")
+        data_value = event.get("XXX")
         data_dict = icalio.get_ical_dict(event, "XXX")
 
         self.assertEqual(data_value, "5")
@@ -466,7 +470,7 @@ END:VCALENDAR
 """,
             content,
         )
-        
+
     ## =======================================================================
 
     def test_evolution_event_all_day_basic(self):
@@ -474,24 +478,27 @@ END:VCALENDAR
 
         event_path = get_data_path("evolution_all_day_event_basic.ics")
         event_ical_content = read_file(event_path)
-        
+
         manager = Manager()
         new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
-        
-        self.assertEqual( 1, len(new_items) )
-        self.assertEqual( 0, len(dangling_items) )
+
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(0, len(dangling_items))
 
         new_event: Task = new_items[0]
-        self.assertEqual( "49c4245a00131e320f35c0b1ba360d7d23b0a0af", new_event.UID )
-        self.assertEqual( datetime.datetime(2025, 11, 11, 14, 3, 31), new_event.createDateTime.replace(tzinfo=None) )
-        self.assertEqual( datetime.datetime(2025, 11, 11, 15, 3, 31), new_event.lastModifiedDateTime.replace(tzinfo=None) )
-        self.assertEqual( datetime.datetime(2025, 11, 28, 0, 0), new_event.startDateTime )
-        self.assertEqual( datetime.datetime(2025, 11, 29, 0, 0), new_event.endDateTime )
-        self.assertEqual( "summary data", new_event.summary )
-        self.assertEqual( "location data", new_event.location )
-        self.assertEqual( "webpage data", new_event.url )
-        self.assertEqual( "description data", new_event.description )
-        self.assertEqual( 2, new_event.sequence )
+        self.assertEqual("49c4245a00131e320f35c0b1ba360d7d23b0a0af", new_event.UID)
+        self.assertEqual(datetime.datetime(2025, 11, 11, 14, 3, 31), new_event.createDateTime.replace(tzinfo=None))
+        self.assertEqual(
+            datetime.datetime(2025, 11, 11, 15, 3, 31),
+            new_event.lastModifiedDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual(datetime.datetime(2025, 11, 28, 0, 0), new_event.startDateTime)
+        self.assertEqual(datetime.datetime(2025, 11, 29, 0, 0), new_event.endDateTime)
+        self.assertEqual("summary data", new_event.summary)
+        self.assertEqual("location data", new_event.location)
+        self.assertEqual("webpage data", new_event.url)
+        self.assertEqual("description data", new_event.description)
+        self.assertEqual(2, new_event.sequence)
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -502,7 +509,7 @@ END:VCALENDAR
         event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
         event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
-        
+
         self.assertEqual(
             event_ical_content,
             content,
@@ -513,22 +520,22 @@ END:VCALENDAR
 
         event_path = get_data_path("evolution_todo.ics")
         event_ical_content = read_file(event_path)
-        
+
         manager = Manager()
         new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
-        
-        self.assertEqual( 1, len(new_items) )
-        self.assertEqual( 0, len(dangling_items) )
+
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(0, len(dangling_items))
 
         new_event: Task = new_items[0]
-        self.assertEqual( "7c72ab99414ca6dfe803be5765508d9055909706", new_event.UID )
-        self.assertEqual( datetime.datetime(2025, 11, 8, 1, 2, 51), new_event.createDateTime.replace(tzinfo=None) )
-        self.assertEqual( datetime.datetime(2025, 11, 8, 1, 2, 51), new_event.lastModifiedDateTime.replace(tzinfo=None) )
-        self.assertEqual( "evolution task sample", new_event.summary )
-        self.assertEqual( "", new_event.location )
-        self.assertEqual( "", new_event.url )
-        self.assertEqual( "", new_event.description )
-        self.assertEqual( 1, new_event.sequence )
+        self.assertEqual("7c72ab99414ca6dfe803be5765508d9055909706", new_event.UID)
+        self.assertEqual(datetime.datetime(2025, 11, 8, 1, 2, 51), new_event.createDateTime.replace(tzinfo=None))
+        self.assertEqual(datetime.datetime(2025, 11, 8, 1, 2, 51), new_event.lastModifiedDateTime.replace(tzinfo=None))
+        self.assertEqual("evolution task sample", new_event.summary)
+        self.assertEqual("", new_event.location)
+        self.assertEqual("", new_event.url)
+        self.assertEqual("", new_event.description)
+        self.assertEqual(1, new_event.sequence)
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -539,7 +546,7 @@ END:VCALENDAR
         event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
         event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
-        
+
         self.assertEqual(
             event_ical_content,
             content,
