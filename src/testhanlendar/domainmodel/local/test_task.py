@@ -29,7 +29,7 @@ from datetime import timedelta
 from hanlendar.domainmodel.reminder import Reminder
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
 from hanlendar.domainmodel.local.task import LocalTask as Task
-from hanlendar.domainmodel.task import TaskOccurrence, DateTimeRange
+from hanlendar.domainmodel.taskoccurrence import TaskOccurrence, DateTimeRange
 
 
 class TaskTest(unittest.TestCase):

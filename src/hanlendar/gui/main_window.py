@@ -31,7 +31,7 @@ from PyQt5.QtWidgets import QFileDialog
 
 from hanlendar.domainmodel.caldav.manager import CalDAVManager, CalDAVConnector
 from hanlendar.domainmodel.reminder import Notification
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.local.todo import LocalToDo
 from hanlendar.domainmodel.local.manager import LocalManager
 

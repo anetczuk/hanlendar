@@ -33,7 +33,7 @@ from hanlendar.domainmodel.manager import Manager
 # from hanlendar.domainmodel.caldav.task import CalDAVTask
 from hanlendar.domainmodel.local.manager import LocalManager
 from hanlendar.domainmodel.icalio import import_icalendar, export_icalendar
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.local.task import Task
 
 # from hanlendar import persist
 # from hanlendar.domainmodel.reminder import Notification

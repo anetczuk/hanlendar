@@ -56,7 +56,7 @@ from hanlendar.gui.command.renamenotecommand import RenameNoteCommand
 from hanlendar.gui.command.removenotecommand import RemoveNoteCommand
 
 from hanlendar.domainmodel.local.manager import LocalManager
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.local.todo import LocalToDo
 from hanlendar.domainmodel.manager import Manager
 

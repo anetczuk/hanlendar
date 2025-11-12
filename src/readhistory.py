@@ -31,7 +31,7 @@ import argparse
 from hanlendar.main import initialize_qt
 from hanlendar.domainmodel.local.manager import LocalManager
 from hanlendar.gui.main_window import SettingsObject
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.local.task import Task
 
 
 _LOGGER = logging.getLogger(__name__)

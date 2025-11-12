@@ -26,7 +26,7 @@ import logging
 from enum import Enum, unique
 from datetime import datetime, timedelta
 
-# from hanlendar.domainmodel.task import Task
+# from hanlendar.domainmodel.local.task import Task
 
 
 _LOGGER = logging.getLogger(__name__)

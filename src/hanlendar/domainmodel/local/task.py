@@ -24,15 +24,382 @@
 import logging
 import datetime
 from typing import Any
+import abc
+from dateutil.relativedelta import relativedelta
 
 from hanlendar import persist
-from hanlendar.domainmodel.task import Task, DateTimeRange
-from hanlendar.domainmodel.item import generate_uid
-from hanlendar.domainmodel.recurrent import Recurrent
-from hanlendar.domainmodel.reminder import Reminder
+from hanlendar.domainmodel.item import generate_uid, Item
+from hanlendar.domainmodel.recurrent import Recurrent, find_multiplication_after
+from hanlendar.domainmodel.reminder import Reminder, Notification
+from hanlendar.domainmodel.taskoccurrence import DateTimeRange, TaskOccurrence, DateRange
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class Task(Item):
+    """Task is entity that lasts over time."""
+
+    @abc.abstractmethod
+    def _getCreateDateTime(self) -> datetime.datetime:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @property
+    def createDateTime(self) -> datetime.datetime:
+        return self._getCreateDateTime()
+
+    @abc.abstractmethod
+    def _getLastModifiedDateTime(self) -> datetime.datetime:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @property
+    def lastModifiedDateTime(self) -> datetime.datetime:
+        return self._getLastModifiedDateTime()
+
+    @abc.abstractmethod
+    def _getStartDateTime(self) -> datetime.datetime:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
+    def _setStartDateTime(self, _value: datetime.datetime):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @property
+    def startDateTime(self) -> datetime.datetime:
+        return self._getStartDateTime()
+
+    @abc.abstractmethod
+    def _getDueDateTime(self) -> datetime.datetime:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
+    def _setDueDateTime(self, _value: datetime.datetime):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @property
+    def dueDateTime(self) -> datetime.datetime:
+        return self._getDueDateTime()
+
+    @property
+    def endDateTime(self) -> datetime.datetime:
+        return self._getDueDateTime()
+
+    def setOccurrence(self, start: datetime.datetime, due: datetime.datetime):
+        start = ensure_date_time(start)
+        due = ensure_date_time(due)
+        self._setStartDateTime(start)
+        self._setDueDateTime(due)
+
+    def setOccurrenceDue(self, due: datetime.datetime):
+        self._setStartDateTime(None)
+        due = ensure_date_time(due)
+        self._setDueDateTime(due)
+
+    def setDefaultDateTime(self, start: datetime.datetime):
+        start = ensure_date_time(start)
+        due = start + datetime.timedelta(hours=1)
+        self.setOccurrence(start, due)
+
+    def setDefaultDate(self, startDate: datetime.date):
+        start = datetime.datetime.combine(startDate, datetime.time(10, 0, 0))
+        self.setDefaultDateTime(start)
+
+    def setDeadline(self):
+        self._setStartDateTime(None)
+
+    def setDeadlineDateTime(self, due: datetime.datetime):
+        self.setOccurrenceDue(due)
+
+    def isAllDay(self) -> bool:
+        if self.startDateTime is None:
+            return False
+        if self.endDateTime is None:
+            return False
+        start_time = self.startDateTime.time()
+        if start_time.hour != 0 or start_time.minute != 0 or start_time.second != 0:
+            return False
+        end_time = self.endDateTime.time()
+        return not (end_time.hour != 0 or end_time.minute != 0 or end_time.second != 0)
+
+    def getReferenceDateTime(self) -> datetime.datetime:
+        if self.startDateTime is not None:
+            return self.startDateTime
+        ## deadline case
+        return self.dueDateTime
+
+    @abc.abstractmethod
+    def _getCompletedList(self) -> list[DateTimeRange]:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @property
+    def completedList(self) -> list[DateTimeRange]:
+        return self._getCompletedList()
+
+    ## ========================================================================
+
+    @abc.abstractmethod
+    def _getRecurrence(self):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
+    def _setRecurrence(self, _value):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @property
+    def recurrence(self) -> Recurrent:
+        return self._getRecurrence()
+
+    @recurrence.setter
+    def recurrence(self, value: Recurrent):
+        self._setRecurrence(value)
+
+    def getAppliedRecurrence(self) -> Recurrent:
+        recurrence = self._getRecurrence()
+        if recurrence is None:
+            return None
+        if recurrence.isAsParent() is False:
+            return recurrence
+        parent = self.getParent()
+        if parent is None:
+            return None
+        return parent.getAppliedRecurrence()
+
+    ## ========================================================================
+
+    def currentOccurrence(self) -> TaskOccurrence:
+        dateRange = self.getDateTimeRange()
+        return TaskOccurrence(self, datetime_range=dateRange)
+
+    def subOccurrences(self) -> list[TaskOccurrence]:
+        subitems = self.getSubitems()
+        if subitems is None:
+            return []
+        ret = []
+        for currItem in subitems:
+            currOccurrence: TaskOccurrence = currItem.currentOccurrence()
+            ret.append(currOccurrence)
+        return ret
+
+    ## return TaskOccurrence for given date
+    ## returns None if no occurrence in given date
+    def getTaskOccurrenceForDate(self, entryDate: datetime.date) -> TaskOccurrence:
+        startDueRange: DateTimeRange = self.getDateTimeRange()
+        dateRange: DateRange = startDueRange.dateRange()
+        dateRange.normalize()
+        if dateRange.isNormalized() is False:
+            return None
+        if entryDate in dateRange:
+            return TaskOccurrence(self)
+
+        recurr = self.getAppliedRecurrence()
+        if recurr is None:
+            return None
+
+        if recurr.endDate is not None and recurr.endDate < entryDate:
+            return None
+
+        completedList = self.completedList
+        for item in completedList:
+            itemRange: DateRange = item.dateRange()
+            itemRange.normalize()
+            if itemRange.isNormalized() is False:
+                return None
+            if entryDate in itemRange:
+                return TaskOccurrence(self, datetime_range=item)
+
+        recurrentDateOffset: relativedelta = recurr.getDateOffset()
+        if recurrentDateOffset is None:
+            return None
+
+        multiplicator = find_multiplication_after(dateRange.end, entryDate, recurrentDateOffset)
+        if multiplicator < 1:
+            return None
+        dateRange += recurrentDateOffset * multiplicator
+        if entryDate in dateRange:
+            datetime_range = self.getOccurrenceDateTimeRange(multiplicator)
+            return TaskOccurrence(self, datetime_range=datetime_range)
+
+        return None
+
+    ## ========================================================================
+
+    ## return smallest date from: occurrenceStart, occurrenceDue and reminder date
+    def getFirstDateTime(self) -> datetime.datetime:
+        if self.dueDateTime is None:
+            return None
+        minDate = self.dueDateTime
+        if self.startDateTime is not None and self.startDateTime < minDate:
+            minDate = self.startDateTime
+        remindDate = self.getReminderFirstDate()
+        if remindDate is not None and remindDate < minDate:
+            minDate = remindDate
+        return minDate
+
+    def getDateTimeRange(self) -> DateTimeRange:
+        startDate = self._getStartDateTime()
+        endDate = self._getDueDateTime()
+        return DateTimeRange(startDate, endDate)
+
+    def getOccurrenceDateTimeRange(self, offset: int = 0) -> DateTimeRange:
+        dateRange: DateTimeRange = self.getDateTimeRange()
+        if dateRange is None:
+            return DateTimeRange()
+        if offset != 0:
+            recurrence: Recurrent = self.getAppliedRecurrence()
+            if recurrence is not None:
+                recurrenceOffset = recurrence.getDateOffset()
+                dateRange += recurrenceOffset * offset
+        return dateRange
+
+    ## ========================================================================
+
+    @abc.abstractmethod
+    def _getReminderList(self):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
+    def _setReminderList(self, _values):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @property
+    def reminderList(self):
+        return self._getReminderList()
+
+    @reminderList.setter
+    def reminderList(self, values):
+        self._setReminderList(values)
+
+    def addReminder(self, reminder=None):
+        reminderList = self._getReminderList()
+        if reminderList is None:
+            reminderList = []
+            self._setReminderList(reminderList)
+        if reminder is None:
+            reminder = Reminder()
+        reminderList.append(reminder)
+        return reminder
+
+    def addReminderDays(self, days=1):
+        reminder = Reminder()
+        reminder.setDays(days)
+        self.addReminder(reminder)
+
+    def getReminderFirstDate(self) -> datetime.datetime:
+        if self.dueDateTime is None:
+            return None
+        reminderList = self._getReminderList()
+        if reminderList is None:
+            return None
+        retOffset = self.getReminderGreatest()
+        if retOffset is None:
+            return None
+        return self.dueDateTime - retOffset
+
+    def getReminderGreatest(self) -> datetime.timedelta:
+        reminderList = self._getReminderList()
+        if reminderList is None:
+            return None
+        retOffset = None
+        for reminder in reminderList:
+            if retOffset is None:
+                retOffset = reminder.getOffset()
+                continue
+            currOffset = reminder.getOffset()
+            retOffset = max(retOffset, currOffset)
+        return retOffset
+
+    ## ========================================================================
+
+    def getNotifications(self) -> list[Notification]:
+        if self.dueDateTime is None:
+            return []
+        currTime = datetime.datetime.today()
+        ret: list[Notification] = []
+        if self.dueDateTime > currTime:
+            notif = Notification()
+            notif.notifyTime = self.dueDateTime
+            notif.task = self
+            notif.message = f"task '{self.title}' reached deadline"
+            ret.append(notif)
+
+        reminderList = self._getReminderList()
+        if reminderList is None:
+            return ret
+
+        for reminder in reminderList:
+            notifTime = self.dueDateTime - reminder.getOffset()
+            if notifTime > currTime:
+                notif = Notification()
+                notif.notifyTime = notifTime
+                notif.task = self
+                notif.message = f"task '{self.title}': {reminder.printPretty()}"
+                ret.append(notif)
+
+        ret.sort(key=Notification.sortByTime)
+        return ret
+
+    @abc.abstractmethod
+    def addSubTask(self):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    def printNextRecurrence(self) -> str:
+        recurr = self.getAppliedRecurrence()
+        if recurr is None:
+            return "None"
+        refDate = self.getReferenceDateTime()
+        nextRepeat = recurr.nextDateTime(refDate)
+        if nextRepeat is None:
+            return "None"
+        return nextRepeat.strftime("%Y-%m-%d %H:%M")
+
+    def _progressRecurrence(self) -> bool:
+        recurr: Recurrent = self.getAppliedRecurrence()
+        if recurr is None or recurr.isValid() is False:
+            return False
+        recurrent_date_offset = recurr.getDateOffset()
+        nextDueDate = self.dueDateTime + recurrent_date_offset
+        nextDate = nextDueDate.date()
+        if recurr.isEnd(nextDate):
+            return False
+        nextStartDate = self.startDateTime
+        if nextStartDate is not None:
+            nextStartDate += recurrent_date_offset
+        self.setOccurrence(nextStartDate, nextDueDate)
+        return True
+
+    @staticmethod
+    def sortByDates(task):
+        return (task.dueDateTime, task.startDateTime)
+
+
+## ========================================================================
+
+
+def ensure_date_time(value):
+    if value is None:
+        return value
+    if isinstance(value, datetime.datetime):
+        return value
+    if isinstance(value, datetime.date):
+        value = datetime.datetime.combine(value, datetime.datetime.min.time())
+    _LOGGER.warning("unknown type: %s %s", value, type(value))
+    return None
+
+
+## ========================================================================
+## ========================================================================
 
 
 class LocalTask(Task, persist.Versionable):

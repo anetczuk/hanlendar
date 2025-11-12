@@ -28,9 +28,10 @@ import logging
 import abc
 
 from hanlendar.domainmodel.reminder import Notification
-from hanlendar.domainmodel.task import Task, TaskOccurrence
+from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.item import Item
 from hanlendar.domainmodel.local.todo import LocalToDo
+from hanlendar.domainmodel.taskoccurrence import TaskOccurrence
 
 # from hanlendar import persist
 # from hanlendar.domainmodel.item import Item

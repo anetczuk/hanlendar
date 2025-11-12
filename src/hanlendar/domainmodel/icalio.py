@@ -34,7 +34,7 @@ import icalendar
 from icalendar.prop import TypesFactory
 
 from hanlendar.domainmodel.manager import Manager
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.local.todo import LocalToDo
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
 from hanlendar.domainmodel.reminder import Reminder

@@ -29,7 +29,7 @@ import glob
 from hanlendar import persist
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.item import Item
-from hanlendar.domainmodel.task import Task
+from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.local.task import LocalTask, fill_completed_list, update_start_due_date
 from hanlendar.domainmodel.local.todo import LocalToDo
 
@@ -52,31 +52,44 @@ class ModuleMapper:
         if version == 1:
             ## convert from version 1
             module = module.replace("hanlendar.domainmodel.", "hanlendar.domainmodel.local.")
-            version = 2
+            version += 1
         if version == 2:
             ## convert from version 2
             if module == "hanlendar.domainmodel.local.item":
-                return ("hanlendar.domainmodel.item", name)
-            version = 3
+                module = "hanlendar.domainmodel.item"
+            version += 1
         if version == 3:
             ## convert from version 3
             if module == "hanlendar.domainmodel.local.recurrent":
-                return ("hanlendar.domainmodel.recurrent", name)
+                module = "hanlendar.domainmodel.recurrent"
             if module == "hanlendar.domainmodel.local.reminder":
-                return ("hanlendar.domainmodel.reminder", name)
-            version = 4
+                module = "hanlendar.domainmodel.reminder"
+            version += 1
         if version == 4:
             ## convert from version 4
             if module == "hanlendar.domainmodel.local.task" and name == "Task":
-                return ("hanlendar.domainmodel.local.task", "LocalTask")
-            version = 5
+                name = "LocalTask"
+            version += 1
         if version == 5:
             ## do nothing
-            version = 6
+            version += 1
         if version == 6:
             if module == "hanlendar.domainmodel.local.todo" and name == "ToDo":
-                return ("hanlendar.domainmodel.local.todo", "LocalToDo")
-            version = 7
+                name = "LocalToDo"
+            version += 1
+        if version == 7:
+            ## do nothing
+            version += 1
+        if version == 8:
+            if module == "hanlendar.domainmodel.task":
+                module = {
+                    "DateRange": "hanlendar.domainmodel.taskoccurrence",
+                    "DateTimeRange": "hanlendar.domainmodel.taskoccurrence",
+                    "TaskOccurrence": "hanlendar.domainmodel.taskoccurrence",
+                    "Task": "hanlendar.domainmodel.local.task",
+                }.get(name, module)
+            version += 1
+
         return (module, name)
 
 
@@ -92,7 +105,9 @@ class LocalManager(Manager):
     ## 6 - moved data to 'local' subdirectory
     ## 7 - renamed class from 'hanlendar.domainmodel.local.todo.ToDo' to 'hanlendar.domainmodel.local.todo.LocalToDo'
     ## 8 - removed "_recurrentOffset" from LocalTask
-    _class_version = 8
+    ## 9 - moved Task from "hanlendar.domainmodel.task" to "hanlendar.domainmodel.local.task"
+    ##     moved remaining content from "hanlendar.domainmodel.task" to "hanlendar.domainmodel.taskoccurence"
+    _class_version = 9
 
     def __init__(self, ioDir=None):
         self._tasks = []
