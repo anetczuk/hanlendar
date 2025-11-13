@@ -271,7 +271,8 @@ class TaskSerialization:
             ievent.add(TaskField.SEQUENCE.value, task.sequence)
 
         value_dt = convert_to_ical_dt(task.createDateTime)
-        ievent.add(TaskField.CREATED.value, value_dt)
+        if value_dt is not None:
+            ievent.add(TaskField.CREATED.value, value_dt)
 
         value_dt = convert_to_ical_dt(task.lastModifiedDateTime)
         ievent.add(TaskField.LASTMODIFIED.value, value_dt)
@@ -289,9 +290,9 @@ class TaskSerialization:
             ievent.add(TaskField.DTEND.value, end_date_time.date())
         else:
             if start_date_time:
-                ievent.add(TaskField.DTSTART.value, start_date_time)
+                ievent.add(TaskField.DTSTART.value, start_date_time.astimezone(tz=datetime.timezone.utc))
             if end_date_time:
-                ievent.add(TaskField.DTEND.value, end_date_time)
+                ievent.add(TaskField.DTEND.value, end_date_time.astimezone(tz=datetime.timezone.utc))
 
         if task.completed != 0:
             ievent.add(TaskField.COMPLETED.value, task.completed)
@@ -322,7 +323,7 @@ class TaskSerialization:
                     continue
 
                 ## subcomponents
-                for _subkey, subitem in item.items():
+                for subitem in item.values():
                     isubcomponent: icalendar.cal.Component = icalendar.cal.Component.from_ical(subitem)
                     ievent.add_component(isubcomponent)
 
@@ -478,7 +479,7 @@ class ToDoSerialization:
                     continue
 
                 ## subcomponents
-                for _subkey, subitem in item.items():
+                for subitem in item.values():
                     isubcomponent: icalendar.cal.Component = icalendar.cal.Component.from_ical(subitem)
                     itodo.add_component(isubcomponent)
 
@@ -757,7 +758,7 @@ def sort_ical_list(content_lines):
     sub_lines = content_lines[start_index + 1 : end_index]
     sub_sorted = sort_ical_list(sub_lines)
 
-    return props_sorted + [content_lines[start_index]] + sub_sorted + [content_lines[end_index]]
+    return [*props_sorted, content_lines[start_index], *sub_sorted, content_lines[end_index]]
 
 
 def find_starting_index(content_list, line_start):

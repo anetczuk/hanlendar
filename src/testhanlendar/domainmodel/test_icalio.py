@@ -575,7 +575,8 @@ END:VCALENDAR
         self.assertEqual("061269e77012385c9d603051e26a8a43a534e9a8", new_event.UID)
         self.assertEqual(datetime.datetime(2025, 11, 6, 22, 52, 59), new_event.createDateTime.replace(tzinfo=None))
         self.assertEqual(
-            datetime.datetime(2025, 11, 6, 22, 52, 59), new_event.lastModifiedDateTime.replace(tzinfo=None)
+            datetime.datetime(2025, 11, 6, 22, 52, 59),
+            new_event.lastModifiedDateTime.replace(tzinfo=None),
         )
         self.assertEqual(datetime.datetime(2025, 11, 25, 0, 0), new_event.startDateTime)
         self.assertEqual(datetime.datetime(2025, 11, 26, 0, 0), new_event.dueDateTime)
@@ -596,7 +597,7 @@ END:VCALENDAR
                     "VALARM": b"BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:ev"
                     b"olution all day event\r\nTRIGGER;RELATED=END:-"
                     b"PT15M\r\nX-EVOLUTION-ALARM-UID:234e78a29144053"
-                    b"f40193800fb08a18722cb0f79\r\nEND:VALARM\r\n"
+                    b"f40193800fb08a18722cb0f79\r\nEND:VALARM\r\n",
                 },
             },
             new_event.unknownProps,
@@ -609,9 +610,84 @@ END:VCALENDAR
 
         event_ical_content = sort_ical_content(event_ical_content)
         event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
-        event_ical_content = replace_line(event_ical_content, "EXDATE;", "EXDATE:20251106", replace_whole_line=True)
         event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+        #TODO: fix compatibility
+        event_ical_content = replace_line(event_ical_content, "EXDATE;", "EXDATE:20251106", replace_whole_line=True)
+
+        self.assertEqual(
+            event_ical_content,
+            content,
+        )
+
+    def test_evolution_appointment_full(self):
+        ## compatibility with evolution
+
+        event_path = get_data_path("evolution_appointment_full.ics")
+        event_ical_content = read_file(event_path)
+
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(0, len(dangling_items))
+
+        new_event: Task = new_items[0]
+        self.assertEqual("a9029b2d-bb58-11f0-ad88-80fa5b58053f", new_event.UID)
+        self.assertEqual(None, new_event.createDateTime)
+        self.assertEqual(
+            datetime.datetime(2025, 11, 6, 22, 48, 19),
+            new_event.lastModifiedDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual(datetime.datetime(2025, 11, 24, 10, 0), new_event.startDateTime.replace(tzinfo=None))
+        self.assertEqual(datetime.datetime(2025, 11, 24, 11, 0), new_event.dueDateTime.replace(tzinfo=None))
+        self.assertEqual("evolution full example", new_event.summary)
+        self.assertEqual("location", new_event.location)
+        self.assertEqual("web", new_event.url)
+        self.assertEqual("descr", new_event.description)
+        self.assertEqual(1, new_event.sequence)
+        # TODO: all unknown props should be handled
+        self.assertDictEqual(
+            {
+                "ATTACH": b"https://google.pl",
+                "CLASS": b"PUBLIC",
+                "COLOR": b"yellow",
+                "RRULE": b"FREQ=DAILY;COUNT=2;INTERVAL=3",
+                "STATUS": b"CANCELLED",
+                "TRANSP": b"OPAQUE",
+                "subcomponents": {
+                    "VALARM": b"BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:ev"
+                    b"olution full example\r\nTRIGGER;RELATED=START:"
+                    b"-PT15M\r\nX-EVOLUTION-ALARM-UID:98686f444ce13b"
+                    b"e455218bfc72170a45a8c25e32\r\nEND:VALARM\r\n",
+                },
+            },
+            new_event.unknownProps,
+        )
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251106T213631Z")
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
+        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+        #TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "ATTACH;",
+            "ATTACH:https://google.pl",
+            replace_whole_line=True,
+        )
+        #TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "RRULE;",
+            "RRULE:FREQ=DAILY;COUNT=2;INTERVAL=3",
+            replace_whole_line=True,
+        )
 
         self.assertEqual(
             event_ical_content,
