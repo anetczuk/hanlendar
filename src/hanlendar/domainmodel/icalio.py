@@ -444,14 +444,20 @@ class ToDoSerialization:
         curr_time = curr_time.replace(tzinfo=None)
         itodo.add("DTSTAMP", curr_time)
 
-        itodo.add(ToDoField.UID.value, todo.UID)
-        itodo.add(ToDoField.SUMMARY.value, todo.title)
-
         value_dt = convert_to_ical_dt(todo.createDateTime)
         itodo.add(ToDoField.CREATED.value, value_dt)
 
         value_dt = convert_to_ical_dt(todo.lastModifiedDateTime)
         itodo.add(ToDoField.LASTMODIFIED.value, value_dt)
+
+        itodo.add(ToDoField.UID.value, todo.UID)
+        itodo.add(ToDoField.SUMMARY.value, todo.title)
+
+        if todo.location:
+            itodo.add(ToDoField.LOCATION.value, todo.location)
+
+        if todo.url:
+            itodo.add(ToDoField.URL.value, todo.url)
 
         if todo.description:
             itodo.add(ToDoField.DESCRIPTION.value, todo.description)

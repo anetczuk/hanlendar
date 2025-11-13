@@ -39,7 +39,7 @@ from hanlendar.domainmodel.icalio import (
 
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
 from hanlendar.domainmodel.local.manager import LocalManager as Manager
-from hanlendar.domainmodel.local.task import LocalTask as LocalTask
+from hanlendar.domainmodel.local.task import LocalTask
 from hanlendar.domainmodel.reminder import Reminder
 from hanlendar.domainmodel.local.todo import LocalToDo
 from hanlendar.domainmodel.caldav.manager import fix_dangling_tasks
@@ -580,49 +580,6 @@ END:VCALENDAR
             content,
         )
 
-    def test_evolution_task_basic(self):
-        ## compatibility with evolution
-
-        event_path = get_data_path("evolution_task_basic.ics")
-        event_ical_content = read_file(event_path)
-
-        manager = Manager()
-        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
-
-        self.assertEqual(1, len(new_items))
-        self.assertEqual(0, len(dangling_items))
-
-        new_item: LocalToDo = new_items[0]
-        self.assertEqual(LocalToDo, type(new_item))
-        self.assertEqual("7c72ab99414ca6dfe803be5765508d9055909706", new_item.UID)
-        self.assertEqual(datetime.datetime(2025, 11, 8, 1, 2, 51), new_item.createDateTime.replace(tzinfo=None))
-        self.assertEqual(datetime.datetime(2025, 11, 8, 1, 2, 51), new_item.lastModifiedDateTime.replace(tzinfo=None))
-        self.assertEqual("evolution task sample", new_item.summary)
-        self.assertEqual("", new_item.location)
-        self.assertEqual("", new_item.url)
-        self.assertEqual("", new_item.description)
-        self.assertEqual(1, new_item.sequence)
-        # TODO: all unknown props should be handled
-        self.assertDictEqual(
-            {"CLASS": b"CONFIDENTIAL", "DUE": b"20251122", "PERCENT-COMPLETE": b"45", "STATUS": b"IN-PROCESS"},
-            new_item.unknownProps,
-        )
-
-        content = export_icalendar_content(manager)
-        content = content.replace("\r\n", "\n")
-        content = sort_ical_content(content)
-        content = replace_line(content, "DTSTAMP:", "20251104T195837Z")
-
-        event_ical_content = sort_ical_content(event_ical_content)
-        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
-        event_ical_content = remove_line(event_ical_content, "VERSION:")
-        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
-
-        self.assertEqual(
-            event_ical_content,
-            content,
-        )
-
     def test_evolution_appointment_full(self):
         ## compatibility with evolution
 
@@ -692,6 +649,103 @@ END:VCALENDAR
             "RRULE:FREQ=DAILY;COUNT=2;INTERVAL=3",
             replace_whole_line=True,
         )
+
+        self.assertEqual(
+            event_ical_content,
+            content,
+        )
+
+    def test_evolution_task_basic(self):
+        ## compatibility with evolution
+
+        event_path = get_data_path("evolution_task_basic.ics")
+        event_ical_content = read_file(event_path)
+
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(0, len(dangling_items))
+
+        new_item: LocalToDo = new_items[0]
+        self.assertEqual(LocalToDo, type(new_item))
+        self.assertEqual("7c72ab99414ca6dfe803be5765508d9055909706", new_item.UID)
+        self.assertEqual(datetime.datetime(2025, 11, 8, 1, 2, 51), new_item.createDateTime.replace(tzinfo=None))
+        self.assertEqual(datetime.datetime(2025, 11, 8, 1, 2, 51), new_item.lastModifiedDateTime.replace(tzinfo=None))
+        self.assertEqual("evolution task sample", new_item.summary)
+        self.assertEqual("", new_item.location)
+        self.assertEqual("", new_item.url)
+        self.assertEqual("", new_item.description)
+        self.assertEqual(1, new_item.sequence)
+        # TODO: all unknown props should be handled
+        self.assertDictEqual(
+            {"CLASS": b"CONFIDENTIAL", "DUE": b"20251122", "PERCENT-COMPLETE": b"45", "STATUS": b"IN-PROCESS"},
+            new_item.unknownProps,
+        )
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251104T195837Z")
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
+        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+
+        self.assertEqual(
+            event_ical_content,
+            content,
+        )
+
+    def test_evolution_task_completed(self):
+        ## compatibility with evolution
+
+        event_path = get_data_path("evolution_task_completed.ics")
+        event_ical_content = read_file(event_path)
+
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(0, len(dangling_items))
+
+        new_item: LocalToDo = new_items[0]
+        self.assertEqual(LocalToDo, type(new_item))
+        self.assertEqual("f5dccad88abe34db1e29b7432b1c2dd9d1169316", new_item.UID)
+        self.assertEqual(datetime.datetime(2025, 11, 13, 21, 34, 59), new_item.createDateTime.replace(tzinfo=None))
+        self.assertEqual(
+            datetime.datetime(2025, 11, 13, 21, 35, 38),
+            new_item.lastModifiedDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual("evolution todo start end", new_item.summary)
+        self.assertEqual("todo location", new_item.location)
+        self.assertEqual("", new_item.url)
+        self.assertEqual("todo descr", new_item.description)
+        self.assertEqual(2, new_item.sequence)
+        # TODO: all unknown props should be handled
+        self.assertDictEqual(
+            {
+                "CLASS": b"PUBLIC",
+                "COMPLETED": b"20251113T000000Z",
+                "DTSTART": b"20251114",
+                "DUE": b"20251116",
+                "ESTIMATED-DURATION": b"P1DT2H3M",
+                "PERCENT-COMPLETE": b"100",
+                "STATUS": b"COMPLETED",
+            },
+            new_item.unknownProps,
+        )
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251108T000146Z")
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
+        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
 
         self.assertEqual(
             event_ical_content,
