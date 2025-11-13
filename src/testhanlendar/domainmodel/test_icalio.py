@@ -517,10 +517,10 @@ END:VCALENDAR
             content,
         )
 
-    def test_evolution_todo_basic(self):
+    def test_evolution_task_basic(self):
         ## compatibility with evolution
 
-        event_path = get_data_path("evolution_todo.ics")
+        event_path = get_data_path("evolution_task_basic.ics")
         event_ical_content = read_file(event_path)
 
         manager = Manager()
@@ -612,7 +612,7 @@ END:VCALENDAR
         event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
         event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
-        #TODO: fix compatibility
+        # TODO: fix compatibility
         event_ical_content = replace_line(event_ical_content, "EXDATE;", "EXDATE:20251106", replace_whole_line=True)
 
         self.assertEqual(
@@ -674,14 +674,14 @@ END:VCALENDAR
         event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
         event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
-        #TODO: fix compatibility
+        # TODO: fix compatibility
         event_ical_content = replace_line(
             event_ical_content,
             "ATTACH;",
             "ATTACH:https://google.pl",
             replace_whole_line=True,
         )
-        #TODO: fix compatibility
+        # TODO: fix compatibility
         event_ical_content = replace_line(
             event_ical_content,
             "RRULE;",
