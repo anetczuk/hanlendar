@@ -39,7 +39,7 @@ from hanlendar.domainmodel.icalio import (
 
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
 from hanlendar.domainmodel.local.manager import LocalManager as Manager
-from hanlendar.domainmodel.local.task import LocalTask as Task
+from hanlendar.domainmodel.local.task import LocalTask as LocalTask
 from hanlendar.domainmodel.reminder import Reminder
 from hanlendar.domainmodel.local.todo import LocalToDo
 from hanlendar.domainmodel.caldav.manager import fix_dangling_tasks
@@ -199,10 +199,10 @@ END:VCALENDAR
         newTasks = manager.getTasksAll()
         self.assertEqual(len(newTasks), 2)
 
-        newTask: Task = newTasks[0]
+        newTask: LocalTask = newTasks[0]
         self.assertEqual(newTask.UID, "284cd1d8-701a-4bea-8603-3cf4dd9a1260@hanlendar")
         self.assertEqual(newTask.title, "title example")
-        newSubTask: Task = newTasks[1]
+        newSubTask: LocalTask = newTasks[1]
         self.assertEqual(newSubTask.UID, "1212afc7-09c2-4ee5-88f6-2829e247e9d6@hanlendar")
         self.assertEqual(newSubTask.title, "a subtitle example")
         self.assertEqual(newSubTask.getParent(), newTask)
@@ -268,7 +268,7 @@ END:VCALENDAR
 
     def test_io_task_basic(self):
         manager = Manager()
-        task: Task = manager.createEmptyTask()
+        task: LocalTask = manager.createEmptyTask()
         manager.addTask(task)
         self.assertEqual(len(manager.getTasksAll()), 1)
 
@@ -285,7 +285,7 @@ END:VCALENDAR
 
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 1)
-        newTask: Task = newTasks[0]
+        newTask: LocalTask = newTasks[0]
 
         self.assertEqual(newTask.UID, task.UID)
         self.assertEqual(newTask.title, task.title)
@@ -297,7 +297,7 @@ END:VCALENDAR
 
     def test_io_task_dtstart_none(self):
         manager = Manager()
-        task: Task = manager.createEmptyTask()
+        task: LocalTask = manager.createEmptyTask()
         manager.addTask(task)
         self.assertEqual(len(manager.getTasksAll()), 1)
 
@@ -309,7 +309,7 @@ END:VCALENDAR
 
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 1)
-        newTask: Task = newTasks[0]
+        newTask: LocalTask = newTasks[0]
 
         self.assertEqual(newTask.title, task.title)
         self.assertEqual(newTask.startDateTime, task.startDateTime)
@@ -317,7 +317,7 @@ END:VCALENDAR
 
     def test_io_task_recurrence(self):
         manager = Manager()
-        task: Task = manager.createEmptyTask()
+        task: LocalTask = manager.createEmptyTask()
         manager.addTask(task)
         self.assertEqual(len(manager.getTasksAll()), 1)
 
@@ -331,7 +331,7 @@ END:VCALENDAR
 
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 1)
-        newTask: Task = newTasks[0]
+        newTask: LocalTask = newTasks[0]
 
         self.assertEqual(newTask.UID, task.UID)
         self.assertEqual(newTask.title, task.title)
@@ -341,7 +341,7 @@ END:VCALENDAR
 
     def test_io_task_subitems(self):
         manager = Manager()
-        task: Task = manager.createEmptyTask()
+        task: LocalTask = manager.createEmptyTask()
         manager.addTask(task)
         task.title = "title example"
         subTask = task.addSubTask()
@@ -354,17 +354,17 @@ END:VCALENDAR
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 2)
 
-        newTask: Task = newTasks[0]
+        newTask: LocalTask = newTasks[0]
         self.assertEqual(newTask.UID, task.UID)
         self.assertEqual(newTask.title, task.title)
-        newSubTask: Task = newTasks[1]
+        newSubTask: LocalTask = newTasks[1]
         self.assertEqual(newSubTask.UID, subTask.UID)
         self.assertEqual(newSubTask.title, subTask.title)
         self.assertEqual(newSubTask.getParent(), newTask)
 
     def test_io_task_reminder(self):
         manager = Manager()
-        task: Task = manager.createEmptyTask()
+        task: LocalTask = manager.createEmptyTask()
         manager.addTask(task)
         task.title = "title example"
         task.addReminderDays(2)
@@ -376,7 +376,7 @@ END:VCALENDAR
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 1)
 
-        newTask: Task = newTasks[0]
+        newTask: LocalTask = newTasks[0]
         self.assertEqual(newTask.UID, task.UID)
         self.assertEqual(newTask.title, task.title)
         self.assertEqual(len(newTask.reminderList), 1)
@@ -384,7 +384,7 @@ END:VCALENDAR
 
     def test_io_task_reminder_list(self):
         manager = Manager()
-        task: Task = manager.createEmptyTask()
+        task: LocalTask = manager.createEmptyTask()
         manager.addTask(task)
         task.title = "title example"
         task.addReminderDays(2)
@@ -397,7 +397,7 @@ END:VCALENDAR
         newTasks = newManager.getTasksAll()
         self.assertEqual(len(newTasks), 1)
 
-        newTask: Task = newTasks[0]
+        newTask: LocalTask = newTasks[0]
         self.assertEqual(newTask.UID, task.UID)
         self.assertEqual(newTask.title, task.title)
         self.assertEqual(len(newTask.reminderList), 2)
@@ -419,7 +419,7 @@ END:VCALENDAR
 
     def test_export_icalendar_task(self):
         manager = Manager()
-        task: Task = manager.createEmptyTask()
+        task: LocalTask = manager.createEmptyTask()
         task.UID = "1111-2222-3333-4444"
         task._createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
         task._lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # pylint: disable=W0212
@@ -473,7 +473,7 @@ END:VCALENDAR
 
     ## =======================================================================
 
-    def test_evolution_event_all_day_basic(self):
+    def test_evolution_all_day_event_basic(self):
         ## compatibility with evolution
 
         event_path = get_data_path("evolution_all_day_event_basic.ics")
@@ -485,22 +485,23 @@ END:VCALENDAR
         self.assertEqual(1, len(new_items))
         self.assertEqual(0, len(dangling_items))
 
-        new_event: Task = new_items[0]
-        self.assertEqual("49c4245a00131e320f35c0b1ba360d7d23b0a0af", new_event.UID)
-        self.assertEqual(datetime.datetime(2025, 11, 11, 14, 3, 31), new_event.createDateTime.replace(tzinfo=None))
+        new_item: LocalTask = new_items[0]
+        self.assertEqual(LocalTask, type(new_item))
+        self.assertEqual("49c4245a00131e320f35c0b1ba360d7d23b0a0af", new_item.UID)
+        self.assertEqual(datetime.datetime(2025, 11, 11, 14, 3, 31), new_item.createDateTime.replace(tzinfo=None))
         self.assertEqual(
             datetime.datetime(2025, 11, 11, 15, 3, 31),
-            new_event.lastModifiedDateTime.replace(tzinfo=None),
+            new_item.lastModifiedDateTime.replace(tzinfo=None),
         )
-        self.assertEqual(datetime.datetime(2025, 11, 28, 0, 0), new_event.startDateTime)
-        self.assertEqual(datetime.datetime(2025, 11, 29, 0, 0), new_event.endDateTime)
-        self.assertEqual("summary data", new_event.summary)
-        self.assertEqual("location data", new_event.location)
-        self.assertEqual("webpage data", new_event.url)
-        self.assertEqual("description data", new_event.description)
-        self.assertEqual(2, new_event.sequence)
+        self.assertEqual(datetime.datetime(2025, 11, 28, 0, 0), new_item.startDateTime)
+        self.assertEqual(datetime.datetime(2025, 11, 29, 0, 0), new_item.endDateTime)
+        self.assertEqual("summary data", new_item.summary)
+        self.assertEqual("location data", new_item.location)
+        self.assertEqual("webpage data", new_item.url)
+        self.assertEqual("description data", new_item.description)
+        self.assertEqual(2, new_item.sequence)
         # TODO: all unknown props should be handled
-        self.assertDictEqual({"CLASS": b"PUBLIC", "COLOR": b"fuchsia", "TRANSP": b"OPAQUE"}, new_event.unknownProps)
+        self.assertDictEqual({"CLASS": b"PUBLIC", "COLOR": b"fuchsia", "TRANSP": b"OPAQUE"}, new_item.unknownProps)
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -517,49 +518,7 @@ END:VCALENDAR
             content,
         )
 
-    def test_evolution_task_basic(self):
-        ## compatibility with evolution
-
-        event_path = get_data_path("evolution_task_basic.ics")
-        event_ical_content = read_file(event_path)
-
-        manager = Manager()
-        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
-
-        self.assertEqual(1, len(new_items))
-        self.assertEqual(0, len(dangling_items))
-
-        new_event: Task = new_items[0]
-        self.assertEqual("7c72ab99414ca6dfe803be5765508d9055909706", new_event.UID)
-        self.assertEqual(datetime.datetime(2025, 11, 8, 1, 2, 51), new_event.createDateTime.replace(tzinfo=None))
-        self.assertEqual(datetime.datetime(2025, 11, 8, 1, 2, 51), new_event.lastModifiedDateTime.replace(tzinfo=None))
-        self.assertEqual("evolution task sample", new_event.summary)
-        self.assertEqual("", new_event.location)
-        self.assertEqual("", new_event.url)
-        self.assertEqual("", new_event.description)
-        self.assertEqual(1, new_event.sequence)
-        # TODO: all unknown props should be handled
-        self.assertDictEqual(
-            {"CLASS": b"CONFIDENTIAL", "DUE": b"20251122", "PERCENT-COMPLETE": b"45", "STATUS": b"IN-PROCESS"},
-            new_event.unknownProps,
-        )
-
-        content = export_icalendar_content(manager)
-        content = content.replace("\r\n", "\n")
-        content = sort_ical_content(content)
-        content = replace_line(content, "DTSTAMP:", "20251104T195837Z")
-
-        event_ical_content = sort_ical_content(event_ical_content)
-        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
-        event_ical_content = remove_line(event_ical_content, "VERSION:")
-        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
-
-        self.assertEqual(
-            event_ical_content,
-            content,
-        )
-
-    def test_evolution_event_all_day_full(self):
+    def test_evolution_all_day_event_full(self):
         ## compatibility with evolution
 
         event_path = get_data_path("evolution_all_day_event_full.ics")
@@ -571,20 +530,21 @@ END:VCALENDAR
         self.assertEqual(1, len(new_items))
         self.assertEqual(0, len(dangling_items))
 
-        new_event: Task = new_items[0]
-        self.assertEqual("061269e77012385c9d603051e26a8a43a534e9a8", new_event.UID)
-        self.assertEqual(datetime.datetime(2025, 11, 6, 22, 52, 59), new_event.createDateTime.replace(tzinfo=None))
+        new_item: LocalTask = new_items[0]
+        self.assertEqual(LocalTask, type(new_item))
+        self.assertEqual("061269e77012385c9d603051e26a8a43a534e9a8", new_item.UID)
+        self.assertEqual(datetime.datetime(2025, 11, 6, 22, 52, 59), new_item.createDateTime.replace(tzinfo=None))
         self.assertEqual(
             datetime.datetime(2025, 11, 6, 22, 52, 59),
-            new_event.lastModifiedDateTime.replace(tzinfo=None),
+            new_item.lastModifiedDateTime.replace(tzinfo=None),
         )
-        self.assertEqual(datetime.datetime(2025, 11, 25, 0, 0), new_event.startDateTime)
-        self.assertEqual(datetime.datetime(2025, 11, 26, 0, 0), new_event.dueDateTime)
-        self.assertEqual("evolution all day event", new_event.summary)
-        self.assertEqual("loc", new_event.location)
-        self.assertEqual("", new_event.url)
-        self.assertEqual("", new_event.description)
-        self.assertEqual(2, new_event.sequence)
+        self.assertEqual(datetime.datetime(2025, 11, 25, 0, 0), new_item.startDateTime)
+        self.assertEqual(datetime.datetime(2025, 11, 26, 0, 0), new_item.dueDateTime)
+        self.assertEqual("evolution all day event", new_item.summary)
+        self.assertEqual("loc", new_item.location)
+        self.assertEqual("", new_item.url)
+        self.assertEqual("", new_item.description)
+        self.assertEqual(2, new_item.sequence)
         # TODO: all unknown props should be handled
         self.assertDictEqual(
             {
@@ -600,7 +560,7 @@ END:VCALENDAR
                     b"f40193800fb08a18722cb0f79\r\nEND:VALARM\r\n",
                 },
             },
-            new_event.unknownProps,
+            new_item.unknownProps,
         )
 
         content = export_icalendar_content(manager)
@@ -620,6 +580,49 @@ END:VCALENDAR
             content,
         )
 
+    def test_evolution_task_basic(self):
+        ## compatibility with evolution
+
+        event_path = get_data_path("evolution_task_basic.ics")
+        event_ical_content = read_file(event_path)
+
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(0, len(dangling_items))
+
+        new_item: LocalToDo = new_items[0]
+        self.assertEqual(LocalToDo, type(new_item))
+        self.assertEqual("7c72ab99414ca6dfe803be5765508d9055909706", new_item.UID)
+        self.assertEqual(datetime.datetime(2025, 11, 8, 1, 2, 51), new_item.createDateTime.replace(tzinfo=None))
+        self.assertEqual(datetime.datetime(2025, 11, 8, 1, 2, 51), new_item.lastModifiedDateTime.replace(tzinfo=None))
+        self.assertEqual("evolution task sample", new_item.summary)
+        self.assertEqual("", new_item.location)
+        self.assertEqual("", new_item.url)
+        self.assertEqual("", new_item.description)
+        self.assertEqual(1, new_item.sequence)
+        # TODO: all unknown props should be handled
+        self.assertDictEqual(
+            {"CLASS": b"CONFIDENTIAL", "DUE": b"20251122", "PERCENT-COMPLETE": b"45", "STATUS": b"IN-PROCESS"},
+            new_item.unknownProps,
+        )
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251104T195837Z")
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
+        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+
+        self.assertEqual(
+            event_ical_content,
+            content,
+        )
+
     def test_evolution_appointment_full(self):
         ## compatibility with evolution
 
@@ -632,20 +635,21 @@ END:VCALENDAR
         self.assertEqual(1, len(new_items))
         self.assertEqual(0, len(dangling_items))
 
-        new_event: Task = new_items[0]
-        self.assertEqual("a9029b2d-bb58-11f0-ad88-80fa5b58053f", new_event.UID)
-        self.assertEqual(None, new_event.createDateTime)
+        new_item: LocalTask = new_items[0]
+        self.assertEqual(LocalTask, type(new_item))
+        self.assertEqual("a9029b2d-bb58-11f0-ad88-80fa5b58053f", new_item.UID)
+        self.assertEqual(None, new_item.createDateTime)
         self.assertEqual(
             datetime.datetime(2025, 11, 6, 22, 48, 19),
-            new_event.lastModifiedDateTime.replace(tzinfo=None),
+            new_item.lastModifiedDateTime.replace(tzinfo=None),
         )
-        self.assertEqual(datetime.datetime(2025, 11, 24, 10, 0), new_event.startDateTime.replace(tzinfo=None))
-        self.assertEqual(datetime.datetime(2025, 11, 24, 11, 0), new_event.dueDateTime.replace(tzinfo=None))
-        self.assertEqual("evolution full example", new_event.summary)
-        self.assertEqual("location", new_event.location)
-        self.assertEqual("web", new_event.url)
-        self.assertEqual("descr", new_event.description)
-        self.assertEqual(1, new_event.sequence)
+        self.assertEqual(datetime.datetime(2025, 11, 24, 10, 0), new_item.startDateTime.replace(tzinfo=None))
+        self.assertEqual(datetime.datetime(2025, 11, 24, 11, 0), new_item.dueDateTime.replace(tzinfo=None))
+        self.assertEqual("evolution full example", new_item.summary)
+        self.assertEqual("location", new_item.location)
+        self.assertEqual("web", new_item.url)
+        self.assertEqual("descr", new_item.description)
+        self.assertEqual(1, new_item.sequence)
         # TODO: all unknown props should be handled
         self.assertDictEqual(
             {
@@ -662,7 +666,7 @@ END:VCALENDAR
                     b"e455218bfc72170a45a8c25e32\r\nEND:VALARM\r\n",
                 },
             },
-            new_event.unknownProps,
+            new_item.unknownProps,
         )
 
         content = export_icalendar_content(manager)
