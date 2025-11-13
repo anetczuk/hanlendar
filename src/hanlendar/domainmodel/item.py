@@ -24,6 +24,7 @@
 import logging
 import abc
 import uuid
+from typing import Any
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +60,15 @@ class Item:
         raise NotImplementedError(message)
 
     ## ========================================================================
+
+    @abc.abstractmethod
+    def _getUnknownProps(self) -> dict[Any, Any]:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @property
+    def unknownProps(self) -> dict[Any, Any]:
+        return self._getUnknownProps()
 
     @abc.abstractmethod
     def _getUID(self):

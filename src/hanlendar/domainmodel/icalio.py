@@ -312,15 +312,23 @@ class TaskSerialization:
         reminderList = task.reminderList
         set_ical_list(ievent, TaskField.REMINDERS, reminderList, value_extractor=lambda rem: str(rem.timeOffset))
 
-        if task._unknown_props:  # type: ignore[attr-defined]
+        if task.unknownProps:
             factory = TypesFactory()
-            for key, item in task._unknown_props.items():  # type: ignore[attr-defined]
-                decoded_item = item.decode("utf-8")
-                desired_item = factory.from_ical(key, decoded_item)
-                ievent.add(key, desired_item)
+            for key, item in task.unknownProps.items():
+                if key != "subcomponents":
+                    decoded_item = item.decode("utf-8")
+                    desired_item = factory.from_ical(key, decoded_item)
+                    ievent.add(key, desired_item)
+                    continue
+
+                ## subcomponents
+                for _subkey, subitem in item.items():
+                    isubcomponent: icalendar.cal.Component = icalendar.cal.Component.from_ical(subitem)
+                    ievent.add_component(isubcomponent)
 
         return ievent
 
+    # pylint: disable=R0914
     def from_ical(self, component, manager):
         new_items = []
         dangling_children: list[tuple[Any, Any]] = []
@@ -400,6 +408,11 @@ class TaskSerialization:
         for item in TaskField:
             prop_name = item.value.upper()
             unhandled_props.pop(prop_name, None)
+        unhandled_subs = {}
+        for subitem in component.subcomponents:
+            unhandled_subs[subitem.name] = subitem.to_ical()
+        if unhandled_subs:
+            unhandled_props["subcomponents"] = unhandled_subs
         task._unknown_props = unhandled_props  # type: ignore[attr-defined]
 
         parentUID = get_ical_str(component, TaskField.GROUP_PARENT)
@@ -455,12 +468,19 @@ class ToDoSerialization:
         if taskParent is not None:
             itodo.add(ToDoField.GROUP_PARENT.value, taskParent.UID)
 
-        if todo._unknown_props:
+        if todo.unknownProps:
             factory = TypesFactory()
-            for key, item in todo._unknown_props.items():
-                decoded_item = item.decode("utf-8")
-                desired_item = factory.from_ical(key, decoded_item)
-                itodo.add(key, desired_item)
+            for key, item in todo.unknownProps.items():
+                if key != "subcomponents":
+                    decoded_item = item.decode("utf-8")
+                    desired_item = factory.from_ical(key, decoded_item)
+                    itodo.add(key, desired_item)
+                    continue
+
+                ## subcomponents
+                for _subkey, subitem in item.items():
+                    isubcomponent: icalendar.cal.Component = icalendar.cal.Component.from_ical(subitem)
+                    itodo.add_component(isubcomponent)
 
         return itodo
 
@@ -508,6 +528,11 @@ class ToDoSerialization:
         for item in ToDoField:
             prop_name = item.value.upper()
             unhandled_props.pop(prop_name, None)
+        unhandled_subs = {}
+        for subitem in component.subcomponents:
+            unhandled_subs[subitem.name] = subitem.to_ical()
+        if unhandled_subs:
+            unhandled_props["subcomponents"] = unhandled_subs
         todo._unknown_props = unhandled_props
 
         parentUID = get_ical_str(component, ToDoField.GROUP_PARENT)
@@ -694,11 +719,14 @@ def set_ical_dict(
 ## =================================================================
 
 
-def replace_line(content, line_prefix, new_content):
+def replace_line(content, line_prefix, new_content, *, replace_whole_line=False):
     lines = content.splitlines()
     for i, line in enumerate(lines):
         if line.startswith(line_prefix):
-            lines[i] = f"{line_prefix}{new_content}"
+            if replace_whole_line is False:
+                lines[i] = f"{line_prefix}{new_content}"
+            else:
+                lines[i] = new_content
     return "\n".join(lines) + "\n"
 
 
@@ -710,20 +738,26 @@ def remove_line(content, line_prefix):
 
 def sort_ical_content(content):
     lines = content.splitlines()
-    cal_index = lines.index("BEGIN:VCALENDAR")
-    cal_lines = lines[cal_index + 1 :]
-    item_start_index = find_starting_index(cal_lines, "BEGIN:")
-    item_end_index = find_starting_index(cal_lines, "END:")
-    item_lines = cal_lines[item_start_index + 1 : item_end_index]
-    item_lines.sort()
+    sorted_lines = sort_ical_list(lines)
+    return "\n".join(sorted_lines) + "\n"
 
-    out_lines = []
-    out_lines.extend(lines[: cal_index + 1])
-    out_lines.extend(cal_lines[: item_start_index + 1])
-    out_lines.extend(item_lines)
-    out_lines.extend(cal_lines[item_end_index:])
 
-    return "\n".join(out_lines) + "\n"
+def sort_ical_list(content_lines):
+    if not content_lines:
+        return []
+
+    start_index = find_starting_index(content_lines, "BEGIN:")
+    end_index = find_ending_index(content_lines, "END:")
+    if start_index < 0 and end_index < 0:
+        return sorted(content_lines)
+
+    props_lines = content_lines[:start_index] + content_lines[end_index + 1 :]
+    props_sorted = sort_ical_list(props_lines)
+
+    sub_lines = content_lines[start_index + 1 : end_index]
+    sub_sorted = sort_ical_list(sub_lines)
+
+    return props_sorted + [content_lines[start_index]] + sub_sorted + [content_lines[end_index]]
 
 
 def find_starting_index(content_list, line_start):
@@ -731,3 +765,17 @@ def find_starting_index(content_list, line_start):
         if item.startswith(line_start):
             return i
     return -1
+
+
+def find_ending_index(content_list, line_start):
+    found = -1
+    for i, item in enumerate(content_list):
+        if item.startswith(line_start):
+            found = i
+    return found
+
+
+def index_from_end(content_list, content):
+    # reverse the list and find index in the reversed version
+    rev_index = content_list[::-1].index(content)
+    return len(content_list) - 1 - rev_index

@@ -499,6 +499,8 @@ END:VCALENDAR
         self.assertEqual("webpage data", new_event.url)
         self.assertEqual("description data", new_event.description)
         self.assertEqual(2, new_event.sequence)
+        # TODO: all unknown props should be handled
+        self.assertDictEqual({"CLASS": b"PUBLIC", "COLOR": b"fuchsia", "TRANSP": b"OPAQUE"}, new_event.unknownProps)
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -536,6 +538,11 @@ END:VCALENDAR
         self.assertEqual("", new_event.url)
         self.assertEqual("", new_event.description)
         self.assertEqual(1, new_event.sequence)
+        # TODO: all unknown props should be handled
+        self.assertDictEqual(
+            {"CLASS": b"CONFIDENTIAL", "DUE": b"20251122", "PERCENT-COMPLETE": b"45", "STATUS": b"IN-PROCESS"},
+            new_event.unknownProps,
+        )
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -544,6 +551,65 @@ END:VCALENDAR
 
         event_ical_content = sort_ical_content(event_ical_content)
         event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
+        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+
+        self.assertEqual(
+            event_ical_content,
+            content,
+        )
+
+    def test_evolution_event_all_day_full(self):
+        ## compatibility with evolution
+
+        event_path = get_data_path("evolution_all_day_event_full.ics")
+        event_ical_content = read_file(event_path)
+
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(0, len(dangling_items))
+
+        new_event: Task = new_items[0]
+        self.assertEqual("061269e77012385c9d603051e26a8a43a534e9a8", new_event.UID)
+        self.assertEqual(datetime.datetime(2025, 11, 6, 22, 52, 59), new_event.createDateTime.replace(tzinfo=None))
+        self.assertEqual(
+            datetime.datetime(2025, 11, 6, 22, 52, 59), new_event.lastModifiedDateTime.replace(tzinfo=None)
+        )
+        self.assertEqual(datetime.datetime(2025, 11, 25, 0, 0), new_event.startDateTime)
+        self.assertEqual(datetime.datetime(2025, 11, 26, 0, 0), new_event.dueDateTime)
+        self.assertEqual("evolution all day event", new_event.summary)
+        self.assertEqual("loc", new_event.location)
+        self.assertEqual("", new_event.url)
+        self.assertEqual("", new_event.description)
+        self.assertEqual(2, new_event.sequence)
+        # TODO: all unknown props should be handled
+        self.assertDictEqual(
+            {
+                "CLASS": b"PUBLIC",
+                "EXDATE": b"20251106",
+                "RRULE": b"FREQ=DAILY;COUNT=2",
+                "STATUS": b"TENTATIVE",
+                "TRANSP": b"OPAQUE",
+                "subcomponents": {
+                    "VALARM": b"BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:ev"
+                    b"olution all day event\r\nTRIGGER;RELATED=END:-"
+                    b"PT15M\r\nX-EVOLUTION-ALARM-UID:234e78a29144053"
+                    b"f40193800fb08a18722cb0f79\r\nEND:VALARM\r\n"
+                },
+            },
+            new_event.unknownProps,
+        )
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251106T211247Z")
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = replace_line(event_ical_content, "EXDATE;", "EXDATE:20251106", replace_whole_line=True)
         event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
 

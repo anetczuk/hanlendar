@@ -159,6 +159,10 @@ class LocalToDo(Item, persist.Versionable):
     ## ========================================================================
 
     ## overriden
+    def _getUnknownProps(self) -> dict[Any, Any]:
+        return self._unknown_props
+
+    ## overriden
     def _getUID(self):
         return self._UID
 
