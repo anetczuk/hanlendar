@@ -35,10 +35,6 @@ from hanlendar.domainmodel.local.manager import LocalManager
 from hanlendar.domainmodel.icalio import import_icalendar, export_icalendar
 from hanlendar.domainmodel.local.task import Task
 
-# from hanlendar import persist
-# from hanlendar.domainmodel.reminder import Notification
-# from hanlendar.domainmodel.local.todo import LocalToDo
-
 
 _LOGGER = logging.getLogger(__name__)
 

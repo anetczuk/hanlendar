@@ -96,18 +96,19 @@ class ModuleMapper:
 class LocalManager(Manager):
     """Root class for domain data structure."""
 
-    ## 1 - renamed modules from 'todocalendar' to 'hanlendar'
-    ## 2 - renamed modules from 'hanlendar.domainmodel.*' to 'hanlendar.domainmodel.local.*'
-    ## 3 - renamed modules from 'hanlendar.domainmodel.local.item' to 'hanlendar.domainmodel.item'
-    ## 4 - renamed modules from 'hanlendar.domainmodel.local.recurrent' to 'hanlendar.domainmodel.recurrent'
-    ##     renamed modules from 'hanlendar.domainmodel.local.reminder' to 'hanlendar.domainmodel.reminder'
-    ## 5 - renamed class from 'hanlendar.domainmodel.local.task.Task' to 'hanlendar.domainmodel.local.task.LocalTask'
-    ## 6 - moved data to 'local' subdirectory
-    ## 7 - renamed class from 'hanlendar.domainmodel.local.todo.ToDo' to 'hanlendar.domainmodel.local.todo.LocalToDo'
-    ## 8 - removed "_recurrentOffset" from LocalTask
-    ## 9 - moved Task from "hanlendar.domainmodel.task" to "hanlendar.domainmodel.local.task"
-    ##     moved remaining content from "hanlendar.domainmodel.task" to "hanlendar.domainmodel.taskoccurence"
-    _class_version = 9
+    ##  1 - renamed modules from 'todocalendar' to 'hanlendar'
+    ##  2 - renamed modules from 'hanlendar.domainmodel.*' to 'hanlendar.domainmodel.local.*'
+    ##  3 - renamed modules from 'hanlendar.domainmodel.local.item' to 'hanlendar.domainmodel.item'
+    ##  4 - renamed modules from 'hanlendar.domainmodel.local.recurrent' to 'hanlendar.domainmodel.recurrent'
+    ##      renamed modules from 'hanlendar.domainmodel.local.reminder' to 'hanlendar.domainmodel.reminder'
+    ##  5 - renamed class from 'hanlendar.domainmodel.local.task.Task' to 'hanlendar.domainmodel.local.task.LocalTask'
+    ##  6 - moved data to 'local' subdirectory
+    ##  7 - renamed class from 'hanlendar.domainmodel.local.todo.ToDo' to 'hanlendar.domainmodel.local.todo.LocalToDo'
+    ##  8 - removed "_recurrentOffset" from LocalTask
+    ##  9 - moved Task from "hanlendar.domainmodel.task" to "hanlendar.domainmodel.local.task"
+    ##      moved remaining content from "hanlendar.domainmodel.task" to "hanlendar.domainmodel.taskoccurence"
+    ## 10 - replaced tasks.obj, todos.obj, notes.obj with data.obj
+    _class_version = 10
 
     def __init__(self, ioDir=None):
         self._tasks = []
@@ -136,16 +137,13 @@ class LocalManager(Manager):
         if persist.store_object(self._class_version, outputFile) is True:
             changed = True
 
-        outputFile = os.path.join(outputDir, "tasks.obj")
-        if persist.store_object(self.tasks, outputFile) is True:
-            changed = True
-
-        outputFile = os.path.join(outputDir, "todos.obj")
-        if persist.store_object(self.todos, outputFile) is True:
-            changed = True
-
-        outputFile = os.path.join(outputDir, "notes.obj")
-        if persist.store_object(self.notes, outputFile) is True:
+        data_dict = {
+            "tasks": self.tasks,
+            "todos": self.todos,
+            "notes": self.notes,
+        }
+        outputFile = os.path.join(outputDir, "data.obj")
+        if persist.store_object(data_dict, outputFile) is True:
             changed = True
 
         ## backup data
@@ -180,32 +178,46 @@ class LocalManager(Manager):
 
         mapperObject = ModuleMapper(mngrVersion)
 
-        try:
-            inputFile = os.path.join(inputDir, "tasks.obj")
-            self.tasks = persist.load_object(inputFile, class_mapper=mapperObject)
-            if self.tasks is None:
+        if mngrVersion < 10:
+            try:
+                inputFile = os.path.join(inputDir, "tasks.obj")
+                self.tasks = persist.load_object(inputFile, class_mapper=mapperObject)
+                if self.tasks is None:
+                    self.tasks = []
+            except FileNotFoundError:
+                _LOGGER.warning("unable to load file: %s", inputFile)
                 self.tasks = []
-        except FileNotFoundError:
-            _LOGGER.warning("unable to load file: %s", inputFile)
-            self.tasks = []
-
-        try:
-            inputFile = os.path.join(inputDir, "todos.obj")
-            self.todos = persist.load_object(inputFile, class_mapper=mapperObject)
-            if self.todos is None:
+    
+            try:
+                inputFile = os.path.join(inputDir, "todos.obj")
+                self.todos = persist.load_object(inputFile, class_mapper=mapperObject)
+                if self.todos is None:
+                    self.todos = []
+            except FileNotFoundError:
+                _LOGGER.warning("unable to load file: %s", inputFile)
                 self.todos = []
-        except FileNotFoundError:
-            _LOGGER.warning("unable to load file: %s", inputFile)
-            self.todos = []
-
-        try:
-            inputFile = os.path.join(inputDir, "notes.obj")
-            self.notes = persist.load_object(inputFile, class_mapper=mapperObject)
-            if self.notes is None:
+    
+            try:
+                inputFile = os.path.join(inputDir, "notes.obj")
+                self.notes = persist.load_object(inputFile, class_mapper=mapperObject)
+                if self.notes is None:
+                    self.notes = {"notes": ""}
+            except FileNotFoundError:
+                _LOGGER.warning("unable to load file: %s", inputFile)
                 self.notes = {"notes": ""}
-        except FileNotFoundError:
-            _LOGGER.warning("unable to load file: %s", inputFile)
-            self.notes = {"notes": ""}
+
+        else:
+            try:
+                inputFile = os.path.join(inputDir, "data.obj")
+                data_dict = persist.load_object(inputFile, class_mapper=mapperObject)
+            except FileNotFoundError:
+                _LOGGER.warning("unable to load file: %s", inputFile)
+                data_dict = {}
+
+            self.tasks = data_dict.get("tasks", [])
+            self.todos = data_dict.get("todos", [])
+            self.notes = data_dict.get("notes", {"notes": ""})
+
         self.fixData()
 
         if mngrVersion < 8:
@@ -274,6 +286,7 @@ class LocalManager(Manager):
 
         mapperObject = ModuleMapper(mngrVersion)
 
+        ## old style
         tasks_raw = hist_data_raw.get("tasks.obj", None)
         tasks = persist.load_data(tasks_raw, class_mapper=mapperObject)
         if tasks is None:
@@ -288,6 +301,14 @@ class LocalManager(Manager):
         notes = persist.load_data(notes_raw, class_mapper=mapperObject)
         if notes is None:
             notes = []
+
+        ## new style
+        data_raw = hist_data_raw.get("data.obj", None)
+        data_dict = persist.load_data(data_raw, class_mapper=mapperObject)
+        if data_dict is not None:
+            tasks = data_dict.get("tasks", [])
+            todos = data_dict.get("todos", [])
+            notes = data_dict.get("notes", [])
 
         return {"file": storedZipFile, "version": mngrVersion, "tasks": tasks, "todos": todos, "notes": notes}
 
