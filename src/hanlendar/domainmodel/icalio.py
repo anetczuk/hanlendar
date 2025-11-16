@@ -32,7 +32,6 @@ import re
 
 import icalendar
 from icalendar.prop import TypesFactory
-from icalendar.cal import ComponentFactory
 
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.local.task import Task
@@ -42,6 +41,9 @@ from hanlendar.domainmodel.reminder import Reminder
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+UNHANDLED_SUBS_KEY = "subcomponents"
 
 
 def export_icalendar_content(manager: Manager) -> str:
@@ -74,8 +76,8 @@ def export_icalendar(manager: Manager) -> icalendar.cal.Calendar:
 
     ## export unhandled props
     unknown_props = manager.unknownProps
-    subitems = unknown_props.get("subcomponents", {})
-    for item in subitems.values():
+    subitems = unknown_props.get(UNHANDLED_SUBS_KEY, [])
+    for item in subitems:
         decoded_item = item.decode("utf-8")
         desired_item = icalendar.cal.Component.from_ical(decoded_item)
         calendar.add_component(desired_item)
@@ -129,9 +131,9 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar) -> tupl
 
         ## unhandled items
         item = component.to_ical()
-        subitems = manager.unknownProps.get("subcomponents", {})
-        subitems[component.name] = item
-        manager.unknownProps["subcomponents"] = subitems
+        subitems = manager.unknownProps.get(UNHANDLED_SUBS_KEY, [])
+        subitems.append(item)
+        manager.unknownProps[UNHANDLED_SUBS_KEY] = subitems
 
     return tasks, dangling_children
 
@@ -332,18 +334,16 @@ class TaskSerialization:
 
         if task.unknownProps:
             type_factory = TypesFactory()
-            comp_factory = ComponentFactory()
             for key, item in task.unknownProps.items():
-                if key != "subcomponents":
+                if key != UNHANDLED_SUBS_KEY:
                     decoded_item = item.decode("utf-8")
                     desired_item = type_factory.from_ical(key, decoded_item)
                     ievent.add(key, desired_item)
                     continue
 
                 ## subcomponents
-                for subkey, subitem in item.items():
-                    component_type = comp_factory[subkey]
-                    isubcomponent: icalendar.cal.Component = component_type.from_ical(subitem)
+                for subitem in item:
+                    isubcomponent: icalendar.cal.Component = icalendar.cal.Component.from_ical(subitem)
                     ievent.add_component(isubcomponent)
 
         return ievent
@@ -428,11 +428,12 @@ class TaskSerialization:
         for item in TaskField:
             prop_name = item.value.upper()
             unhandled_props.pop(prop_name, None)
-        unhandled_subs = {}
+        unhandled_subs = []
         for subitem in component.subcomponents:
-            unhandled_subs[subitem.name] = subitem.to_ical()
+            ical_item = subitem.to_ical()
+            unhandled_subs.append(ical_item)
         if unhandled_subs:
-            unhandled_props["subcomponents"] = unhandled_subs
+            unhandled_props[UNHANDLED_SUBS_KEY] = unhandled_subs
         task._unknown_props = unhandled_props  # type: ignore[attr-defined]
 
         parentUID = get_ical_str(component, TaskField.GROUP_PARENT)
@@ -496,18 +497,16 @@ class ToDoSerialization:
 
         if todo.unknownProps:
             type_factory = TypesFactory()
-            comp_factory = ComponentFactory()
             for key, item in todo.unknownProps.items():
-                if key != "subcomponents":
+                if key != UNHANDLED_SUBS_KEY:
                     decoded_item = item.decode("utf-8")
                     desired_item = type_factory.from_ical(key, decoded_item)
                     itodo.add(key, desired_item)
                     continue
 
                 ## subcomponents
-                for subkey, subitem in item.items():
-                    component_type = comp_factory[subkey]
-                    isubcomponent: icalendar.cal.Component = component_type.from_ical(subitem)
+                for subitem in item:
+                    isubcomponent: icalendar.cal.Component = icalendar.cal.Component.from_ical(subitem)
                     itodo.add_component(isubcomponent)
 
         return itodo
@@ -556,11 +555,12 @@ class ToDoSerialization:
         for item in ToDoField:
             prop_name = item.value.upper()
             unhandled_props.pop(prop_name, None)
-        unhandled_subs = {}
+        unhandled_subs = []
         for subitem in component.subcomponents:
-            unhandled_subs[subitem.name] = subitem.to_ical()
+            ical_item = subitem.to_ical()
+            unhandled_subs.append(ical_item)
         if unhandled_subs:
-            unhandled_props["subcomponents"] = unhandled_subs
+            unhandled_props[UNHANDLED_SUBS_KEY] = unhandled_subs
         todo._unknown_props = unhandled_props
 
         parentUID = get_ical_str(component, ToDoField.GROUP_PARENT)
