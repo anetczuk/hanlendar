@@ -79,6 +79,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertEqual("webpage data", new_item.url)
         self.assertEqual("description data", new_item.description)
         self.assertEqual(2, new_item.sequence)
+        self.assertEqual(0, len(new_item.reminderList))
         # TODO: all unknown props should be handled
         self.assertDictEqual({"CLASS": b"PUBLIC", "COLOR": b"fuchsia", "TRANSP": b"OPAQUE"}, new_item.unknownProps)
 
@@ -134,12 +135,6 @@ class IcalioEvolutionTest(unittest.TestCase):
                 "RRULE": b"FREQ=DAILY;COUNT=2",
                 "STATUS": b"TENTATIVE",
                 "TRANSP": b"OPAQUE",
-                "subcomponents": [
-                    b"BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:ev"
-                    b"olution all day event\r\nTRIGGER;RELATED=END:-"
-                    b"PT15M\r\nX-EVOLUTION-ALARM-UID:234e78a29144053"
-                    b"f40193800fb08a18722cb0f79\r\nEND:VALARM\r\n",
-                ],
             },
             new_item.unknownProps,
         )
@@ -154,7 +149,12 @@ class IcalioEvolutionTest(unittest.TestCase):
         event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
         # TODO: fix compatibility
-        event_ical_content = replace_line(event_ical_content, "EXDATE;", "EXDATE:20251106", replace_whole_line=True)
+        event_ical_content = replace_line(
+            event_ical_content,
+            "EXDATE;VALUE=DATE:20251106",
+            "EXDATE:20251106",
+            replace_whole_line=True,
+        )
 
         self.assertEqual(
             event_ical_content,
@@ -199,12 +199,6 @@ class IcalioEvolutionTest(unittest.TestCase):
                 "RRULE": b"FREQ=DAILY;COUNT=2;INTERVAL=3",
                 "STATUS": b"CANCELLED",
                 "TRANSP": b"OPAQUE",
-                "subcomponents": [
-                    b"BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:ev"
-                    b"olution full example\r\nTRIGGER;RELATED=START:"
-                    b"-PT15M\r\nX-EVOLUTION-ALARM-UID:98686f444ce13b"
-                    b"e455218bfc72170a45a8c25e32\r\nEND:VALARM\r\n",
-                ],
             },
             new_item.unknownProps,
         )
@@ -221,14 +215,14 @@ class IcalioEvolutionTest(unittest.TestCase):
         # TODO: fix compatibility
         event_ical_content = replace_line(
             event_ical_content,
-            "ATTACH;",
+            "ATTACH;FMTTYPE=application/x-perl:https://google.pl",
             "ATTACH:https://google.pl",
             replace_whole_line=True,
         )
         # TODO: fix compatibility
         event_ical_content = replace_line(
             event_ical_content,
-            "RRULE;",
+            "RRULE;X-EVOLUTION-ENDDATE=20251127T090000Z:FREQ=DAILY;COUNT=2;INTERVAL=3",
             "RRULE:FREQ=DAILY;COUNT=2;INTERVAL=3",
             replace_whole_line=True,
         )
@@ -290,19 +284,6 @@ class IcalioEvolutionTest(unittest.TestCase):
             {
                 "CLASS": b"PUBLIC",
                 "TRANSP": b"OPAQUE",
-                "subcomponents": [
-                    b"BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:multiple r"
-                    b"eminders\r\nTRIGGER;RELATED=START:-PT15M\r\nX-EVOLUTION-"
-                    b"ALARM-UID:9892d2f34689401854031bad2d3e7168680f73ac\r\nEND:"
-                    b"VALARM\r\n",
-                    b"BEGIN:VALARM\r\nACTION:AUDIO\r\nTRIGGER;RELATED=START:-P"
-                    b"T2H\r\nX-EVOLUTION-ALARM-UID:8bc796cda97b3d7b35add94b999be"
-                    b"1b1a19b2ea5\r\nEND:VALARM\r\n",
-                    b"BEGIN:VALARM\r\nACTION:PROCEDURE\r\nATTACH:prog_xxx\r\nDUR"
-                    b"ATION:PT5M\r\nREPEAT:1\r\nTRIGGER;RELATED=END:P3D\r\nX-EVO"
-                    b"LUTION-ALARM-UID:30e05dbbdef65a603da399415ee1652c35e34b8"
-                    b"1\r\nEND:VALARM\r\n",
-                ],
             },
             new_item.unknownProps,
         )
@@ -319,14 +300,14 @@ class IcalioEvolutionTest(unittest.TestCase):
         # TODO: fix compatibility
         event_ical_content = replace_line(
             event_ical_content,
-            "DTEND;",
+            "DTEND;TZID=Europe/Warsaw:20251211T092500",
             "DTEND:20251211T082500Z",
             replace_whole_line=True,
         )
         # TODO: fix compatibility
         event_ical_content = replace_line(
             event_ical_content,
-            "DTSTART;",
+            "DTSTART;TZID=Europe/Warsaw:20251211T090000",
             "DTSTART:20251211T080000Z",
             replace_whole_line=True,
         )

@@ -22,20 +22,19 @@
 #
 
 import logging
+from typing import Any
 
 from enum import Enum, unique
 from datetime import datetime, timedelta
-
-# from hanlendar.domainmodel.local.task import Task
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @unique
-class TimePointType(Enum):
-    #     Start = ()
-    Due = ()  # pylint: disable=C0103
+class RelatedType(Enum):
+    START = "START"
+    END = "END"
 
 
 @unique
@@ -77,6 +76,29 @@ class Reminder:
         self.direction: RemainderDirectionType = direction  ## not used?
         if days is not None:
             self.setDays(days)
+
+        # TODO: handle new members
+        self.action: str = None  ## value from icalendar (default DISPLAY)
+        self.description: str = None  ## reminder message
+        self.related: RelatedType = None  ## default START
+
+        ## unknown icalendar properties
+        self.unknownProps: dict[Any, Any] = None
+
+    def get_action(self) -> str:
+        if self.action is None:
+            self.action = "DISPLAY"
+        return self.action
+
+    def get_description(self) -> str:
+        if self.description is None:
+            self.description = ""
+        return self.description
+
+    def get_related_value(self):
+        if self.related is None:
+            return RelatedType.START.value
+        return self.related.value
 
     def setTime(self, days, seconds):
         self.setDays(days)

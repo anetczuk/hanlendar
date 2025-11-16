@@ -83,9 +83,6 @@ class IcalioOneCalendarTest(unittest.TestCase):
             {
                 "RRULE": b"FREQ=WEEKLY;UNTIL=20251130;INTERVAL=1;BYDAY=WE,SA",
                 "X-ONECAL-CATEGORYID": b"107",
-                "subcomponents": [
-                    b"BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder\r\nTRIGGER:-PT12H\r\nEND:VALARM\r\n",
-                ],
             },
             new_item.unknownProps,
         )
@@ -99,20 +96,6 @@ class IcalioOneCalendarTest(unittest.TestCase):
         event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
         event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
-        # TODO: fix compatibility
-        event_ical_content = replace_line(
-            event_ical_content,
-            "ATTACH;",
-            "ATTACH:https://google.pl",
-            replace_whole_line=True,
-        )
-        # TODO: fix compatibility
-        event_ical_content = replace_line(
-            event_ical_content,
-            "RRULE;",
-            "RRULE:FREQ=DAILY;COUNT=2;INTERVAL=3",
-            replace_whole_line=True,
-        )
 
         self.assertEqual(
             event_ical_content,
@@ -162,13 +145,9 @@ class IcalioOneCalendarTest(unittest.TestCase):
         self.assertEqual("", new_item.url)
         self.assertEqual("desc data with reminder 45mins", new_item.description)
         self.assertEqual(1, new_item.sequence)
-        # TODO: all unknown props should be handled
         self.assertDictEqual(
             {
                 "X-ONECAL-CATEGORYID": b"110",
-                "subcomponents": [
-                    b"BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:Reminder\r\nTRIGGER:-PT45M\r\nEND:VALARM\r\n",
-                ],
             },
             new_item.unknownProps,
         )
@@ -184,14 +163,14 @@ class IcalioOneCalendarTest(unittest.TestCase):
         # TODO: fix compatibility
         event_ical_content = replace_line(
             event_ical_content,
-            "DTEND;",
+            "DTEND;TZID=Europe/Warsaw:20251218T130000",
             "DTEND:20251218T120000Z",
             replace_whole_line=True,
         )
         # TODO: fix compatibility
         event_ical_content = replace_line(
             event_ical_content,
-            "DTSTART;",
+            "DTSTART;TZID=Europe/Warsaw:20251218T120000",
             "DTSTART:20251218T110000Z",
             replace_whole_line=True,
         )

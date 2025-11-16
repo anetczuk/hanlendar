@@ -37,7 +37,7 @@ from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.local.todo import LocalToDo
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
-from hanlendar.domainmodel.reminder import Reminder
+from hanlendar.domainmodel.reminder import Reminder, RelatedType
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,31 +56,23 @@ def export_icalendar(manager: Manager) -> icalendar.cal.Calendar:
     calendar: icalendar.cal.Calendar = icalendar.cal.Calendar()
     calendar.add("prodid", "-//Hanlendar//EN")
 
-    task_serialization = TaskSerialization()
-    todo_serialization = ToDoSerialization()
-
     allTasks: list[Task] = manager.getTasksAll()
     _LOGGER.info("creating events: %s", len(allTasks))
     for task_item in allTasks:
         _LOGGER.info("exporting task: %s %s", task_item.UID, task_item.title)
-        ievent: icalendar.cal.Event = task_serialization.to_ical(task_item)
+        ievent: icalendar.cal.Event = TaskSerialization.to_ical(task_item)
         calendar.add_component(ievent)
 
     allTodos = manager.getTodosAll()
     _LOGGER.info("creating todos: %s", len(allTodos))
     for todo_item in allTodos:
         _LOGGER.info("exporting todo: %s %s", todo_item.UID, todo_item.title)
-        itodo: icalendar.cal.Todo = todo_serialization.to_ical(todo_item)
+        itodo: icalendar.cal.Todo = ToDoSerialization.to_ical(todo_item)
 
         calendar.add_component(itodo)
 
     ## export unhandled props
-    unknown_props = manager.unknownProps
-    subitems = unknown_props.get(UNHANDLED_SUBS_KEY, [])
-    for item in subitems:
-        decoded_item = item.decode("utf-8")
-        desired_item = icalendar.cal.Component.from_ical(decoded_item)
-        calendar.add_component(desired_item)
+    write_unknown_props(calendar, manager.unknownProps)
 
     return calendar
 
@@ -95,14 +87,6 @@ def import_icalendar_content(manager: Manager, content: str):
         calendar: icalendar.cal.Calendar = icalendar.cal.Calendar.from_ical(extracted_ical)
         imported_items, children = import_icalendar(manager, calendar)
         dangling_children.extend(children)
-        for item in imported_items:
-            if not hasattr(item, "reminderList"):
-                continue
-            if item.reminderList is None:
-                continue
-            if len(item.reminderList) > 0:
-                continue
-            item.addReminderDays(1)
     except ValueError as ex:
         _LOGGER.warning("unable to import calendar data: %s", ex)
         return None
@@ -113,18 +97,15 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar) -> tupl
     tasks: list[Task] = []
     dangling_children = []
 
-    task_serialization = TaskSerialization()
-    todo_serialization = ToDoSerialization()
-
     for component in calendar.subcomponents:
         if component.name == "VEVENT":
-            imported_tasks, imported_dangling_children = task_serialization.from_ical(component, manager)
+            imported_tasks, imported_dangling_children = TaskSerialization.from_ical(component, manager)
             tasks.extend(imported_tasks)
             dangling_children.extend(imported_dangling_children)
             continue
 
         if component.name == "VTODO":
-            imported_tasks, imported_dangling_children = todo_serialization.from_ical(component, manager)
+            imported_tasks, imported_dangling_children = ToDoSerialization.from_ical(component, manager)
             tasks.extend(imported_tasks)
             dangling_children.extend(imported_dangling_children)
             continue
@@ -178,7 +159,6 @@ class TaskField(Enum):
 
     GROUP_PARENT = "x-hanlendar-parent"  ## uuid
     RECURRENCE = "x-hanlendar-recurrence"
-    REMINDERS = "x-hanlendar-reminders"  ## comma separated list of 'timedelta' values
 
     @classmethod
     def findByName(cls, name, defaultValue=None):
@@ -267,7 +247,8 @@ class ToDoField(Enum):
 
 class TaskSerialization:
 
-    def to_ical(self, task: Task) -> icalendar.cal.Event:
+    @staticmethod
+    def to_ical(task: Task) -> icalendar.cal.Event:
         ievent: icalendar.cal.Event = icalendar.cal.Event()
 
         curr_time = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -329,27 +310,23 @@ class TaskSerialization:
             ievent[RecurrentField.STEP.value] = str(recurrence.every)
             ievent[RecurrentField.ENDDATE.value] = str(recurrence.endDate)
 
+        ## store reminders
         reminderList = task.reminderList
-        set_ical_list(ievent, TaskField.REMINDERS, reminderList, value_extractor=lambda rem: str(rem.timeOffset))
+        if reminderList is None:
+            reminderList = []
+        for reminder in reminderList:
+            subcomponent = ReminderSerialization.to_ical(reminder)
+            if subcomponent is None:
+                continue
+            ievent.add_component(subcomponent)
 
-        if task.unknownProps:
-            type_factory = TypesFactory()
-            for key, item in task.unknownProps.items():
-                if key != UNHANDLED_SUBS_KEY:
-                    decoded_item = item.decode("utf-8")
-                    desired_item = type_factory.from_ical(key, decoded_item)
-                    ievent.add(key, desired_item)
-                    continue
-
-                ## subcomponents
-                for subitem in item:
-                    isubcomponent: icalendar.cal.Component = icalendar.cal.Component.from_ical(subitem)
-                    ievent.add_component(isubcomponent)
+        write_unknown_props(ievent, task.unknownProps)
 
         return ievent
 
     # pylint: disable=R0914
-    def from_ical(self, component, manager):
+    @staticmethod
+    def from_ical(component: icalendar.cal.Component, manager):
         new_items = []
         dangling_children: list[tuple[Any, Any]] = []
 
@@ -410,17 +387,12 @@ class TaskSerialization:
         except Exception:  # pylint: disable=W0718 # nosec
             pass
 
-        try:
-            task.reminderList = get_ical_list(
-                component,
-                TaskField.REMINDERS,
-                value_converter=reminder_from_string,
-            )
-            if task.reminderList is not None:
-                task.reminderList = [item for item in task.reminderList if item is not None]
-        except Exception:  # as ex:
-            _LOGGER.warning("unable to import remainder list: %s %s", task.title, task.dueDateTime)
-            raise
+        ## restore reminders
+        reminders_list, unhandled_alarms = ReminderSerialization.from_ical(component)
+        for reminder in reminders_list:
+            task.addReminder(reminder)
+        if task.reminderList is None:
+            task.reminderList = []
 
         unhandled_props = {}
         for key, val in component.items():
@@ -428,8 +400,10 @@ class TaskSerialization:
         for item in TaskField:
             prop_name = item.value.upper()
             unhandled_props.pop(prop_name, None)
-        unhandled_subs = []
+        unhandled_subs = unhandled_alarms
         for subitem in component.subcomponents:
+            if subitem.name == "VALARM":
+                continue
             ical_item = subitem.to_ical()
             unhandled_subs.append(ical_item)
         if unhandled_subs:
@@ -457,7 +431,8 @@ class TaskSerialization:
 
 class ToDoSerialization:
 
-    def to_ical(self, todo: LocalToDo) -> icalendar.cal.Todo:
+    @staticmethod
+    def to_ical(todo: LocalToDo) -> icalendar.cal.Todo:
         itodo: icalendar.cal.Todo = icalendar.cal.Todo()
 
         curr_time = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -495,23 +470,23 @@ class ToDoSerialization:
         if taskParent is not None:
             itodo.add(ToDoField.GROUP_PARENT.value, taskParent.UID)
 
-        if todo.unknownProps:
-            type_factory = TypesFactory()
-            for key, item in todo.unknownProps.items():
-                if key != UNHANDLED_SUBS_KEY:
-                    decoded_item = item.decode("utf-8")
-                    desired_item = type_factory.from_ical(key, decoded_item)
-                    itodo.add(key, desired_item)
-                    continue
+        # TODO: activate reminders
+        # ## store reminders
+        # reminderList = todo.reminderList
+        # if reminderList is None:
+        #     reminderList = []
+        # for reminder in reminderList:
+        #     subcomponent = ReminderSerialization.to_ical(reminder)
+        #     if subcomponent is None:
+        #         continue
+        #     itodo.add_component(subcomponent)
 
-                ## subcomponents
-                for subitem in item:
-                    isubcomponent: icalendar.cal.Component = icalendar.cal.Component.from_ical(subitem)
-                    itodo.add_component(isubcomponent)
+        write_unknown_props(itodo, todo.unknownProps)
 
         return itodo
 
-    def from_ical(self, component, manager):
+    @staticmethod
+    def from_ical(component: icalendar.cal.Component, manager):
         new_items = []
         dangling_children: list[Any] = []
 
@@ -549,6 +524,13 @@ class ToDoSerialization:
         todo.completed = get_ical_value_int(component, ToDoField.COMPLETED, 0)
         todo.priority = get_ical_value_int(component, ToDoField.PRIORITY, 5)
 
+        # ## restore reminders
+        # reminders_list = ReminderSerialization.from_ical(component)
+        # for reminder in reminders_list:
+        #     task.addReminder(reminder)
+        # if task.reminderList is None:
+        #     task.reminderList = []
+
         unhandled_props = {}
         for key, val in component.items():
             unhandled_props[key] = val.to_ical()
@@ -580,6 +562,131 @@ class ToDoSerialization:
             dangling_children.append((todo, parentUID))
 
         return (new_items, dangling_children)
+
+
+## info:
+## https://icalendar.org/iCalendar-RFC-5545/3-6-6-alarm-component.html
+class ReminderSerialization:
+
+    @staticmethod
+    def to_ical(reminder: Reminder) -> icalendar.cal.Alarm:
+        action = reminder.get_action()
+        if action in ("DISPLAY", "AUDIO", "PROCEDURE"):
+            ialarm: icalendar.cal.Alarm = icalendar.cal.Alarm()
+
+            ialarm["ACTION"] = action
+            description = reminder.get_description()
+            if description:
+                ialarm["DESCRIPTION"] = reminder.get_description()
+            trigger_props = None
+            if reminder.related:
+                trigger_props = {"RELATED": reminder.get_related_value()}
+            ialarm.add("TRIGGER", reminder.timeOffset, parameters=trigger_props)
+
+            write_unknown_props(ialarm, reminder.unknownProps)
+            return ialarm
+
+        _LOGGER.warning("unhandled action: %s", action)
+        return None
+
+    @staticmethod
+    def from_ical(component: icalendar.cal.Component) -> tuple[list[Reminder], list[Any]]:
+        ret_list: list[Reminder] = []
+        unhandled_subs = []
+
+        for subcomponent in component.subcomponents:
+            if subcomponent.name != "VALARM":
+                continue
+            alarm_props = subcomponent.items()
+            if not alarm_props:
+                ## no props - sometimes component has empty alarm
+                continue
+
+            reminder = None
+            alarm_action = subcomponent.get("ACTION")
+
+            if alarm_action == "DISPLAY":
+                reminder = ReminderSerialization.from_display(subcomponent)
+            elif alarm_action == "AUDIO":
+                reminder = ReminderSerialization.from_audio(subcomponent)
+            elif alarm_action == "PROCEDURE":
+                reminder = ReminderSerialization.from_procedure(subcomponent)
+            else:
+                _LOGGER.warning("unahndled Alarm ACTION: '%s'", alarm_action)
+
+            if reminder:
+                ret_list.append(reminder)
+            else:
+                ical_item = component.to_ical()
+                unhandled_subs.append(ical_item)
+
+        return ret_list, unhandled_subs
+
+    @staticmethod
+    def from_display(component: icalendar.cal.Alarm) -> Reminder:
+        alarm_props = component.items()
+
+        reminder = Reminder()
+        reminder.action = component.get("ACTION")
+        reminder.description = component.get("DESCRIPTION")
+
+        unknown_props = {}
+
+        for prop_name, prop_val in alarm_props:
+            if prop_name in ("ACTION", "DESCRIPTION"):
+                ## already handled
+                continue
+
+            if prop_name == "TRIGGER":
+                if prop_val.params is None:
+                    _LOGGER.warning("unhandled alarm case - no properties: %s", component)
+                    return None
+                related = prop_val.params.get("RELATED")
+                if related:
+                    if related == "START":
+                        reminder.related = RelatedType.START
+                    elif related == "END":
+                        reminder.related = RelatedType.END
+                    else:
+                        _LOGGER.warning("unhandled alarm case - unknown RELATED: %s", component)
+                        return None
+
+                reminder.timeOffset = prop_val.dt
+                continue
+
+            if prop_name not in (" X-EVOLUTION-ALARM-UID"):
+                _LOGGER.warning("unhandled alarm property: %s", prop_name)
+
+            unknown_props[prop_name] = prop_val.to_ical()
+
+        reminder.unknownProps = unknown_props
+        return reminder
+
+    @staticmethod
+    def from_audio(component: icalendar.cal.Alarm) -> Reminder:
+        return ReminderSerialization.from_display(component)
+
+    @staticmethod
+    def from_procedure(component: icalendar.cal.Alarm) -> Reminder:
+        return ReminderSerialization.from_display(component)
+
+
+def write_unknown_props(component, props_dict):
+    if not props_dict:
+        return
+    type_factory = TypesFactory()
+    for key, item in props_dict.items():
+        if key != UNHANDLED_SUBS_KEY:
+            decoded_item = item.decode("utf-8")
+            desired_item = type_factory.from_ical(key, decoded_item)
+            component.add(key, desired_item)
+            continue
+
+        ## subcomponents
+        for subitem in item:
+            decoded_item = subitem.decode("utf-8")
+            isubcomponent: icalendar.cal.Component = icalendar.cal.Component.from_ical(decoded_item)
+            component.add_component(isubcomponent)
 
 
 ## =================================================================
