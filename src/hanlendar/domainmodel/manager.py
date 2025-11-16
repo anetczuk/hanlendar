@@ -21,11 +21,10 @@
 # SOFTWARE.
 #
 
-from datetime import date, datetime
-
 import logging
-
+from typing import Any
 import abc
+from datetime import date, datetime
 
 from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.local.task import Task
@@ -67,6 +66,15 @@ class Manager:
         self._setToDos(todos)
         notes = manager._getNotes()  # pylint: disable=W0212
         self._setNotes(notes)
+
+    @abc.abstractmethod
+    def _getUnknownProps(self) -> dict[Any, Any]:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @property
+    def unknownProps(self) -> dict[Any, Any]:
+        return self._getUnknownProps()
 
     @abc.abstractmethod
     def _getTasks(self):

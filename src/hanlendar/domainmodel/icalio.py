@@ -32,6 +32,7 @@ import re
 
 import icalendar
 from icalendar.prop import TypesFactory
+from icalendar.cal import ComponentFactory
 
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.local.task import Task
@@ -71,6 +72,14 @@ def export_icalendar(manager: Manager) -> icalendar.cal.Calendar:
 
         calendar.add_component(itodo)
 
+    ## export unhandled props
+    unknown_props = manager.unknownProps
+    subitems = unknown_props.get("subcomponents", {})
+    for item in subitems.values():
+        decoded_item = item.decode("utf-8")
+        desired_item = icalendar.cal.Component.from_ical(decoded_item)
+        calendar.add_component(desired_item)
+
     return calendar
 
 
@@ -105,16 +114,24 @@ def import_icalendar(manager: Manager, calendar: icalendar.cal.Calendar) -> tupl
     task_serialization = TaskSerialization()
     todo_serialization = ToDoSerialization()
 
-    for component in calendar.walk():
+    for component in calendar.subcomponents:
         if component.name == "VEVENT":
             imported_tasks, imported_dangling_children = task_serialization.from_ical(component, manager)
             tasks.extend(imported_tasks)
             dangling_children.extend(imported_dangling_children)
+            continue
 
         if component.name == "VTODO":
             imported_tasks, imported_dangling_children = todo_serialization.from_ical(component, manager)
             tasks.extend(imported_tasks)
             dangling_children.extend(imported_dangling_children)
+            continue
+
+        ## unhandled items
+        item = component.to_ical()
+        subitems = manager.unknownProps.get("subcomponents", {})
+        subitems[component.name] = item
+        manager.unknownProps["subcomponents"] = subitems
 
     return tasks, dangling_children
 
@@ -314,17 +331,19 @@ class TaskSerialization:
         set_ical_list(ievent, TaskField.REMINDERS, reminderList, value_extractor=lambda rem: str(rem.timeOffset))
 
         if task.unknownProps:
-            factory = TypesFactory()
+            type_factory = TypesFactory()
+            comp_factory = ComponentFactory()
             for key, item in task.unknownProps.items():
                 if key != "subcomponents":
                     decoded_item = item.decode("utf-8")
-                    desired_item = factory.from_ical(key, decoded_item)
+                    desired_item = type_factory.from_ical(key, decoded_item)
                     ievent.add(key, desired_item)
                     continue
 
                 ## subcomponents
-                for subitem in item.values():
-                    isubcomponent: icalendar.cal.Component = icalendar.cal.Component.from_ical(subitem)
+                for subkey, subitem in item.items():
+                    component_type = comp_factory[subkey]
+                    isubcomponent: icalendar.cal.Component = component_type.from_ical(subitem)
                     ievent.add_component(isubcomponent)
 
         return ievent
@@ -476,17 +495,19 @@ class ToDoSerialization:
             itodo.add(ToDoField.GROUP_PARENT.value, taskParent.UID)
 
         if todo.unknownProps:
-            factory = TypesFactory()
+            type_factory = TypesFactory()
+            comp_factory = ComponentFactory()
             for key, item in todo.unknownProps.items():
                 if key != "subcomponents":
                     decoded_item = item.decode("utf-8")
-                    desired_item = factory.from_ical(key, decoded_item)
+                    desired_item = type_factory.from_ical(key, decoded_item)
                     itodo.add(key, desired_item)
                     continue
 
                 ## subcomponents
-                for subitem in item.values():
-                    isubcomponent: icalendar.cal.Component = icalendar.cal.Component.from_ical(subitem)
+                for subkey, subitem in item.items():
+                    component_type = comp_factory[subkey]
+                    isubcomponent: icalendar.cal.Component = component_type.from_ical(subitem)
                     itodo.add_component(isubcomponent)
 
         return itodo
@@ -749,22 +770,81 @@ def sort_ical_content(content):
     return "\n".join(sorted_lines) + "\n"
 
 
+# def sort_ical_list(content_lines):
+#     if not content_lines:
+#         return []
+
+# start_index = find_starting_index(content_lines, "BEGIN:")
+# end_index = find_ending_index(content_lines, "END:")
+# if start_index < 0 and end_index < 0:
+#     return sorted(content_lines)
+#
+# props_lines = content_lines[:start_index] + content_lines[end_index + 1 :]
+# props_sorted = sort_ical_list(props_lines)
+#
+# sub_lines = content_lines[start_index + 1 : end_index]
+# sub_sorted = sort_ical_list(sub_lines)
+#
+# return [*props_sorted, content_lines[start_index], *sub_sorted, content_lines[end_index]]
+
+
 def sort_ical_list(content_lines):
     if not content_lines:
         return []
 
-    start_index = find_starting_index(content_lines, "BEGIN:")
-    end_index = find_ending_index(content_lines, "END:")
-    if start_index < 0 and end_index < 0:
-        return sorted(content_lines)
+    ## build tree
+    ret_tree: dict[Any, Any] = {"start": None, "items": [], "end": None}
+    item_stack = [ret_tree]
+    for line in content_lines:
+        curr_item = item_stack[-1]
+        if line.startswith("BEGIN:"):
+            new_item = {"start": line, "items": [], "end": None}
+            items = curr_item["items"]
+            items.append(new_item)
+            item_stack.append(new_item)
+            continue
+        if line.startswith("END:"):
+            curr_item["end"] = line
+            items = curr_item["items"]
+            items = _sort_ical_tree_list(items)
+            curr_item["items"] = items
+            item_stack.pop()
+            continue
+        items = curr_item["items"]
+        items.append(line)
 
-    props_lines = content_lines[:start_index] + content_lines[end_index + 1 :]
-    props_sorted = sort_ical_list(props_lines)
+    items = ret_tree["items"]
+    items = _sort_ical_tree_list(items)
+    ret_tree["items"] = items
 
-    sub_lines = content_lines[start_index + 1 : end_index]
-    sub_sorted = sort_ical_list(sub_lines)
+    return _ical_tree_to_list(items)
 
-    return [*props_sorted, content_lines[start_index], *sub_sorted, content_lines[end_index]]
+
+def _sort_ical_tree_list(tree_list):
+    props_list = []
+    sub_list = []
+    for item in tree_list:
+        if isinstance(item, dict):
+            sub_list.append(item)
+        else:
+            props_list.append(item)
+    props_list.sort()
+    sub_list.sort(key=lambda tree_item: tree_item["start"])
+    return [*props_list, *sub_list]
+
+
+def _ical_tree_to_list(ical_tree_list):
+    content_list = []
+    for item in ical_tree_list:
+        if isinstance(item, dict):
+            content_list.append(item["start"])
+            items = item["items"]
+            subcontent = _ical_tree_to_list(items)
+            content_list.extend(subcontent)
+            content_list.append(item["end"])
+        else:
+            content_list.append(item)
+    return content_list
 
 
 def find_starting_index(content_list, line_start):

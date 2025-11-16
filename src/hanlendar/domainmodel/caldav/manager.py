@@ -24,6 +24,7 @@
 # pylint: disable=W0212
 
 import logging
+from typing import Any
 
 import caldav
 import icalendar
@@ -180,6 +181,10 @@ class CalDAVManager(Manager):
         _LOGGER.info("export done")
 
     ## ======================================================================
+
+    ## overriden
+    def _getUnknownProps(self) -> dict[Any, Any]:
+        return self._localManager._getUnknownProps()
 
     # override
     def _getTasks(self):

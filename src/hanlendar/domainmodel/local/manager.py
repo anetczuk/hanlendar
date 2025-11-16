@@ -23,7 +23,7 @@
 
 import os
 import logging
-
+from typing import Any
 import glob
 
 from hanlendar import persist
@@ -108,7 +108,8 @@ class LocalManager(Manager):
     ##  9 - moved Task from "hanlendar.domainmodel.task" to "hanlendar.domainmodel.local.task"
     ##      moved remaining content from "hanlendar.domainmodel.task" to "hanlendar.domainmodel.taskoccurence"
     ## 10 - replaced tasks.obj, todos.obj, notes.obj with data.obj
-    _class_version = 10
+    ## 11 - added "_unknown_props"
+    _class_version = 11
 
     def __init__(self, ioDir=None):
         self._tasks = []
@@ -116,6 +117,9 @@ class LocalManager(Manager):
         self.notes = {"notes": ""}  ## default notes
 
         self._ioDir = ioDir  ## do not persist
+
+        ## unknown icalendar properties
+        self._unknown_props: dict[Any, Any] = None
 
     def storeToDisk(self, outputDir):
         if outputDir:
@@ -141,6 +145,7 @@ class LocalManager(Manager):
             "tasks": self.tasks,
             "todos": self.todos,
             "notes": self.notes,
+            "unknown_props": self._unknown_props,
         }
         outputFile = os.path.join(outputDir, "data.obj")
         if persist.store_object(data_dict, outputFile) is True:
@@ -187,7 +192,7 @@ class LocalManager(Manager):
             except FileNotFoundError:
                 _LOGGER.warning("unable to load file: %s", inputFile)
                 self.tasks = []
-    
+
             try:
                 inputFile = os.path.join(inputDir, "todos.obj")
                 self.todos = persist.load_object(inputFile, class_mapper=mapperObject)
@@ -196,7 +201,7 @@ class LocalManager(Manager):
             except FileNotFoundError:
                 _LOGGER.warning("unable to load file: %s", inputFile)
                 self.todos = []
-    
+
             try:
                 inputFile = os.path.join(inputDir, "notes.obj")
                 self.notes = persist.load_object(inputFile, class_mapper=mapperObject)
@@ -217,6 +222,7 @@ class LocalManager(Manager):
             self.tasks = data_dict.get("tasks", [])
             self.todos = data_dict.get("todos", [])
             self.notes = data_dict.get("notes", {"notes": ""})
+            self._unknown_props = data_dict.get("unknown_props")
 
         self.fixData()
 
@@ -330,6 +336,12 @@ class LocalManager(Manager):
         return None
 
     ## ======================================================================
+
+    ## overriden
+    def _getUnknownProps(self) -> dict[Any, Any]:
+        if self._unknown_props is None:
+            self._unknown_props = {}
+        return self._unknown_props
 
     # override
     def _getTasks(self):
