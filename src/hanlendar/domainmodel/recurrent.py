@@ -28,6 +28,8 @@ from enum import Enum, unique, auto
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
+from hanlendar import persist
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,9 +62,14 @@ class RepeatType(Enum):
         return -1
 
 
-class Recurrent:
+class Recurrent(persist.Versionable):
+
+    ##  0: add versioning
+    _class_version = 0
 
     def __init__(self, mode: RepeatType = None, every: int = None, endDate: date = None):
+        super().__init__()
+
         if mode is None:
             mode = RepeatType.NEVER
         if every is None:
@@ -72,6 +79,16 @@ class Recurrent:
         self.mode: RepeatType = mode
         self.every: int = every
         self.endDate: date = endDate
+
+    def _convertstate_(self, state_dict, state_version):
+        _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
+
+        if state_version is None:
+            state_version = -1
+
+        state_version = max(state_version, 0)
+
+        return state_dict
 
     def _key(self):
         return (self.mode, self.every, self.endDate)
