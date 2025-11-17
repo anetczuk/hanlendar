@@ -317,6 +317,93 @@ class IcalioEvolutionTest(unittest.TestCase):
             content,
         )
 
+    def test_evolution_appointment_recurrent(self):
+        ## compatibility with evolution
+
+        event_path = get_data_path("evolution_appointment_recurrent.ics")
+        event_ical_content = read_file(event_path)
+
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(0, len(dangling_items))
+
+        # TODO: all unknown props should be handled
+        self.assertDictEqual(
+            {
+                "subcomponents": [
+                    b'BEGIN:VTIMEZONE\r\nTZID:Europe/Warsaw\r\nX-LIC-LOCATION:'
+                    b'Europe/Warsaw\r\nBEGIN:STANDARD\r\nDTSTART:19961027T0300'
+                    b'00\r\nRRULE:FREQ=YEARLY;UNTIL=20361026T010000Z;BYDAY=-1SU;'
+                    b'BYMONTH=10\r\nTZNAME:CET\r\nTZOFFSETFROM:+0200\r\nTZOFFSET'
+                    b'TO:+0100\r\nEND:STANDARD\r\nBEGIN:STANDARD\r\nDTSTART:2037'
+                    b'1025T030000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10'
+                    b'\r\nTZNAME:CET\r\nTZOFFSETFROM:+0200\r\nTZOFFSETTO:+01'
+                    b'00\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:19880327T0'
+                    b'20000\r\nRRULE:FREQ=YEARLY;UNTIL=20370329T010000Z;BYDAY=-1'
+                    b'SU;BYMONTH=3\r\nTZNAME:CEST\r\nTZOFFSETFROM:+0100\r\nTZOFF'
+                    b'SETTO:+0200\r\nEND:DAYLIGHT\r\nBEGIN:DAYLIGHT\r\nDTSTART:2'
+                    b'0380328T020000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH'
+                    b'=3\r\nTZNAME:CEST\r\nTZOFFSETFROM:+0100\r\nTZOFFSETTO:+020'
+                    b'0\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE\r\n',
+                ],
+            },
+            manager.unknownProps,
+        )
+
+        new_item: LocalTask = new_items[0]
+        self.assertEqual(LocalTask, type(new_item))
+        self.assertEqual("852294732a8d21a4af0993fdbbfd09caf6f7eadf", new_item.UID)
+        self.assertEqual(datetime.datetime(2025, 11, 17, 22, 32, 57), new_item.createDateTime.replace(tzinfo=None))
+        self.assertEqual(
+            datetime.datetime(2025, 11, 17, 22, 32, 57),
+            new_item.lastModifiedDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual(datetime.datetime(2025, 12, 5, 9, 0), new_item.startDateTime.replace(tzinfo=None))
+        self.assertEqual(datetime.datetime(2025, 12, 5, 9, 25), new_item.dueDateTime.replace(tzinfo=None))
+        self.assertEqual("evolution appointment recurrent", new_item.summary)
+        self.assertEqual("", new_item.location)
+        self.assertEqual("", new_item.url)
+        self.assertEqual("started 05.12.2025", new_item.description)
+        self.assertEqual(2, new_item.sequence)
+        # TODO: all unknown props should be handled
+        self.assertDictEqual(
+            {
+                'CLASS': b'PUBLIC', 'RRULE': b'FREQ=DAILY;COUNT=5', 'TRANSP': b'OPAQUE'
+            },
+            new_item.unknownProps,
+        )
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251106T211247Z")
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
+        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+        # TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "DTEND;TZID=Europe/Warsaw:20251205T092500",
+            "DTEND:20251205T082500Z",
+            replace_whole_line=True,
+        )
+        # TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "DTSTART;TZID=Europe/Warsaw:20251205T090000",
+            "DTSTART:20251205T080000Z",
+            replace_whole_line=True,
+        )
+
+        self.assertEqual(
+            event_ical_content,
+            content,
+        )
+
     def test_evolution_task_basic(self):
         ## compatibility with evolution
 
@@ -474,6 +561,61 @@ class IcalioEvolutionTest(unittest.TestCase):
             "EXDATE:20251122",
             replace_whole_line=True,
         )
+
+        self.assertEqual(
+            event_ical_content,
+            content,
+        )
+
+    def test_evolution_task_recurrent_completed(self):
+        ## compatibility with evolution
+
+        event_path = get_data_path("evolution_task_recurrent_completed.ics")
+        event_ical_content = read_file(event_path)
+
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(0, len(dangling_items))
+
+        self.assertDictEqual({}, manager.unknownProps)
+
+        new_item: LocalToDo = new_items[0]
+        self.assertEqual(LocalToDo, type(new_item))
+        self.assertEqual("f69520b625348c108feb96b2815247ed5dff8600", new_item.UID)
+        self.assertEqual(datetime.datetime(2025, 11, 17, 22, 0, 26), new_item.createDateTime.replace(tzinfo=None))
+        self.assertEqual(
+            datetime.datetime(2025, 11, 17, 22, 2, 4),
+            new_item.lastModifiedDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual("evolution recurrent task", new_item.summary)
+        self.assertEqual("", new_item.location)
+        self.assertEqual("", new_item.url)
+        self.assertEqual("completed twice, first started 5.12.2025", new_item.description)
+        self.assertEqual(3, new_item.sequence)
+        # TODO: all unknown props should be handled
+        self.assertDictEqual(
+            {
+                "CLASS": b"PUBLIC",
+                "DTSTART": b"20260201",
+                "DUE": b"20260202",
+                "PERCENT-COMPLETE": b"50",
+                "RRULE": b"FREQ=MONTHLY;BYMONTHDAY=1",
+                'STATUS': b'IN-PROCESS',
+            },
+            new_item.unknownProps,
+        )
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251108T000146Z")
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
+        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
 
         self.assertEqual(
             event_ical_content,
