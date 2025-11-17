@@ -63,7 +63,7 @@ class RenamingUnpicklerTest(unittest.TestCase):
         self.assertTrue("_field" in testObject.__dict__)
         self.assertTrue("field" not in testObject.__dict__)
 
-    def test_findName_callable(self):
+    def test_find_name_callable(self):
         def mapper_function(module, name):
             name_map = {"aaa": "bbb"}
             return (name_map.get(module, module), name)
@@ -71,12 +71,12 @@ class RenamingUnpicklerTest(unittest.TestCase):
         file = FileMock()
         unpicker = persist.RenamingUnpickler(file, module_mapper=mapper_function)
 
-        module, name = unpicker.findName("aaa", "xxx")
+        module, name = unpicker.find_name("aaa", "xxx")
 
         self.assertEqual(module, "bbb")
         self.assertEqual(name, "xxx")
 
-    def test_findName_object(self):
+    def test_find_name_object(self):
         class MapperClass:
             def __call__(self, module, name):
                 name_map = {"aaa": "bbb"}
@@ -87,7 +87,7 @@ class RenamingUnpicklerTest(unittest.TestCase):
         file = FileMock()
         unpicker = persist.RenamingUnpickler(file, module_mapper=mapper)
 
-        module, name = unpicker.findName("aaa", "xxx")
+        module, name = unpicker.find_name("aaa", "xxx")
 
         self.assertEqual(module, "bbb")
         self.assertEqual(name, "xxx")

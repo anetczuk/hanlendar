@@ -22,6 +22,7 @@
 #
 
 import logging
+from typing import Any
 
 import os
 import io
@@ -40,11 +41,11 @@ class RenamingUnpickler(pickle.Unpickler):
         self.module_mapper = module_mapper
 
     def find_class(self, module, name):
-        moduleName, itemName = self.findName(module, name)
+        moduleName, itemName = self.find_name(module, name)
         #         _LOGGER.info( "unpicking module: %s %s %s", module, name, moduleName )
         return super().find_class(moduleName, itemName)
 
-    def findName(self, module, name):
+    def find_name(self, module, name):
         if self.module_mapper is None:
             return (module, name)
 
@@ -227,6 +228,17 @@ def read_file_bytes(file_path):
 
 
 class Versionable:
+    def _convertstate_(self, state_dict, state_version) -> dict[str, Any]:
+        """Convert state between versions.
+
+        This method is intended to be overriden.
+        Method should return modified/updated state of object based on 'state_dict' and 'state_version'.
+        """
+        # pylint: disable=E1101,C0301
+        _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)  # type: ignore[attr-defined]
+        # pylint: disable=W0201
+        return state_dict
+
     def __getstate__(self):
         """Get object's state."""
         if not hasattr(self, "_class_version"):
@@ -243,15 +255,12 @@ class Versionable:
             # pylint: disable=W0201
             self.__dict__ = dict_
         else:
-            self._convertstate_(dict_, version_present_in_pickle)
-
-    def _convertstate_(self, dict_, dict_version_):
-        # pylint: disable=E1101,C0301
-        _LOGGER.info("converting object from version %s to %s", dict_version_, self._class_version)  # type: ignore[attr-defined]
-        # pylint: disable=W0201
-        self.__dict__ = dict_
+            state_dict = self._convertstate_(dict_, version_present_in_pickle)
+            if state_dict is None:
+                state_dict = dict_
+            self.__dict__ = state_dict
 
 
 #     @abc.abstractmethod
-#     def _convertstate_(self, dict_, dict_version_ ):
+#     def _convertstate_(self, state_dict, dict_version_ ):
 #         raise NotImplementedError('You need to define this method in derived class!')

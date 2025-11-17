@@ -75,57 +75,56 @@ class LocalToDo(Item, persist.Versionable):
         ## unknown icalendar properties
         self._unknown_props: dict[Any, Any] = None
 
-    def _convertstate_(self, dict_, dict_version_):
-        _LOGGER.info("converting object from version %s to %s", dict_version_, self._class_version)
+    def _convertstate_(self, state_dict, state_version):
+        _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
 
-        if dict_version_ is None:
-            dict_version_ = -1
+        if state_version is None:
+            state_version = -1
 
-        ## set of conditions converting dict_ to recent version
-        if dict_version_ < 0:
+        ## set of conditions converting state_dict to recent version
+        if state_version < 0:
             ## initialize subtodos field
-            dict_["subtodos"] = None
-            dict_version_ = 0
+            state_dict["subtodos"] = None
+            state_version = 0
 
-        if dict_version_ == 0:
+        if state_version == 0:
             ## base class extracted, "subtodos" renamed to "subitems"
-            dict_["subitems"] = dict_["subtodos"]
-            dict_.pop("subtodos", None)
-            dict_version_ += 1
+            state_dict["subitems"] = state_dict["subtodos"]
+            state_dict.pop("subtodos", None)
+            state_version += 1
 
-        if dict_version_ == 1:
+        if state_version == 1:
             ## rename fields
-            dict_["_title"] = dict_.pop("title", "")
-            dict_["_description"] = dict_.pop("description", "")
-            dict_["_priority"] = dict_.pop("priority", 10)
-            dict_version_ += 1
+            state_dict["_title"] = state_dict.pop("title", "")
+            state_dict["_description"] = state_dict.pop("description", "")
+            state_dict["_priority"] = state_dict.pop("priority", 10)
+            state_version += 1
 
-        if dict_version_ == 2:
+        if state_version == 2:
             ## rescale priority
-            priority = dict_.pop("_priority", 10)
-            dict_["_priority"] = int(priority / 2.0)
-            dict_version_ += 1
+            priority = state_dict.pop("_priority", 10)
+            state_dict["_priority"] = int(priority / 2.0)
+            state_version += 1
 
-        if dict_version_ == 3:
-            dict_["_UID"] = generate_uid()
-            dict_version_ += 1
+        if state_version == 3:
+            state_dict["_UID"] = generate_uid()
+            state_version += 1
 
-        if dict_version_ == 4:
-            dict_["_createDate"] = datetime.datetime.now(datetime.timezone.utc)
-            dict_version_ += 1
+        if state_version == 4:
+            state_dict["_createDate"] = datetime.datetime.now(datetime.timezone.utc)
+            state_version += 1
 
-        if dict_version_ == 5:
-            dict_["_location"] = ""
-            dict_["_url"] = ""
-            dict_["_sequence"] = 0
-            dict_version_ += 1
+        if state_version == 5:
+            state_dict["_location"] = ""
+            state_dict["_url"] = ""
+            state_dict["_sequence"] = 0
+            state_version += 1
 
-        if dict_version_ == 6:
-            dict_["_unknown_props"] = None
-            dict_version_ += 1
+        if state_version == 6:
+            state_dict["_unknown_props"] = None
+            state_version += 1
 
-        # pylint: disable=W0201
-        self.__dict__ = dict_
+        return state_dict
 
     def __str__(self):
         subLen = 0

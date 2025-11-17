@@ -456,80 +456,80 @@ class LocalTask(Task, persist.Versionable):
         self._unknown_props: dict[Any, Any] = None
 
     # ruff: noqa: PLR0912
-    def _convertstate_(self, dict_, dict_version_):  # pylint: disable=R0915
-        _LOGGER.info("converting object from version %s to %s", dict_version_, self._class_version)
+    def _convertstate_(self, state_dict, state_version):  # pylint: disable=R0915
+        _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
 
-        if dict_version_ is None:
-            dict_version_ = -1
+        if state_version is None:
+            state_version = -1
 
-        dict_version_ = max(dict_version_, 0)
+        state_version = max(state_version, 0)
 
-        if dict_version_ == 0:
+        if state_version == 0:
             ## replace _recurrentStartDate and _recurrentDueDate with _recurrentOffset
-            recurrence = dict_["_recurrence"]
+            recurrence = state_dict["_recurrence"]
             if recurrence is not None:
-                dueDate = dict_["_dueDate"].date()
-                targetDueDate = dict_["_recurrentDueDate"].date()
+                dueDate = state_dict["_dueDate"].date()
+                targetDueDate = state_dict["_recurrentDueDate"].date()
                 recurrentOffset = recurrence.findRecurrentOffset(dueDate, targetDueDate)
-                dict_["_recurrentOffset"] = recurrentOffset
+                state_dict["_recurrentOffset"] = recurrentOffset
             else:
                 ## set default value
-                dict_["_recurrentOffset"] = 0
-            dict_version_ += 1
+                state_dict["_recurrentOffset"] = 0
+            state_version += 1
 
-        if dict_version_ == 1:
+        if state_version == 1:
             ## add field
-            dict_["subitems"] = None
-            dict_version_ += 1
+            state_dict["subitems"] = None
+            state_version += 1
 
-        if dict_version_ == 2:
+        if state_version == 2:
             ## rename fields
-            dict_["_title"] = dict_.pop("title", "")
-            dict_["_description"] = dict_.pop("description", "")
-            dict_["_priority"] = dict_.pop("priority", 10)
-            dict_version_ += 1
+            state_dict["_title"] = state_dict.pop("title", "")
+            state_dict["_description"] = state_dict.pop("description", "")
+            state_dict["_priority"] = state_dict.pop("priority", 10)
+            state_version += 1
 
-        if dict_version_ == 3:
+        if state_version == 3:
             ## rename fields
-            dict_["_reminderList"] = dict_.pop("reminderList", None)
-            dict_version_ += 1
+            state_dict["_reminderList"] = state_dict.pop("reminderList", None)
+            state_version += 1
 
-        if dict_version_ == 4:
+        if state_version == 4:
             ## rescale priority
-            priority = dict_.pop("_priority", 10)
-            dict_["_priority"] = int(priority / 2.0)
-            dict_version_ += 1
+            priority = state_dict.pop("_priority", 10)
+            state_dict["_priority"] = int(priority / 2.0)
+            state_version += 1
 
-        if dict_version_ == 5:
-            dict_["_UID"] = generate_uid()
-            dict_version_ += 1
+        if state_version == 5:
+            state_dict["_UID"] = generate_uid()
+            state_version += 1
 
-        if dict_version_ == 6:
+        if state_version == 6:
             completed_list = []
-            completed = dict_["_completed"]
-            recurrence = dict_["_recurrence"]
+            completed = state_dict["_completed"]
+            recurrence = state_dict["_recurrence"]
             if recurrence is None:
                 if completed == 100:
                     ## already completed - add start, due date
-                    dt_range = DateTimeRange(dict_["_startDate"], dict_["_dueDate"])
+                    dt_range = DateTimeRange(state_dict["_startDate"], state_dict["_dueDate"])
                     completed_list.append(dt_range)
             else:
-                start_date = dict_["_startDate"]
-                due_date = dict_["_dueDate"]
-                recurrence_offset = dict_["_recurrentOffset"]
+                start_date = state_dict["_startDate"]
+                due_date = state_dict["_dueDate"]
+                recurrence_offset = state_dict["_recurrentOffset"]
                 completed_list = fill_completed_list(start_date, due_date, recurrence_offset, recurrence)
                 if completed_list is None:
-                    dict_["_fix_completedList_"] = (start_date, due_date, recurrence_offset)
+                    state_dict["_fix_completedList_"] = (start_date, due_date, recurrence_offset)
                     completed_list = []
-            dict_["_completedList"] = completed_list
-            dict_version_ += 1
+            state_dict["_completedList"] = completed_list
+            state_version += 1
 
-        if dict_version_ == 7:
-            recurrence = dict_["_recurrence"]
+        if state_version == 7:
+            recurrence = state_dict["_recurrence"]
             if recurrence is not None:
-                start_date = dict_["_startDate"]
-                due_date = dict_["_dueDate"]
-                recurrence_offset = dict_["_recurrentOffset"]
+                start_date = state_dict["_startDate"]
+                due_date = state_dict["_dueDate"]
+                recurrence_offset = state_dict["_recurrentOffset"]
                 next_start_date, next_due_date = update_start_due_date(
                     start_date,
                     due_date,
@@ -537,30 +537,29 @@ class LocalTask(Task, persist.Versionable):
                     recurrence,
                 )
                 if next_due_date is not None:
-                    dict_["_startDate"] = next_start_date
-                    dict_["_dueDate"] = next_due_date
+                    state_dict["_startDate"] = next_start_date
+                    state_dict["_dueDate"] = next_due_date
                 else:
-                    dict_["_fix_recurrentOffset_"] = (start_date, due_date, recurrence_offset)
-            del dict_["_recurrentOffset"]
-            dict_version_ += 1
+                    state_dict["_fix_recurrentOffset_"] = (start_date, due_date, recurrence_offset)
+            del state_dict["_recurrentOffset"]
+            state_version += 1
 
-        if dict_version_ == 8:
-            create_date = dict_["_startDate"]
+        if state_version == 8:
+            create_date = state_dict["_startDate"]
             if create_date is None:
-                create_date = dict_["_dueDate"]
-            dict_["_createDate"] = create_date
-            dict_version_ += 1
+                create_date = state_dict["_dueDate"]
+            state_dict["_createDate"] = create_date
+            state_version += 1
 
-        if dict_version_ == 9:
-            dict_["_location"] = ""
-            dict_["_url"] = ""
-            dict_["_sequence"] = 0
-            dict_["_lastModifiedDate"] = dict_["_createDate"]
-            dict_["_unknown_props"] = None
-            dict_version_ += 1
+        if state_version == 9:
+            state_dict["_location"] = ""
+            state_dict["_url"] = ""
+            state_dict["_sequence"] = 0
+            state_dict["_lastModifiedDate"] = state_dict["_createDate"]
+            state_dict["_unknown_props"] = None
+            state_version += 1
 
-        # pylint: disable=W0201
-        self.__dict__ = dict_
+        return state_dict
 
     ## overrided
     def getParent(self):
