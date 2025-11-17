@@ -50,7 +50,7 @@ class IcalioOneCalendarTest(unittest.TestCase):
         pass
 
     def test_onecalendar_item_all_day(self):
-        ## compatibility with evolution
+        ## compatibility with onecalendar
 
         event_path = get_data_path("onecalendar_item_all_day.ics")
         event_ical_content = read_file(event_path)
@@ -103,7 +103,7 @@ class IcalioOneCalendarTest(unittest.TestCase):
         )
 
     def test_onecalendar_item_reminder(self):
-        ## compatibility with evolution
+        ## compatibility with onecalendar
 
         event_path = get_data_path("onecalendar_item_reminder.ics")
         event_ical_content = read_file(event_path)

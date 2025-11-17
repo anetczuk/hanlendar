@@ -417,3 +417,65 @@ class IcalioEvolutionTest(unittest.TestCase):
             event_ical_content,
             content,
         )
+
+    def test_evolution_task_recurrent(self):
+        ## compatibility with evolution
+
+        event_path = get_data_path("evolution_task_recurrent.ics")
+        event_ical_content = read_file(event_path)
+
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(0, len(dangling_items))
+
+        self.assertDictEqual({}, manager.unknownProps)
+
+        new_item: LocalToDo = new_items[0]
+        self.assertEqual(LocalToDo, type(new_item))
+        self.assertEqual("b5ca5750aae3021469829d2e8dae3d761030c0f4", new_item.UID)
+        self.assertEqual(datetime.datetime(2025, 11, 17, 17, 39, 19), new_item.createDateTime.replace(tzinfo=None))
+        self.assertEqual(
+            datetime.datetime(2025, 11, 17, 17, 39, 19),
+            new_item.lastModifiedDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual("evolution task repeated 1", new_item.summary)
+        self.assertEqual("", new_item.location)
+        self.assertEqual("", new_item.url)
+        self.assertEqual("", new_item.description)
+        self.assertEqual(1, new_item.sequence)
+        # TODO: all unknown props should be handled
+        self.assertDictEqual(
+            {
+                "CLASS": b"PUBLIC",
+                "DTSTART": b"20251120",
+                "DUE": b"20251124",
+                "EXDATE": b"20251122",  ## exception date when repeated
+                "PERCENT-COMPLETE": b"0",
+                "RRULE": b"FREQ=WEEKLY;BYDAY=MO,WE,TH",
+            },
+            new_item.unknownProps,
+        )
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251108T000146Z")
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
+        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+        # TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "EXDATE;VALUE=DATE:20251122",
+            "EXDATE:20251122",
+            replace_whole_line=True,
+        )
+
+        self.assertEqual(
+            event_ical_content,
+            content,
+        )
