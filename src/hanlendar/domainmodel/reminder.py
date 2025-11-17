@@ -26,6 +26,7 @@ from typing import Any
 
 from enum import Enum, unique
 from datetime import datetime, timedelta
+from hanlendar import persist
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,9 +70,15 @@ class Notification:
         return notification.notifyTime
 
 
-class Reminder:
+class Reminder(persist.Versionable):
+
+    ##  0: add versioning
+    ##  1: add 'action', 'description', 'related' and 'unknownProps' fields
+    _class_version = 1
 
     def __init__(self, days=None, timeOffset: timedelta = None, direction=None):
+        super().__init__()
+
         self.timeOffset: timedelta = timeOffset
         self.direction: RemainderDirectionType = direction  ## not used?
         if days is not None:
@@ -84,6 +91,23 @@ class Reminder:
 
         ## unknown icalendar properties
         self.unknownProps: dict[Any, Any] = None
+
+    def _convertstate_(self, state_dict, state_version):
+        _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
+
+        if state_version is None:
+            state_version = -1
+
+        state_version = max(state_version, 0)
+
+        if state_version == 0:
+            state_dict["action"] = None
+            state_dict["description"] = None
+            state_dict["related"] = None
+            state_dict["unknownProps"] = None
+            state_version += 1
+
+        return state_dict
 
     def get_action(self) -> str:
         if self.action is None:
