@@ -62,10 +62,20 @@ class RepeatType(Enum):
         return -1
 
 
+@unique
+class RepeatUntilMode(Enum):
+    FOREVER = auto()
+    OCCURENCES = auto()
+    UNTIL_DATE = auto()
+
+
 class Recurrent(persist.Versionable):
 
     ##  0: add versioning
-    _class_version = 0
+    ##  1: added 'exception_dates', 'occurences', 'occurenceMode'
+    ##  2: do nothing
+    ##  3: added 'weekday', 'monthweek', 'monthday', 'month'
+    _class_version = 3
 
     def __init__(self, mode: RepeatType = None, every: int = None, endDate: date = None):
         super().__init__()
@@ -76,9 +86,18 @@ class Recurrent(persist.Versionable):
             every = 0
         every = max(every, 0)
 
-        self.mode: RepeatType = mode
-        self.every: int = every
-        self.endDate: date = endDate
+        self.mode: RepeatType = mode        ## FREQ, list
+        self.every: int = every             ## INTERVAL
+        self.weekday: list[int] = None      ## for WEEKLY and MONTHLY, indicates days of week
+        self.monthweek: list[int] = None    ## for MONTHLY, indicates weekday in month (e.g second Sunday or last Monday), 0 means Monday
+        self.monthday: list[int] = None     ## for MONTHLY, indicates day of month, eg. 1st, 12nd, 24th, 1 means first day of month
+        self.month: list[int] = None        ## for YEARLY, indicates month of year, eg. 1st, 2nd, 6th, 1 means January
+
+        self.occurenceMode: RepeatUntilMode = None      ## None means "forever"
+        self.occurences: int = None                     ## COUNT (number of occurrences of item)
+        self.endDate: date = endDate                    ## UNTIL
+
+        self.exception_dates: list[datetime.date] = []
 
     def _convertstate_(self, state_dict, state_version):
         _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
@@ -87,6 +106,25 @@ class Recurrent(persist.Versionable):
             state_version = -1
 
         state_version = max(state_version, 0)
+
+        if state_version == 0:
+            state_dict["exception_dates"] = None
+            state_dict["occurenceMode"] = None
+            state_dict["occurences"] = None
+            if state_dict["endDate"] is not None:
+                state_dict["occurenceMode"] = RepeatUntilMode.UNTIL_DATE
+            state_version += 1
+
+        if state_version == 1:
+            ## do nothing
+            state_version += 1
+
+        if state_version == 2:
+            state_dict["weekday"] = None
+            state_dict["monthweek"] = None
+            state_dict["monthday"] = None
+            state_dict["month"] = None
+            state_version += 1
 
         return state_dict
 

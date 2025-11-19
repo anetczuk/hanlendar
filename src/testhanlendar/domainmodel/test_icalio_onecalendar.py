@@ -81,7 +81,6 @@ class IcalioOneCalendarTest(unittest.TestCase):
         # TODO: all unknown props should be handled
         self.assertDictEqual(
             {
-                "RRULE": b"FREQ=WEEKLY;UNTIL=20251130;INTERVAL=1;BYDAY=WE,SA",
                 "X-ONECAL-CATEGORYID": b"107",
             },
             new_item.unknownProps,

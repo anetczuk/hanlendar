@@ -131,8 +131,6 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertDictEqual(
             {
                 "CLASS": b"PUBLIC",
-                "EXDATE": b"20251106",
-                "RRULE": b"FREQ=DAILY;COUNT=2",
                 "STATUS": b"TENTATIVE",
                 "TRANSP": b"OPAQUE",
             },
@@ -153,6 +151,12 @@ class IcalioEvolutionTest(unittest.TestCase):
             event_ical_content,
             "EXDATE;VALUE=DATE:20251106",
             "EXDATE:20251106",
+            replace_whole_line=True,
+        )
+        event_ical_content = replace_line(
+            event_ical_content,
+            "EXDATE;VALUE=DATE:20251118",
+            "EXDATE:20251118",
             replace_whole_line=True,
         )
 
@@ -196,7 +200,6 @@ class IcalioEvolutionTest(unittest.TestCase):
                 "ATTACH": b"https://google.pl",
                 "CLASS": b"PUBLIC",
                 "COLOR": b"yellow",
-                "RRULE": b"FREQ=DAILY;COUNT=2;INTERVAL=3",
                 "STATUS": b"CANCELLED",
                 "TRANSP": b"OPAQUE",
             },
@@ -370,7 +373,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         # TODO: all unknown props should be handled
         self.assertDictEqual(
             {
-                'CLASS': b'PUBLIC', 'RRULE': b'FREQ=DAILY;COUNT=5', 'TRANSP': b'OPAQUE'
+                'CLASS': b'PUBLIC', 'TRANSP': b'OPAQUE'
             },
             new_item.unknownProps,
         )

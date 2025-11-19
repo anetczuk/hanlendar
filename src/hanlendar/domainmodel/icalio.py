@@ -36,7 +36,7 @@ from icalendar.prop import TypesFactory
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.local.todo import LocalToDo
-from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
+from hanlendar.domainmodel.recurrent import Recurrent, RepeatType, RepeatUntilMode
 from hanlendar.domainmodel.reminder import Reminder, RelatedType
 
 
@@ -135,6 +135,43 @@ def extract_ical(content: str):
 ## =================================================================
 
 
+class PropsDict:
+    
+    def __init__(self):
+        self.props: dict[str, Any] = {}
+    
+    def join(self, props: "PropsDict"):
+        self.props = self.props | props.props
+
+    def add(self, key, value):
+        self.props[key] = value
+
+    def add_prop(self, component, prop_key):
+        prop_item = component.get(prop_key)
+        if prop_item is None:
+            return
+        if isinstance(prop_item, list):
+            data_list = []
+            for item in prop_item:
+                data_list.append( item.to_ical() )
+            self.props[prop_key] = data_list
+        else:                        
+            self.props[prop_key] = prop_item.to_ical()
+
+    def add_props(self, component):
+        for key, val in component.items():
+            if isinstance(val, list):
+                data_list = []
+                for item in val:
+                    data_list.append( item.to_ical() )
+                self.props[key] = data_list
+            else:
+                self.props[key] = val.to_ical()
+
+    def pop(self, key):
+        return self.props.pop(key, None)
+
+
 ##
 ## Translation of task field to ical field
 ##
@@ -224,7 +261,7 @@ class ToDoField(Enum):
     COMPLETED = "x-hanlendar-completedx"
     PRIORITY = "priority"
 
-    GROUP_PARENT = "x-hanlendar-parent"  ## uuid
+    GROUP_PARENT = "x-hanlendar-parent"  ## uuid of parent
 
     @classmethod
     def findByName(cls, name, defaultValue=None):
@@ -246,6 +283,100 @@ class ToDoField(Enum):
 
 
 class TaskSerialization:
+
+    # pylint: disable=R0914
+    @staticmethod
+    def from_ical(component: icalendar.cal.Component, manager):
+        new_items = []
+        dangling_children: list[tuple[Any, Any]] = []
+
+        task: Task = manager.createEmptyTask()
+
+        task.UID = get_ical_str(component, TaskField.UID)
+
+        summary = get_ical_str(component, TaskField.SUMMARY)
+        if summary is not None:
+            task.title = f"{summary}"
+
+        location = component.get(TaskField.LOCATION.value)
+        if location is not None:
+            task.location = f"{location}"
+
+        url = component.get(TaskField.URL.value)
+        if url is not None:
+            task.url = f"{url}"
+
+        task.description = get_ical_str(component, TaskField.DESCRIPTION)
+        if task.description is None:
+            task.description = ""
+        task.description = task.description.replace("=0D=0A", "\n")
+
+        sequence = component.get(TaskField.SEQUENCE.value)
+        if sequence is not None:
+            task.sequence = int(sequence)
+
+        created_date = get_ical_value_dt(component, TaskField.CREATED)
+        task._createDate = created_date  # type: ignore[attr-defined]
+
+        modified_date = get_ical_value_dt(component, TaskField.LASTMODIFIED)
+        task._lastModifiedDate = modified_date  # type: ignore[attr-defined]
+
+        start_date = get_ical_value_dt(component, TaskField.DTSTART)
+        end_date = get_ical_value_dt(component, TaskField.DTEND)
+
+        if start_date == end_date:
+            start_date = None
+        task.setOccurrence(start_date, end_date)
+
+        task.completed = get_ical_value_int(component, TaskField.COMPLETED, 0)
+        task.priority = get_ical_value_int(component, TaskField.PRIORITY, 5)
+
+        ## restore reminders
+        reminders_list, unhandled_alarms = ReminderSerialization.from_ical(component)
+        for reminder in reminders_list:
+            task.addReminder(reminder)
+        if task.reminderList is None:
+            task.reminderList = []
+
+        ## restore recurrence
+        task.recurrence, unhandled_recurrent = RecurrentSerialization.from_ical(component)
+
+        unhandled_props = PropsDict()
+        unhandled_props.add_props(component)
+        unhandled_props.pop("RRULE")
+        unhandled_props.pop("RDATE")
+        unhandled_props.pop("EXDATE")        
+        for item in TaskField:
+            prop_name = item.value.upper()
+            unhandled_props.pop(prop_name)
+        unhandled_props.join(unhandled_recurrent)
+        unhandled_subs = unhandled_alarms
+        for subitem in component.subcomponents:
+            if subitem.name == "VALARM":
+                continue
+            ical_item = subitem.to_ical()
+            unhandled_subs.append(ical_item)
+        if unhandled_subs:
+            unhandled_props.add(UNHANDLED_SUBS_KEY, unhandled_subs)
+        task._unknown_props = unhandled_props.props  # type: ignore[attr-defined]
+
+        parentUID = get_ical_str(component, TaskField.GROUP_PARENT)
+        if parentUID is None:
+            ## regular task
+            addedTask = manager.addTask(task)
+            new_items.append(addedTask)
+            return (new_items, dangling_children)
+
+        taskParent: Task = manager.findTaskByUID(parentUID)
+        if taskParent is not None:
+            ## add as subitem
+            taskParent.addSubItem(task)
+            new_items.append(task)
+        else:
+            ## invalid case -- parent still not added
+            dangling_children.append((task, parentUID))
+
+        return (new_items, dangling_children)
 
     @staticmethod
     def to_ical(task: Task) -> icalendar.cal.Event:
@@ -304,12 +435,6 @@ class TaskSerialization:
         if taskParent is not None:
             ievent.add(TaskField.GROUP_PARENT.value, taskParent.UID)
 
-        recurrence = task.recurrence
-        if recurrence is not None:
-            ievent[RecurrentField.MODE.value] = str(recurrence.mode.name)
-            ievent[RecurrentField.STEP.value] = str(recurrence.every)
-            ievent[RecurrentField.ENDDATE.value] = str(recurrence.endDate)
-
         ## store reminders
         reminderList = task.reminderList
         if reminderList is None:
@@ -320,116 +445,92 @@ class TaskSerialization:
                 continue
             ievent.add_component(subcomponent)
 
+        ## store recurrent
+        RecurrentSerialization.to_ical(task.recurrence, ievent)
+
         write_unknown_props(ievent, task.unknownProps)
 
         return ievent
 
-    # pylint: disable=R0914
+
+class ToDoSerialization:
+
     @staticmethod
     def from_ical(component: icalendar.cal.Component, manager):
         new_items = []
-        dangling_children: list[tuple[Any, Any]] = []
+        dangling_children: list[Any] = []
 
-        task: Task = manager.createEmptyTask()
+        todo: LocalToDo = manager.createEmptyToDo()
 
-        task.UID = get_ical_str(component, TaskField.UID)
+        todo.UID = get_ical_str(component, ToDoField.UID)
 
-        summary = get_ical_str(component, TaskField.SUMMARY)
+        summary = get_ical_str(component, ToDoField.SUMMARY)
         if summary is not None:
-            task.title = f"{summary}"
+            todo.title = f"{summary}"
 
-        location = component.get(TaskField.LOCATION.value)
+        location = component.get(ToDoField.LOCATION.value)
         if location is not None:
-            task.location = f"{location}"
+            todo.location = f"{location}"
 
-        url = component.get(TaskField.URL.value)
+        url = component.get(ToDoField.URL.value)
         if url is not None:
-            task.url = f"{url}"
+            todo.url = f"{url}"
 
-        task.description = get_ical_str(component, TaskField.DESCRIPTION)
-        if task.description is None:
-            task.description = ""
-        task.description = task.description.replace("=0D=0A", "\n")
+        todo.description = get_ical_str(component, ToDoField.DESCRIPTION)
+        if todo.description is None:
+            todo.description = ""
+        todo.description = todo.description.replace("=0D=0A", "\n")
 
-        sequence = component.get(TaskField.SEQUENCE.value)
+        sequence = component.get(ToDoField.SEQUENCE.value)
         if sequence is not None:
-            task.sequence = int(sequence)
+            todo.sequence = int(sequence)
 
-        created_date = get_ical_value_dt(component, TaskField.CREATED)
-        task._createDate = created_date  # type: ignore[attr-defined]
+        created_date = get_ical_value_dt(component, ToDoField.CREATED)
+        todo._createDate = created_date
 
-        modified_date = get_ical_value_dt(component, TaskField.LASTMODIFIED)
-        task._lastModifiedDate = modified_date  # type: ignore[attr-defined]
+        modified_date = get_ical_value_dt(component, ToDoField.LASTMODIFIED)
+        todo._lastModifiedDate = modified_date
 
-        start_date = get_ical_value_dt(component, TaskField.DTSTART)
-        end_date = get_ical_value_dt(component, TaskField.DTEND)
+        todo.completed = get_ical_value_int(component, ToDoField.COMPLETED, 0)
+        todo.priority = get_ical_value_int(component, ToDoField.PRIORITY, 5)
 
-        if start_date == end_date:
-            start_date = None
-        task.setOccurrence(start_date, end_date)
+        # ## restore reminders
+        # reminders_list = ReminderSerialization.from_ical(component)
+        # for reminder in reminders_list:
+        #     task.addReminder(reminder)
+        # if task.reminderList is None:
+        #     task.reminderList = []
 
-        task.completed = get_ical_value_int(component, TaskField.COMPLETED, 0)
-        task.priority = get_ical_value_int(component, TaskField.PRIORITY, 5)
-
-        try:
-            recurrMode = component.get(RecurrentField.MODE.value)
-            recurrMode = RepeatType.findByName(recurrMode)
-
-            recurrStep = component.get(RecurrentField.STEP.value)
-            recurrStep = int(recurrStep)
-
-            recurrEnd = component.get(RecurrentField.ENDDATE.value)
-            recurrEnd = convert_to_date(recurrEnd)
-
-            task.recurrence = Recurrent(recurrMode, recurrStep, recurrEnd)
-
-        # ruff: noqa: S110
-        except Exception:  # pylint: disable=W0718 # nosec
-            pass
-
-        ## restore reminders
-        reminders_list, unhandled_alarms = ReminderSerialization.from_ical(component)
-        for reminder in reminders_list:
-            task.addReminder(reminder)
-        if task.reminderList is None:
-            task.reminderList = []
-
-        unhandled_props = {}
-        for key, val in component.items():
-            unhandled_props[key] = val.to_ical()
-        for item in TaskField:
+        unhandled_props = PropsDict()
+        unhandled_props.add_props(component)
+        for item in ToDoField:
             prop_name = item.value.upper()
-            unhandled_props.pop(prop_name, None)
-        unhandled_subs = unhandled_alarms
+            unhandled_props.pop(prop_name)
+        unhandled_subs = []
         for subitem in component.subcomponents:
-            if subitem.name == "VALARM":
-                continue
             ical_item = subitem.to_ical()
             unhandled_subs.append(ical_item)
         if unhandled_subs:
             unhandled_props[UNHANDLED_SUBS_KEY] = unhandled_subs
-        task._unknown_props = unhandled_props  # type: ignore[attr-defined]
+        todo._unknown_props = unhandled_props.props
 
-        parentUID = get_ical_str(component, TaskField.GROUP_PARENT)
+        parentUID = get_ical_str(component, ToDoField.GROUP_PARENT)
         if parentUID is None:
-            ## regular task
-            addedTask = manager.addTask(task)
-            new_items.append(addedTask)
+            ## regular todo
+            added_item = manager.addToDo(todo)
+            new_items.append(added_item)
             return (new_items, dangling_children)
 
-        taskParent: Task = manager.findTaskByUID(parentUID)
+        taskParent: LocalToDo = manager.findTaskByUID(parentUID)
         if taskParent is not None:
             ## add as subitem
-            taskParent.addSubItem(task)
-            new_items.append(task)
+            taskParent.addSubItem(todo)
+            new_items.append(todo)
         else:
             ## invalid case -- parent still not added
-            dangling_children.append((task, parentUID))
+            dangling_children.append((todo, parentUID))
 
         return (new_items, dangling_children)
-
-
-class ToDoSerialization:
 
     @staticmethod
     def to_ical(todo: LocalToDo) -> icalendar.cal.Todo:
@@ -485,109 +586,10 @@ class ToDoSerialization:
 
         return itodo
 
-    @staticmethod
-    def from_ical(component: icalendar.cal.Component, manager):
-        new_items = []
-        dangling_children: list[Any] = []
-
-        todo: LocalToDo = manager.createEmptyToDo()
-
-        todo.UID = get_ical_str(component, ToDoField.UID)
-
-        summary = get_ical_str(component, ToDoField.SUMMARY)
-        if summary is not None:
-            todo.title = f"{summary}"
-
-        location = component.get(ToDoField.LOCATION.value)
-        if location is not None:
-            todo.location = f"{location}"
-
-        url = component.get(ToDoField.URL.value)
-        if url is not None:
-            todo.url = f"{url}"
-
-        todo.description = get_ical_str(component, ToDoField.DESCRIPTION)
-        if todo.description is None:
-            todo.description = ""
-        todo.description = todo.description.replace("=0D=0A", "\n")
-
-        sequence = component.get(ToDoField.SEQUENCE.value)
-        if sequence is not None:
-            todo.sequence = int(sequence)
-
-        created_date = get_ical_value_dt(component, ToDoField.CREATED)
-        todo._createDate = created_date
-
-        modified_date = get_ical_value_dt(component, ToDoField.LASTMODIFIED)
-        todo._lastModifiedDate = modified_date
-
-        todo.completed = get_ical_value_int(component, ToDoField.COMPLETED, 0)
-        todo.priority = get_ical_value_int(component, ToDoField.PRIORITY, 5)
-
-        # ## restore reminders
-        # reminders_list = ReminderSerialization.from_ical(component)
-        # for reminder in reminders_list:
-        #     task.addReminder(reminder)
-        # if task.reminderList is None:
-        #     task.reminderList = []
-
-        unhandled_props = {}
-        for key, val in component.items():
-            unhandled_props[key] = val.to_ical()
-        for item in ToDoField:
-            prop_name = item.value.upper()
-            unhandled_props.pop(prop_name, None)
-        unhandled_subs = []
-        for subitem in component.subcomponents:
-            ical_item = subitem.to_ical()
-            unhandled_subs.append(ical_item)
-        if unhandled_subs:
-            unhandled_props[UNHANDLED_SUBS_KEY] = unhandled_subs
-        todo._unknown_props = unhandled_props
-
-        parentUID = get_ical_str(component, ToDoField.GROUP_PARENT)
-        if parentUID is None:
-            ## regular todo
-            added_item = manager.addToDo(todo)
-            new_items.append(added_item)
-            return (new_items, dangling_children)
-
-        taskParent: LocalToDo = manager.findTaskByUID(parentUID)
-        if taskParent is not None:
-            ## add as subitem
-            taskParent.addSubItem(todo)
-            new_items.append(todo)
-        else:
-            ## invalid case -- parent still not added
-            dangling_children.append((todo, parentUID))
-
-        return (new_items, dangling_children)
-
 
 ## info:
 ## https://icalendar.org/iCalendar-RFC-5545/3-6-6-alarm-component.html
 class ReminderSerialization:
-
-    @staticmethod
-    def to_ical(reminder: Reminder) -> icalendar.cal.Alarm:
-        action = reminder.get_action()
-        if action in ("DISPLAY", "AUDIO", "PROCEDURE"):
-            ialarm: icalendar.cal.Alarm = icalendar.cal.Alarm()
-
-            ialarm["ACTION"] = action
-            description = reminder.get_description()
-            if description:
-                ialarm["DESCRIPTION"] = reminder.get_description()
-            trigger_props = None
-            if reminder.related:
-                trigger_props = {"RELATED": reminder.get_related_value()}
-            ialarm.add("TRIGGER", reminder.timeOffset, parameters=trigger_props)
-
-            write_unknown_props(ialarm, reminder.unknownProps)
-            return ialarm
-
-        _LOGGER.warning("unhandled action: %s", action)
-        return None
 
     @staticmethod
     def from_ical(component: icalendar.cal.Component) -> tuple[list[Reminder], list[Any]]:
@@ -670,6 +672,270 @@ class ReminderSerialization:
     def from_procedure(component: icalendar.cal.Alarm) -> Reminder:
         return ReminderSerialization.from_display(component)
 
+    @staticmethod
+    def to_ical(reminder: Reminder) -> icalendar.cal.Alarm:
+        action = reminder.get_action()
+        if action in ("DISPLAY", "AUDIO", "PROCEDURE"):
+            ialarm: icalendar.cal.Alarm = icalendar.cal.Alarm()
+
+            ialarm["ACTION"] = action
+            description = reminder.get_description()
+            if description:
+                ialarm["DESCRIPTION"] = reminder.get_description()
+            trigger_props = None
+            if reminder.related:
+                trigger_props = {"RELATED": reminder.get_related_value()}
+            ialarm.add("TRIGGER", reminder.timeOffset, parameters=trigger_props)
+
+            write_unknown_props(ialarm, reminder.unknownProps)
+            return ialarm
+
+        _LOGGER.warning("unhandled action: %s", action)
+        return None
+
+
+## info:
+## https://icalendar.org/iCalendar-RFC-5545/3-8-5-3-recurrence-rule.html
+class RecurrentSerialization:
+
+    @staticmethod
+    def from_ical(component: icalendar.cal.Component) -> tuple[Recurrent, PropsDict]:
+        rrule: icalendar.prop.vRecur = component.get("RRULE")
+
+        if rrule is None:           
+            return RecurrentSerialization.get_unhandled(component)
+
+        recurrence = Recurrent()
+        prop_freq_list = rrule.get("FREQ")
+        if not prop_freq_list:
+            return RecurrentSerialization.get_unhandled(component)
+        if len(prop_freq_list) > 1:
+            _LOGGER.warning("unable to handle RRULE: %s", rrule)
+            return RecurrentSerialization.get_unhandled(component)
+
+        prop_freq = prop_freq_list[0]
+        freq_dict = {
+            "DAILY": RepeatType.DAILY,
+            "WEEKLY": RepeatType.WEEKLY,
+            "MONTHLY": RepeatType.MONTHLY,
+            "YEARLY": RepeatType.YEARLY,
+        }
+        recurrence.mode = freq_dict.get(prop_freq, RepeatType.NEVER)
+
+        recurrence.occurenceMode = RepeatUntilMode.FOREVER
+        prop_count_list = rrule.get("COUNT", [])
+        if prop_count_list:
+            if len(prop_count_list) > 1:
+                _LOGGER.warning("unable to handle RRULE: %s", rrule)
+                return RecurrentSerialization.get_unhandled(component)
+            recurrence.occurenceMode = RepeatUntilMode.OCCURENCES
+            recurrence.occurences = prop_count_list[0]
+            recurrence.endDate = None
+
+        prop_until_list = rrule.get("UNTIL", [])
+        if prop_until_list:
+            if len(prop_until_list) > 1:
+                _LOGGER.warning("unable to handle RRULE: %s", rrule)
+                return RecurrentSerialization.get_unhandled(component)
+            recurrence.occurenceMode = RepeatUntilMode.UNTIL_DATE
+            recurrence.occurences = None
+            recurrence.endDate = prop_until_list[0]
+
+        prop_interval_list = rrule.get("INTERVAL", [])
+        if prop_interval_list:
+            if len(prop_interval_list) > 1:
+                _LOGGER.warning("unable to handle RRULE: %s", rrule)
+                return RecurrentSerialization.get_unhandled(component)
+            recurrence.every = prop_interval_list[0]
+
+        if recurrence.mode == RepeatType.WEEKLY:
+            ## WEEKLY: BYDAY=SU,MO,TU,WE,TH,FR,SA
+            prop_byday_list = rrule.get("BYDAY")
+            recurrence.weekday = convert_weekday_to_index(prop_byday_list)
+
+        elif recurrence.mode == RepeatType.MONTHLY:
+            prop_byday_list = rrule.get("BYDAY")
+            prop_bymonthday_list = rrule.get("BYMONTHDAY")
+            if prop_byday_list and prop_bymonthday_list:
+                _LOGGER.warning("invalid RRULE: %s", rrule)
+                return RecurrentSerialization.get_unhandled(component)
+            ## MONTHLY: BYDAY=1SU,1WE,2SU,3FR,4TU,5TU,-1WE
+            weekday_list, monthday_list = convert_monthday_to_index(prop_byday_list)
+            recurrence.weekday = weekday_list
+            recurrence.monthweek = monthday_list
+            ## MONTHLY: BYMONTHDAY=7,30        ## if there is no day in month, then no event (eg. there is no 30th of February)
+            recurrence.monthday = [ int(day) for day in prop_bymonthday_list ]
+
+        elif recurrence.mode == RepeatType.YEARLY:
+            prop_bymonth_list = rrule.get("BYMONTH")
+            prop_byday_list = rrule.get("BYDAY")
+            prop_bymonthday_list = rrule.get("BYMONTHDAY")
+            if prop_byday_list and prop_bymonthday_list:
+                _LOGGER.warning("invalid RRULE: %s", rrule)
+                return RecurrentSerialization.get_unhandled(component)
+            ## YEARLY: BYMONTH=11;BYDAY=1SU,1WE,2SU,3FR,4TU,5TU,-1WE
+            recurrence.month = [ int(month) for month in prop_bymonth_list ]
+            weekday_list, monthday_list = convert_monthday_to_index(prop_byday_list)
+            recurrence.weekday = weekday_list
+            recurrence.monthweek = monthday_list
+            ## YEARLY: BYMONTH=11;BYMONTHDAY=7,30
+            recurrence.monthday = [ int(day) for day in prop_bymonthday_list ]
+
+        unhandled_props = PropsDict()
+        
+        rdate = component.get("RDATE")
+        if rdate is not None:
+            #TODO: implement
+            _LOGGER.warning("RDATE is not supported")
+            unhandled_props.add_prop(component, "RDATE")
+
+        exdate = component.get("EXDATE")
+        if exdate is not None:
+            ex_dates = []
+            for item in exdate:
+                ex_dates.extend( item.dts )
+            date_list = [ item.dt for item in ex_dates ]
+            recurrence.exception_dates = date_list
+
+        return (recurrence, unhandled_props)
+
+    @staticmethod
+    def get_unhandled(component: icalendar.cal.Component):
+        unhandled_props = PropsDict()
+        unhandled_props.add_prop(component, "RRULE")
+        unhandled_props.add_prop(component, "RDATE")
+        unhandled_props.add_prop(component, "EXDATE")
+        return (None, unhandled_props)
+
+    @staticmethod
+    def to_ical(recurrence: Recurrent, component: icalendar.cal.Component):
+        if recurrence is None:
+            return
+        
+        rrule = icalendar.prop.vRecur()
+
+        freq_dict = {
+            RepeatType.DAILY: "DAILY",
+            RepeatType.WEEKLY: "WEEKLY",
+            RepeatType.MONTHLY: "MONTHLY",
+            RepeatType.YEARLY: "YEARLY",
+        }
+        freq_mode = freq_dict.get(recurrence.mode)
+        if freq_mode is not None:
+            rrule["FREQ"] = freq_mode
+        else:
+            _LOGGER.warning("unhandled mode: %s", recurrence.mode)
+            return
+
+        if recurrence.occurenceMode is None:
+            if recurrence.endDate is not None:
+                rrule["UNTIL"] = recurrence.endDate
+        elif recurrence.occurenceMode == RepeatUntilMode.FOREVER:
+            ## do nothing
+            pass
+        elif recurrence.occurenceMode == RepeatUntilMode.OCCURENCES:
+            rrule["COUNT"] = recurrence.occurences
+        elif recurrence.occurenceMode == RepeatUntilMode.UNTIL_DATE:
+            rrule["UNTIL"] = recurrence.endDate
+        else:
+            _LOGGER.warning("unhandled occurrence: %s", recurrence.occurenceMode)
+            return
+
+        if recurrence.every > 0:
+            rrule["INTERVAL"] = recurrence.every
+
+        if recurrence.mode == RepeatType.WEEKLY:
+            ## WEEKLY: BYDAY=SU,MO,TU,WE,TH,FR,SA
+            weekday_list = convert_index_to_weekday(recurrence.weekday)
+            rrule["BYDAY"] = weekday_list
+
+        elif recurrence.mode == RepeatType.MONTHLY:
+            if recurrence.weekday and recurrence.monthweek:
+                ## MONTHLY: BYDAY=1SU,1WE,2SU,3FR,4TU,5TU,-1WE
+                weekday_list = convert_index_to_monthday(recurrence.weekday, recurrence.monthweek)
+                rrule["BYDAY"] = weekday_list
+            if recurrence.monthday:
+                ## MONTHLY: BYMONTHDAY=7,30        ## if there is no day in month, then no event (eg. there is no 30th of February)           
+                rrule["BYMONTHDAY"] = ",".join(recurrence.monthday)
+
+        elif recurrence.mode == RepeatType.YEARLY:
+            if recurrence.weekday and recurrence.monthweek:
+                ## YEARLY: BYMONTH=11;BYDAY=1SU,1WE,2SU,3FR,4TU,5TU,-1WE
+                rrule["BYMONTH"] = recurrence.month
+                weekday_list = convert_index_to_monthday(recurrence.weekday, recurrence.monthweek)
+                rrule["BYDAY"] = weekday_list
+            if recurrence.monthday:
+                ## YEARLY: BYMONTH=11;BYMONTHDAY=7,30
+                rrule["BYMONTH"] = recurrence.month
+                rrule["BYMONTHDAY"] = recurrence.monthday
+
+        component.add("RRULE", rrule)
+
+        exdates = list(recurrence.exception_dates)
+        for item in exdates:
+            component.add("EXDATE", item)
+
+
+def convert_weekday_to_index(weekday_list) -> list[int]:
+    weekday_index_dict = {
+        "MO": 0,
+        "TU": 1,
+        "WE": 2,
+        "TH": 3,
+        "FR": 4,
+        "SA": 5,
+        "SU": 6,
+    }
+    ret_list = []
+    for day in weekday_list:
+        index = weekday_index_dict.get(day)
+        if index is None:
+            _LOGGER.warning("unhandled week day: %s", day)
+            continue
+        ret_list.append(index)
+    return ret_list
+
+
+def convert_index_to_weekday(index_list) -> list[str]:
+    weekday_index_dict = {
+        0: "MO",
+        1: "TU",
+        2: "WE",
+        3: "TH",
+        4: "FR",
+        5: "SA",
+        6: "SU",
+    }
+    ret_list = []
+    for index in index_list:
+        day = weekday_index_dict.get(index)
+        if day is None:
+            _LOGGER.warning("unhandled week index: %s", index)
+            continue
+        ret_list.append(day)
+    return ret_list    
+
+
+def convert_monthday_to_index(monthday_list) -> tuple[list[int], list[int]]:
+    ret_weekday_list = []
+    ret_monthday_list = []
+    for day in monthday_list:
+        match = re.match(r"(-?\d+)(.*)", day)
+        number = int(match.group(1))
+        name = match.group(2)
+        day_index = convert_weekday_to_index( [name] )
+        if not day_index:
+            _LOGGER.warning("unhandled month day: %s", day)
+            continue
+        ret_weekday_list.append( day_index[0] )
+        ret_monthday_list.append( number )
+    return (ret_weekday_list, ret_monthday_list)
+
+
+def convert_index_to_monthday(weekday_list, monthday_list) -> list[int]:
+    weekday_names = convert_index_to_weekday(weekday_list)
+    return [f"{day_name}{week_index}" for day_name, week_index in zip(monthday_list, weekday_names)]
+
 
 def write_unknown_props(component, props_dict):
     if not props_dict:
@@ -677,9 +943,15 @@ def write_unknown_props(component, props_dict):
     type_factory = TypesFactory()
     for key, item in props_dict.items():
         if key != UNHANDLED_SUBS_KEY:
-            decoded_item = item.decode("utf-8")
-            desired_item = type_factory.from_ical(key, decoded_item)
-            component.add(key, desired_item)
+            item_list = []
+            if isinstance(item, list):
+                item_list = item
+            else:
+                item_list = [item]                
+            for sub_item in item_list:
+                decoded_item = sub_item.decode("utf-8")
+                desired_item = type_factory.from_ical(key, decoded_item)
+                component.add(key, desired_item)
             continue
 
         ## subcomponents
