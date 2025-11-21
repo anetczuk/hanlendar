@@ -415,6 +415,7 @@ class LocalTask(Task, persist.Versionable):
     ##  8: remove '_recurrentOffset' and use '_startDate' and '_dueDate'
     ##  9: added '_createDate'
     ## 10: added '_location', '_url', '_sequence', '_lastModifiedDate', '_unknown_props'
+    ## 11: added '_status'
     _class_version = 10
 
     def __init__(self, title=""):
@@ -429,6 +430,7 @@ class LocalTask(Task, persist.Versionable):
         self._location = ""
         self._url = ""
         self._description = ""
+        self._status: str = ""  ## TENTATIVE, CONFIRMED, CANCELLED
 
         self._sequence = 0
         self._completed = 0  ## task completion percentage, in range [0..100]
@@ -559,6 +561,10 @@ class LocalTask(Task, persist.Versionable):
             state_dict["_unknown_props"] = None
             state_version += 1
 
+        if state_version == 10:
+            state_dict["_status"] = ""
+            state_version += 1
+
         return state_dict
 
     ## overrided
@@ -627,6 +633,14 @@ class LocalTask(Task, persist.Versionable):
     ## overriden
     def _setDescription(self, value: str):
         self._description = value
+
+    ## overriden
+    def _getStatus(self) -> str:
+        return self._status
+
+    ## overriden
+    def _setStatus(self, value: str):
+        self._status = value
 
     ## overriden
     def _getSequence(self) -> int:

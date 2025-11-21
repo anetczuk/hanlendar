@@ -128,14 +128,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertEqual("", new_item.description)
         self.assertEqual(2, new_item.sequence)
         # TODO: all unknown props should be handled
-        self.assertDictEqual(
-            {
-                "CLASS": b"PUBLIC",
-                "STATUS": b"TENTATIVE",
-                "TRANSP": b"OPAQUE",
-            },
-            new_item.unknownProps,
-        )
+        self.assertDictEqual( { "CLASS": b"PUBLIC", "TRANSP": b"OPAQUE", }, new_item.unknownProps )
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -200,7 +193,6 @@ class IcalioEvolutionTest(unittest.TestCase):
                 "ATTACH": b"https://google.pl",
                 "CLASS": b"PUBLIC",
                 "COLOR": b"yellow",
-                "STATUS": b"CANCELLED",
                 "TRANSP": b"OPAQUE",
             },
             new_item.unknownProps,
@@ -431,7 +423,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertEqual(1, new_item.sequence)
         # TODO: all unknown props should be handled
         self.assertDictEqual(
-            {"CLASS": b"CONFIDENTIAL", "DUE": b"20251122", "PERCENT-COMPLETE": b"45", "STATUS": b"IN-PROCESS"},
+            {"CLASS": b"CONFIDENTIAL", "DUE": b"20251122", "PERCENT-COMPLETE": b"45"},
             new_item.unknownProps,
         )
 
@@ -486,7 +478,6 @@ class IcalioEvolutionTest(unittest.TestCase):
                 "DUE": b"20251116",
                 "ESTIMATED-DURATION": b"P1DT2H3M",
                 "PERCENT-COMPLETE": b"100",
-                "STATUS": b"COMPLETED",
             },
             new_item.unknownProps,
         )
@@ -602,8 +593,7 @@ class IcalioEvolutionTest(unittest.TestCase):
                 "DTSTART": b"20260201",
                 "DUE": b"20260202",
                 "PERCENT-COMPLETE": b"50",
-                "RRULE": b"FREQ=MONTHLY;BYMONTHDAY=1",
-                "STATUS": b"IN-PROCESS",
+                "RRULE": b"FREQ=MONTHLY;BYMONTHDAY=1"
             },
             new_item.unknownProps,
         )

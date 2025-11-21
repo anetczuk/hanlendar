@@ -178,6 +178,7 @@ class TaskField(Enum):
     LOCATION = "location"
     URL = "url"
     DESCRIPTION = "description"
+    STATUS = "status"
 
     DTSTAMP = "dtstamp"  ## create datetime
     DTSTART = "dtstart"
@@ -247,6 +248,7 @@ class ToDoField(Enum):
     LOCATION = "location"
     URL = "url"
     DESCRIPTION = "description"
+    STATUS = "status"
 
     DTSTAMP = "dtstamp"  ## create datetime
     CREATED = "created"
@@ -306,6 +308,10 @@ class TaskSerialization:
         if task.description is None:
             task.description = ""
         task.description = task.description.replace("=0D=0A", "\n")
+
+        task.status = get_ical_str(component, TaskField.STATUS)
+        if task.status is None:
+            task.status = ""
 
         sequence = component.get(TaskField.SEQUENCE.value)
         if sequence is not None:
@@ -394,6 +400,9 @@ class TaskSerialization:
         if task.description:
             ievent.add(TaskField.DESCRIPTION.value, task.description)
 
+        if task.status:
+            ievent.add(TaskField.STATUS.value, task.status)
+
         if task.sequence > 0:
             ievent.add(TaskField.SEQUENCE.value, task.sequence)
 
@@ -477,6 +486,10 @@ class ToDoSerialization:
             todo.description = ""
         todo.description = todo.description.replace("=0D=0A", "\n")
 
+        todo.status = get_ical_str(component, ToDoField.STATUS)
+        if todo.status is None:
+            todo.status = ""
+
         sequence = component.get(ToDoField.SEQUENCE.value)
         if sequence is not None:
             todo.sequence = int(sequence)
@@ -553,6 +566,9 @@ class ToDoSerialization:
 
         if todo.description:
             itodo.add(ToDoField.DESCRIPTION.value, todo.description)
+
+        if todo.status:
+            itodo.add(ToDoField.STATUS.value, todo.status)
 
         if todo.sequence > 0:
             itodo.add(ToDoField.SEQUENCE.value, todo.sequence)

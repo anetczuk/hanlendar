@@ -36,14 +36,15 @@ _LOGGER = logging.getLogger(__name__)
 class LocalToDo(Item, persist.Versionable):
     """ToDo is entity without placement in time."""
 
-    ## 0: add subtodos
-    ## 1: add base class Item
-    ## 2: rename: 'title' to '_title', 'description' to '_description', 'priority' to '_priority'
-    ## 3: rescaled 'priority'
-    ## 4: added 'UID'
-    ## 5: added '_createDate'
-    ## 6: added '_location', '_url', '_sequence', '_lastModifiedDate
-    ## 7: added '_unknown_props'
+    ##  0: add subtodos
+    ##  1: add base class Item
+    ##  2: rename: 'title' to '_title', 'description' to '_description', 'priority' to '_priority'
+    ##  3: rescaled 'priority'
+    ##  4: added 'UID'
+    ##  5: added '_createDate'
+    ##  6: added '_location', '_url', '_sequence', '_lastModifiedDate
+    ##  7: added '_unknown_props'
+    ##  9: added '_status'
     _class_version = 7
 
     def __init__(self, title=""):
@@ -58,6 +59,7 @@ class LocalToDo(Item, persist.Versionable):
         self._location: str = ""
         self._url: str = ""
         self._description: str = ""
+        self._status: str = ""  ## NEEDS-ACTION, COMPLETED, IN-PROCESS, CANCELLED
 
         self._sequence = 0
         self._completed = 0  ## in range [0..100]
@@ -200,6 +202,14 @@ class LocalToDo(Item, persist.Versionable):
     ## overriden
     def _setDescription(self, value: str):
         self._description = value
+
+    ## overriden
+    def _getStatus(self) -> str:
+        return self._status
+
+    ## overriden
+    def _setStatus(self, value: str):
+        self._status = value
 
     ## overriden
     def _getSequence(self) -> int:

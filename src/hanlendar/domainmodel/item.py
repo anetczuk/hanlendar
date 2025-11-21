@@ -188,7 +188,7 @@ class Item:
         raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setDescription(self, value: str):
+    def _setDescription(self, _value: str):
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
@@ -209,12 +209,38 @@ class Item:
     ## ========================================================================
 
     @abc.abstractmethod
+    def _getStatus(self) -> str:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
+    def _setStatus(self, _value: str):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    def getStatus(self) -> str:
+        return self._getStatus()
+
+    def setStatus(self, value: str):
+        self._setStatus(value)
+
+    @property
+    def status(self) -> str:
+        return self.getStatus()
+
+    @status.setter
+    def status(self, value: str):
+        self.setStatus(value)
+
+    ## ========================================================================
+
+    @abc.abstractmethod
     def _getSequence(self) -> int:
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setSequence(self, value: int):
+    def _setSequence(self, _value: int):
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
