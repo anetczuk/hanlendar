@@ -21,7 +21,7 @@
 # SOFTWARE.
 #
 
-# pylint: disable=W0212
+# pylint: disable=W0212,C0302
 
 import logging
 from enum import Enum, unique
@@ -136,10 +136,10 @@ def extract_ical(content: str):
 
 
 class PropsDict:
-    
+
     def __init__(self):
         self.props: dict[str, Any] = {}
-    
+
     def join(self, props: "PropsDict"):
         self.props = self.props | props.props
 
@@ -151,19 +151,15 @@ class PropsDict:
         if prop_item is None:
             return
         if isinstance(prop_item, list):
-            data_list = []
-            for item in prop_item:
-                data_list.append( item.to_ical() )
+            data_list = [item.to_ical() for item in prop_item]
             self.props[prop_key] = data_list
-        else:                        
+        else:
             self.props[prop_key] = prop_item.to_ical()
 
     def add_props(self, component):
         for key, val in component.items():
             if isinstance(val, list):
-                data_list = []
-                for item in val:
-                    data_list.append( item.to_ical() )
+                data_list = [item.to_ical() for item in val]
                 self.props[key] = data_list
             else:
                 self.props[key] = val.to_ical()
@@ -345,7 +341,7 @@ class TaskSerialization:
         unhandled_props.add_props(component)
         unhandled_props.pop("RRULE")
         unhandled_props.pop("RDATE")
-        unhandled_props.pop("EXDATE")        
+        unhandled_props.pop("EXDATE")
         for item in TaskField:
             prop_name = item.value.upper()
             unhandled_props.pop(prop_name)
@@ -511,7 +507,7 @@ class ToDoSerialization:
             ical_item = subitem.to_ical()
             unhandled_subs.append(ical_item)
         if unhandled_subs:
-            unhandled_props[UNHANDLED_SUBS_KEY] = unhandled_subs
+            unhandled_props.add(UNHANDLED_SUBS_KEY, unhandled_subs)
         todo._unknown_props = unhandled_props.props
 
         parentUID = get_ical_str(component, ToDoField.GROUP_PARENT)
@@ -702,7 +698,7 @@ class RecurrentSerialization:
     def from_ical(component: icalendar.cal.Component) -> tuple[Recurrent, PropsDict]:
         rrule: icalendar.prop.vRecur = component.get("RRULE")
 
-        if rrule is None:           
+        if rrule is None:
             return RecurrentSerialization.get_unhandled(component)
 
         recurrence = Recurrent()
@@ -759,12 +755,15 @@ class RecurrentSerialization:
             if prop_byday_list and prop_bymonthday_list:
                 _LOGGER.warning("invalid RRULE: %s", rrule)
                 return RecurrentSerialization.get_unhandled(component)
-            ## MONTHLY: BYDAY=1SU,1WE,2SU,3FR,4TU,5TU,-1WE
-            weekday_list, monthday_list = convert_monthday_to_index(prop_byday_list)
-            recurrence.weekday = weekday_list
-            recurrence.monthweek = monthday_list
-            ## MONTHLY: BYMONTHDAY=7,30        ## if there is no day in month, then no event (eg. there is no 30th of February)
-            recurrence.monthday = [ int(day) for day in prop_bymonthday_list ]
+            if prop_byday_list:
+                ## MONTHLY: BYDAY=1SU,1WE,2SU,3FR,4TU,5TU,-1WE
+                weekday_list, monthday_list = convert_monthday_to_index(prop_byday_list)
+                recurrence.weekday = weekday_list
+                recurrence.monthweek = monthday_list
+            if prop_bymonthday_list:
+                ## if there is no day in month, then no event (eg. there is no 30th of February)
+                ## MONTHLY: BYMONTHDAY=7,30
+                recurrence.monthday = [int(day) for day in prop_bymonthday_list]
 
         elif recurrence.mode == RepeatType.YEARLY:
             prop_bymonth_list = rrule.get("BYMONTH")
@@ -774,27 +773,32 @@ class RecurrentSerialization:
                 _LOGGER.warning("invalid RRULE: %s", rrule)
                 return RecurrentSerialization.get_unhandled(component)
             ## YEARLY: BYMONTH=11;BYDAY=1SU,1WE,2SU,3FR,4TU,5TU,-1WE
-            recurrence.month = [ int(month) for month in prop_bymonth_list ]
+            recurrence.month = [int(month) for month in prop_bymonth_list]
             weekday_list, monthday_list = convert_monthday_to_index(prop_byday_list)
             recurrence.weekday = weekday_list
             recurrence.monthweek = monthday_list
             ## YEARLY: BYMONTH=11;BYMONTHDAY=7,30
-            recurrence.monthday = [ int(day) for day in prop_bymonthday_list ]
+            recurrence.monthday = [int(day) for day in prop_bymonthday_list]
 
         unhandled_props = PropsDict()
-        
+
         rdate = component.get("RDATE")
         if rdate is not None:
-            #TODO: implement
+            # TODO: implement
             _LOGGER.warning("RDATE is not supported")
             unhandled_props.add_prop(component, "RDATE")
 
         exdate = component.get("EXDATE")
         if exdate is not None:
+            exdate_list = []
+            if not isinstance(exdate, list):
+                exdate_list.append(exdate)
+            else:
+                exdate_list = exdate
             ex_dates = []
-            for item in exdate:
-                ex_dates.extend( item.dts )
-            date_list = [ item.dt for item in ex_dates ]
+            for item in exdate_list:
+                ex_dates.extend(item.dts)
+            date_list = [item.dt for item in ex_dates]
             recurrence.exception_dates = date_list
 
         return (recurrence, unhandled_props)
@@ -811,7 +815,7 @@ class RecurrentSerialization:
     def to_ical(recurrence: Recurrent, component: icalendar.cal.Component):
         if recurrence is None:
             return
-        
+
         rrule = icalendar.prop.vRecur()
 
         freq_dict = {
@@ -846,24 +850,22 @@ class RecurrentSerialization:
 
         if recurrence.mode == RepeatType.WEEKLY:
             ## WEEKLY: BYDAY=SU,MO,TU,WE,TH,FR,SA
-            weekday_list = convert_index_to_weekday(recurrence.weekday)
-            rrule["BYDAY"] = weekday_list
+            rrule["BYDAY"] = convert_index_to_weekday(recurrence.weekday)
 
         elif recurrence.mode == RepeatType.MONTHLY:
             if recurrence.weekday and recurrence.monthweek:
                 ## MONTHLY: BYDAY=1SU,1WE,2SU,3FR,4TU,5TU,-1WE
-                weekday_list = convert_index_to_monthday(recurrence.weekday, recurrence.monthweek)
-                rrule["BYDAY"] = weekday_list
+                rrule["BYDAY"] = convert_index_to_monthday(recurrence.weekday, recurrence.monthweek)
             if recurrence.monthday:
-                ## MONTHLY: BYMONTHDAY=7,30        ## if there is no day in month, then no event (eg. there is no 30th of February)           
-                rrule["BYMONTHDAY"] = ",".join(recurrence.monthday)
+                ## if there is no day in month, then no event (eg. there is no 30th of February)
+                ## MONTHLY: BYMONTHDAY=7,30
+                rrule["BYMONTHDAY"] = ",".join(recurrence.monthday)  # type: ignore[arg-type]
 
         elif recurrence.mode == RepeatType.YEARLY:
             if recurrence.weekday and recurrence.monthweek:
                 ## YEARLY: BYMONTH=11;BYDAY=1SU,1WE,2SU,3FR,4TU,5TU,-1WE
                 rrule["BYMONTH"] = recurrence.month
-                weekday_list = convert_index_to_monthday(recurrence.weekday, recurrence.monthweek)
-                rrule["BYDAY"] = weekday_list
+                rrule["BYDAY"] = convert_index_to_monthday(recurrence.weekday, recurrence.monthweek)
             if recurrence.monthday:
                 ## YEARLY: BYMONTH=11;BYMONTHDAY=7,30
                 rrule["BYMONTH"] = recurrence.month
@@ -913,7 +915,7 @@ def convert_index_to_weekday(index_list) -> list[str]:
             _LOGGER.warning("unhandled week index: %s", index)
             continue
         ret_list.append(day)
-    return ret_list    
+    return ret_list
 
 
 def convert_monthday_to_index(monthday_list) -> tuple[list[int], list[int]]:
@@ -923,17 +925,17 @@ def convert_monthday_to_index(monthday_list) -> tuple[list[int], list[int]]:
         match = re.match(r"(-?\d+)(.*)", day)
         number = int(match.group(1))
         name = match.group(2)
-        day_index = convert_weekday_to_index( [name] )
+        day_index = convert_weekday_to_index([name])
         if not day_index:
             _LOGGER.warning("unhandled month day: %s", day)
             continue
-        ret_weekday_list.append( day_index[0] )
-        ret_monthday_list.append( number )
+        ret_weekday_list.append(day_index[0])
+        ret_monthday_list.append(number)
     return (ret_weekday_list, ret_monthday_list)
 
 
-def convert_index_to_monthday(weekday_list, monthday_list) -> list[int]:
-    weekday_names = convert_index_to_weekday(weekday_list)
+def convert_index_to_monthday(weekday_list: list[int], monthday_list: list[int]) -> list[str]:
+    weekday_names: list[str] = convert_index_to_weekday(weekday_list)
     return [f"{day_name}{week_index}" for day_name, week_index in zip(monthday_list, weekday_names)]
 
 
@@ -943,11 +945,7 @@ def write_unknown_props(component, props_dict):
     type_factory = TypesFactory()
     for key, item in props_dict.items():
         if key != UNHANDLED_SUBS_KEY:
-            item_list = []
-            if isinstance(item, list):
-                item_list = item
-            else:
-                item_list = [item]                
+            item_list = item if isinstance(item, list) else [item]
             for sub_item in item_list:
                 decoded_item = sub_item.decode("utf-8")
                 desired_item = type_factory.from_ical(key, decoded_item)
@@ -1126,20 +1124,38 @@ def set_ical_dict(
 ## =================================================================
 
 
-def replace_line(content, line_prefix, new_content, *, replace_whole_line=False):
+def replace_line(content, line_prefix, new_content, *, replace_whole_line=False, element_index=None):
     lines = content.splitlines()
+    counter = element_index
     for i, line in enumerate(lines):
         if line.startswith(line_prefix):
-            if replace_whole_line is False:
+            if element_index is not None:
+                counter -= 1
+                if counter == -1:
+                    if replace_whole_line is False:
+                        lines[i] = f"{line_prefix}{new_content}"
+                    else:
+                        lines[i] = new_content
+            elif replace_whole_line is False:
                 lines[i] = f"{line_prefix}{new_content}"
             else:
                 lines[i] = new_content
     return "\n".join(lines) + "\n"
 
 
-def remove_line(content, line_prefix):
+def remove_line(content, line_prefix, element_index=None):
     lines = content.splitlines()
-    out_lines = [line for line in lines if not line.startswith(line_prefix)]
+    out_lines = []
+    if element_index is None:
+        out_lines = [line for line in lines if not line.startswith(line_prefix)]
+    else:
+        counter = element_index
+        for line in lines:
+            if line.startswith(line_prefix):
+                counter -= 1
+                if counter == -1:
+                    continue
+            out_lines.append(line)
     return "\n".join(out_lines) + "\n"
 
 

@@ -25,7 +25,7 @@ import logging
 
 from enum import Enum, unique, auto
 
-from datetime import date, datetime
+import datetime
 from dateutil.relativedelta import relativedelta
 
 from hanlendar import persist
@@ -77,7 +77,7 @@ class Recurrent(persist.Versionable):
     ##  3: added 'weekday', 'monthweek', 'monthday', 'month'
     _class_version = 3
 
-    def __init__(self, mode: RepeatType = None, every: int = None, endDate: date = None):
+    def __init__(self, mode: RepeatType = None, every: int = None, endDate: datetime.date = None):
         super().__init__()
 
         if mode is None:
@@ -86,18 +86,22 @@ class Recurrent(persist.Versionable):
             every = 0
         every = max(every, 0)
 
-        self.mode: RepeatType = mode        ## FREQ, list
-        self.every: int = every             ## INTERVAL
-        self.weekday: list[int] = None      ## for WEEKLY and MONTHLY, indicates days of week
-        self.monthweek: list[int] = None    ## for MONTHLY, indicates weekday in month (e.g second Sunday or last Monday), 0 means Monday
-        self.monthday: list[int] = None     ## for MONTHLY, indicates day of month, eg. 1st, 12nd, 24th, 1 means first day of month
-        self.month: list[int] = None        ## for YEARLY, indicates month of year, eg. 1st, 2nd, 6th, 1 means January
+        self.mode: RepeatType = mode  ## FREQ, list
+        self.every: int = every  ## INTERVAL
+        self.weekday: list[int] = None  ## for WEEKLY and MONTHLY, indicates days of week
+        self.monthweek: list[int] = (
+            None  ## for MONTHLY, indicates weekday in month (e.g second Sunday or last Monday), 0 means Monday
+        )
+        self.monthday: list[int] = (
+            None  ## for MONTHLY, indicates day of month, eg. 1st, 12nd, 24th, 1 means first day of month
+        )
+        self.month: list[int] = None  ## for YEARLY, indicates month of year, eg. 1st, 2nd, 6th, 1 means January
 
-        self.occurenceMode: RepeatUntilMode = None      ## None means "forever"
-        self.occurences: int = None                     ## COUNT (number of occurrences of item)
-        self.endDate: date = endDate                    ## UNTIL
+        self.occurenceMode: RepeatUntilMode = None  ## None means "forever"
+        self.occurences: int = None  ## COUNT (number of occurrences of item)
+        self.endDate: datetime.date = endDate  ## UNTIL
 
-        self.exception_dates: list[datetime.date] = []
+        self.exception_dates: list[datetime.date | datetime.datetime] = []
 
     def _convertstate_(self, state_dict, state_version):
         _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
@@ -186,14 +190,14 @@ class Recurrent(persist.Versionable):
         _LOGGER.warning("unhandled case")
         return None
 
-    def isEnd(self, currDate: date) -> bool:
+    def isEnd(self, currDate: datetime.date) -> bool:
         if currDate is None:
             return False
         if self.endDate is None:
             return False
         return currDate > self.endDate
 
-    def nextDateTime(self, currDate: datetime, offset: int = 1) -> datetime:
+    def nextDateTime(self, currDate: datetime.datetime, offset: int = 1) -> datetime.datetime:
         if currDate is None:
             return None
         dateOffset = self.getDateOffset()
@@ -206,12 +210,12 @@ class Recurrent(persist.Versionable):
             return None
         return nextDate
 
-    def findRecurrentOffset(self, referenceDate: date, targetDate: date) -> int:
+    def findRecurrentOffset(self, referenceDate: datetime.date, targetDate: datetime.date) -> int:
         offset = self.getDateOffset()
         return find_multiplication(referenceDate, targetDate, offset)
 
 
-def find_multiplication(startDate: date, endDate: date, offset: relativedelta) -> int:
+def find_multiplication(startDate: datetime.date, endDate: datetime.date, offset: relativedelta) -> int:
     dateTD = endDate - startDate
     diffDays = dateTD.days
 
@@ -235,7 +239,7 @@ def find_multiplication(startDate: date, endDate: date, offset: relativedelta) -
 
 
 # returns: startDate + offset * multiplicator >= endDate
-def find_multiplication_after(startDate: date, endDate: date, offset: relativedelta) -> int:
+def find_multiplication_after(startDate: datetime.date, endDate: datetime.date, offset: relativedelta) -> int:
     multiplicator = find_multiplication(startDate, endDate, offset)
     if multiplicator < 0:
         return multiplicator

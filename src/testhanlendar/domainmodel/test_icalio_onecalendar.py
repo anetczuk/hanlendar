@@ -178,3 +178,197 @@ class IcalioOneCalendarTest(unittest.TestCase):
             event_ical_content,
             content,
         )
+
+    def test_onecalendar_item_recurrent_monthly(self):
+        ## compatibility with onecalendar
+
+        event_path = get_data_path("onecalendar_item_repeat_monthly.ics")
+        event_ical_content = read_file(event_path)
+
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(0, len(dangling_items))
+
+        # TODO: all unknown props should be handled
+        self.assertDictEqual(
+            {
+                "subcomponents": [
+                    b"BEGIN:VTIMEZONE\r\nTZID:Europe/Warsaw\r\nBEGIN:STANDARD\r\nDTS"
+                    b"TART:20001029T030000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=1"
+                    b"0\r\nTZNAME:CET\r\nTZOFFSETFROM:+0200\r\nTZOFFSETTO:+0100\r"
+                    b"\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:20000326T020000\r\n"
+                    b"RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3\r\nTZNAME:CEST\r\nTZO"
+                    b"FFSETFROM:+0100\r\nTZOFFSETTO:+0200\r\nEND:DAYLIGHT\r\nEND:VTI"
+                    b"MEZONE\r\n",
+                ],
+            },
+            manager.unknownProps,
+        )
+
+        new_item: LocalTask = new_items[0]
+        self.assertEqual(LocalTask, type(new_item))
+        self.assertEqual("35cf75d3-8aee-4c31-b2ed-c4c7f53c1ba4", new_item.UID)
+        self.assertEqual(None, new_item.createDateTime)
+        self.assertEqual(
+            datetime.datetime(2025, 11, 19, 22, 38, 57),
+            new_item.lastModifiedDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual(datetime.datetime(2025, 12, 2, 12, 0), new_item.startDateTime.replace(tzinfo=None))
+        self.assertEqual(datetime.datetime(2025, 12, 2, 13, 0), new_item.dueDateTime.replace(tzinfo=None))
+        self.assertEqual("Onecal repeat every month", new_item.summary)
+        self.assertEqual("", new_item.location)
+        self.assertEqual("", new_item.url)
+        self.assertEqual("", new_item.description)
+        self.assertEqual(1, new_item.sequence)
+        self.assertDictEqual({}, new_item.unknownProps)
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251119T213857Z")
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
+        event_ical_content = remove_line(event_ical_content, "LOCATION:")
+        event_ical_content = remove_line(event_ical_content, "DESCRIPTION:", element_index=0)
+        # TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "DTEND;TZID=Europe/Warsaw:20251202T130000",
+            "DTEND:20251202T120000Z",
+            replace_whole_line=True,
+        )
+        # TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "DTSTART;TZID=Europe/Warsaw:20251202T120000",
+            "DTSTART:20251202T110000Z",
+            replace_whole_line=True,
+        )
+
+        self.assertEqual(
+            event_ical_content,
+            content,
+        )
+
+    def test_onecalendar_item_recurrent_weekly(self):
+        ## compatibility with onecalendar
+
+        event_path = get_data_path("onecalendar_item_repeat_weekly.ics")
+        event_ical_content = read_file(event_path)
+
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+
+        self.assertEqual(2, len(new_items))
+        self.assertEqual(0, len(dangling_items))
+
+        # TODO: all unknown props should be handled
+        self.assertDictEqual(
+            {
+                "subcomponents": [
+                    b"BEGIN:VTIMEZONE\r\nTZID:Europe/Warsaw\r\nBEGIN:STANDARD\r\nDTS"
+                    b"TART:20001029T030000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=1"
+                    b"0\r\nTZNAME:CET\r\nTZOFFSETFROM:+0200\r\nTZOFFSETTO:+0100\r"
+                    b"\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:20000326T020000\r\n"
+                    b"RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3\r\nTZNAME:CEST\r\nTZO"
+                    b"FFSETFROM:+0100\r\nTZOFFSETTO:+0200\r\nEND:DAYLIGHT\r\nEND:VTI"
+                    b"MEZONE\r\n",
+                ],
+            },
+            manager.unknownProps,
+        )
+
+        new_item: LocalTask = new_items[0]
+        self.assertEqual(LocalTask, type(new_item))
+        self.assertEqual("6237be1a-1f96-4bc6-8deb-6450397c230b", new_item.UID)
+        self.assertEqual(None, new_item.createDateTime)
+        self.assertEqual(
+            datetime.datetime(2025, 11, 19, 22, 39, 25),
+            new_item.lastModifiedDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual(datetime.datetime(2025, 11, 4, 12, 0), new_item.startDateTime.replace(tzinfo=None))
+        self.assertEqual(datetime.datetime(2025, 11, 4, 13, 0), new_item.dueDateTime.replace(tzinfo=None))
+        self.assertEqual("Onecal repeat every week", new_item.summary)
+        self.assertEqual("", new_item.location)
+        self.assertEqual("", new_item.url)
+        self.assertEqual("one occurence removed", new_item.description)
+        self.assertEqual(2, new_item.sequence)
+        self.assertDictEqual({}, new_item.unknownProps)
+
+        new_item = new_items[1]
+        self.assertEqual(LocalTask, type(new_item))
+        self.assertEqual("6237be1a-1f96-4bc6-8deb-6450397c230b", new_item.UID)
+        self.assertEqual(None, new_item.createDateTime)
+        self.assertEqual(
+            datetime.datetime(2025, 11, 19, 22, 38, 59),
+            new_item.lastModifiedDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual(datetime.datetime(2025, 11, 18, 12, 0), new_item.startDateTime.replace(tzinfo=None))
+        self.assertEqual(datetime.datetime(2025, 11, 18, 13, 0), new_item.dueDateTime.replace(tzinfo=None))
+        self.assertEqual("Onecal repeat every week", new_item.summary)
+        self.assertEqual("Occurence loc", new_item.location)
+        self.assertEqual("", new_item.url)
+        self.assertEqual("one occurence removed", new_item.description)
+        self.assertEqual(1, new_item.sequence)
+        self.assertDictEqual(
+            {
+                "RECURRENCE-ID": b"20251118T120000",
+            },
+            new_item.unknownProps,
+        )
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251119T213857Z", element_index=0)
+        content = replace_line(content, "DTSTAMP:", "20251119T213859Z", element_index=1)
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
+        event_ical_content = remove_line(event_ical_content, "LOCATION:", element_index=0)  ## empty content
+        # TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "DTEND;TZID=Europe/Warsaw:20251104T130000",
+            "DTEND:20251104T120000Z",
+            replace_whole_line=True,
+        )
+        # TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "DTSTART;TZID=Europe/Warsaw:20251104T120000",
+            "DTSTART:20251104T110000Z",
+            replace_whole_line=True,
+        )
+        ## second vevent
+        # TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "DTEND;TZID=Europe/Warsaw:20251118T130000",
+            "DTEND:20251118T120000Z",
+            replace_whole_line=True,
+        )
+        # TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "DTSTART;TZID=Europe/Warsaw:20251118T120000",
+            "DTSTART:20251118T110000Z",
+            replace_whole_line=True,
+        )
+        # TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "RECURRENCE-ID;TZID=Europe/Warsaw:20251118T120000",
+            "RECURRENCE-ID:20251118T120000",
+            replace_whole_line=True,
+        )
+
+        self.assertEqual(
+            event_ical_content,
+            content,
+        )

@@ -336,20 +336,20 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertDictEqual(
             {
                 "subcomponents": [
-                    b'BEGIN:VTIMEZONE\r\nTZID:Europe/Warsaw\r\nX-LIC-LOCATION:'
-                    b'Europe/Warsaw\r\nBEGIN:STANDARD\r\nDTSTART:19961027T0300'
-                    b'00\r\nRRULE:FREQ=YEARLY;UNTIL=20361026T010000Z;BYDAY=-1SU;'
-                    b'BYMONTH=10\r\nTZNAME:CET\r\nTZOFFSETFROM:+0200\r\nTZOFFSET'
-                    b'TO:+0100\r\nEND:STANDARD\r\nBEGIN:STANDARD\r\nDTSTART:2037'
-                    b'1025T030000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10'
-                    b'\r\nTZNAME:CET\r\nTZOFFSETFROM:+0200\r\nTZOFFSETTO:+01'
-                    b'00\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:19880327T0'
-                    b'20000\r\nRRULE:FREQ=YEARLY;UNTIL=20370329T010000Z;BYDAY=-1'
-                    b'SU;BYMONTH=3\r\nTZNAME:CEST\r\nTZOFFSETFROM:+0100\r\nTZOFF'
-                    b'SETTO:+0200\r\nEND:DAYLIGHT\r\nBEGIN:DAYLIGHT\r\nDTSTART:2'
-                    b'0380328T020000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH'
-                    b'=3\r\nTZNAME:CEST\r\nTZOFFSETFROM:+0100\r\nTZOFFSETTO:+020'
-                    b'0\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE\r\n',
+                    b"BEGIN:VTIMEZONE\r\nTZID:Europe/Warsaw\r\nX-LIC-LOCATION:"
+                    b"Europe/Warsaw\r\nBEGIN:STANDARD\r\nDTSTART:19961027T0300"
+                    b"00\r\nRRULE:FREQ=YEARLY;UNTIL=20361026T010000Z;BYDAY=-1SU;"
+                    b"BYMONTH=10\r\nTZNAME:CET\r\nTZOFFSETFROM:+0200\r\nTZOFFSET"
+                    b"TO:+0100\r\nEND:STANDARD\r\nBEGIN:STANDARD\r\nDTSTART:2037"
+                    b"1025T030000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10"
+                    b"\r\nTZNAME:CET\r\nTZOFFSETFROM:+0200\r\nTZOFFSETTO:+01"
+                    b"00\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:19880327T0"
+                    b"20000\r\nRRULE:FREQ=YEARLY;UNTIL=20370329T010000Z;BYDAY=-1"
+                    b"SU;BYMONTH=3\r\nTZNAME:CEST\r\nTZOFFSETFROM:+0100\r\nTZOFF"
+                    b"SETTO:+0200\r\nEND:DAYLIGHT\r\nBEGIN:DAYLIGHT\r\nDTSTART:2"
+                    b"0380328T020000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH"
+                    b"=3\r\nTZNAME:CEST\r\nTZOFFSETFROM:+0100\r\nTZOFFSETTO:+020"
+                    b"0\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE\r\n",
                 ],
             },
             manager.unknownProps,
@@ -372,9 +372,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertEqual(2, new_item.sequence)
         # TODO: all unknown props should be handled
         self.assertDictEqual(
-            {
-                'CLASS': b'PUBLIC', 'TRANSP': b'OPAQUE'
-            },
+            {"CLASS": b"PUBLIC", "TRANSP": b"OPAQUE"},
             new_item.unknownProps,
         )
 
@@ -605,7 +603,7 @@ class IcalioEvolutionTest(unittest.TestCase):
                 "DUE": b"20260202",
                 "PERCENT-COMPLETE": b"50",
                 "RRULE": b"FREQ=MONTHLY;BYMONTHDAY=1",
-                'STATUS': b'IN-PROCESS',
+                "STATUS": b"IN-PROCESS",
             },
             new_item.unknownProps,
         )
