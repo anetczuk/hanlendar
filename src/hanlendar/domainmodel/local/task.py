@@ -415,7 +415,7 @@ class LocalTask(Task, persist.Versionable):
     ##  8: remove '_recurrentOffset' and use '_startDate' and '_dueDate'
     ##  9: added '_createDate'
     ## 10: added '_location', '_url', '_sequence', '_lastModifiedDate', '_unknown_props'
-    ## 11: added '_status'
+    ## 11: added '_status', '_class'
     _class_version = 10
 
     def __init__(self, title=""):
@@ -430,6 +430,7 @@ class LocalTask(Task, persist.Versionable):
         self._location = ""
         self._url = ""
         self._description = ""
+        self._class: str = ""  ## PUBLIC, PRIVATE, CONFIDENTIAL
         self._status: str = ""  ## TENTATIVE, CONFIRMED, CANCELLED
 
         self._sequence = 0
@@ -562,6 +563,7 @@ class LocalTask(Task, persist.Versionable):
             state_version += 1
 
         if state_version == 10:
+            state_dict["_class"] = ""
             state_dict["_status"] = ""
             state_version += 1
 
@@ -641,6 +643,14 @@ class LocalTask(Task, persist.Versionable):
     ## overriden
     def _setStatus(self, value: str):
         self._status = value
+
+    ## overriden
+    def _getClass(self) -> str:
+        return self._class
+
+    ## overriden
+    def _setClass(self, value: str):
+        self._class = value
 
     ## overriden
     def _getSequence(self) -> int:

@@ -235,6 +235,32 @@ class Item:
     ## ========================================================================
 
     @abc.abstractmethod
+    def _getClass(self) -> str:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
+    def _setClass(self, _value: str):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    def getClass(self) -> str:
+        return self._getClass()
+
+    def setClass(self, value: str):
+        self._setClass(value)
+
+    @property
+    def class_prop(self) -> str:
+        return self.getClass()
+
+    @class_prop.setter
+    def class_prop(self, value: str):
+        self.setClass(value)
+
+    ## ========================================================================
+
+    @abc.abstractmethod
     def _getSequence(self) -> int:
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)

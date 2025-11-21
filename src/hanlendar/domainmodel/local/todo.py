@@ -44,7 +44,7 @@ class LocalToDo(Item, persist.Versionable):
     ##  5: added '_createDate'
     ##  6: added '_location', '_url', '_sequence', '_lastModifiedDate
     ##  7: added '_unknown_props'
-    ##  9: added '_status'
+    ##  8: added '_status', '_class'
     _class_version = 7
 
     def __init__(self, title=""):
@@ -59,6 +59,7 @@ class LocalToDo(Item, persist.Versionable):
         self._location: str = ""
         self._url: str = ""
         self._description: str = ""
+        self._class: str = ""  ## PUBLIC, PRIVATE, CONFIDENTIAL
         self._status: str = ""  ## NEEDS-ACTION, COMPLETED, IN-PROCESS, CANCELLED
 
         self._sequence = 0
@@ -124,6 +125,11 @@ class LocalToDo(Item, persist.Versionable):
 
         if state_version == 6:
             state_dict["_unknown_props"] = None
+            state_version += 1
+
+        if state_version == 8:
+            state_dict["_class"] = ""
+            state_dict["_status"] = ""
             state_version += 1
 
         return state_dict
@@ -210,6 +216,14 @@ class LocalToDo(Item, persist.Versionable):
     ## overriden
     def _setStatus(self, value: str):
         self._status = value
+
+    ## overriden
+    def _getClass(self) -> str:
+        return self._class
+
+    ## overriden
+    def _setClass(self, value: str):
+        self._class = value
 
     ## overriden
     def _getSequence(self) -> int:

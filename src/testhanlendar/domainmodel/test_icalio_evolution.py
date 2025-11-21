@@ -81,7 +81,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertEqual(2, new_item.sequence)
         self.assertEqual(0, len(new_item.reminderList))
         # TODO: all unknown props should be handled
-        self.assertDictEqual({"CLASS": b"PUBLIC", "COLOR": b"fuchsia", "TRANSP": b"OPAQUE"}, new_item.unknownProps)
+        self.assertDictEqual({"COLOR": b"fuchsia", "TRANSP": b"OPAQUE"}, new_item.unknownProps)
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -128,7 +128,12 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertEqual("", new_item.description)
         self.assertEqual(2, new_item.sequence)
         # TODO: all unknown props should be handled
-        self.assertDictEqual( { "CLASS": b"PUBLIC", "TRANSP": b"OPAQUE", }, new_item.unknownProps )
+        self.assertDictEqual(
+            {
+                "TRANSP": b"OPAQUE",
+            },
+            new_item.unknownProps,
+        )
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -189,12 +194,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertEqual(1, new_item.sequence)
         # TODO: all unknown props should be handled
         self.assertDictEqual(
-            {
-                "ATTACH": b"https://google.pl",
-                "CLASS": b"PUBLIC",
-                "COLOR": b"yellow",
-                "TRANSP": b"OPAQUE",
-            },
+            {"ATTACH": b"https://google.pl", "COLOR": b"yellow", "TRANSP": b"OPAQUE"},
             new_item.unknownProps,
         )
 
@@ -275,13 +275,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertEqual("", new_item.description)
         self.assertEqual(2, new_item.sequence)
         # TODO: all unknown props should be handled
-        self.assertDictEqual(
-            {
-                "CLASS": b"PUBLIC",
-                "TRANSP": b"OPAQUE",
-            },
-            new_item.unknownProps,
-        )
+        self.assertDictEqual({"TRANSP": b"OPAQUE"}, new_item.unknownProps)
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -363,10 +357,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertEqual("started 05.12.2025", new_item.description)
         self.assertEqual(2, new_item.sequence)
         # TODO: all unknown props should be handled
-        self.assertDictEqual(
-            {"CLASS": b"PUBLIC", "TRANSP": b"OPAQUE"},
-            new_item.unknownProps,
-        )
+        self.assertDictEqual({"TRANSP": b"OPAQUE"}, new_item.unknownProps)
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -423,7 +414,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertEqual(1, new_item.sequence)
         # TODO: all unknown props should be handled
         self.assertDictEqual(
-            {"CLASS": b"CONFIDENTIAL", "DUE": b"20251122", "PERCENT-COMPLETE": b"45"},
+            {"DUE": b"20251122", "PERCENT-COMPLETE": b"45"},
             new_item.unknownProps,
         )
 
@@ -472,7 +463,6 @@ class IcalioEvolutionTest(unittest.TestCase):
         # TODO: all unknown props should be handled
         self.assertDictEqual(
             {
-                "CLASS": b"PUBLIC",
                 "COMPLETED": b"20251113T000000Z",
                 "DTSTART": b"20251114",
                 "DUE": b"20251116",
@@ -527,7 +517,6 @@ class IcalioEvolutionTest(unittest.TestCase):
         # TODO: all unknown props should be handled
         self.assertDictEqual(
             {
-                "CLASS": b"PUBLIC",
                 "DTSTART": b"20251120",
                 "DUE": b"20251124",
                 "EXDATE": b"20251122",  ## exception date when repeated
@@ -589,11 +578,10 @@ class IcalioEvolutionTest(unittest.TestCase):
         # TODO: all unknown props should be handled
         self.assertDictEqual(
             {
-                "CLASS": b"PUBLIC",
                 "DTSTART": b"20260201",
                 "DUE": b"20260202",
                 "PERCENT-COMPLETE": b"50",
-                "RRULE": b"FREQ=MONTHLY;BYMONTHDAY=1"
+                "RRULE": b"FREQ=MONTHLY;BYMONTHDAY=1",
             },
             new_item.unknownProps,
         )
