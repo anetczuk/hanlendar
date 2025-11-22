@@ -257,8 +257,7 @@ class ToDoField(Enum):
     LASTMODIFIED = "last-modified"
     SEQUENCE = "sequence"
 
-    ## 'completed:' substring is converted in all fields in caldav, so it has to be postfixed prevent conversion
-    COMPLETED = "x-hanlendar-completedx"
+    COMPLETE = "percent-complete"
     PRIORITY = "priority"
 
     GROUP_PARENT = "x-hanlendar-parent"  ## uuid of parent
@@ -513,7 +512,7 @@ class ToDoSerialization:
         modified_date = get_ical_value_dt(component, ToDoField.LASTMODIFIED)
         todo._lastModifiedDate = modified_date
 
-        todo.completed = get_ical_value_int(component, ToDoField.COMPLETED, 0)
+        todo.completed = get_ical_value_int(component, ToDoField.COMPLETE, 0)
         todo.priority = get_ical_value_int(component, ToDoField.PRIORITY, 5)
 
         # ## restore reminders
@@ -590,7 +589,7 @@ class ToDoSerialization:
             itodo.add(ToDoField.SEQUENCE.value, todo.sequence)
 
         if todo.completed != 0:
-            itodo.add(ToDoField.COMPLETED.value, todo.completed)
+            itodo.add(ToDoField.COMPLETE.value, todo.completed)
 
         if todo.priority != 5:
             itodo.add(ToDoField.PRIORITY.value, todo.priority)

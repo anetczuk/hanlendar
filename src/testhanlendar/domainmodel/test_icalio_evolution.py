@@ -413,10 +413,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertEqual("", new_item.description)
         self.assertEqual(1, new_item.sequence)
         # TODO: all unknown props should be handled
-        self.assertDictEqual(
-            {"DUE": b"20251122", "PERCENT-COMPLETE": b"45"},
-            new_item.unknownProps,
-        )
+        self.assertDictEqual({"DUE": b"20251122"}, new_item.unknownProps)
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -467,7 +464,6 @@ class IcalioEvolutionTest(unittest.TestCase):
                 "DTSTART": b"20251114",
                 "DUE": b"20251116",
                 "ESTIMATED-DURATION": b"P1DT2H3M",
-                "PERCENT-COMPLETE": b"100",
             },
             new_item.unknownProps,
         )
@@ -520,7 +516,6 @@ class IcalioEvolutionTest(unittest.TestCase):
                 "DTSTART": b"20251120",
                 "DUE": b"20251124",
                 "EXDATE": b"20251122",  ## exception date when repeated
-                "PERCENT-COMPLETE": b"0",
                 "RRULE": b"FREQ=WEEKLY;BYDAY=MO,WE,TH",
             },
             new_item.unknownProps,
@@ -535,6 +530,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
         event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+        event_ical_content = remove_line(event_ical_content, "PERCENT-COMPLETE:")
         # TODO: fix compatibility
         event_ical_content = replace_line(
             event_ical_content,
@@ -580,7 +576,6 @@ class IcalioEvolutionTest(unittest.TestCase):
             {
                 "DTSTART": b"20260201",
                 "DUE": b"20260202",
-                "PERCENT-COMPLETE": b"50",
                 "RRULE": b"FREQ=MONTHLY;BYMONTHDAY=1",
             },
             new_item.unknownProps,
