@@ -515,8 +515,6 @@ class IcalioEvolutionTest(unittest.TestCase):
             {
                 "DTSTART": b"20251120",
                 "DUE": b"20251124",
-                "EXDATE": b"20251122",  ## exception date when repeated
-                "RRULE": b"FREQ=WEEKLY;BYDAY=MO,WE,TH",
             },
             new_item.unknownProps,
         )
@@ -576,7 +574,6 @@ class IcalioEvolutionTest(unittest.TestCase):
             {
                 "DTSTART": b"20260201",
                 "DUE": b"20260202",
-                "RRULE": b"FREQ=MONTHLY;BYMONTHDAY=1",
             },
             new_item.unknownProps,
         )

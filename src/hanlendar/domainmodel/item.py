@@ -25,6 +25,8 @@ import logging
 import abc
 import uuid
 from typing import Any
+import datetime
+from hanlendar.domainmodel.recurrent import Recurrent
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -514,3 +516,44 @@ class Item:
     @staticmethod
     def sortByPriority(item):
         return item.priority
+
+
+## ============================================================
+
+
+class CommonData:
+    """Container for common data for Task and ToDo."""
+
+    def __init__(self):
+        self.UID: str = generate_uid()
+
+        self.title: str = ""
+        self.location: str = ""
+        self.url: str = ""
+        self.description: str = ""
+        self.component_class: str = ""  ## PUBLIC, PRIVATE, CONFIDENTIAL
+
+        ## item Task - TENTATIVE, CONFIRMED, CANCELLED
+        ## item ToDo - NEEDS-ACTION, COMPLETED, IN-PROCESS, CANCELLED
+        self.status: str = ""
+
+        self.sequence: int = 0
+        self.completed: int = 0  ## completion percentage, in range [0..100]
+
+        ## Evolution priority meanings:
+        ##  missing: Undefined
+        ##  3: High
+        ##  5: Normal
+        ##  7: Low
+        self.priority: int = 5  ## lower number, greater priority
+
+        self.createDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
+        self.lastModifiedDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
+
+        ## current task start time (updated every time recurrent task is completed)
+        self.startDate: datetime.datetime = None
+
+        self.recurrence: Recurrent = None
+
+        ## unknown icalendar properties
+        self.unknown_props: dict[str, Any] = None

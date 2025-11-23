@@ -27,7 +27,7 @@ from typing import Any
 
 from hanlendar import persist
 
-from hanlendar.domainmodel.item import Item, generate_uid
+from hanlendar.domainmodel.item import Item, generate_uid, CommonData
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,38 +45,17 @@ class LocalToDo(Item, persist.Versionable):
     ##  6: added '_location', '_url', '_sequence', '_lastModifiedDate
     ##  7: added '_unknown_props'
     ##  8: added '_status', '_class'
-    _class_version = 7
+    ##  9: use '_common_data'
+    _class_version = 9
 
-    def __init__(self, title=""):
+    def __init__(self, title: str = ""):
         super().__init__()
 
         self._parent = None
         self.subitems: list = None
 
-        self._UID: str = generate_uid()
-
-        self._title: str = title
-        self._location: str = ""
-        self._url: str = ""
-        self._description: str = ""
-        self._class: str = ""  ## PUBLIC, PRIVATE, CONFIDENTIAL
-        self._status: str = ""  ## NEEDS-ACTION, COMPLETED, IN-PROCESS, CANCELLED
-
-        self._sequence = 0
-        self._completed = 0  ## in range [0..100]
-
-        ## Evolution priority meanings:
-        ##  missing: Undefined
-        ##  3: High
-        ##  5: Normal
-        ##  7: Low
-        self._priority: int = 5  ## lower number, greater priority
-
-        self._createDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
-        self._lastModifiedDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
-
-        ## unknown icalendar properties
-        self._unknown_props: dict[Any, Any] = None
+        self._common_data: CommonData = CommonData()
+        self._common_data.title = title
 
     def _convertstate_(self, state_dict, state_version):
         _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
@@ -127,9 +106,34 @@ class LocalToDo(Item, persist.Versionable):
             state_dict["_unknown_props"] = None
             state_version += 1
 
-        if state_version == 8:
+        if state_version == 7:
             state_dict["_class"] = ""
             state_dict["_status"] = ""
+            state_version += 1
+
+        if state_version == 8:
+            if "_lastModifiedDate" not in state_dict:
+                state_dict["_lastModifiedDate"] = state_dict["_createDate"]
+            fields_mapping = {
+                "UID": "_UID",
+                "title": "_title",
+                "location": "_location",
+                "url": "_url",
+                "description": "_description",
+                "component_class": "_class",
+                "status": "_status",
+                "sequence": "_sequence",
+                "completed": "_completed",
+                "priority": "_priority",
+                "createDate": "_createDate",
+                "lastModifiedDate": "_lastModifiedDate",
+                "unknown_props": "_unknown_props",
+            }
+            common_data: CommonData = CommonData()
+            for key, value in fields_mapping.items():
+                common_data.__dict__[key] = state_dict[value]
+                del state_dict[value]
+            state_dict["_common_data"] = common_data
             state_version += 1
 
         return state_dict
@@ -139,7 +143,7 @@ class LocalToDo(Item, persist.Versionable):
         subitems = self.getSubitems()
         if subitems is not None:
             subLen = len(subitems)
-        return f"[t:{self.title} d:{self.description} c:{self._completed} p:{self.priority} subs:{subLen}]"
+        return f"[t:{self.title} d:{self.description} c:{self._common_data.completed} p:{self.priority} subs:{subLen}]"
 
     ## overrided
     def getParent(self):
@@ -167,94 +171,94 @@ class LocalToDo(Item, persist.Versionable):
 
     ## overriden
     def _getUnknownProps(self) -> dict[Any, Any]:
-        return self._unknown_props
+        return self._common_data.unknown_props
 
     ## overriden
     def _getUID(self):
-        return self._UID
+        return self._common_data.UID
 
     ## overriden
     def _setUID(self, value):
-        self._UID = value
+        self._common_data.UID = value
 
     ## overriden
     def _getTitle(self) -> str:
-        return self._title
+        return self._common_data.title
 
     ## overriden
     def _setTitle(self, value: str):
-        self._title = value
+        self._common_data.title = value
 
     ## overriden
     def _getLocation(self) -> str:
-        return self._location
+        return self._common_data.location
 
     ## overriden
     def _setLocation(self, value: str):
-        self._location = value
+        self._common_data.location = value
 
     ## overriden
     def _getURL(self) -> str:
-        return self._url
+        return self._common_data.url
 
     ## overriden
     def _setURL(self, value: str):
-        self._url = value
+        self._common_data.url = value
 
     ## overriden
     def _getDescription(self) -> str:
-        return self._description
+        return self._common_data.description
 
     ## overriden
     def _setDescription(self, value: str):
-        self._description = value
+        self._common_data.description = value
 
     ## overriden
     def _getStatus(self) -> str:
-        return self._status
+        return self._common_data.status
 
     ## overriden
     def _setStatus(self, value: str):
-        self._status = value
+        self._common_data.status = value
 
     ## overriden
     def _getClass(self) -> str:
-        return self._class
+        return self._common_data.component_class
 
     ## overriden
     def _setClass(self, value: str):
-        self._class = value
+        self._common_data.component_class = value
 
     ## overriden
     def _getSequence(self) -> int:
-        return self._sequence
+        return self._common_data.sequence
 
     ## overriden
     def _setSequence(self, value: int):
-        self._sequence = value
+        self._common_data.sequence = value
 
     ## overrided
     def _getCompleted(self):
-        return self._completed
+        return self._common_data.completed
 
     ## overrided
     def _setCompleted(self, value=100):
-        self._completed = value
+        self._common_data.completed = value
 
     ## overrided
     def _getPriority(self):
-        return self._priority
+        return self._common_data.priority
 
     ## overrided
     def _setPriority(self, value):
-        self._priority = value
+        self._common_data.priority = value
 
     ## ========================================================================
 
     @property
     def createDateTime(self) -> datetime.datetime:
-        return self._createDate
+        return self._common_data.createDate
 
     @property
     def lastModifiedDateTime(self) -> datetime.datetime:
-        return self._lastModifiedDate
+        return self._common_data.lastModifiedDate

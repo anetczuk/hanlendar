@@ -28,7 +28,7 @@ import abc
 from dateutil.relativedelta import relativedelta
 
 from hanlendar import persist
-from hanlendar.domainmodel.item import generate_uid, Item
+from hanlendar.domainmodel.item import generate_uid, Item, CommonData
 from hanlendar.domainmodel.recurrent import Recurrent, find_multiplication_after
 from hanlendar.domainmodel.reminder import Reminder, Notification
 from hanlendar.domainmodel.taskoccurrence import DateTimeRange, TaskOccurrence, DateRange
@@ -416,47 +416,24 @@ class LocalTask(Task, persist.Versionable):
     ##  9: added '_createDate'
     ## 10: added '_location', '_url', '_sequence', '_lastModifiedDate', '_unknown_props'
     ## 11: added '_status', '_class'
-    _class_version = 10
+    ## 12: use '_common_data'
+    _class_version = 12
 
-    def __init__(self, title=""):
+    def __init__(self, title: str = ""):
         super().__init__()
 
         self._parent = None
         self.subitems: list = None
 
-        self._UID: str = generate_uid()
+        self._common_data: CommonData = CommonData()
+        self._common_data.title = title
 
-        self._title = title
-        self._location = ""
-        self._url = ""
-        self._description = ""
-        self._class: str = ""  ## PUBLIC, PRIVATE, CONFIDENTIAL
-        self._status: str = ""  ## TENTATIVE, CONFIRMED, CANCELLED
-
-        self._sequence = 0
-        self._completed = 0  ## task completion percentage, in range [0..100]
-
-        ## Evolution priority meanings:
-        ##  missing: Undefined
-        ##  3: High
-        ##  5: Normal
-        ##  7: Low
-        self._priority: int = 5  ## lower number, greater priority
-
-        self._createDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
-        self._lastModifiedDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
-        ## current task start time (updated every time recurrent task is completed)
-        self._startDate: datetime.datetime = None
         ## current task due time (updated every time recurrent task is completed)
         self._dueDate: datetime.datetime = None
         ## include completed 'self._startDate' and 'self._dueDate' (even for non recurrent tasks)
         self._completedList: list[DateTimeRange] = []
 
         self._reminderList: list[Reminder] = None
-        self._recurrence: Recurrent = None
-
-        ## unknown icalendar properties
-        self._unknown_props: dict[Any, Any] = None
 
     # ruff: noqa: PLR0912
     def _convertstate_(self, state_dict, state_version):  # pylint: disable=R0915
@@ -567,6 +544,31 @@ class LocalTask(Task, persist.Versionable):
             state_dict["_status"] = ""
             state_version += 1
 
+        if state_version == 11:
+            fields_mapping = {
+                "UID": "_UID",
+                "title": "_title",
+                "location": "_location",
+                "url": "_url",
+                "description": "_description",
+                "component_class": "_class",
+                "status": "_status",
+                "sequence": "_sequence",
+                "completed": "_completed",
+                "priority": "_priority",
+                "createDate": "_createDate",
+                "lastModifiedDate": "_lastModifiedDate",
+                "startDate": "_startDate",
+                "recurrence": "_recurrence",
+                "unknown_props": "_unknown_props",
+            }
+            common_data: CommonData = CommonData()
+            for key, value in fields_mapping.items():
+                common_data.__dict__[key] = state_dict[value]
+                del state_dict[value]
+            state_dict["_common_data"] = common_data
+            state_version += 1
+
         return state_dict
 
     ## overrided
@@ -594,75 +596,75 @@ class LocalTask(Task, persist.Versionable):
 
     ## overriden
     def _getUnknownProps(self) -> dict[Any, Any]:
-        return self._unknown_props
+        return self._common_data.unknown_props
 
     ## overriden
     def _getUID(self):
-        return self._UID
+        return self._common_data.UID
 
     ## overriden
     def _setUID(self, value):
-        self._UID = value
+        self._common_data.UID = value
 
     ## overriden
     def _getTitle(self) -> str:
-        return self._title
+        return self._common_data.title
 
     ## overriden
     def _setTitle(self, value: str):
-        self._title = value
+        self._common_data.title = value
 
     ## overriden
     def _getLocation(self) -> str:
-        return self._location
+        return self._common_data.location
 
     ## overriden
     def _setLocation(self, value: str):
-        self._location = value
+        self._common_data.location = value
 
     ## overriden
     def _getURL(self) -> str:
-        return self._url
+        return self._common_data.url
 
     ## overriden
     def _setURL(self, value: str):
-        self._url = value
+        self._common_data.url = value
 
     ## overriden
     def _getDescription(self) -> str:
-        return self._description
+        return self._common_data.description
 
     ## overriden
     def _setDescription(self, value: str):
-        self._description = value
+        self._common_data.description = value
 
     ## overriden
     def _getStatus(self) -> str:
-        return self._status
+        return self._common_data.status
 
     ## overriden
     def _setStatus(self, value: str):
-        self._status = value
+        self._common_data.status = value
 
     ## overriden
     def _getClass(self) -> str:
-        return self._class
+        return self._common_data.component_class
 
     ## overriden
     def _setClass(self, value: str):
-        self._class = value
+        self._common_data.component_class = value
 
     ## overriden
     def _getSequence(self) -> int:
-        return self._sequence
+        return self._common_data.sequence
 
     ## overriden
     def _setSequence(self, value: int):
-        self._sequence = value
+        self._common_data.sequence = value
 
     ## overrided
     def _getCompleted(self):
-        return self._completed
+        return self._common_data.completed
 
     ## overrided
     def _setCompleted(self, value=100):
@@ -679,35 +681,35 @@ class LocalTask(Task, persist.Versionable):
                 self._completedList.append(dt_range)
         if value == 100 and self._progressRecurrence() is True:
             # completed -- next occurrence
-            self._completed = 0
+            self._common_data.completed = 0
         else:
-            self._completed = value
+            self._common_data.completed = value
 
     ## overrided
     def _getPriority(self):
-        return self._priority
+        return self._common_data.priority
 
     ## overrided
     def _setPriority(self, value):
-        self._priority = value
+        self._common_data.priority = value
 
     ## ========================================================================
 
     ## overriden
     def _getCreateDateTime(self) -> datetime.datetime:
-        return self._createDate
+        return self._common_data.createDate
 
     ## overriden
     def _getLastModifiedDateTime(self) -> datetime.datetime:
-        return self._lastModifiedDate
+        return self._common_data.lastModifiedDate
 
     ## overriden
     def _getStartDateTime(self) -> datetime.datetime:
-        return self._startDate
+        return self._common_data.startDate
 
     ## overriden
     def _setStartDateTime(self, value: datetime.datetime):
-        self._startDate = value
+        self._common_data.startDate = value
 
     ## overriden
     def _getDueDateTime(self) -> datetime.datetime:
@@ -737,20 +739,20 @@ class LocalTask(Task, persist.Versionable):
 
     ## overriden
     def _getRecurrence(self) -> Recurrent:
-        return self._recurrence
+        return self._common_data.recurrence
 
     ## overriden
     def _setRecurrence(self, value: Recurrent):
-        self._recurrence = value
+        self._common_data.recurrence = value
 
     ## ========================================================================
 
     def __str__(self):
         reminderList = self._getReminderList()
         return (
-            f"[t:{self.title} d:{self.description} c:{self._completed} p:{self.priority}"
+            f"[t:{self.title} d:{self.description} c:{self._common_data.completed} p:{self.priority}"
             f" sd:{self.startDateTime} dd:{self.dueDateTime} rem:{reminderList}"
-            f" rec:{self._recurrence}]"
+            f" rec:{self._common_data.recurrence}]"
         )
 
 

@@ -75,8 +75,8 @@ class CalDAVManagerTest(unittest.TestCase):
         taskDate = datetime.datetime(2025, 11, 22, 10, 20, 30)
         new_task = self.manager.addNewTaskDateTime(taskDate, "task1")
         new_task.UID = "1111-2222-3333-4444"
-        new_task._createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
-        new_task._lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
+        new_task._common_data.createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
+        new_task._common_data.lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
         self.manager.saveToServer()
 
         calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)
@@ -107,7 +107,7 @@ END:VCALENDAR
     def test_addTodo(self):
         new_todo = self.manager.addNewToDo("todo1")
         new_todo.UID = "1111-2222-3333-4444"
-        new_todo._createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
+        new_todo._common_data.createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
         self.manager.saveToServer()
 
         calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)

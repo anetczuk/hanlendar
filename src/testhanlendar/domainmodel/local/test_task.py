@@ -170,13 +170,16 @@ class TaskTest(unittest.TestCase):
 
         task = Task()
         obj_dict = {
+            "_title": "task title",
+            "_description": "task description",
+            "_priority": 3,
             "_startDate": datetime.datetime(2020, 5, 2, 10),
             "_dueDate": datetime.datetime(2020, 5, 2, 11),
             "_completed": 0,
             "_recurrence": Recurrent(RepeatType.DAILY, 1),
             "_recurrentOffset": 3,
         }
-        task.__dict__ = task._convertstate_(obj_dict, 6)  # pylint: disable=W0212
+        task.__dict__ = task._convertstate_(obj_dict, 5)  # pylint: disable=W0212
 
         self.assertListEqual(
             task.completedList,

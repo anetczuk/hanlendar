@@ -469,8 +469,8 @@ END:VCALENDAR
         manager = Manager()
         task: LocalTask = manager.createEmptyTask()
         task.UID = "1111-2222-3333-4444"
-        task._createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
-        task._lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # pylint: disable=W0212
+        task._common_data.createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
+        task._common_data.lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # pylint: disable=W0212
         manager.addTask(task)
         task.title = "title example"
         content = export_icalendar_content(manager)
@@ -496,7 +496,7 @@ END:VCALENDAR
         manager = Manager()
         todo: LocalToDo = manager.createEmptyToDo()
         todo.UID = "1111-2222-3333-4444"
-        todo._createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
+        todo._common_data.createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
         manager.addToDo(todo)
         todo.title = "title example"
         content = export_icalendar_content(manager)

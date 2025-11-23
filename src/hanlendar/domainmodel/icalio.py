@@ -38,6 +38,7 @@ from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.local.todo import LocalToDo
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType, RepeatUntilMode
 from hanlendar.domainmodel.reminder import Reminder, RelatedType
+from hanlendar.domainmodel.item import CommonData
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -281,6 +282,104 @@ class ToDoField(Enum):
         return -1
 
 
+class CommonDataSerialization:
+
+    # pylint: disable=R0914
+    @staticmethod
+    def from_ical(component: icalendar.cal.Component, commonData: CommonData):
+        commonData.UID = get_ical_str(component, TaskField.UID)
+
+        summary = component.get("summary")
+        if summary is not None:
+            commonData.title = f"{summary}"
+
+        location = component.get("location")
+        if location is not None:
+            commonData.location = f"{location}"
+
+        url = component.get("url")
+        if url is not None:
+            commonData.url = f"{url}"
+
+        commonData.description = component.get("description")
+        if commonData.description is None:
+            commonData.description = ""
+        commonData.description = commonData.description.replace("=0D=0A", "\n")
+
+        commonData.component_class = component.get("class")
+        if commonData.component_class is None:
+            commonData.component_class = ""
+
+        commonData.status = component.get("status")
+        if commonData.status is None:
+            commonData.status = ""
+
+        sequence = component.get("sequence")
+        if sequence is not None:
+            commonData.sequence = int(sequence)
+
+        created_date = get_ical_value_dt(component, TaskField.CREATED)
+        commonData.createDate = created_date
+
+        modified_date = get_ical_value_dt(component, TaskField.LASTMODIFIED)
+        commonData.lastModifiedDate = modified_date
+
+        commonData.startDate = get_ical_value_dt(component, TaskField.DTSTART)
+
+        commonData.priority = get_ical_value_int(component, TaskField.PRIORITY, 5)
+
+        ## restore recurrence
+        commonData.recurrence, unhandled_props = RecurrentSerialization.from_ical(component)
+        commonData.unknown_props = unhandled_props.props
+
+    @staticmethod
+    def to_ical(commonData: CommonData, component: icalendar.cal.Component):
+        curr_time = datetime.datetime.now(tz=datetime.timezone.utc)
+        curr_time = curr_time.replace(tzinfo=None)
+        component.add("DTSTAMP", curr_time)
+
+        component.add(TaskField.UID.value, commonData.UID)
+        component.add(TaskField.SUMMARY.value, commonData.title)
+
+        if commonData.location:
+            component.add(TaskField.LOCATION.value, commonData.location)
+
+        if commonData.url:
+            component.add(TaskField.URL.value, commonData.url)
+
+        if commonData.description:
+            component.add(TaskField.DESCRIPTION.value, commonData.description)
+
+        if commonData.component_class:
+            component.add(TaskField.CLASS.value, commonData.component_class)
+
+        if commonData.status:
+            component.add(TaskField.STATUS.value, commonData.status)
+
+        if commonData.sequence > 0:
+            component.add(TaskField.SEQUENCE.value, commonData.sequence)
+
+        value_dt = convert_to_ical_dt(commonData.createDate)
+        if value_dt is not None:
+            component.add(TaskField.CREATED.value, value_dt)
+
+        value_dt = convert_to_ical_dt(commonData.lastModifiedDate)
+        component.add(TaskField.LASTMODIFIED.value, value_dt)
+
+        ## stored in other place
+        # value_dt = convert_to_ical_dt(commonData.startDate)
+        # if value_dt is not None:
+        #     component.add(TaskField.DTSTAMP.value, value_dt)
+
+        if commonData.priority != 5:
+            component.add(TaskField.PRIORITY.value, commonData.priority)
+
+        ## store recurrent
+        RecurrentSerialization.to_ical(commonData.recurrence, component)
+
+        write_unknown_props(component, commonData.unknown_props)
+
+
 class TaskSerialization:
 
     # pylint: disable=R0914
@@ -291,52 +390,15 @@ class TaskSerialization:
 
         task: Task = manager.createEmptyTask()
 
-        task.UID = get_ical_str(component, TaskField.UID)
-
-        summary = get_ical_str(component, TaskField.SUMMARY)
-        if summary is not None:
-            task.title = f"{summary}"
-
-        location = component.get(TaskField.LOCATION.value)
-        if location is not None:
-            task.location = f"{location}"
-
-        url = component.get(TaskField.URL.value)
-        if url is not None:
-            task.url = f"{url}"
-
-        task.description = get_ical_str(component, TaskField.DESCRIPTION)
-        if task.description is None:
-            task.description = ""
-        task.description = task.description.replace("=0D=0A", "\n")
-
-        task.class_prop = get_ical_str(component, TaskField.CLASS)
-        if task.class_prop is None:
-            task.class_prop = ""
-
-        task.status = get_ical_str(component, TaskField.STATUS)
-        if task.status is None:
-            task.status = ""
-
-        sequence = component.get(TaskField.SEQUENCE.value)
-        if sequence is not None:
-            task.sequence = int(sequence)
-
-        created_date = get_ical_value_dt(component, TaskField.CREATED)
-        task._createDate = created_date  # type: ignore[attr-defined]
-
-        modified_date = get_ical_value_dt(component, TaskField.LASTMODIFIED)
-        task._lastModifiedDate = modified_date  # type: ignore[attr-defined]
+        CommonDataSerialization.from_ical(component, task._common_data)  # type: ignore[attr-defined]
 
         start_date = get_ical_value_dt(component, TaskField.DTSTART)
         end_date = get_ical_value_dt(component, TaskField.DTEND)
-
         if start_date == end_date:
             start_date = None
         task.setOccurrence(start_date, end_date)
 
         task.completed = get_ical_value_int(component, TaskField.COMPLETED, 0)
-        task.priority = get_ical_value_int(component, TaskField.PRIORITY, 5)
 
         ## restore reminders
         reminders_list, unhandled_alarms = ReminderSerialization.from_ical(component)
@@ -344,9 +406,6 @@ class TaskSerialization:
             task.addReminder(reminder)
         if task.reminderList is None:
             task.reminderList = []
-
-        ## restore recurrence
-        task.recurrence, unhandled_recurrent = RecurrentSerialization.from_ical(component)
 
         unhandled_props = PropsDict()
         unhandled_props.add_props(component)
@@ -356,7 +415,7 @@ class TaskSerialization:
         for item in TaskField:
             prop_name = item.value.upper()
             unhandled_props.pop(prop_name)
-        unhandled_props.join(unhandled_recurrent)
+
         unhandled_subs = unhandled_alarms
         for subitem in component.subcomponents:
             if subitem.name == "VALARM":
@@ -365,7 +424,8 @@ class TaskSerialization:
             unhandled_subs.append(ical_item)
         if unhandled_subs:
             unhandled_props.add(UNHANDLED_SUBS_KEY, unhandled_subs)
-        task._unknown_props = unhandled_props.props  # type: ignore[attr-defined]
+
+        task._common_data.unknown_props |= unhandled_props.props  # type: ignore[attr-defined]
 
         parentUID = get_ical_str(component, TaskField.GROUP_PARENT)
         if parentUID is None:
@@ -389,37 +449,7 @@ class TaskSerialization:
     def to_ical(task: Task) -> icalendar.cal.Event:
         ievent: icalendar.cal.Event = icalendar.cal.Event()
 
-        curr_time = datetime.datetime.now(tz=datetime.timezone.utc)
-        curr_time = curr_time.replace(tzinfo=None)
-        ievent.add("DTSTAMP", curr_time)
-
-        ievent.add(TaskField.UID.value, task.UID)
-        ievent.add(TaskField.SUMMARY.value, task.title)
-
-        if task.location:
-            ievent.add(TaskField.LOCATION.value, task.location)
-
-        if task.url:
-            ievent.add(TaskField.URL.value, task.url)
-
-        if task.description:
-            ievent.add(TaskField.DESCRIPTION.value, task.description)
-
-        if task.class_prop:
-            ievent.add(TaskField.CLASS.value, task.class_prop)
-
-        if task.status:
-            ievent.add(TaskField.STATUS.value, task.status)
-
-        if task.sequence > 0:
-            ievent.add(TaskField.SEQUENCE.value, task.sequence)
-
-        value_dt = convert_to_ical_dt(task.createDateTime)
-        if value_dt is not None:
-            ievent.add(TaskField.CREATED.value, value_dt)
-
-        value_dt = convert_to_ical_dt(task.lastModifiedDateTime)
-        ievent.add(TaskField.LASTMODIFIED.value, value_dt)
+        CommonDataSerialization.to_ical(task._common_data, ievent)  # type: ignore[attr-defined]
 
         start_date_time = None
         if task.startDateTime is not None:
@@ -441,9 +471,6 @@ class TaskSerialization:
         if task.completed != 0:
             ievent.add(TaskField.COMPLETED.value, task.completed)
 
-        if task.priority != 5:
-            ievent.add(TaskField.PRIORITY.value, task.priority)
-
         taskParent = task.getParent()
         if taskParent is not None:
             ievent.add(TaskField.GROUP_PARENT.value, taskParent.UID)
@@ -458,11 +485,6 @@ class TaskSerialization:
                 continue
             ievent.add_component(subcomponent)
 
-        ## store recurrent
-        RecurrentSerialization.to_ical(task.recurrence, ievent)
-
-        write_unknown_props(ievent, task.unknownProps)
-
         return ievent
 
 
@@ -475,65 +497,29 @@ class ToDoSerialization:
 
         todo: LocalToDo = manager.createEmptyToDo()
 
-        todo.UID = get_ical_str(component, ToDoField.UID)
-
-        summary = get_ical_str(component, ToDoField.SUMMARY)
-        if summary is not None:
-            todo.title = f"{summary}"
-
-        location = component.get(ToDoField.LOCATION.value)
-        if location is not None:
-            todo.location = f"{location}"
-
-        url = component.get(ToDoField.URL.value)
-        if url is not None:
-            todo.url = f"{url}"
-
-        todo.description = get_ical_str(component, ToDoField.DESCRIPTION)
-        if todo.description is None:
-            todo.description = ""
-        todo.description = todo.description.replace("=0D=0A", "\n")
-
-        todo.class_prop = get_ical_str(component, ToDoField.CLASS)
-        if todo.class_prop is None:
-            todo.class_prop = ""
-
-        todo.status = get_ical_str(component, ToDoField.STATUS)
-        if todo.status is None:
-            todo.status = ""
-
-        sequence = component.get(ToDoField.SEQUENCE.value)
-        if sequence is not None:
-            todo.sequence = int(sequence)
-
-        created_date = get_ical_value_dt(component, ToDoField.CREATED)
-        todo._createDate = created_date
-
-        modified_date = get_ical_value_dt(component, ToDoField.LASTMODIFIED)
-        todo._lastModifiedDate = modified_date
+        CommonDataSerialization.from_ical(component, todo._common_data)
 
         todo.completed = get_ical_value_int(component, ToDoField.COMPLETE, 0)
-        todo.priority = get_ical_value_int(component, ToDoField.PRIORITY, 5)
-
-        # ## restore reminders
-        # reminders_list = ReminderSerialization.from_ical(component)
-        # for reminder in reminders_list:
-        #     task.addReminder(reminder)
-        # if task.reminderList is None:
-        #     task.reminderList = []
 
         unhandled_props = PropsDict()
         unhandled_props.add_props(component)
+        unhandled_props.pop("RRULE")
+        unhandled_props.pop("RDATE")
+        unhandled_props.pop("EXDATE")
         for item in ToDoField:
             prop_name = item.value.upper()
             unhandled_props.pop(prop_name)
+
         unhandled_subs = []
         for subitem in component.subcomponents:
+            ##if subitem.name == "VALARM":
+            ##    continue
             ical_item = subitem.to_ical()
             unhandled_subs.append(ical_item)
         if unhandled_subs:
             unhandled_props.add(UNHANDLED_SUBS_KEY, unhandled_subs)
-        todo._unknown_props = unhandled_props.props
+
+        todo._common_data.unknown_props |= unhandled_props.props
 
         parentUID = get_ical_str(component, ToDoField.GROUP_PARENT)
         if parentUID is None:
@@ -557,59 +543,14 @@ class ToDoSerialization:
     def to_ical(todo: LocalToDo) -> icalendar.cal.Todo:
         itodo: icalendar.cal.Todo = icalendar.cal.Todo()
 
-        curr_time = datetime.datetime.now(tz=datetime.timezone.utc)
-        curr_time = curr_time.replace(tzinfo=None)
-        itodo.add("DTSTAMP", curr_time)
-
-        value_dt = convert_to_ical_dt(todo.createDateTime)
-        itodo.add(ToDoField.CREATED.value, value_dt)
-
-        value_dt = convert_to_ical_dt(todo.lastModifiedDateTime)
-        itodo.add(ToDoField.LASTMODIFIED.value, value_dt)
-
-        itodo.add(ToDoField.UID.value, todo.UID)
-        itodo.add(ToDoField.SUMMARY.value, todo.title)
-
-        if todo.location:
-            itodo.add(ToDoField.LOCATION.value, todo.location)
-
-        if todo.url:
-            itodo.add(ToDoField.URL.value, todo.url)
-
-        if todo.description:
-            itodo.add(ToDoField.DESCRIPTION.value, todo.description)
-
-        if todo.class_prop:
-            itodo.add(ToDoField.CLASS.value, todo.class_prop)
-
-        if todo.status:
-            itodo.add(ToDoField.STATUS.value, todo.status)
-
-        if todo.sequence > 0:
-            itodo.add(ToDoField.SEQUENCE.value, todo.sequence)
+        CommonDataSerialization.to_ical(todo._common_data, itodo)
 
         if todo.completed != 0:
             itodo.add(ToDoField.COMPLETE.value, todo.completed)
 
-        if todo.priority != 5:
-            itodo.add(ToDoField.PRIORITY.value, todo.priority)
-
         taskParent = todo.getParent()
         if taskParent is not None:
             itodo.add(ToDoField.GROUP_PARENT.value, taskParent.UID)
-
-        # TODO: activate reminders
-        # ## store reminders
-        # reminderList = todo.reminderList
-        # if reminderList is None:
-        #     reminderList = []
-        # for reminder in reminderList:
-        #     subcomponent = ReminderSerialization.to_ical(reminder)
-        #     if subcomponent is None:
-        #         continue
-        #     itodo.add_component(subcomponent)
-
-        write_unknown_props(itodo, todo.unknownProps)
 
         return itodo
 
@@ -890,7 +831,7 @@ class RecurrentSerialization:
             if recurrence.monthday:
                 ## if there is no day in month, then no event (eg. there is no 30th of February)
                 ## MONTHLY: BYMONTHDAY=7,30
-                rrule["BYMONTHDAY"] = ",".join(recurrence.monthday)  # type: ignore[arg-type]
+                rrule["BYMONTHDAY"] = recurrence.monthday
 
         elif recurrence.mode == RepeatType.YEARLY:
             if recurrence.weekday and recurrence.monthweek:
