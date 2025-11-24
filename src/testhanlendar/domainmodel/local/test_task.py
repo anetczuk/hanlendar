@@ -179,7 +179,7 @@ class TaskTest(unittest.TestCase):
             "_recurrence": Recurrent(RepeatType.DAILY, 1),
             "_recurrentOffset": 3,
         }
-        task.__dict__ = task._convertstate_(obj_dict, 5)  # pylint: disable=W0212
+        task.__dict__ = task._convertstate_(obj_dict, 3)  # pylint: disable=W0212
 
         self.assertListEqual(
             task.completedList,

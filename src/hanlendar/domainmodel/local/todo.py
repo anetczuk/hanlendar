@@ -46,7 +46,8 @@ class LocalToDo(Item, persist.Versionable):
     ##  7: added '_unknown_props'
     ##  8: added '_status', '_class'
     ##  9: use '_common_data'
-    _class_version = 9
+    ## 10: added '_dueDate', '_completedDate'
+    _class_version = 10
 
     def __init__(self, title: str = ""):
         super().__init__()
@@ -56,6 +57,9 @@ class LocalToDo(Item, persist.Versionable):
 
         self._common_data: CommonData = CommonData()
         self._common_data.title = title
+
+        self._dueDate: datetime.datetime = None
+        self._completedDate: datetime.datetime = None
 
     def _convertstate_(self, state_dict, state_version):
         _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
@@ -262,3 +266,21 @@ class LocalToDo(Item, persist.Versionable):
     @property
     def lastModifiedDateTime(self) -> datetime.datetime:
         return self._common_data.lastModifiedDate
+
+    @property
+    def startDateTime(self) -> datetime.datetime:
+        return self._common_data.startDate
+
+    @property
+    def dueDateTime(self) -> datetime.datetime:
+        return self._dueDate
+
+    def setDueDateTime(self, value: datetime.datetime):
+        self._dueDate = value
+
+    @property
+    def completedDateTime(self) -> datetime.datetime:
+        return self._completedDate
+
+    def setCompletedDateTime(self, value: datetime.datetime):
+        self._completedDate = value

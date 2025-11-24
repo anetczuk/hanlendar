@@ -27,6 +27,8 @@ import uuid
 from typing import Any
 import datetime
 from hanlendar.domainmodel.recurrent import Recurrent
+from hanlendar.domainmodel.reminder import Reminder
+from hanlendar import persist
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -521,8 +523,11 @@ class Item:
 ## ============================================================
 
 
-class CommonData:
+class CommonData(persist.Versionable):
     """Container for common data for Task and ToDo."""
+
+    ##  1: added '_reminderList'
+    _class_version = 1
 
     def __init__(self):
         self.UID: str = generate_uid()
@@ -555,5 +560,28 @@ class CommonData:
 
         self.recurrence: Recurrent = None
 
+        self.reminderList: list[Reminder] = None
+
         ## unknown icalendar properties
         self.unknown_props: dict[str, Any] = None
+
+    # ruff: noqa: PLR0912
+    def _convertstate_(self, state_dict, state_version):  # pylint: disable=R0915
+        _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
+
+        if state_version is None:
+            state_version = -1
+
+        state_version = max(state_version, 0)
+
+        if state_version == 0:
+            state_dict["reminderList"] = None
+            state_version += 1
+
+    def addReminder(self, reminder=None):
+        if self.reminderList is None:
+            self.reminderList = []
+        if reminder is None:
+            reminder = Reminder()
+        self.reminderList.append(reminder)
+        return reminder

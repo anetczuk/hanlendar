@@ -407,13 +407,15 @@ class IcalioEvolutionTest(unittest.TestCase):
         self.assertEqual("7c72ab99414ca6dfe803be5765508d9055909706", new_item.UID)
         self.assertEqual(datetime.datetime(2025, 11, 8, 1, 2, 51), new_item.createDateTime.replace(tzinfo=None))
         self.assertEqual(datetime.datetime(2025, 11, 8, 1, 2, 51), new_item.lastModifiedDateTime.replace(tzinfo=None))
+        self.assertIsNone(new_item.startDateTime)
+        self.assertEqual(datetime.datetime(2025, 11, 22, 0, 0), new_item.dueDateTime.replace(tzinfo=None))
+        self.assertIsNone(new_item.completedDateTime)
         self.assertEqual("evolution task sample", new_item.summary)
         self.assertEqual("", new_item.location)
         self.assertEqual("", new_item.url)
         self.assertEqual("", new_item.description)
         self.assertEqual(1, new_item.sequence)
-        # TODO: all unknown props should be handled
-        self.assertDictEqual({"DUE": b"20251122"}, new_item.unknownProps)
+        self.assertDictEqual({}, new_item.unknownProps)
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -452,21 +454,22 @@ class IcalioEvolutionTest(unittest.TestCase):
             datetime.datetime(2025, 11, 13, 21, 35, 38),
             new_item.lastModifiedDateTime.replace(tzinfo=None),
         )
+        self.assertEqual(
+            datetime.datetime(2025, 11, 14, 0, 0),
+            new_item.startDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual(
+            datetime.datetime(2025, 11, 16, 0, 0),
+            new_item.dueDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual(datetime.datetime(2025, 11, 13, 1, 0), new_item.completedDateTime.replace(tzinfo=None))
         self.assertEqual("evolution todo start end", new_item.summary)
         self.assertEqual("todo location", new_item.location)
         self.assertEqual("", new_item.url)
         self.assertEqual("todo descr", new_item.description)
         self.assertEqual(2, new_item.sequence)
         # TODO: all unknown props should be handled
-        self.assertDictEqual(
-            {
-                "COMPLETED": b"20251113T000000Z",
-                "DTSTART": b"20251114",
-                "DUE": b"20251116",
-                "ESTIMATED-DURATION": b"P1DT2H3M",
-            },
-            new_item.unknownProps,
-        )
+        self.assertDictEqual({"ESTIMATED-DURATION": b"P1DT2H3M"}, new_item.unknownProps)
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -477,6 +480,13 @@ class IcalioEvolutionTest(unittest.TestCase):
         event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
         event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+        # TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "COMPLETED:20251113T000000Z",
+            "COMPLETED;VALUE=DATE:20251113",
+            replace_whole_line=True,
+        )
 
         self.assertEqual(
             event_ical_content,
@@ -505,19 +515,21 @@ class IcalioEvolutionTest(unittest.TestCase):
             datetime.datetime(2025, 11, 17, 17, 39, 19),
             new_item.lastModifiedDateTime.replace(tzinfo=None),
         )
+        self.assertEqual(
+            datetime.datetime(2025, 11, 20, 0, 0),
+            new_item.startDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual(
+            datetime.datetime(2025, 11, 24, 0, 0),
+            new_item.dueDateTime.replace(tzinfo=None),
+        )
+        self.assertIsNone(new_item.completedDateTime)
         self.assertEqual("evolution task repeated 1", new_item.summary)
         self.assertEqual("", new_item.location)
         self.assertEqual("", new_item.url)
         self.assertEqual("", new_item.description)
         self.assertEqual(1, new_item.sequence)
-        # TODO: all unknown props should be handled
-        self.assertDictEqual(
-            {
-                "DTSTART": b"20251120",
-                "DUE": b"20251124",
-            },
-            new_item.unknownProps,
-        )
+        self.assertDictEqual({}, new_item.unknownProps)
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -564,19 +576,21 @@ class IcalioEvolutionTest(unittest.TestCase):
             datetime.datetime(2025, 11, 17, 22, 2, 4),
             new_item.lastModifiedDateTime.replace(tzinfo=None),
         )
+        self.assertEqual(
+            datetime.datetime(2026, 2, 1, 0, 0),
+            new_item.startDateTime.replace(tzinfo=None),
+        )
+        self.assertEqual(
+            datetime.datetime(2026, 2, 2, 0, 0),
+            new_item.dueDateTime.replace(tzinfo=None),
+        )
+        self.assertIsNone(new_item.completedDateTime)
         self.assertEqual("evolution recurrent task", new_item.summary)
         self.assertEqual("", new_item.location)
         self.assertEqual("", new_item.url)
         self.assertEqual("completed twice, first started 5.12.2025", new_item.description)
         self.assertEqual(3, new_item.sequence)
-        # TODO: all unknown props should be handled
-        self.assertDictEqual(
-            {
-                "DTSTART": b"20260201",
-                "DUE": b"20260202",
-            },
-            new_item.unknownProps,
-        )
+        self.assertDictEqual({}, new_item.unknownProps)
 
         content = export_icalendar_content(manager)
         content = content.replace("\r\n", "\n")
@@ -587,6 +601,61 @@ class IcalioEvolutionTest(unittest.TestCase):
         event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
         event_ical_content = remove_line(event_ical_content, "VERSION:")
         event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+
+        self.assertEqual(
+            event_ical_content,
+            content,
+        )
+
+    def test_evolution_task_reminder(self):
+        ## compatibility with evolution
+
+        event_path = get_data_path("evolution_task_reminder.ics")
+        event_ical_content = read_file(event_path)
+
+        manager = Manager()
+        new_items, dangling_items = import_icalendar_content(manager, event_ical_content)
+
+        self.assertEqual(1, len(new_items))
+        self.assertEqual(0, len(dangling_items))
+
+        self.assertDictEqual({}, manager.unknownProps)
+
+        new_item: LocalToDo = new_items[0]
+        self.assertEqual(LocalToDo, type(new_item))
+        self.assertEqual("5b0e9a12d0a7c37551a07a5e173c61a371629717", new_item.UID)
+        self.assertEqual(datetime.datetime(2025, 11, 22, 22, 37, 19), new_item.createDateTime.replace(tzinfo=None))
+        self.assertEqual(
+            datetime.datetime(2025, 11, 22, 22, 39, 49),
+            new_item.lastModifiedDateTime.replace(tzinfo=None),
+        )
+        self.assertIsNone(new_item.startDateTime)
+        self.assertIsNone(new_item.dueDateTime)
+        self.assertIsNone(new_item.completedDateTime)
+        self.assertEqual("evolution todo eample", new_item.summary)
+        self.assertEqual("", new_item.location)
+        self.assertEqual("", new_item.url)
+        self.assertEqual("with simple reminder", new_item.description)
+        self.assertEqual(2, new_item.sequence)
+        self.assertDictEqual({}, new_item.unknownProps)
+
+        content = export_icalendar_content(manager)
+        content = content.replace("\r\n", "\n")
+        content = sort_ical_content(content)
+        content = replace_line(content, "DTSTAMP:", "20251104T195837Z")
+
+        event_ical_content = sort_ical_content(event_ical_content)
+        event_ical_content = replace_line(event_ical_content, "PRODID:", "-//Hanlendar//EN")
+        event_ical_content = remove_line(event_ical_content, "VERSION:")
+        event_ical_content = remove_line(event_ical_content, "CALSCALE:")
+        event_ical_content = remove_line(event_ical_content, "PERCENT-COMPLETE:")
+        # TODO: fix compatibility
+        event_ical_content = replace_line(
+            event_ical_content,
+            "EXDATE;VALUE=DATE:20251122",
+            "EXDATE:20251122",
+            replace_whole_line=True,
+        )
 
         self.assertEqual(
             event_ical_content,

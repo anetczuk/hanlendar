@@ -417,7 +417,8 @@ class LocalTask(Task, persist.Versionable):
     ## 10: added '_location', '_url', '_sequence', '_lastModifiedDate', '_unknown_props'
     ## 11: added '_status', '_class'
     ## 12: use '_common_data'
-    _class_version = 12
+    ## 12: move '_reminderList' to CommonData
+    _class_version = 13
 
     def __init__(self, title: str = ""):
         super().__init__()
@@ -433,10 +434,8 @@ class LocalTask(Task, persist.Versionable):
         ## include completed 'self._startDate' and 'self._dueDate' (even for non recurrent tasks)
         self._completedList: list[DateTimeRange] = []
 
-        self._reminderList: list[Reminder] = None
-
     # ruff: noqa: PLR0912
-    def _convertstate_(self, state_dict, state_version):  # pylint: disable=R0915
+    def _convertstate_(self, state_dict, state_version):  # pylint: disable=R0915,R0912
         _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
 
         if state_version is None:
@@ -567,6 +566,11 @@ class LocalTask(Task, persist.Versionable):
                 common_data.__dict__[key] = state_dict[value]
                 del state_dict[value]
             state_dict["_common_data"] = common_data
+            state_version += 1
+
+        if state_version == 12:
+            common_data = state_dict["_common_data"]
+            common_data.reminderList = state_dict["_reminderList"]
             state_version += 1
 
         return state_dict
@@ -729,11 +733,11 @@ class LocalTask(Task, persist.Versionable):
 
     ## overriden
     def _getReminderList(self):
-        return self._reminderList
+        return self._common_data.reminderList
 
     ## overriden
     def _setReminderList(self, values):
-        self._reminderList = values
+        self._common_data.reminderList = values
 
     ## =====================================================================
 
