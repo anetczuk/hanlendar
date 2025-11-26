@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>651</width>
-    <height>675</height>
+    <width>359</width>
+    <height>533</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,63 +15,122 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QFormLayout" name="formLayout">
+    <layout class="QFormLayout" name="formLayout_2">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>UID:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLabel" name="uidText">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="label">
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>Parent UID:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLabel" name="parentUidText">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_11">
        <property name="text">
         <string>Title:</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="titleEdit">
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-      </widget>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="titleEdit"/>
      </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_2">
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_12">
        <property name="text">
         <string>Completion:</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item row="3" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
        <property name="spacing">
         <number>0</number>
        </property>
        <item>
-        <widget class="QLabel" name="completionLabel">
+        <widget class="QSlider" name="completionSlider">
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="tickPosition">
+          <enum>QSlider::TicksBelow</enum>
+         </property>
+         <property name="tickInterval">
+          <number>10</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="completionValueLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>25</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="text">
-          <string>TextLabel</string>
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>%</string>
          </property>
         </widget>
        </item>
       </layout>
      </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_3">
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_14">
        <property name="text">
         <string>Priority:</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout">
+     <item row="4" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
        <item>
         <widget class="QSpinBox" name="priorityBox">
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
          <property name="value">
           <number>10</number>
          </property>
         </widget>
        </item>
        <item>
-        <spacer name="horizontalSpacer">
+        <spacer name="horizontalSpacer_4">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -86,19 +145,16 @@
       </layout>
      </item>
      <item row="5" column="0">
-      <widget class="QLabel" name="label_4">
+      <widget class="QLabel" name="label_15">
        <property name="text">
         <string>Start:</string>
        </property>
       </widget>
      </item>
      <item row="5" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <layout class="QHBoxLayout" name="horizontalLayout_7">
        <item>
         <widget class="QDateTimeEdit" name="startDateTime">
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
          <property name="calendarPopup">
           <bool>true</bool>
          </property>
@@ -106,16 +162,13 @@
        </item>
        <item>
         <widget class="QCheckBox" name="deadlineBox">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
          <property name="text">
           <string>Deadline</string>
          </property>
         </widget>
        </item>
        <item>
-        <spacer name="horizontalSpacer_2">
+        <spacer name="horizontalSpacer_5">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -130,26 +183,23 @@
       </layout>
      </item>
      <item row="6" column="0">
-      <widget class="QLabel" name="label_5">
+      <widget class="QLabel" name="label_16">
        <property name="text">
         <string>Due:</string>
        </property>
       </widget>
      </item>
      <item row="6" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <layout class="QHBoxLayout" name="horizontalLayout_8">
        <item>
         <widget class="QDateTimeEdit" name="dueDateTime">
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
          <property name="calendarPopup">
           <bool>true</bool>
          </property>
         </widget>
        </item>
        <item>
-        <spacer name="horizontalSpacer_3">
+        <spacer name="horizontalSpacer_6">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -163,47 +213,112 @@
        </item>
       </layout>
      </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="label_7">
-       <property name="text">
-        <string>Description:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="0">
-      <widget class="QLabel" name="label_6">
-       <property name="text">
-        <string>Reminder:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="1">
-      <widget class="QListWidget" name="reminderList"/>
-     </item>
-     <item row="9" column="0">
-      <widget class="QLabel" name="label_8">
-       <property name="text">
-        <string>Recurrent:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="9" column="1">
-      <widget class="RecurrentWidget" name="recurrentWidget" native="true"/>
-     </item>
-     <item row="7" column="1">
-      <widget class="QTextBrowser" name="descriptionEdit">
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-       <property name="textInteractionFlags">
-        <set>Qt::TextBrowserInteraction</set>
-       </property>
-       <property name="openLinks">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="descTab">
+      <attribute name="title">
+       <string>Description</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QTextBrowser" name="descriptionEdit">
+         <property name="readOnly">
+          <bool>false</bool>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextEditable|Qt::TextEditorInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+         <property name="openLinks">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_17">
+           <property name="text">
+            <string>Url:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="urlEdit"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="bottomButtonsLayout">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <spacer name="horizontalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="openLocalFilePB">
+           <property name="text">
+            <string>Open File</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="openLocalDirPB">
+           <property name="text">
+            <string>Open Dir</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="addUrlPB">
+           <property name="text">
+            <string>Add Url</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="reminderTab">
+      <attribute name="title">
+       <string>Reminder</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="ReminderWidget" name="reminderWidget" native="true"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="recurrentTab">
+      <attribute name="title">
+       <string>Recurrent</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="RecurrentWidget" name="recurrentWidget" native="true"/>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </item>
   </layout>
  </widget>
@@ -214,9 +329,31 @@
    <header>hanlendar.gui.widget.recurrentwidget</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>ReminderWidget</class>
+   <extends>QWidget</extends>
+   <header>hanlendar.gui.widget.reminderwidget</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <resources/>
  <connections>
+  <connection>
+   <sender>completionSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>completionValueLabel</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>332</x>
+     <y>57</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>612</x>
+     <y>57</y>
+    </hint>
+   </hints>
+  </connection>
   <connection>
    <sender>deadlineBox</sender>
    <signal>toggled(bool)</signal>
@@ -225,11 +362,11 @@
    <hints>
     <hint type="sourcelabel">
      <x>255</x>
-     <y>125</y>
+     <y>122</y>
     </hint>
     <hint type="destinationlabel">
      <x>148</x>
-     <y>125</y>
+     <y>122</y>
     </hint>
    </hints>
   </connection>

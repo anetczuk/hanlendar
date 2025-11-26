@@ -240,7 +240,7 @@ class TaskOccurrence:
         return retDate
 
     def isCompleted(self):
-        if self.dateRange.end < self.task.dueDateTime:
+        if self.dateRange.end and self.task.dueDateTime and self.dateRange.end < self.task.dueDateTime:
             return True
         return self.task.isCompleted()
 

@@ -39,6 +39,12 @@ with contextlib.suppress(ImportError):
 
 import sys
 from datetime import datetime
+import logging
+import copy
+import pprint
+from deepdiff import DeepDiff
+
+from hanlendar import logger
 
 from hanlendar.gui.qt import QApplication, renderToPixmap
 from hanlendar.gui.sigint import setup_interrupt_handling
@@ -54,6 +60,12 @@ from hanlendar.domainmodel.local.task import LocalTask
 
 if __name__ != "__main__":
     sys.exit(0)
+
+
+logFile = logger.get_logging_output_file()
+logger.configure(logFile)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 app = QApplication(sys.argv)
@@ -86,15 +98,32 @@ task.completed = 50
 task.priority = 5
 task.setDefaultDateTime(datetime.today().replace(hour=12, minute=0, second=0))
 
+task_backup = copy.deepcopy(task)
+
 setup_interrupt_handling()
 
 dialog = TaskDialog(task)
-dialog.resize(400, 450)
+dialog.resize(600, 800)
 
 root_path = get_root_path()
 renderToPixmap(dialog, root_path + "/tmp/taskdialog-big.png")
 
-dialogCode = dialog.exec_()
+exitCode = dialog.exec_()
+print("Dialog return:", exitCode)
 
-print("Dialog return:", dialogCode)
-print("Created task:", dialog.task)
+if exitCode == 0:
+    print("operation interrupted")
+    sys.exit(exitCode)
+
+diff = DeepDiff(task_backup, dialog.task)
+changed = dialog.task != task_backup
+if changed:
+    diff_str = pprint.pformat(diff)
+    print(f"task changed, difference:\n{diff_str}")
+else:
+    print("nothing changed")
+
+if changed != bool(diff):
+    print("invalid equality operator")
+
+sys.exit(exitCode)

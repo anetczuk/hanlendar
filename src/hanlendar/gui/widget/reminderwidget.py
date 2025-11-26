@@ -67,6 +67,13 @@ class ReminderWidget(QtBaseClass):  # type: ignore[valid-type,misc]
         self.setEnabled(True)
         self.refreshWidget()
 
+    def setReadOnly(self, *, read_only: bool):
+        self.ui.daysBox.setDisabled(read_only)
+        self.ui.hoursEdit.setDisabled(read_only)
+        self.ui.newPB.setDisabled(read_only)
+        self.ui.removePB.setDisabled(read_only)
+        self.ui.reminderList.setDisabled(read_only)
+
     def _newReminder(self):
         reminder = Reminder()
         reminder.setDays(2)

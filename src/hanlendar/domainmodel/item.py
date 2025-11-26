@@ -578,6 +578,14 @@ class CommonData(persist.Versionable):
             state_dict["reminderList"] = None
             state_version += 1
 
+    def __str__(self):
+        return (
+            f"[uid:{self.UID} t:{self.title} l:{self.location} u:{self.url} d:{self.description}"
+            f" c:{self.component_class} s:{self.status} s:{self.sequence} c:{self.completed} p:{self.priority}"
+            f" cd:{self.createDate} lm:{self.lastModifiedDate} sd:{self.startDate}"
+            f" rec:{self.recurrence} rem:{self.reminderList} up:{self.unknown_props}]"
+        )
+
     def addReminder(self, reminder=None):
         if self.reminderList is None:
             self.reminderList = []

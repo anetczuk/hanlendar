@@ -1,6 +1,8 @@
 PyQt5
 python-dateutil
 
+deepdiff
+
 ## for ics files
 icalendar
 pidfile

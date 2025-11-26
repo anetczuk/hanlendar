@@ -23,6 +23,8 @@
 # SOFTWARE.
 #
 
+# ruff: noqa: T201 (`print` found)
+
 import contextlib
 
 with contextlib.suppress(ImportError):
@@ -37,6 +39,13 @@ with contextlib.suppress(ImportError):
 
 import sys
 from datetime import datetime
+import logging
+import argparse
+import copy
+import pprint
+from deepdiff import DeepDiff
+
+from hanlendar import logger
 
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
@@ -52,6 +61,18 @@ if __name__ != "__main__":
     sys.exit(0)
 
 
+parser = argparse.ArgumentParser(description="Hanlendar Example")
+parser.add_argument("-ro", "--readonly", action="store_const", const=True, default=False, help="Read-only mode")
+
+args = parser.parse_args()
+
+
+logFile = logger.get_logging_output_file()
+logger.configure(logFile)
+
+_LOGGER = logging.getLogger(__name__)
+
+
 app = QApplication(sys.argv)
 app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
@@ -59,16 +80,35 @@ app.setOrganizationName("arnet")
 
 task = LocalTask()
 task.title = "Task title"
-task.description = "Description"
+task.description = "Description\nwww.google.pl"
+task.url = "http://www.google.pl"
 task.completed = 50
 task.priority = 5
 task.setDefaultDateTime(datetime.today())
 
+task_backup = copy.deepcopy(task)
+
 setup_interrupt_handling()
 
 widget = TaskDetails()
+widget.setReadOnly(read_only=args.readonly)
 widget.setTask(task)
 widget.show()
 
 exitCode = app.exec_()
+
+if widget.completed is not None:
+    task.completed = widget.completed
+
+diff = DeepDiff(task_backup, task)
+changed = task != task_backup
+if changed:
+    diff_str = pprint.pformat(diff)
+    print(f"task changed, difference:\n{diff_str}")
+else:
+    print("nothing changed")
+
+if changed != bool(diff):
+    print("invalid equality operator")
+
 sys.exit(exitCode)

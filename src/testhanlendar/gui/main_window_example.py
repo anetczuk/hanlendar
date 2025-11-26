@@ -94,7 +94,7 @@ def prepare_example_data(dataManager: Manager):
     dueDateTime = task3.dueDateTime - timedelta(days=40)
     subtask1.setOccurrence(startDateTime, dueDateTime)
 
-    completedTask = dataManager.addNewTaskDateTime(task2.startDateTime - timedelta(hours=3), "completed task 2")
+    completedTask = dataManager.addNewTaskDateTime(task2.dueDateTime - timedelta(hours=3), "completed task 2")
     completedTask.setCompleted()
 
     recurrentDate2 = datetime.today().replace(day=15) + timedelta(days=30)
@@ -180,10 +180,8 @@ window = MainWindow()
 window.disableSaving()
 window.setWindowTitle(window.windowTitle() + " Preview")
 
-window.loadSettings()
-if args.loadUserData:
-    window.loadData()
-else:
+window.loadSettings(load_user_data=args.loadUserData)
+if not args.loadUserData:
     manager = window.getManager()
     prepare_example_data(manager)
     window.refreshView()

@@ -268,6 +268,9 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         caldavManager.setData(manager)
         caldavManager.saveToServer()
 
+    def getManager(self):
+        return self.data.getManager()
+
     def loadData(self):
         self.data.loadData(custom_path=self._data_custom_path)
         self.refreshView()
@@ -312,6 +315,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
             return
         if isinstance(entity, Task):
             self.ui.taskDetails.setTask(entity)
+            self.ui.taskDetails.setReadOnly(read_only=True)
             self.ui.entityDetailsStack.setCurrentIndex(1)
             return
         if isinstance(entity, LocalToDo):
@@ -513,7 +517,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.appSettings = dialog.appSettings
         self.applySettings()
 
-    def applySettings(self):
+    def applySettings(self, *, load_user_data=True):
         _LOGGER.info("applying settings")
         self.setIconTheme(self.appSettings.trayIcon)
 
@@ -528,16 +532,17 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
             _LOGGER.warning("unhandled database mode: %s", self.appSettings.databaseMode)
 
         self.data.setManager(manager)
-        self.loadData()
+        if load_user_data:
+            self.loadData()
 
-    def loadSettings(self, *, apply=True):
+    def loadSettings(self, *, apply=True, load_user_data=True):
         settings = self.qtSettings.getSettings()
         self.logger.debug("loading app state from %s", settings.fileName())
 
         self.appSettings.loadSettings(settings)
 
         if apply:
-            self.applySettings()
+            self.applySettings(load_user_data=load_user_data)
 
         ## restore widget state and geometry
         settings.beginGroup(self.objectName())

@@ -575,6 +575,9 @@ class LocalTask(Task, persist.Versionable):
 
         return state_dict
 
+    def __str__(self):
+        return f"[common:{self._common_data} due:{self._dueDate} completed:{self._completedList}]"
+
     ## overrided
     def getParent(self):
         return self._parent
@@ -748,16 +751,6 @@ class LocalTask(Task, persist.Versionable):
     ## overriden
     def _setRecurrence(self, value: Recurrent):
         self._common_data.recurrence = value
-
-    ## ========================================================================
-
-    def __str__(self):
-        reminderList = self._getReminderList()
-        return (
-            f"[t:{self.title} d:{self.description} c:{self._common_data.completed} p:{self.priority}"
-            f" sd:{self.startDateTime} dd:{self.dueDateTime} rem:{reminderList}"
-            f" rec:{self._common_data.recurrence}]"
-        )
 
 
 ## ========================================================================
