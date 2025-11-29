@@ -29,8 +29,8 @@ from PyQt5.QtCore import QTime
 from PyQt5.QtWidgets import QListWidgetItem
 
 from hanlendar.domainmodel.reminder import Reminder
-from hanlendar.domainmodel.local.task import Task
 from hanlendar.gui import uiloader
+from hanlendar.domainmodel.item import CommonData
 
 
 UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
@@ -46,7 +46,7 @@ class ReminderWidget(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
 
-        self.task = None
+        self.common_data: CommonData = None
 
         self.ui.daysBox.valueChanged.connect(self._daysChanged)
         self.ui.hoursEdit.timeChanged.connect(self._hoursChanged)
@@ -55,17 +55,7 @@ class ReminderWidget(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.removePB.clicked.connect(self._removeReminder)
         self.ui.reminderList.itemSelectionChanged.connect(self._selectReminder)
 
-        self.setTask(None)
-
-    def setTask(self, task: Task):
-        self.task = task
-        if self.task is None:
-            self.setEnabled(False)
-            self.ui.reminderList.clear()
-            return
-
-        self.setEnabled(True)
-        self.refreshWidget()
+        self.setItem(None)
 
     def setReadOnly(self, *, read_only: bool):
         self.ui.daysBox.setDisabled(read_only)
@@ -74,15 +64,25 @@ class ReminderWidget(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.removePB.setDisabled(read_only)
         self.ui.reminderList.setDisabled(read_only)
 
+    def setItem(self, common_data: CommonData):
+        self.common_data = common_data
+        if self.common_data is None:
+            self.setEnabled(False)
+            self.ui.reminderList.clear()
+            return
+
+        self.setEnabled(True)
+        self.refreshWidget()
+
     def _newReminder(self):
         reminder = Reminder()
         reminder.setDays(2)
-        self.task.addReminder(reminder)
+        self.common_data.addReminder(reminder)
         self._activateWidget()
 
     def _removeReminder(self):
         reminder = self._getCurrentReminder()
-        self.task.reminderList.remove(reminder)
+        self.common_data.reminderList.remove(reminder)
         self.refreshWidget()
 
     def _selectReminder(self):
@@ -119,13 +119,13 @@ class ReminderWidget(QtBaseClass):  # type: ignore[valid-type,misc]
     # ===================================================================
 
     def refreshWidget(self):
-        if self.task is None:
+        if self.common_data is None:
             self._disableWidget()
             return
-        if self.task.reminderList is None:
+        if self.common_data.reminderList is None:
             self._disableWidget()
             return
-        if len(self.task.reminderList) < 1:
+        if len(self.common_data.reminderList) < 1:
             self._disableWidget()
             return
         self._activateWidget()
@@ -143,7 +143,7 @@ class ReminderWidget(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.reminderList.setEnabled(True)
 
         self.ui.reminderList.clear()
-        for i, rem in enumerate(self.task.reminderList):
+        for i, rem in enumerate(self.common_data.reminderList):
             item = QListWidgetItem(rem.printPretty())
             self.ui.reminderList.insertItem(i, item)
 
@@ -154,6 +154,6 @@ class ReminderWidget(QtBaseClass):  # type: ignore[valid-type,misc]
         currentRow = self.ui.reminderList.currentRow()
         if currentRow < 0:
             return None
-        if currentRow >= len(self.task.reminderList):
+        if currentRow >= len(self.common_data.reminderList):
             return None
-        return self.task.reminderList[currentRow]
+        return self.common_data.reminderList[currentRow]

@@ -23,6 +23,7 @@
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import QObject
+from PyQt5.QtWidgets import QMenu
 
 
 def get_label_url(url: str):
@@ -60,3 +61,28 @@ def render_to_pixmap(widget: QtWidgets.QWidget, outputPath=None):
     if outputPath is not None:
         pixmap.save(outputPath)
     return pixmap
+
+
+def find_action(menu: QMenu, actionText):
+    actions = menu.actions()
+    for act in actions:
+        currText = act.text()
+        if actionText in currText:
+            return act
+    return None
+
+
+def enable_layout(layout, *, enable_state: bool):
+    for i in range(layout.count()):
+        item = layout.itemAt(i)
+        widget = item.widget()
+        if widget:
+            widget.setEnabled(enable_state)
+
+
+def hide_layout(layout, *, hide_state: bool):
+    for i in range(layout.count()):
+        item = layout.itemAt(i)
+        widget = item.widget()
+        if widget:
+            widget.setVisible(not hide_state)

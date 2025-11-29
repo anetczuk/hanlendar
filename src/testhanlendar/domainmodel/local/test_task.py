@@ -25,10 +25,11 @@ import unittest
 
 import datetime
 from datetime import timedelta
+import copy
 
 from hanlendar.domainmodel.reminder import Reminder
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType
-from hanlendar.domainmodel.local.task import LocalTask as Task
+from hanlendar.domainmodel.local.task import LocalTask
 from hanlendar.domainmodel.taskoccurrence import TaskOccurrence, DateTimeRange
 
 
@@ -41,9 +42,78 @@ class TaskTest(unittest.TestCase):
         ## Called after testfunction was executed
         pass
 
+    def test_compare_self(self):
+        item = LocalTask()
+
+        # ruff: noqa: PLR0124
+        self.assertTrue(item == item)  # pylint: disable=R0124
+        # ruff: noqa: PLR0124
+        self.assertTrue(item is item)  # pylint: disable=R0124
+        # ruff: noqa: PLR0124
+        self.assertFalse(item != item)  # pylint: disable=R0124
+        self.assertEqual(item, item)
+
+    def test_compare_copy(self):
+        item_01 = LocalTask()
+        item_02 = copy.deepcopy(item_01)
+
+        self.assertTrue(item_01 == item_02)
+        self.assertFalse(item_01 is item_02)
+        self.assertFalse(item_01 != item_02)
+        self.assertEqual(item_01, item_02)
+
+    def test_compare_equal(self):
+        item_01 = LocalTask()
+        item_02 = LocalTask()
+        item_02.commonData.UID = item_01.commonData.UID
+        item_02.commonData.createDate = item_01.commonData.createDate
+        item_02.commonData.lastModifiedDate = item_01.commonData.lastModifiedDate
+
+        self.assertTrue(item_01 == item_02)
+        self.assertFalse(item_01 is item_02)
+        self.assertFalse(item_01 != item_02)
+        self.assertEqual(item_01, item_02)
+
+    def test_compare_diff(self):
+        item_01 = LocalTask()
+        item_02 = LocalTask()
+        item_02.title = item_01.title + "xxx"
+
+        self.assertFalse(item_01 == item_02)
+        self.assertFalse(item_01 is item_02)
+        self.assertTrue(item_01 != item_02)
+        self.assertNotEqual(item_01, item_02)
+
+    def test_in_self(self):
+        item = LocalTask()
+        item_set = {item}
+
+        self.assertTrue(item in item_set)
+        self.assertFalse(item not in item_set)
+        self.assertIn(item, item_set)
+
+    def test_in_copy(self):
+        item_01 = LocalTask()
+        item_set = {item_01}
+        item_02 = copy.deepcopy(item_01)
+
+        self.assertTrue(item_02 in item_set)
+        self.assertFalse(item_02 not in item_set)
+        self.assertIn(item_02, item_set)
+
+    def test_in_diff_01(self):
+        item_01 = LocalTask()
+        item_set = {item_01}
+        item_02 = LocalTask()
+        item_02.title = f"{item_01.title}_xxx"
+
+        self.assertFalse(item_02 in item_set)
+        self.assertTrue(item_02 not in item_set)
+        self.assertNotIn(item_02, item_set)
+
     def test_setCompleted(self):
         taskDate = datetime.date(2020, 5, 17)
-        task = Task()
+        task = LocalTask()
         task.setDefaultDate(taskDate)
 
         self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 17))
@@ -58,7 +128,7 @@ class TaskTest(unittest.TestCase):
 
     def test_setCompleted_recurrent(self):
         taskDate = datetime.date(2020, 5, 17)
-        task = Task()
+        task = LocalTask()
         task.recurrence = Recurrent()
         task.recurrence.setDaily()
         task.setDefaultDate(taskDate)
@@ -74,7 +144,7 @@ class TaskTest(unittest.TestCase):
 
     def test_setCompleted_recurrent_change(self):
         taskDate = datetime.date(2020, 5, 3)
-        task = Task()
+        task = LocalTask()
         task.recurrence = Recurrent()
         task.recurrence.setWeekly()
         task.setDefaultDate(taskDate)
@@ -110,7 +180,7 @@ class TaskTest(unittest.TestCase):
 
     def test_setCompleted_history_001(self):
         taskDate = datetime.date(2020, 5, 2)
-        task = Task()
+        task = LocalTask()
         task.recurrence = Recurrent()
         task.recurrence.setDaily()
         task.setDefaultDate(taskDate)
@@ -130,7 +200,7 @@ class TaskTest(unittest.TestCase):
 
     def test_setCompleted_history_002(self):
         taskDate = datetime.date(2020, 5, 2)
-        task = Task()
+        task = LocalTask()
         task.recurrence = Recurrent()
         task.setDefaultDate(taskDate)
 
@@ -166,9 +236,9 @@ class TaskTest(unittest.TestCase):
         self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 18))
 
     def test_deserialize_complete_list_v6(self):
-        ## test deserialization of Task version 6 and restore of "_completedList"
+        ## test deserialization of LocalTask version 6 and restore of "_completedList"
 
-        task = Task()
+        task = LocalTask()
         obj_dict = {
             "_title": "task title",
             "_description": "task description",
@@ -195,7 +265,7 @@ class TaskTest(unittest.TestCase):
 
     def test_getTaskOccurrenceForDate(self):
         taskDate = datetime.datetime(2020, 5, 17)
-        task = Task()
+        task = LocalTask()
         task.setOccurrenceDue(taskDate)
 
         entry: TaskOccurrence = task.getTaskOccurrenceForDate(taskDate.date())
@@ -203,7 +273,7 @@ class TaskTest(unittest.TestCase):
 
     def test_getTaskOccurrenceForDate_recurrent(self):
         taskDate = datetime.datetime(2020, 5, 17)
-        task = Task()
+        task = LocalTask()
         task.setOccurrenceDue(taskDate)
         task.recurrence = Recurrent()
         task.recurrence.setDaily(1)
@@ -214,7 +284,7 @@ class TaskTest(unittest.TestCase):
 
     def test_getTaskOccurrenceForDate_recurrent_far(self):
         taskDate = datetime.datetime(2020, 5, 17)
-        task = Task()
+        task = LocalTask()
         task.setOccurrenceDue(taskDate)
         task.recurrence = Recurrent()
         task.recurrence.setDaily(1)
@@ -224,7 +294,7 @@ class TaskTest(unittest.TestCase):
 
     def test_getTaskOccurrenceForDate_recurrent_endDate(self):
         taskDate = datetime.datetime(2020, 5, 17)
-        task = Task()
+        task = LocalTask()
         task.setOccurrenceDue(taskDate)
         task.recurrence = Recurrent()
         task.recurrence.setDaily(1)
@@ -234,7 +304,7 @@ class TaskTest(unittest.TestCase):
         self.assertEqual(entry, None)
 
     def test_getTaskOccurrenceForDate_recurrent_completed(self):
-        task = Task()
+        task = LocalTask()
         todayDate = datetime.datetime.today()
         dueDate = todayDate.replace(day=8, hour=12)
         task.setOccurrenceDue(dueDate)
@@ -254,7 +324,7 @@ class TaskTest(unittest.TestCase):
         self.assertEqual(occurrence3.isCompleted(), False)
 
     def test_getNotifications_due(self):
-        task = Task()
+        task = LocalTask()
         task.title = "task 1"
         dueDate = datetime.datetime.today() + datetime.timedelta(seconds=10)
         task.setOccurrenceDue(dueDate)
@@ -265,7 +335,7 @@ class TaskTest(unittest.TestCase):
         self.assertEqual(notifications[0].message, "task 'task 1' reached deadline")
 
     def test_getNotifications_reminder(self):
-        task = Task()
+        task = LocalTask()
         task.title = "task 1"
         dueDate = datetime.datetime.today() + datetime.timedelta(seconds=30)
         task.setOccurrenceDue(dueDate)
@@ -282,7 +352,7 @@ class TaskTest(unittest.TestCase):
         self.assertEqual(notifications[1].message, "task 'task 1' reached deadline")
 
     def test_recurrence(self):
-        task = Task()
+        task = LocalTask()
         task.recurrence = Recurrent(RepeatType.DAILY, 3)
 
         recurrent = task.recurrence
@@ -291,8 +361,8 @@ class TaskTest(unittest.TestCase):
 
 
 #     def test_repr(self):
-#         task = Task()
-#         task.addSubItem( Task() )
+#         task = LocalTask()
+#         task.addSubItem( LocalTask() )
 #         task.recurrence = Recurrent()
 #         task.recurrence.setDaily()
 #         task.reminderList = [ Reminder(1) ]
@@ -310,7 +380,7 @@ class TaskOccurrenceTest(unittest.TestCase):
         pass
 
     def test_date_current_subtask(self):
-        task = Task()
+        task = LocalTask()
         startTime = datetime.datetime(2020, 10, 10)
         dueTime = startTime + timedelta(days=1)
         task.setOccurrence(startTime, dueTime)
@@ -325,12 +395,12 @@ class TaskOccurrenceTest(unittest.TestCase):
         self.assertEqual(occurrence.dueCurrent, subtask.dueDateTime)
 
     def test_isTimedout(self):
-        task = Task()
+        task = LocalTask()
         occurrence = task.currentOccurrence()
         self.assertEqual(occurrence.isTimedout(), False)
 
     def test_isReminded(self):
-        task = Task()
+        task = LocalTask()
         dueDateTime = datetime.datetime.today() + datetime.timedelta(seconds=30)
         task.setOccurrenceDue(dueDateTime)
 
@@ -338,7 +408,7 @@ class TaskOccurrenceTest(unittest.TestCase):
         self.assertEqual(occurrence.isReminded(), False)
 
     def test_isReminded_reminded(self):
-        task = Task()
+        task = LocalTask()
         dueDateTime = datetime.datetime.today() + datetime.timedelta(seconds=30)
         task.setOccurrenceDue(dueDateTime)
 

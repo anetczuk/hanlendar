@@ -575,6 +575,18 @@ class LocalTask(Task, persist.Versionable):
 
         return state_dict
 
+    def __eq__(self, other):
+        if not isinstance(other, LocalTask):
+            return NotImplemented
+        return self.__dict__ == other.__dict__
+
+    def _key(self):
+        ## no parent, no subitems
+        return (self._common_data, self._dueDate, None if not self._completedList else tuple(self._completedList))
+
+    def __hash__(self):
+        return hash(self._key())
+
     def __str__(self):
         return f"[common:{self._common_data} due:{self._dueDate} completed:{self._completedList}]"
 
@@ -600,6 +612,10 @@ class LocalTask(Task, persist.Versionable):
         return self.addSubItem(LocalTask())
 
     ## ========================================================================
+
+    ## overriden
+    def _get_common_data(self) -> CommonData:
+        return self._common_data
 
     ## overriden
     def _getUnknownProps(self) -> dict[Any, Any]:

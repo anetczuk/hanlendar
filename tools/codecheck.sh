@@ -149,11 +149,13 @@ run_ruff() {
     ignore_errors+=(D102)       ## D102 Missing docstring in public method
     ignore_errors+=(D103)       ## D103 Missing docstring in public function
     ignore_errors+=(D104)       ## D104 Missing docstring in public package
+    ignore_errors+=(D106)       ## D106 Missing docstring in public nested clas
     ignore_errors+=(D107)       ## D107 Missing docstring in `__init__`
     ignore_errors+=(D203)       ## incorrect-blank-line-before-class
     ignore_errors+=(D213)       ## multi-line-summary-second-line
     ignore_errors+=(E501)       ## E501 Line too long (111 > 88)
     ignore_errors+=(ERA001)     ## ERA001 Found commented-out code
+    ignore_errors+=(FA102)      ## FA102 Missing `from __future__ import annotations`, but uses PEP 604 union
     ignore_errors+=(PLR2004)    ## PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
     ignore_errors+=(PT009)      ## PT009 Use a regular `assert` instead of unittest-style `assertEqual`
     ignore_errors+=(RUF013)     ## RUF013 PEP 484 prohibits implicit `Optional`

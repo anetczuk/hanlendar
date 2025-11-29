@@ -142,6 +142,18 @@ class LocalToDo(Item, persist.Versionable):
 
         return state_dict
 
+    def __eq__(self, other):
+        if not isinstance(other, LocalToDo):
+            return NotImplemented
+        return self.__dict__ == other.__dict__
+
+    def _key(self):
+        ## no parent, no subitems
+        return (self._common_data, self._dueDate, self._completedDate)
+
+    def __hash__(self):
+        return hash(self._key())
+
     def __str__(self):
         subLen = 0
         subitems = self.getSubitems()
@@ -172,6 +184,10 @@ class LocalToDo(Item, persist.Versionable):
         return self.addSubItem(todo, index)
 
     ## ========================================================================
+
+    ## overriden
+    def _get_common_data(self) -> CommonData:
+        return self._common_data
 
     ## overriden
     def _getUnknownProps(self) -> dict[Any, Any]:

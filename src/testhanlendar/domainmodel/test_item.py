@@ -25,10 +25,12 @@ import unittest
 
 import copy
 
-from hanlendar.domainmodel.local.todo import LocalToDo
+from hanlendar.domainmodel.item import CommonData
+from hanlendar.domainmodel.recurrent import Recurrent
+from hanlendar.domainmodel.reminder import Reminder
 
 
-class TaskTest(unittest.TestCase):
+class CommonDataTest(unittest.TestCase):
     def setUp(self):
         ## Called before testfunction is executed
         pass
@@ -38,7 +40,7 @@ class TaskTest(unittest.TestCase):
         pass
 
     def test_compare_self(self):
-        item = LocalToDo()
+        item = CommonData()
 
         # ruff: noqa: PLR0124
         self.assertTrue(item == item)  # pylint: disable=R0124
@@ -49,7 +51,7 @@ class TaskTest(unittest.TestCase):
         self.assertEqual(item, item)
 
     def test_compare_copy(self):
-        item_01 = LocalToDo()
+        item_01 = CommonData()
         item_02 = copy.deepcopy(item_01)
 
         self.assertTrue(item_01 == item_02)
@@ -58,11 +60,11 @@ class TaskTest(unittest.TestCase):
         self.assertEqual(item_01, item_02)
 
     def test_compare_equal(self):
-        item_01 = LocalToDo()
-        item_02 = LocalToDo()
-        item_02.commonData.UID = item_01.commonData.UID
-        item_02.commonData.createDate = item_01.commonData.createDate
-        item_02.commonData.lastModifiedDate = item_01.commonData.lastModifiedDate
+        item_01 = CommonData()
+        item_02 = CommonData()
+        item_02.UID = item_01.UID
+        item_02.createDate = item_01.createDate
+        item_02.lastModifiedDate = item_01.lastModifiedDate
 
         self.assertTrue(item_01 == item_02)
         self.assertFalse(item_01 is item_02)
@@ -70,8 +72,8 @@ class TaskTest(unittest.TestCase):
         self.assertEqual(item_01, item_02)
 
     def test_compare_diff(self):
-        item_01 = LocalToDo()
-        item_02 = LocalToDo()
+        item_01 = CommonData()
+        item_02 = CommonData()
         item_02.title = item_01.title + "xxx"
 
         self.assertFalse(item_01 == item_02)
@@ -80,7 +82,7 @@ class TaskTest(unittest.TestCase):
         self.assertNotEqual(item_01, item_02)
 
     def test_in_self(self):
-        item = LocalToDo()
+        item = CommonData()
         item_set = {item}
 
         self.assertTrue(item in item_set)
@@ -88,7 +90,9 @@ class TaskTest(unittest.TestCase):
         self.assertIn(item, item_set)
 
     def test_in_copy(self):
-        item_01 = LocalToDo()
+        item_01 = CommonData()
+        item_01.recurrence = Recurrent()
+        item_01.reminderList = [Reminder()]
         item_set = {item_01}
         item_02 = copy.deepcopy(item_01)
 
@@ -97,32 +101,35 @@ class TaskTest(unittest.TestCase):
         self.assertIn(item_02, item_set)
 
     def test_in_diff_01(self):
-        item_01 = LocalToDo()
+        item_01 = CommonData()
         item_set = {item_01}
-        item_02 = LocalToDo()
+        item_02 = CommonData()
         item_02.title = f"{item_01.title}_xxx"
 
         self.assertFalse(item_02 in item_set)
         self.assertTrue(item_02 not in item_set)
         self.assertNotIn(item_02, item_set)
 
-    def test_isCompleted(self):
-        todo = LocalToDo()
-        self.assertEqual(todo.isCompleted(), False)
+    def test_in_diff_02(self):
+        item_01 = CommonData()
+        item_01.recurrence = Recurrent()
+        item_set = {item_01}
 
-        todo.setCompleted()
-        self.assertEqual(todo.isCompleted(), True)
+        item_02 = copy.deepcopy(item_01)
+        item_02.recurrence.every = item_01.recurrence.every + 1
 
-    def test_isCompleted_sub(self):
-        todo = LocalToDo()
-        self.assertEqual(todo.isCompleted(), False)
+        self.assertFalse(item_02 in item_set)
+        self.assertTrue(item_02 not in item_set)
+        self.assertNotIn(item_02, item_set)
 
-        todo.setCompleted()
-        self.assertEqual(todo.isCompleted(), True)
+    def test_in_diff_03(self):
+        item_01 = CommonData()
+        item_01.reminderList = [Reminder()]
+        item_set = {item_01}
 
-        child = todo.addSubtodo(LocalToDo())
-        self.assertEqual(todo.isCompleted(), False)
+        item_02 = copy.deepcopy(item_01)
+        item_02.reminderList[0].action = f"{item_01.reminderList[0].action}_xxx"
 
-        child.setCompleted()
-        self.assertEqual(todo.isCompleted(), True)
-        self.assertEqual(child.isCompleted(), True)
+        self.assertFalse(item_02 in item_set)
+        self.assertTrue(item_02 not in item_set)
+        self.assertNotIn(item_02, item_set)

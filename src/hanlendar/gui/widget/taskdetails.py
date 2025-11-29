@@ -25,11 +25,12 @@ import logging
 import datetime
 
 from PyQt5.QtCore import Qt, QUrl
-from PyQt5.QtWidgets import QDialog, QFileDialog, QMenu, QAction
+from PyQt5.QtWidgets import QDialog, QFileDialog, QAction
 from PyQt5.QtGui import QDesktopServices, QKeySequence
 
 from hanlendar.domainmodel.local.task import Task
 from hanlendar.gui import uiloader
+from hanlendar.gui.utils import enable_layout, hide_layout, find_action
 
 
 UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
@@ -86,9 +87,9 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
 
         self.ui.descriptionEdit.setReadOnly(read_only)
         self.ui.reminderWidget.setReadOnly(read_only=read_only)
-        self.ui.recurrentWidget.setReadOnly(read_only)
+        self.ui.recurrentWidget.setReadOnly(read_only=read_only)
 
-        self.ui.urlEdit.setReadOnly(read_only)
+        hide_layout(self.ui.urlLayout, hide_state=read_only)
 
         enable_layout(self.ui.bottomButtonsLayout, enable_state=not read_only)
         hide_layout(self.ui.bottomButtonsLayout, hide_state=read_only)
@@ -96,12 +97,12 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
     def setTask(self, task: Task):
         self.task = None  ## prevents triggering change callbacks
 
-        self.ui.reminderWidget.setTask(task)
-        self.ui.recurrentWidget.setTask(task)
-
         self._update_tabs_state(task)
 
         if task is None:
+            self.ui.reminderWidget.setItem(None)
+            self.ui.recurrentWidget.setItem(None)
+
             self.ui.uidText.clear()
             self.ui.parentUidText.clear()
             self.ui.titleEdit.clear()
@@ -115,6 +116,9 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
             self.ui.urlEdit.clear()
             return
 
+        self.ui.reminderWidget.setItem(task.commonData)
+        self.ui.recurrentWidget.setItem(task)
+
         self.completed = task.completed
 
         self.ui.uidText.setText(task.UID)
@@ -127,19 +131,6 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.titleEdit.setText(task.title)
         self.ui.completionSlider.setValue(task.completed)
         self.ui.priorityBox.setValue(task.priority)
-
-        # if task.startDateTime is None:
-        #     self.ui.deadlineBox.setChecked(True)
-        #     if task.dueDateTime is None:
-        #         dueDateTime = datetime.datetime.today()
-        #         task.setOccurrenceDue(dueDateTime)
-        #     self.ui.startDateTime.setDateTime(task.dueDateTime)
-        # else:
-        #     self.ui.deadlineBox.setChecked(False)
-        #     self.ui.startDateTime.setDateTime(task.startDateTime)
-        #     if task.dueDateTime is None:
-        #         dueDateTime = task.startDateTime + datetime.timedelta(hours=1)
-        #         task.setOccurrence(task.startDateTime, dueDateTime)
 
         if task.startDateTime is None:
             self.ui.deadlineBox.setChecked(True)
@@ -156,9 +147,6 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
 
         self.ui.descriptionEdit.setText(task.description)
         self.ui.urlEdit.setText(task.url)
-
-        self.ui.reminderWidget.setTask(task)
-        self.ui.recurrentWidget.setTask(task)
 
         ## set at end - prevents triggering change callbacks
         self.task = task
@@ -315,31 +303,3 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.descriptionEdit.setAcceptRichText(False)
         self.ui.descriptionEdit.paste()
         self.ui.descriptionEdit.setAcceptRichText(richTextState)
-
-
-## =====================================================================
-
-
-def find_action(menu: QMenu, actionText):
-    actions = menu.actions()
-    for act in actions:
-        currText = act.text()
-        if actionText in currText:
-            return act
-    return None
-
-
-def enable_layout(layout, *, enable_state: bool):
-    for i in range(layout.count()):
-        item = layout.itemAt(i)
-        widget = item.widget()
-        if widget:
-            widget.setEnabled(enable_state)
-
-
-def hide_layout(layout, *, hide_state: bool):
-    for i in range(layout.count()):
-        item = layout.itemAt(i)
-        widget = item.widget()
-        if widget:
-            widget.setVisible(not hide_state)

@@ -109,6 +109,17 @@ class Reminder(persist.Versionable):
 
         return state_dict
 
+    def _key(self):
+        return (self.timeOffset, self.direction, self.action, self.description, self.related, self.unknownProps)
+
+    def __hash__(self):
+        return hash(self._key())
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._key() == other._key()
+
     def get_action(self) -> str:
         if self.action is None:
             self.action = "DISPLAY"

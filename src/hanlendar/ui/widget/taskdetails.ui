@@ -16,34 +16,6 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QFormLayout" name="formLayout_2">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_9">
-       <property name="text">
-        <string>UID:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLabel" name="uidText">
-       <property name="text">
-        <string>TextLabel</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_10">
-       <property name="text">
-        <string>Parent UID:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLabel" name="parentUidText">
-       <property name="text">
-        <string>TextLabel</string>
-       </property>
-      </widget>
-     </item>
      <item row="2" column="0">
       <widget class="QLabel" name="label_11">
        <property name="text">
@@ -144,6 +116,27 @@
        </item>
       </layout>
      </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>UID:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLabel" name="uidText">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>Parent UID:</string>
+       </property>
+      </widget>
+     </item>
      <item row="5" column="0">
       <widget class="QLabel" name="label_15">
        <property name="text">
@@ -213,6 +206,13 @@
        </item>
       </layout>
      </item>
+     <item row="1" column="1">
+      <widget class="QLabel" name="parentUidText">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
@@ -239,7 +239,7 @@
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_9">
+        <layout class="QHBoxLayout" name="urlLayout">
          <property name="topMargin">
           <number>0</number>
          </property>

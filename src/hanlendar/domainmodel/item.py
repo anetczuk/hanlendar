@@ -39,6 +39,112 @@ def generate_uid() -> str:
     # return str(uuid.uuid4()) + "@hanlendar"
 
 
+## ============================================================
+
+
+class CommonData(persist.Versionable):
+    """Container for common data for Task and ToDo."""
+
+    ##  1: added '_reminderList'
+    _class_version = 1
+
+    def __init__(self):
+        self.UID: str = generate_uid()
+
+        self.title: str = ""
+        self.location: str = ""
+        self.url: str = ""
+        self.description: str = ""
+        self.component_class: str = ""  ## PUBLIC, PRIVATE, CONFIDENTIAL
+
+        ## item Task - TENTATIVE, CONFIRMED, CANCELLED
+        ## item ToDo - NEEDS-ACTION, COMPLETED, IN-PROCESS, CANCELLED
+        self.status: str = ""
+
+        self.sequence: int = 0
+        self.completed: int = 0  ## completion percentage, in range [0..100]
+
+        ## Evolution priority meanings:
+        ##  missing: Undefined
+        ##  3: High
+        ##  5: Normal
+        ##  7: Low
+        self.priority: int = 5  ## lower number, greater priority
+
+        self.createDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
+        self.lastModifiedDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
+
+        ## current task start time (updated every time recurrent task is completed)
+        self.startDate: datetime.datetime = None
+
+        self.recurrence: Recurrent = None
+
+        self.reminderList: list[Reminder] = None
+
+        ## unknown icalendar properties
+        self.unknown_props: dict[str, Any] = None
+
+    # ruff: noqa: PLR0912
+    def _convertstate_(self, state_dict, state_version):  # pylint: disable=R0915
+        _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
+
+        if state_version is None:
+            state_version = -1
+
+        state_version = max(state_version, 0)
+
+        if state_version == 0:
+            state_dict["reminderList"] = None
+            state_version += 1
+
+    def __eq__(self, other):
+        if not isinstance(other, CommonData):
+            return NotImplemented
+        return self.__dict__ == other.__dict__
+
+    def _key(self):
+        return (
+            self.UID,
+            self.title,
+            self.location,
+            self.url,
+            self.description,
+            self.component_class,
+            self.status,
+            self.sequence,
+            self.completed,
+            self.priority,
+            self.createDate,
+            self.lastModifiedDate,
+            self.startDate,
+            self.recurrence,
+            None if not self.reminderList else tuple(self.reminderList),
+            self.unknown_props,
+        )
+
+    def __hash__(self):
+        return hash(self._key())
+
+    def __str__(self):
+        return (
+            f"[uid:{self.UID} t:{self.title} l:{self.location} u:{self.url} d:{self.description}"
+            f" c:{self.component_class} s:{self.status} s:{self.sequence} c:{self.completed} p:{self.priority}"
+            f" cd:{self.createDate} lm:{self.lastModifiedDate} sd:{self.startDate}"
+            f" rec:{self.recurrence} rem:{self.reminderList} up:{self.unknown_props}]"
+        )
+
+    def addReminder(self, reminder=None):
+        if self.reminderList is None:
+            self.reminderList = []
+        if reminder is None:
+            reminder = Reminder()
+        self.reminderList.append(reminder)
+        return reminder
+
+
+## ============================================================
+
+
 class Item:
     """Base class for Task and ToDo."""
 
@@ -64,6 +170,15 @@ class Item:
         raise NotImplementedError(message)
 
     ## ========================================================================
+
+    @abc.abstractmethod
+    def _get_common_data(self) -> CommonData:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @property
+    def commonData(self) -> CommonData:
+        return self._get_common_data()
 
     @abc.abstractmethod
     def _getUnknownProps(self) -> dict[Any, Any]:
@@ -436,7 +551,7 @@ class Item:
         items_num = len(itemList)
         for index in range(items_num):
             currItem = itemList[index]
-            if currItem == item:
+            if currItem is item:
                 popped = itemList.pop(index)
                 popped.setParent(None)
                 return popped
@@ -452,7 +567,7 @@ class Item:
         items_num = len(itemList)
         for index in range(items_num):
             currItem = itemList[index]
-            if currItem == oldItem:
+            if currItem is oldItem:
                 newItem.setParent(oldItem.getParent())
                 itemList[index] = newItem
                 return True
@@ -469,7 +584,7 @@ class Item:
         lSize = len(itemsList)
         for i in range(lSize):
             currItem = itemsList[i]
-            if currItem == item:
+            if currItem is item:
                 return [i]
             ret = currItem.getChildCoords(item)
             if ret is not None:
@@ -518,78 +633,3 @@ class Item:
     @staticmethod
     def sortByPriority(item):
         return item.priority
-
-
-## ============================================================
-
-
-class CommonData(persist.Versionable):
-    """Container for common data for Task and ToDo."""
-
-    ##  1: added '_reminderList'
-    _class_version = 1
-
-    def __init__(self):
-        self.UID: str = generate_uid()
-
-        self.title: str = ""
-        self.location: str = ""
-        self.url: str = ""
-        self.description: str = ""
-        self.component_class: str = ""  ## PUBLIC, PRIVATE, CONFIDENTIAL
-
-        ## item Task - TENTATIVE, CONFIRMED, CANCELLED
-        ## item ToDo - NEEDS-ACTION, COMPLETED, IN-PROCESS, CANCELLED
-        self.status: str = ""
-
-        self.sequence: int = 0
-        self.completed: int = 0  ## completion percentage, in range [0..100]
-
-        ## Evolution priority meanings:
-        ##  missing: Undefined
-        ##  3: High
-        ##  5: Normal
-        ##  7: Low
-        self.priority: int = 5  ## lower number, greater priority
-
-        self.createDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
-        self.lastModifiedDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
-
-        ## current task start time (updated every time recurrent task is completed)
-        self.startDate: datetime.datetime = None
-
-        self.recurrence: Recurrent = None
-
-        self.reminderList: list[Reminder] = None
-
-        ## unknown icalendar properties
-        self.unknown_props: dict[str, Any] = None
-
-    # ruff: noqa: PLR0912
-    def _convertstate_(self, state_dict, state_version):  # pylint: disable=R0915
-        _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
-
-        if state_version is None:
-            state_version = -1
-
-        state_version = max(state_version, 0)
-
-        if state_version == 0:
-            state_dict["reminderList"] = None
-            state_version += 1
-
-    def __str__(self):
-        return (
-            f"[uid:{self.UID} t:{self.title} l:{self.location} u:{self.url} d:{self.description}"
-            f" c:{self.component_class} s:{self.status} s:{self.sequence} c:{self.completed} p:{self.priority}"
-            f" cd:{self.createDate} lm:{self.lastModifiedDate} sd:{self.startDate}"
-            f" rec:{self.recurrence} rem:{self.reminderList} up:{self.unknown_props}]"
-        )
-
-    def addReminder(self, reminder=None):
-        if self.reminderList is None:
-            self.reminderList = []
-        if reminder is None:
-            reminder = Reminder()
-        self.reminderList.append(reminder)
-        return reminder
