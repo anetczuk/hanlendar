@@ -146,7 +146,7 @@ class DateTimeModeWidget(QtBaseClass):  # type: ignore[valid-type,misc]
         value = datetime.datetime.combine(new_value, datetime.datetime.min.time())
         self.ui.dateTimeEdit.setDateTime(value)
         self.ui.dateTimeEdit.blockSignals(blocked)
-        
+
         self._emit_value()
 
     def _dateTimeChanged(self, new_value):
@@ -167,13 +167,12 @@ class DateTimeModeWidget(QtBaseClass):  # type: ignore[valid-type,misc]
         current_data = self.ui.modeCB.currentData()
         if current_data == DateTimeModeWidget.DateTimeMode.NONE:
             return None
-        elif current_data == DateTimeModeWidget.DateTimeMode.DATE:
+        if current_data == DateTimeModeWidget.DateTimeMode.DATE:
             newValue = self.ui.dateEdit.date()
             return newValue.toPyDate()
-        elif current_data == DateTimeModeWidget.DateTimeMode.DATETIME:
+        if current_data == DateTimeModeWidget.DateTimeMode.DATETIME:
             newValue = self.ui.dateTimeEdit.dateTime()
             emit_value = newValue.toPyDateTime()
             return emit_value.replace(second=0, microsecond=0)
-        else:
-            _LOGGER.error("unhandled data type case: %s", current_data)
-            return None
+        _LOGGER.error("unhandled data type case: %s", current_data)
+        return None

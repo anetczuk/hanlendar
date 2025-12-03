@@ -24,7 +24,9 @@
 import logging
 import copy
 
-from hanlendar.domainmodel.local.task import LocalTask
+from PyQt5.QtWidgets import QDialog
+
+from hanlendar.domainmodel.local.task import LocalTask, Task
 from hanlendar.gui import uiloader
 
 
@@ -39,19 +41,27 @@ _LOGGER = logging.getLogger(__name__)
 ##
 class TaskDialog(QtBaseClass):  # type: ignore[valid-type,misc]
 
-    def __init__(self, taskObject, parentWidget=None):
+    def __init__(self, task: Task, parentWidget=None):
         super().__init__(parentWidget)
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
 
-        if taskObject is not None:
-            self.task = copy.deepcopy(taskObject)
+        self.task: Task = None
+
+        if task is not None:
+            self.task = copy.deepcopy(task)
         else:
             self.task = LocalTask()
 
-        self.ui.detailsWidget.setTask(self.task)
         self.ui.detailsWidget.setReadOnly(read_only=False)
+        self.ui.detailsWidget.setTask(self.task)
         self.finished.connect(self._finished)
 
-    def _finished(self, _value):
+    def getTask(self):
+        return self.task
+
+    def _finished(self, value):
+        if value == QDialog.Rejected:
+            ## changes rejected
+            return
         self.task.completed = self.ui.detailsWidget.completed

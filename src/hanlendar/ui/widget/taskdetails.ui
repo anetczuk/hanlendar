@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>359</width>
-    <height>533</height>
+    <width>575</width>
+    <height>757</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,6 +16,34 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QFormLayout" name="formLayout_2">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>UID:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLabel" name="uidText">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>Parent UID:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLabel" name="parentUidText">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
      <item row="2" column="0">
       <widget class="QLabel" name="label_11">
        <property name="text">
@@ -116,27 +144,6 @@
        </item>
       </layout>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_9">
-       <property name="text">
-        <string>UID:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLabel" name="uidText">
-       <property name="text">
-        <string>TextLabel</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_10">
-       <property name="text">
-        <string>Parent UID:</string>
-       </property>
-      </widget>
-     </item>
      <item row="5" column="0">
       <widget class="QLabel" name="label_15">
        <property name="text">
@@ -147,9 +154,12 @@
      <item row="5" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout_7">
        <item>
-        <widget class="QDateTimeEdit" name="startDateTime">
-         <property name="calendarPopup">
-          <bool>true</bool>
+        <widget class="DateTimeModeWidget" name="startDateTime" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>0</height>
+          </size>
          </property>
         </widget>
        </item>
@@ -185,9 +195,12 @@
      <item row="6" column="1">
       <layout class="QHBoxLayout" name="horizontalLayout_8">
        <item>
-        <widget class="QDateTimeEdit" name="dueDateTime">
-         <property name="calendarPopup">
-          <bool>true</bool>
+        <widget class="DateTimeModeWidget" name="dueDateTime" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>0</height>
+          </size>
          </property>
         </widget>
        </item>
@@ -206,12 +219,25 @@
        </item>
       </layout>
      </item>
-     <item row="1" column="1">
-      <widget class="QLabel" name="parentUidText">
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>TextLabel</string>
+        <string>Location:</string>
        </property>
       </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QLineEdit" name="locationEdit"/>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>URL:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QLineEdit" name="urlEdit"/>
      </item>
     </layout>
    </item>
@@ -246,12 +272,12 @@
          <item>
           <widget class="QLabel" name="label_17">
            <property name="text">
-            <string>Url:</string>
+            <string>Insert Url:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="urlEdit"/>
+          <widget class="QLineEdit" name="insertUrlEdit"/>
          </item>
         </layout>
        </item>
@@ -318,6 +344,16 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="unknownPropsTab">
+      <attribute name="title">
+       <string>Unknown Properties</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QPlainTextEdit" name="unknownPropsTextEdit"/>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>
@@ -335,40 +371,13 @@
    <header>hanlendar.gui.widget.reminderwidget</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>DateTimeModeWidget</class>
+   <extends>QWidget</extends>
+   <header>hanlendar.gui.widget.datetimemodewidget</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>completionSlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>completionValueLabel</receiver>
-   <slot>setNum(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>332</x>
-     <y>57</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>612</x>
-     <y>57</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>deadlineBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>startDateTime</receiver>
-   <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>255</x>
-     <y>122</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>148</x>
-     <y>122</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

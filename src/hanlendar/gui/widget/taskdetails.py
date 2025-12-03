@@ -23,6 +23,7 @@
 
 import logging
 import datetime
+import pprint
 
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtWidgets import QDialog, QFileDialog, QAction
@@ -50,6 +51,9 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.setupUi(self)
 
         self.task: Task = None
+        ## store value in temporary variable to
+        ## prevent adding "completed date" during field edit
+        ## add "completed "date after accepting the changes
         self.completed = None
         self._read_only: bool = True
 
@@ -59,6 +63,9 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.deadlineBox.stateChanged.connect(self._deadlineChanged)
         self.ui.startDateTime.dateTimeChanged.connect(self._startChanged)
         self.ui.dueDateTime.dateTimeChanged.connect(self._dueChanged)
+
+        self.ui.locationEdit.textChanged.connect(self._locationChanged)
+        self.ui.urlEdit.textChanged.connect(self._urlChanged)
 
         self.ui.descriptionEdit.setUndoRedoEnabled(True)
         self.ui.descriptionEdit.setContextMenuPolicy(Qt.CustomContextMenu)  # type: ignore[attr-defined]
@@ -82,9 +89,11 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.completionSlider.setDisabled(read_only)
         self.ui.priorityBox.setReadOnly(read_only)
         self.ui.deadlineBox.setDisabled(read_only)
-        self.ui.startDateTime.setReadOnly(read_only)
-        self.ui.dueDateTime.setReadOnly(read_only)
+        self.ui.startDateTime.setReadOnly(read_only=read_only)
+        self.ui.dueDateTime.setReadOnly(read_only=read_only)
 
+        self.ui.locationEdit.setReadOnly(read_only)
+        self.ui.urlEdit.setReadOnly(read_only)
         self.ui.descriptionEdit.setReadOnly(read_only)
         self.ui.reminderWidget.setReadOnly(read_only=read_only)
         self.ui.recurrentWidget.setReadOnly(read_only=read_only)
@@ -106,14 +115,18 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
             self.ui.uidText.clear()
             self.ui.parentUidText.clear()
             self.ui.titleEdit.clear()
+            self.ui.locationEdit.clear()
+            self.ui.urlEdit.clear()
             self.ui.completionSlider.setValue(0)
             self.ui.priorityBox.setValue(0)
             self.ui.deadlineBox.setChecked(False)
             todayDate = datetime.datetime.today()
-            self.ui.startDateTime.setDateTime(todayDate)
-            self.ui.dueDateTime.setDateTime(todayDate)
+            self.ui.startDateTime.setValue(todayDate)
+            self.ui.dueDateTime.setValue(todayDate)
             self.ui.descriptionEdit.clear()
-            self.ui.urlEdit.clear()
+            self.ui.insertUrlEdit.clear()
+
+            self.ui.unknownPropsTextEdit.clear()
             return
 
         self.ui.reminderWidget.setItem(task.commonData)
@@ -129,29 +142,45 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
             self.ui.parentUidText.setText("None")
 
         self.ui.titleEdit.setText(task.title)
+        self.ui.locationEdit.setText(task.location)
+        self.ui.urlEdit.setText(task.url)
         self.ui.completionSlider.setValue(task.completed)
         self.ui.priorityBox.setValue(task.priority)
 
         if task.startDateTime is None:
             self.ui.deadlineBox.setChecked(True)
-            if task.dueDateTime is not None:
-                self.ui.startDateTime.setDateTime(task.dueDateTime)
+            self.ui.startDateTime.setNone()
+            # self.ui.startDateTime.setReadOnly(read_only=True)
         else:
             self.ui.deadlineBox.setChecked(False)
-            self.ui.startDateTime.setDateTime(task.startDateTime)
+            self.ui.startDateTime.setValue(task.startDateTime)
+            # self.ui.startDateTime.setReadOnly(read_only=False)
+
         if task.dueDateTime is not None:
-            self.ui.dueDateTime.setEnabled(True)
-            self.ui.dueDateTime.setDateTime(task.dueDateTime)
+            self.ui.dueDateTime.setValue(task.dueDateTime)
+            # self.ui.dueDateTime.setReadOnly(read_only=False)
         else:
-            self.ui.dueDateTime.setEnabled(False)
+            self.ui.startDateTime.setNone()
+        #     self.ui.dueDateTime.setReadOnly(read_only=True)
 
         self.ui.descriptionEdit.setText(task.description)
-        self.ui.urlEdit.setText(task.url)
+        self.ui.insertUrlEdit.setText(task.url)
+
+        if task.unknownProps:
+            content = pprint.pformat(task.unknownProps, indent=3)
+            self.ui.unknownPropsTextEdit.setPlainText(content)
+        else:
+            self.ui.unknownPropsTextEdit.clear()
 
         ## set at end - prevents triggering change callbacks
         self.task = task
 
     def _update_tabs_state(self, task: Task):
+        if task and task.unknownProps:
+            self.ui.tabWidget.setTabEnabled(3, True)
+        else:
+            self.ui.tabWidget.setTabEnabled(3, False)
+
         if self._read_only is False or task is None:
             self.ui.tabWidget.setTabEnabled(1, True)
             self.ui.tabWidget.setTabEnabled(2, True)
@@ -187,6 +216,22 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         _LOGGER.debug("changing title from %s to %s", self.task.title, newValue)
         self.task.title = newValue
 
+    def _locationChanged(self):
+        if self._read_only:
+            return
+        if not self.task:
+            return
+        newValue = self.ui.locationEdit.text()
+        self.task.location = newValue
+
+    def _urlChanged(self):
+        if self._read_only:
+            return
+        if not self.task:
+            return
+        newValue = self.ui.urlEdit.text()
+        self.task.url = newValue
+
     def _descriptionChanged(self):
         if self._read_only:
             return
@@ -197,6 +242,7 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         self.task.description = newValue
 
     def _completedChanged(self, newValue):
+        self.ui.completionValueLabel.setNum(newValue)
         if self._read_only:
             return
         if not self.task:
@@ -213,18 +259,19 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         self.task.priority = newValue
 
     ## deadline checkbox
-    def _deadlineChanged(self, _state):
+    def _deadlineChanged(self, state):
         if self._read_only:
             return
         if not self.task:
             return
-        _LOGGER.debug("changing deadline to %s", _state)
+        _LOGGER.debug("changing deadline to %s", state)
         if self.ui.deadlineBox.isChecked():
             self.task.setDeadline()
+            self.ui.startDateTime.setReadOnly(read_only=True)
         else:
-            startDateTime = self.ui.startDateTime.dateTime()
-            start_date_time = startDateTime.toPyDateTime()
+            start_date_time = self.ui.startDateTime.dateTime()
             self.task.setOccurrence(start_date_time, self.task.dueDateTime)
+            self.ui.startDateTime.setReadOnly(read_only=False)
         self.ui.recurrentWidget.refreshWidget()
 
     def _startChanged(self, newValue):
@@ -233,11 +280,9 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         if not self.task:
             return
         _LOGGER.debug("changing start from %s to %s", self.task.startDateTime, newValue)
-        startDateTime = newValue.toPyDateTime()
-        startDateTime = startDateTime.replace(second=0)
-        self.task.setOccurrence(startDateTime, self.task.dueDateTime)
-        if self.task.startDateTime > self.task.dueDateTime:
-            self.ui.dueDateTime.setDateTime(self.task.startDateTime)
+        self.task.setOccurrence(newValue, self.task.dueDateTime)
+        if self._compare_start_due() > 0:
+            self.ui.dueDateTime.setValue(self.task.startDateTime)
         self.ui.recurrentWidget.refreshWidget()
 
     def _dueChanged(self, newValue):
@@ -246,12 +291,35 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         if not self.task:
             return
         _LOGGER.debug("changing due from %s to %s", self.task.dueDateTime, newValue)
-        dueDateTime = newValue.toPyDateTime()
-        dueDateTime = dueDateTime.replace(second=0)
-        self.task.setOccurrence(self.task.startDateTime, dueDateTime)
-        if self.task.startDateTime is not None and self.task.dueDateTime < self.task.startDateTime:
-            self.ui.startDateTime.setDateTime(self.task.dueDateTime)
+        self.task.setOccurrence(self.task.startDateTime, newValue)
+        if self._compare_start_due() > 0:
+            self.ui.startDateTime.setValue(self.task.dueDateTime)
         self.ui.recurrentWidget.refreshWidget()
+
+    ## -1 - start is less than due
+    ##  0 - start is equal to due
+    ##  1 - start is greater than due
+    def _compare_start_due(self) -> int:
+        if self.task.startDateTime is None:
+            return -1
+        if self.task.dueDateTime is None:
+            return -1
+
+        start_time = self.task.startDateTime
+        if not isinstance(start_time, datetime.datetime):
+            ## date type
+            start_time = datetime.datetime(start_time.year, start_time.month, start_time.day)
+
+        due_time = self.task.dueDateTime
+        if not isinstance(due_time, datetime.datetime):
+            ## date type
+            due_time = datetime.datetime(due_time.year, due_time.month, due_time.day)
+
+        if start_time > due_time:
+            return 1
+        if start_time == due_time:
+            return 0
+        return -1
 
     def _openLocalFile(self):
         fielDialog = QFileDialog(self)
@@ -261,7 +329,7 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
             return
         selectedFile = fielDialog.selectedFiles()[0]
         fileUrl = QUrl.fromLocalFile(selectedFile)
-        self.ui.urlEdit.setText(fileUrl.toString())
+        self.ui.insertUrlEdit.setText(fileUrl.toString())
 
     def _openLocalDir(self):
         fielDialog = QFileDialog(self)
@@ -271,18 +339,18 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
             return
         selectedFile = fielDialog.selectedFiles()[0]
         fileUrl = QUrl.fromLocalFile(selectedFile)
-        self.ui.urlEdit.setText(fileUrl.toString())
+        self.ui.insertUrlEdit.setText(fileUrl.toString())
 
     def _addUrl(self):
-        urlText = self.ui.urlEdit.text()
+        urlText = self.ui.insertUrlEdit.text()
         if len(urlText) < 1:
             return
         hrefText = f"""<a href="{urlText}">{urlText}</a> """
         self.ui.descriptionEdit.insertHtml(hrefText)
-        self.ui.urlEdit.setText("")
+        self.ui.insertUrlEdit.setText("")
 
     def _openLink(self, link):
-        self.ui.urlEdit.setText(link.toLocalFile())
+        self.ui.insertUrlEdit.setText(link.toLocalFile())
         QDesktopServices.openUrl(link)
 
     def _textEditContextMenuRequest(self, point):

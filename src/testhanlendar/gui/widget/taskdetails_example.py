@@ -84,7 +84,10 @@ task.description = "Description\nwww.google.pl"
 task.url = "http://www.google.pl"
 task.completed = 50
 task.priority = 5
-task.setDefaultDateTime(datetime.today())
+# task.setDefaultDateTime(datetime.today())
+start = datetime.today().date()
+end = datetime.today().replace(hour=14, minute=0, second=0)
+task.setOccurrence(start, end)
 
 task_backup = copy.deepcopy(task)
 

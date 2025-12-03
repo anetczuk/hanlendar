@@ -44,15 +44,16 @@ import copy
 import pprint
 from deepdiff import DeepDiff
 
+from PyQt5.QtWidgets import QDialog
+
 from hanlendar import logger
 
-from hanlendar.gui.qt import QApplication, renderToPixmap
+from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
-from hanlendar.gui.resources import get_root_path
 from hanlendar.gui.widget.taskdialog import TaskDialog
 
 from hanlendar.domainmodel.recurrent import Recurrent
-from hanlendar.domainmodel.local.task import LocalTask
+from hanlendar.domainmodel.local.task import LocalTask, Task
 
 
 ## ============================= main section ===================================
@@ -73,57 +74,53 @@ app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
+setup_interrupt_handling()
+
 parentTask = LocalTask()
 parentTask.recurrence = Recurrent()
 parentTask.recurrence.setWeekly(1)
 
-task = LocalTask()
-task.setParent(parentTask)
-task.title = "Task 1"
-# pylint: disable=C0301
-task.description = (
-    '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">'
-    '<html><head><meta name="qrichtext" content="1" /><style type="text/css">'
-    "p, li { white-space: pre-wrap; }"
-    "</style></head><body style=\" font-family:'Noto Sans'; font-size:9pt; font-weight:400; font-style:normal;\">"
-    '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">A description</p>'
-    '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>'
-    '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="www.google.pl"><span style=" text-decoration: underline; color:#0000ff;">www.google.pl</span></a> </p>'
-    '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p>'
-    '<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><a href="file:///var/log/kern.log"><span style=" text-decoration: underline; color:#0000ff;">file:///var/log/kern.log</span></a> </p>'
-    '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>'
-)
+item: Task = LocalTask()
+item.setParent(parentTask)
+item.title = "Task 1"
+item.description = "description example"
+item.completed = 50
+item.priority = 5
+# item.setDefaultDateTime(datetime.today().replace(hour=12, minute=0, second=0))
+start = datetime.today().date()
+end = datetime.today().replace(hour=14, minute=0, second=0)
+item.setOccurrence(start, end)
 
-task.completed = 50
-task.priority = 5
-task.setDefaultDateTime(datetime.today().replace(hour=12, minute=0, second=0))
+while True:
+    item_backup = copy.deepcopy(item)
 
-task_backup = copy.deepcopy(task)
+    dialog = TaskDialog(item)
+    ## dialog.resize(600, 800)
+    ## root_path = get_root_path()
+    ## renderToPixmap(dialog, root_path + "/tmp/taskdialog-big.png")
+    exit_code = dialog.exec_()  ## returns QDialog::DialogCode: 0 - rejected, 1 - accepted
 
-setup_interrupt_handling()
+    item = dialog.task
+    diff = DeepDiff(item_backup, item)
+    changed = item != item_backup
+    if changed:
+        diff_str = pprint.pformat(diff)
+        print(f"todo changed, difference:\n{diff_str}")
+    else:
+        print("nothing changed")
 
-dialog = TaskDialog(task)
-dialog.resize(600, 800)
+    if changed != bool(diff):
+        print("invalid equality operator")
 
-root_path = get_root_path()
-renderToPixmap(dialog, root_path + "/tmp/taskdialog-big.png")
+    if exit_code == QDialog.Rejected:
+        ## closed in other way than by closing window
+        print("rejected:", exit_code)
+        sys.exit(exit_code)
+    elif exit_code == QDialog.Accepted:
+        print("accepted:", exit_code)
+    else:
+        print("unknown exit code:", exit_code)
+        sys.exit(exit_code)
 
-exitCode = dialog.exec_()
-print("Dialog return:", exitCode)
-
-if exitCode == 0:
-    print("operation interrupted")
-    sys.exit(exitCode)
-
-diff = DeepDiff(task_backup, dialog.task)
-changed = dialog.task != task_backup
-if changed:
-    diff_str = pprint.pformat(diff)
-    print(f"task changed, difference:\n{diff_str}")
-else:
-    print("nothing changed")
-
-if changed != bool(diff):
-    print("invalid equality operator")
-
-sys.exit(exitCode)
+    if not changed:
+        sys.exit(exit_code)
