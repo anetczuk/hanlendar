@@ -197,7 +197,11 @@ class Recurrent(persist.Versionable):
             return False
         return currDate > self.endDate
 
-    def nextDateTime(self, currDate: datetime.datetime, offset: int = 1) -> datetime.datetime:
+    def nextDateTime(
+        self,
+        currDate: datetime.date | datetime.datetime,
+        offset: int = 1,
+    ) -> datetime.date | datetime.datetime:
         if currDate is None:
             return None
         dateOffset = self.getDateOffset()
@@ -206,7 +210,10 @@ class Recurrent(persist.Versionable):
         nextDate = currDate + dateOffset * offset
         if self.endDate is None:
             return nextDate
-        if nextDate.date() > self.endDate:
+        if isinstance(nextDate, datetime.datetime):
+            if nextDate.date() > self.endDate:
+                return None
+        elif nextDate > self.endDate:
             return None
         return nextDate
 

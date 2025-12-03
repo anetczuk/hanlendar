@@ -38,19 +38,18 @@ with contextlib.suppress(ImportError):
     ## in this case __init__ is already loaded
 
 import sys
+import logging
+import datetime
+import argparse
 import copy
 import pprint
-import logging
-import argparse
-from deepdiff.diff import DeepDiff
-
-from PyQt5.QtWidgets import QDialog
+from deepdiff import DeepDiff
 
 from hanlendar import logger
 
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
-from hanlendar.gui.widget.tododialog import ToDoDialog
+from hanlendar.gui.widget.tododetails import ToDoDetails
 
 from hanlendar.domainmodel.local.todo import LocalToDo
 
@@ -63,6 +62,7 @@ if __name__ != "__main__":
 
 
 parser = argparse.ArgumentParser(description="Hanlendar Example")
+parser.add_argument("-ro", "--readonly", action="store_const", const=True, default=False, help="Read-only mode")
 
 args = parser.parse_args()
 
@@ -80,43 +80,42 @@ app.setOrganizationName("arnet")
 
 setup_interrupt_handling()
 
-item = LocalToDo()
-item.title = "ToDo title"
-item.description = "Description"
-item.completed = 50
-item.priority = 5
-item._common_data.unknown_props = {"aaa": "bbb"}  # pylint: disable=W0212
+todo = LocalToDo()
+todo.title = "Task title"
+todo.description = "Description\nwww.google.pl"
+todo.url = "http://www.google.pl"
+todo.completed = 50
+todo.priority = 5
+start = datetime.datetime.today().date()
+end = datetime.datetime.today().replace(hour=14, minute=0, second=0)
+todo.setStartDateTime(start)
+todo.setDueDateTime(end)
+todo._common_data.unknown_props = {"aaa": "bbb"}  # pylint: disable=W0212
 
 while True:
-    item_backup = copy.deepcopy(item)
+    todo_backup = copy.deepcopy(todo)
 
-    dialog = ToDoDialog(item)
-    ## dialog.resize(600, 800)
-    ## root_path = get_root_path()
-    ## renderToPixmap(dialog, root_path + "/tmp/taskdialog-big.png")
-    exit_code = dialog.exec_()  ## returns QDialog::DialogCode: 0 - rejected, 1 - accepted
+    widget = ToDoDetails()
+    widget.setReadOnly(read_only=args.readonly)
+    widget.setToDo(todo)
+    widget.show()
 
-    item = dialog.todo
-    diff = DeepDiff(item_backup, item)
-    changed = item != item_backup
+    exit_code = app.exec_()
+    if exit_code != 0:
+        ## closed in other way than by closing window
+        print("interrupt exit", exit_code)
+        sys.exit(exit_code)
+
+    diff = DeepDiff(todo_backup, todo)
+    changed = todo != todo_backup
     if changed:
         diff_str = pprint.pformat(diff)
-        print(f"item changed, difference:\n{diff_str}")
+        print(f"todo changed, difference:\n{diff_str}")
     else:
         print("nothing changed")
 
     if changed != bool(diff):
         print("invalid equality operator")
-
-    if exit_code == QDialog.Rejected:
-        ## closed in other way than by closing window
-        print("rejected:", exit_code)
-        sys.exit(exit_code)
-    elif exit_code == QDialog.Accepted:
-        print("accepted:", exit_code)
-    else:
-        print("unknown exit code:", exit_code)
-        sys.exit(exit_code)
 
     if not changed:
         sys.exit(exit_code)

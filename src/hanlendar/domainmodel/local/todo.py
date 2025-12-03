@@ -28,6 +28,7 @@ from typing import Any
 from hanlendar import persist
 
 from hanlendar.domainmodel.item import Item, generate_uid, CommonData
+from hanlendar.domainmodel.recurrent import Recurrent
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -263,7 +264,14 @@ class LocalToDo(Item, persist.Versionable):
 
     ## overrided
     def _setCompleted(self, value=100):
+        if self._common_data.completed == value:
+            return
         self._common_data.completed = value
+        if value >= 100:
+            utc_dt = datetime.datetime.now(datetime.timezone.utc)
+            self._completedDate = utc_dt.astimezone()
+        else:
+            self._completedDate = None
 
     ## overrided
     def _getPriority(self):
@@ -287,6 +295,9 @@ class LocalToDo(Item, persist.Versionable):
     def startDateTime(self) -> datetime.datetime:
         return self._common_data.startDate
 
+    def setStartDateTime(self, value: datetime.datetime):
+        self._common_data.startDate = value
+
     @property
     def dueDateTime(self) -> datetime.datetime:
         return self._dueDate
@@ -300,3 +311,38 @@ class LocalToDo(Item, persist.Versionable):
 
     def setCompletedDateTime(self, value: datetime.datetime):
         self._completedDate = value
+        if value is not None:
+            self._common_data.completed = 100
+        else:
+            self._common_data.completed = 0
+
+    ## ========================================================================
+
+    def getAppliedRecurrence(self) -> Recurrent:
+        recurrence = self._common_data.recurrence
+        if recurrence is None:
+            return None
+        if recurrence.isAsParent() is False:
+            return recurrence
+        parent = self.getParent()
+        if parent is None:
+            return None
+        return parent.getAppliedRecurrence()
+
+    def getReferenceDateTime(self) -> datetime.datetime:
+        if self.startDateTime is not None:
+            return self.startDateTime
+        ## deadline case
+        return self.dueDateTime
+
+    def printNextRecurrence(self) -> str:
+        recurr = self.getAppliedRecurrence()
+        if recurr is None:
+            return "None"
+        refDate = self.getReferenceDateTime()
+        nextRepeat = recurr.nextDateTime(refDate)
+        if nextRepeat is None:
+            return "None"
+        if isinstance(nextRepeat, datetime.datetime):
+            return nextRepeat.strftime("%Y-%m-%d %H:%M")
+        return nextRepeat.strftime("%Y-%m-%d")

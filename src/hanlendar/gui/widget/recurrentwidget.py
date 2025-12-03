@@ -70,8 +70,7 @@ class RecurrentWidget(QtBaseClass):  # type: ignore[valid-type,misc]
             return self.todo.commonData
 
         def print_next_recurrence(self) -> str:
-            # TODO: implement recurrence for LocalToDo
-            return "None"
+            return self.todo.printNextRecurrence()
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -207,6 +206,7 @@ class RecurrentWidget(QtBaseClass):  # type: ignore[valid-type,misc]
         if recurrence is None:
             return
         recurrence.endDate = newValue.toPyDate()
+        self._updateNextRepeat()
 
     ## ================= update GUI state ================
 

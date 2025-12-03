@@ -38,21 +38,14 @@ with contextlib.suppress(ImportError):
     ## in this case __init__ is already loaded
 
 import sys
-import copy
-import pprint
 import logging
 import argparse
-from deepdiff.diff import DeepDiff
-
-from PyQt5.QtWidgets import QDialog
 
 from hanlendar import logger
 
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
-from hanlendar.gui.widget.tododialog import ToDoDialog
-
-from hanlendar.domainmodel.local.todo import LocalToDo
+from hanlendar.gui.widget.datetimemodewidget import DateTimeModeWidget
 
 
 ## ============================= main section ===================================
@@ -63,6 +56,7 @@ if __name__ != "__main__":
 
 
 parser = argparse.ArgumentParser(description="Hanlendar Example")
+parser.add_argument("-ro", "--readonly", action="store_const", const=True, default=False, help="Read-only mode")
 
 args = parser.parse_args()
 
@@ -80,43 +74,9 @@ app.setOrganizationName("arnet")
 
 setup_interrupt_handling()
 
-item = LocalToDo()
-item.title = "ToDo title"
-item.description = "Description"
-item.completed = 50
-item.priority = 5
-item._common_data.unknown_props = {"aaa": "bbb"}  # pylint: disable=W0212
+widget = DateTimeModeWidget()
+widget.setReadOnly(read_only=args.readonly)
+widget.show()
 
-while True:
-    item_backup = copy.deepcopy(item)
-
-    dialog = ToDoDialog(item)
-    ## dialog.resize(600, 800)
-    ## root_path = get_root_path()
-    ## renderToPixmap(dialog, root_path + "/tmp/taskdialog-big.png")
-    exit_code = dialog.exec_()  ## returns QDialog::DialogCode: 0 - rejected, 1 - accepted
-
-    item = dialog.todo
-    diff = DeepDiff(item_backup, item)
-    changed = item != item_backup
-    if changed:
-        diff_str = pprint.pformat(diff)
-        print(f"item changed, difference:\n{diff_str}")
-    else:
-        print("nothing changed")
-
-    if changed != bool(diff):
-        print("invalid equality operator")
-
-    if exit_code == QDialog.Rejected:
-        ## closed in other way than by closing window
-        print("rejected:", exit_code)
-        sys.exit(exit_code)
-    elif exit_code == QDialog.Accepted:
-        print("accepted:", exit_code)
-    else:
-        print("unknown exit code:", exit_code)
-        sys.exit(exit_code)
-
-    if not changed:
-        sys.exit(exit_code)
+exitCode = app.exec_()
+sys.exit(exitCode)
