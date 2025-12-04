@@ -23,13 +23,16 @@
 
 import logging
 from typing import Any
+import datetime
 
 from enum import Enum, unique
-from datetime import datetime, timedelta
 from hanlendar import persist
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+DateDateTime = datetime.date | datetime.datetime
 
 
 @unique
@@ -49,17 +52,23 @@ class RemainderDirectionType(Enum):
 class Notification:
 
     def __init__(self):
-        self.notifyTime: datetime = None  ## time given in seconds since epoch
+        self.notifyTime: datetime.datetime = None  ## time given in seconds since epoch
         self.message: str = None
         # ruff: noqa: UP037
         self.task: "Task" = None  # type: ignore[name-defined]  # noqa: F821
+
+    def setNotifyTime(self, value: DateDateTime):
+        if isinstance(value, datetime.datetime):
+            self.notifyTime = value
+        else:
+            self.notifyTime = datetime.datetime(value.year, value.month, value.day)
 
     def remainingSeconds(self) -> float:
         timeDiff = self.remainingTime()
         return timeDiff.total_seconds()
 
-    def remainingTime(self) -> timedelta:
-        currTime = datetime.today()
+    def remainingTime(self) -> datetime.timedelta:
+        currTime = datetime.datetime.today()
         return self.notifyTime - currTime
 
     def __str__(self):
@@ -76,10 +85,10 @@ class Reminder(persist.Versionable):
     ##  1: add 'action', 'description', 'related' and 'unknownProps' fields
     _class_version = 1
 
-    def __init__(self, days=None, timeOffset: timedelta = None, direction=None):
+    def __init__(self, days=None, timeOffset: datetime.timedelta = None, direction=None):
         super().__init__()
 
-        self.timeOffset: timedelta = timeOffset
+        self.timeOffset: datetime.timedelta = timeOffset
         self.direction: RemainderDirectionType = direction  ## not used?
         if days is not None:
             self.setDays(days)
@@ -141,35 +150,35 @@ class Reminder(persist.Versionable):
 
     def setDays(self, days):
         if self.timeOffset is None:
-            self.timeOffset = timedelta()
-        remainTime = self.timeOffset % timedelta(days=1)
+            self.timeOffset = datetime.timedelta()
+        remainTime = self.timeOffset % datetime.timedelta(days=1)
         remainSeconds = remainTime.total_seconds()
-        self.timeOffset = timedelta(days=days, seconds=remainSeconds)
+        self.timeOffset = datetime.timedelta(days=days, seconds=remainSeconds)
 
     def setMillis(self, millis):
         if self.timeOffset is None:
-            self.timeOffset = timedelta()
+            self.timeOffset = datetime.timedelta()
         days = self.timeOffset.days
-        self.timeOffset = timedelta(days=days, milliseconds=millis)
+        self.timeOffset = datetime.timedelta(days=days, milliseconds=millis)
 
     # returns positive value
-    def getOffset(self) -> timedelta:
+    def getOffset(self) -> datetime.timedelta:
         if self.timeOffset is None:
-            return timedelta()
+            return datetime.timedelta()
         return self.timeOffset
 
     # return pair [days, seconds]
     def splitTimeOffset(self):
         if self.timeOffset is None:
             return [0, 0]
-        remainTime = self.timeOffset % timedelta(days=1)
+        remainTime = self.timeOffset % datetime.timedelta(days=1)
         seconds = remainTime.total_seconds()
         return [self.timeOffset.days, seconds]
 
     def printPretty(self) -> str:
         offsetTime = self.timeOffset
         if offsetTime is None:
-            offsetTime = timedelta()
+            offsetTime = datetime.timedelta()
         return print_timedelta(offsetTime) + " before due time"
 
     def __repr__(self):
@@ -188,9 +197,9 @@ class Reminder(persist.Versionable):
             timeField = fields[0]
         timeField = timeField.strip()
         try:
-            timePart = datetime.strptime(timeField, "%H:%M:%S")
+            timePart = datetime.datetime.strptime(timeField, "%H:%M:%S")
             retObj = Reminder()
-            retObj.timeOffset = timedelta(
+            retObj.timeOffset = datetime.timedelta(
                 days=days,
                 hours=timePart.hour,
                 minutes=timePart.minute,
@@ -202,7 +211,7 @@ class Reminder(persist.Versionable):
         return retObj
 
 
-def print_timedelta(value: timedelta):
+def print_timedelta(value: datetime.timedelta):
     s = ""
     secs = value.seconds
     days = value.days

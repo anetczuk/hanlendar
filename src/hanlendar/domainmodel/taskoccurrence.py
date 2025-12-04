@@ -266,7 +266,7 @@ class TaskOccurrence:
             return self._dateRange
         return None
 
-    def getFirstDateTime(self):
+    def getFirstDateTime(self) -> datetime.datetime:
         return self.task.getFirstDateTime()
 
     def isInMonth(self, monthDate: datetime.date):

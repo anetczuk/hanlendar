@@ -27,6 +27,7 @@ from enum import Enum, unique
 
 from PyQt5.QtCore import pyqtSignal
 
+from hanlendar.domainmodel.item import DateDateTime, ensure_date_time
 from hanlendar.gui import uiloader
 
 
@@ -55,9 +56,9 @@ class DateTimeModeWidget(QtBaseClass):  # type: ignore[valid-type,misc]
                 index = index + 1
             return -1
 
-    valueChanged = pyqtSignal(object)  # datetime.date | datetime.datetime
-    dateChanged = pyqtSignal(object)  # datetime.date | datetime.datetime
-    dateTimeChanged = pyqtSignal(object)  # datetime.date | datetime.datetime
+    valueChanged = pyqtSignal(object)  # DateDateTime
+    dateChanged = pyqtSignal(object)  # DateDateTime
+    dateTimeChanged = pyqtSignal(object)  # DateDateTime
 
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
@@ -100,7 +101,8 @@ class DateTimeModeWidget(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.dateEdit.blockSignals(blocked)
 
         blocked = self.ui.dateTimeEdit.blockSignals(True)
-        self.ui.dateTimeEdit.setDateTime(datetime.datetime(value.year, value.month, value.day))
+        value_dt = ensure_date_time(value)
+        self.ui.dateTimeEdit.setDateTime(value_dt)
         self.ui.dateTimeEdit.blockSignals(blocked)
 
         self.setMode(DateTimeModeWidget.DateTimeMode.DATE)
@@ -120,7 +122,7 @@ class DateTimeModeWidget(QtBaseClass):  # type: ignore[valid-type,misc]
 
         self.setMode(DateTimeModeWidget.DateTimeMode.DATETIME)
 
-    def setValue(self, value: datetime.date | datetime.datetime):
+    def setValue(self, value: DateDateTime):
         if value is None:
             self.setMode(DateTimeModeWidget.DateTimeMode.NONE)
             return
@@ -143,8 +145,8 @@ class DateTimeModeWidget(QtBaseClass):  # type: ignore[valid-type,misc]
     def _dateChanged(self, new_value):
         blocked = self.ui.dateTimeEdit.blockSignals(True)
         new_value = new_value.toPyDate()
-        value = datetime.datetime.combine(new_value, datetime.datetime.min.time())
-        self.ui.dateTimeEdit.setDateTime(value)
+        value_dt = ensure_date_time(new_value)
+        self.ui.dateTimeEdit.setDateTime(value_dt)
         self.ui.dateTimeEdit.blockSignals(blocked)
 
         self._emit_value()

@@ -34,6 +34,9 @@ from hanlendar import persist
 _LOGGER = logging.getLogger(__name__)
 
 
+DateDateTime = datetime.date | datetime.datetime
+
+
 @unique
 class RepeatType(Enum):
     NEVER = auto()
@@ -101,7 +104,7 @@ class Recurrent(persist.Versionable):
         self.occurences: int = None  ## COUNT (number of occurrences of item)
         self.endDate: datetime.date = endDate  ## UNTIL
 
-        self.exception_dates: list[datetime.date | datetime.datetime] = []
+        self.exception_dates: list[DateDateTime] = []
 
     def _convertstate_(self, state_dict, state_version):
         _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
@@ -199,9 +202,9 @@ class Recurrent(persist.Versionable):
 
     def nextDateTime(
         self,
-        currDate: datetime.date | datetime.datetime,
+        currDate: DateDateTime,
         offset: int = 1,
-    ) -> datetime.date | datetime.datetime:
+    ) -> DateDateTime:
         if currDate is None:
             return None
         dateOffset = self.getDateOffset()

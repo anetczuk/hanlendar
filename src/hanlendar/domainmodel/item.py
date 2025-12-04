@@ -34,6 +34,20 @@ from hanlendar import persist
 _LOGGER = logging.getLogger(__name__)
 
 
+DateDateTime = datetime.date | datetime.datetime
+
+
+def ensure_date_time(value: DateDateTime) -> datetime.datetime:
+    if value is None:
+        return value
+    if isinstance(value, datetime.datetime):
+        return value
+    if isinstance(value, datetime.date):
+        return datetime.datetime(value.year, value.month, value.day)
+    _LOGGER.warning("unknown type: %s %s", value, type(value))
+    return None
+
+
 def generate_uid() -> str:
     return str(uuid.uuid4())
     # return str(uuid.uuid4()) + "@hanlendar"
@@ -75,7 +89,7 @@ class CommonData(persist.Versionable):
         self.lastModifiedDate: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
 
         ## current task start time (updated every time recurrent task is completed)
-        self.startDate: datetime.datetime = None
+        self.startDate: DateDateTime = None
 
         self.recurrence: Recurrent = None
 

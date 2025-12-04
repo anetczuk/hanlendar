@@ -28,7 +28,7 @@ import abc
 from dateutil.relativedelta import relativedelta
 
 from hanlendar import persist
-from hanlendar.domainmodel.item import generate_uid, Item, CommonData
+from hanlendar.domainmodel.item import generate_uid, Item, CommonData, DateDateTime, ensure_date_time
 from hanlendar.domainmodel.recurrent import Recurrent, find_multiplication_after
 from hanlendar.domainmodel.reminder import Reminder, Notification
 from hanlendar.domainmodel.taskoccurrence import DateTimeRange, TaskOccurrence, DateRange
@@ -59,50 +59,78 @@ class Task(Item):
         return self._getLastModifiedDateTime()
 
     @abc.abstractmethod
-    def _getStartDateTime(self) -> datetime.datetime:
+    def _getStartDateTime(self) -> DateDateTime:
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setStartDateTime(self, _value: datetime.datetime):
+    def _setStartDateTime(self, _value: DateDateTime):
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
+
+    @property
+    def startDDT(self) -> DateDateTime:
+        return self._getStartDateTime()
+
+    @property
+    def startDate(self) -> datetime.date:
+        value = self._getStartDateTime()
+        if isinstance(value, datetime.datetime):
+            return value.date()
+        return value
 
     @property
     def startDateTime(self) -> datetime.datetime:
-        return self._getStartDateTime()
+        value = self._getStartDateTime()
+        return ensure_date_time(value)
 
     @abc.abstractmethod
-    def _getDueDateTime(self) -> datetime.datetime:
+    def _getDueDateTime(self) -> DateDateTime:
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
     @abc.abstractmethod
-    def _setDueDateTime(self, _value: datetime.datetime):
+    def _setDueDateTime(self, _value: DateDateTime):
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
+
+    @property
+    def dueDDT(self) -> DateDateTime:
+        return self._getDueDateTime()
+
+    @property
+    def dueDate(self) -> datetime.date:
+        value = self._getDueDateTime()
+        if isinstance(value, datetime.datetime):
+            return value.date()
+        return value
 
     @property
     def dueDateTime(self) -> datetime.datetime:
-        return self._getDueDateTime()
+        value = self._getDueDateTime()
+        return ensure_date_time(value)
+
+    @property
+    def endDDT(self) -> DateDateTime:
+        return self.dueDate
+
+    @property
+    def endDate(self) -> datetime.date:
+        return self.dueDate
 
     @property
     def endDateTime(self) -> datetime.datetime:
-        return self._getDueDateTime()
+        return self.dueDateTime
 
-    def setOccurrence(self, start: datetime.datetime, due: datetime.datetime):
-        start = ensure_date_time(start)
-        due = ensure_date_time(due)
+    def setOccurrence(self, start: DateDateTime, due: DateDateTime):
         self._setStartDateTime(start)
         self._setDueDateTime(due)
 
-    def setOccurrenceDue(self, due: datetime.datetime):
+    def setOccurrenceDue(self, due: DateDateTime):
         self._setStartDateTime(None)
-        due = ensure_date_time(due)
         self._setDueDateTime(due)
 
     def setDefaultDateTime(self, start: datetime.datetime):
-        start = ensure_date_time(start)
         due = start + datetime.timedelta(hours=1)
         self.setOccurrence(start, due)
 
@@ -113,7 +141,7 @@ class Task(Item):
     def setDeadline(self):
         self._setStartDateTime(None)
 
-    def setDeadlineDateTime(self, due: datetime.datetime):
+    def setDeadlineDateTime(self, due: DateDateTime):
         self.setOccurrenceDue(due)
 
     def isAllDay(self) -> bool:
@@ -121,13 +149,16 @@ class Task(Item):
             return False
         if self.endDateTime is None:
             return False
-        start_time = self.startDateTime.time()
-        if start_time.hour != 0 or start_time.minute != 0 or start_time.second != 0:
-            return False
-        end_time = self.endDateTime.time()
-        return not (end_time.hour != 0 or end_time.minute != 0 or end_time.second != 0)
+        if isinstance(self.startDateTime, datetime.datetime):
+            start_time = self.startDateTime.time()
+            if start_time.hour != 0 or start_time.minute != 0 or start_time.second != 0:
+                return False
+        if isinstance(self.endDateTime, datetime.datetime):
+            end_time = self.endDateTime.time()
+            return not (end_time.hour != 0 or end_time.minute != 0 or end_time.second != 0)
+        return True
 
-    def getReferenceDateTime(self) -> datetime.datetime:
+    def getReferenceDateTime(self) -> DateDateTime:
         if self.startDateTime is not None:
             return self.startDateTime
         ## deadline case
@@ -244,6 +275,8 @@ class Task(Item):
             minDate = remindDate
         return minDate
 
+        # datetime.datetime(value.year, value.month, value.day)
+
     def getDateTimeRange(self) -> DateTimeRange:
         startDate = self._getStartDateTime()
         endDate = self._getDueDateTime()
@@ -328,7 +361,7 @@ class Task(Item):
         ret: list[Notification] = []
         if self.dueDateTime > currTime:
             notif = Notification()
-            notif.notifyTime = self.dueDateTime
+            notif.setNotifyTime(self.dueDateTime)
             notif.task = self
             notif.message = f"task '{self.title}' reached deadline"
             ret.append(notif)
@@ -370,7 +403,10 @@ class Task(Item):
             return False
         recurrent_date_offset = recurr.getDateOffset()
         nextDueDate = self.dueDateTime + recurrent_date_offset
-        nextDate = nextDueDate.date()
+        if isinstance(nextDueDate, datetime.datetime):
+            nextDate = nextDueDate.date()
+        else:
+            nextDate = nextDueDate
         if recurr.isEnd(nextDate):
             return False
         nextStartDate = self.startDateTime
@@ -382,20 +418,6 @@ class Task(Item):
     @staticmethod
     def sortByDates(task):
         return (task.dueDateTime, task.startDateTime)
-
-
-## ========================================================================
-
-
-def ensure_date_time(value):
-    if value is None:
-        return value
-    if isinstance(value, datetime.datetime):
-        return value
-    if isinstance(value, datetime.date):
-        value = datetime.datetime.combine(value, datetime.datetime.min.time())
-    _LOGGER.warning("unknown type: %s %s", value, type(value))
-    return None
 
 
 ## ========================================================================
@@ -430,7 +452,7 @@ class LocalTask(Task, persist.Versionable):
         self._common_data.title = title
 
         ## current task due time (updated every time recurrent task is completed)
-        self._dueDate: datetime.datetime = None
+        self._dueDate: DateDateTime = None
         ## include completed 'self._startDate' and 'self._dueDate' (even for non recurrent tasks)
         self._completedList: list[DateTimeRange] = []
 
@@ -695,14 +717,14 @@ class LocalTask(Task, persist.Versionable):
             value = 0
         elif value > 100:
             value = 100
-        if value == 100:
+        if value >= 100:
             if len(self._completedList) == 0:
                 dt_range = DateTimeRange(self.startDateTime, self.dueDateTime)
                 self._completedList.append(dt_range)
             else:
                 dt_range = DateTimeRange(self.startDateTime, self.dueDateTime)
                 self._completedList.append(dt_range)
-        if value == 100 and self._progressRecurrence() is True:
+        if value >= 100 and self._progressRecurrence() is True:
             # completed -- next occurrence
             self._common_data.completed = 0
         else:
@@ -727,19 +749,19 @@ class LocalTask(Task, persist.Versionable):
         return self._common_data.lastModifiedDate
 
     ## overriden
-    def _getStartDateTime(self) -> datetime.datetime:
+    def _getStartDateTime(self) -> DateDateTime:
         return self._common_data.startDate
 
     ## overriden
-    def _setStartDateTime(self, value: datetime.datetime):
+    def _setStartDateTime(self, value: DateDateTime):
         self._common_data.startDate = value
 
     ## overriden
-    def _getDueDateTime(self) -> datetime.datetime:
+    def _getDueDateTime(self) -> DateDateTime:
         return self._dueDate
 
     ## overriden
-    def _setDueDateTime(self, value: datetime.datetime):
+    def _setDueDateTime(self, value: DateDateTime):
         self._dueDate = value
 
     ## overriden

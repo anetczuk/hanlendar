@@ -283,14 +283,7 @@ class ToDoDetails(QtBaseClass):  # type: ignore[valid-type,misc]
             return -1
 
         start_time = self.todo.startDateTime
-        if not isinstance(start_time, datetime.datetime):
-            ## date type
-            start_time = datetime.datetime(start_time.year, start_time.month, start_time.day)
-
         due_time = self.todo.dueDateTime
-        if not isinstance(due_time, datetime.datetime):
-            ## date type
-            due_time = datetime.datetime(due_time.year, due_time.month, due_time.day)
 
         if start_time > due_time:
             return 1

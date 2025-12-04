@@ -116,15 +116,15 @@ class TaskTest(unittest.TestCase):
         task = LocalTask()
         task.setDefaultDate(taskDate)
 
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 17))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 17))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 17))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 17))
 
         task.setCompleted()
 
         self.assertEqual(task.completed, 100)
         self.assertTrue(task.isCompleted())
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 17))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 17))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 17))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 17))
 
     def test_setCompleted_recurrent(self):
         taskDate = datetime.date(2020, 5, 17)
@@ -133,14 +133,14 @@ class TaskTest(unittest.TestCase):
         task.recurrence.setDaily()
         task.setDefaultDate(taskDate)
 
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 17))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 17))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 17))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 17))
 
         task.setCompleted()
 
         self.assertEqual(task.completed, 0)
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 18))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 18))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 18))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 18))
 
     def test_setCompleted_recurrent_change(self):
         taskDate = datetime.date(2020, 5, 3)
@@ -151,8 +151,8 @@ class TaskTest(unittest.TestCase):
 
         task.setCompleted(50)
         self.assertEqual(task.completed, 50)
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 3))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 3))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 3))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 3))
         self.assertEqual(task.printNextRecurrence(), "2020-05-10 10:00")
 
         ## yes, complete twice
@@ -160,22 +160,22 @@ class TaskTest(unittest.TestCase):
         task.setCompleted()
 
         self.assertEqual(task.completed, 0)
-        # self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 17))
-        # self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 17))
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 17))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 17))
+        # self.assertEqual(task.startDate, datetime.date(2020, 5, 17))
+        # self.assertEqual(task.dueDate, datetime.date(2020, 5, 17))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 17))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 17))
         self.assertEqual(task.printNextRecurrence(), "2020-05-24 10:00")
 
         ## change recurrence
         task.recurrence.setDaily()
 
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 17))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 17))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 17))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 17))
 
         task.setCompleted()
 
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 18))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 18))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 18))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 18))
         self.assertEqual(task.printNextRecurrence(), "2020-05-19 10:00")
 
     def test_setCompleted_history_001(self):
@@ -195,8 +195,8 @@ class TaskTest(unittest.TestCase):
                 DateTimeRange(datetime.datetime(2020, 5, 3, 10), datetime.datetime(2020, 5, 3, 11)),
             ],
         )
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 4))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 4))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 4))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 4))
 
     def test_setCompleted_history_002(self):
         taskDate = datetime.date(2020, 5, 2)
@@ -208,17 +208,17 @@ class TaskTest(unittest.TestCase):
         task.setCompleted()
         task.setCompleted()
 
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 4))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 4))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 4))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 4))
 
         task.recurrence.setWeekly()
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 4))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 4))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 4))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 4))
 
         task.setCompleted()
 
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 11))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 11))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 11))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 11))
 
         task.setCompleted()
 
@@ -232,8 +232,8 @@ class TaskTest(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 18))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 18))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 18))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 18))
 
     def test_deserialize_complete_list_v6(self):
         ## test deserialization of LocalTask version 6 and restore of "_completedList"
@@ -259,8 +259,8 @@ class TaskTest(unittest.TestCase):
                 DateTimeRange(datetime.datetime(2020, 5, 4, 10), datetime.datetime(2020, 5, 4, 11)),
             ],
         )
-        self.assertEqual(task.startDateTime.date(), datetime.date(2020, 5, 5))
-        self.assertEqual(task.dueDateTime.date(), datetime.date(2020, 5, 5))
+        self.assertEqual(task.startDate, datetime.date(2020, 5, 5))
+        self.assertEqual(task.dueDate, datetime.date(2020, 5, 5))
         self.assertNotIn("_recurrentOffset", dir(task))
 
     def test_getTaskOccurrenceForDate(self):

@@ -27,7 +27,7 @@ from typing import Any
 
 from hanlendar import persist
 
-from hanlendar.domainmodel.item import Item, generate_uid, CommonData
+from hanlendar.domainmodel.item import Item, generate_uid, CommonData, DateDateTime, ensure_date_time
 from hanlendar.domainmodel.recurrent import Recurrent
 
 
@@ -59,8 +59,8 @@ class LocalToDo(Item, persist.Versionable):
         self._common_data: CommonData = CommonData()
         self._common_data.title = title
 
-        self._dueDate: datetime.datetime = None
-        self._completedDate: datetime.datetime = None
+        self._dueDate: DateDateTime = None
+        self._completedDate: DateDateTime = None
 
     def _convertstate_(self, state_dict, state_version):
         _LOGGER.info("converting object from version %s to %s", state_version, self._class_version)
@@ -292,24 +292,60 @@ class LocalToDo(Item, persist.Versionable):
         return self._common_data.lastModifiedDate
 
     @property
-    def startDateTime(self) -> datetime.datetime:
+    def startDDT(self) -> DateDateTime:
         return self._common_data.startDate
 
-    def setStartDateTime(self, value: datetime.datetime):
+    @property
+    def startDate(self) -> datetime.date:
+        value = self._common_data.startDate
+        if isinstance(value, datetime.datetime):
+            return value.date()
+        return value
+
+    @property
+    def startDateTime(self) -> datetime.datetime:
+        value = self._common_data.startDate
+        return ensure_date_time(value)
+
+    def setStartDateTime(self, value: DateDateTime):
         self._common_data.startDate = value
 
     @property
-    def dueDateTime(self) -> datetime.datetime:
+    def dueDDT(self) -> DateDateTime:
         return self._dueDate
 
-    def setDueDateTime(self, value: datetime.datetime):
+    @property
+    def dueDate(self) -> datetime.date:
+        value = self._dueDate
+        if isinstance(value, datetime.datetime):
+            return value.date()
+        return value
+
+    @property
+    def dueDateTime(self) -> datetime.datetime:
+        value = self._dueDate
+        return ensure_date_time(value)
+
+    def setDueDateTime(self, value: DateDateTime):
         self._dueDate = value
 
     @property
-    def completedDateTime(self) -> datetime.datetime:
+    def completedDDT(self) -> DateDateTime:
         return self._completedDate
 
-    def setCompletedDateTime(self, value: datetime.datetime):
+    @property
+    def completedDate(self) -> datetime.date:
+        value = self._completedDate
+        if isinstance(value, datetime.datetime):
+            return value.date()
+        return value
+
+    @property
+    def completedDateTime(self) -> datetime.datetime:
+        value = self._completedDate
+        return ensure_date_time(value)
+
+    def setCompletedDateTime(self, value: DateDateTime):
         self._completedDate = value
         if value is not None:
             self._common_data.completed = 100
@@ -329,7 +365,7 @@ class LocalToDo(Item, persist.Versionable):
             return None
         return parent.getAppliedRecurrence()
 
-    def getReferenceDateTime(self) -> datetime.datetime:
+    def getReferenceDateTime(self) -> DateDateTime:
         if self.startDateTime is not None:
             return self.startDateTime
         ## deadline case
