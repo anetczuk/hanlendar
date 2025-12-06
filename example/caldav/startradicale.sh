@@ -7,25 +7,39 @@ set -eu
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 
 
+RADICALE_CONF_DIR="/tmp/radicale"
+
 BASE_DIR="${SCRIPT_DIR}"/../../tmp/radicale
 CONFIG_FILE="${SCRIPT_DIR}"/radicale-config
 AUTH_PATH="${SCRIPT_DIR}"/auth.json
 
 
-caldav_user=$(cat "${AUTH_PATH}" | jq -r ".user")
-caldav_pass=$(cat "${AUTH_PATH}" | jq -r ".password")
+mkdir -p "${RADICALE_CONF_DIR}"
 
 
-RADICALE_AUTH="/tmp/radicale_user"
+RADICALE_AUTH="${RADICALE_CONF_DIR}/auth_user"
 
-echo "${caldav_user}:${caldav_pass}" > "${RADICALE_AUTH}"
+caldav_users=$(cat "${AUTH_PATH}" | jq -r '.users[].user')
+caldav_passes=$(cat "${AUTH_PATH}" | jq -r '.users[].password')
+
+mapfile -t user_arr <<< "${caldav_users}"
+mapfile -t pass_arr <<< "${caldav_passes}"
+
+truncate -s 0 "${RADICALE_AUTH}"
+for i in "${!user_arr[@]}"; do
+    echo "${user_arr[i]}:${pass_arr[i]}" >> "${RADICALE_AUTH}"
+done
+
+
+RADICALE_RIGHTS="${RADICALE_CONF_DIR}/rights"
+cp "${SCRIPT_DIR}/rights" "${RADICALE_RIGHTS}"
 
 
 echo "Server dir: ${BASE_DIR}"
 echo "Server config: ${CONFIG_FILE}"
 
-echo "User: ${caldav_user}"
-echo "Pass: ${caldav_pass}"
+echo "Accounts:"
+cat "${RADICALE_AUTH}"
 
 echo
 echo "Starting server. Available at: http://localhost:5232/"

@@ -1,0 +1,6 @@
+## rights configuration
+
+[others-readonly]
+user = .*
+collection = .*
+permissions = r

@@ -8,6 +8,10 @@ hosts = 0.0.0.0:5232, [::]:5232
 
 [auth]
 type = htpasswd
-htpasswd_filename = /tmp/radicale_user
+htpasswd_filename = /tmp/radicale/auth_user
 # encryption method used in the htpasswd file
 htpasswd_encryption = plain
+
+[rights]
+type = from_file
+file = /tmp/radicale/rights
