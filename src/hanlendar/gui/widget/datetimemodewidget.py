@@ -95,31 +95,14 @@ class DateTimeModeWidget(QtBaseClass):  # type: ignore[valid-type,misc]
         if value is None:
             self.setMode(DateTimeModeWidget.DateTimeMode.NONE)
             return
-
-        blocked = self.ui.dateEdit.blockSignals(True)
         self.ui.dateEdit.setDate(value)
-        self.ui.dateEdit.blockSignals(blocked)
-
-        blocked = self.ui.dateTimeEdit.blockSignals(True)
-        value_dt = ensure_date_time(value)
-        self.ui.dateTimeEdit.setDateTime(value_dt)
-        self.ui.dateTimeEdit.blockSignals(blocked)
-
         self.setMode(DateTimeModeWidget.DateTimeMode.DATE)
 
     def setDateTime(self, value: datetime.datetime):
         if value is None:
             self.setMode(DateTimeModeWidget.DateTimeMode.NONE)
             return
-
-        blocked = self.ui.dateEdit.blockSignals(True)
-        self.ui.dateEdit.setDate(value.date())
-        self.ui.dateEdit.blockSignals(blocked)
-
-        blocked = self.ui.dateTimeEdit.blockSignals(True)
         self.ui.dateTimeEdit.setDateTime(value)
-        self.ui.dateTimeEdit.blockSignals(blocked)
-
         self.setMode(DateTimeModeWidget.DateTimeMode.DATETIME)
 
     def setValue(self, value: DateDateTime):
