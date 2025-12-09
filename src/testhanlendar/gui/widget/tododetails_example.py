@@ -110,7 +110,7 @@ while True:
     changed = todo != todo_backup
     if changed:
         diff_str = pprint.pformat(diff)
-        print(f"todo changed, difference:\n{diff_str}")
+        print(f"item changed, difference:\n{diff_str}")
     else:
         print("nothing changed")
 

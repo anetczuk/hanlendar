@@ -86,7 +86,7 @@ def main():
     parser = argparse.ArgumentParser(description="History read")
     parser.add_argument("-la", "--logall", action="store_true", help="Log all messages")
     parser.add_argument("-i", "--index", action="store", required=False, default=None, help="Log all messages")
-    parser.add_argument("--detailed", action="store_true", default=False, help="Log all messages")
+    parser.add_argument("--detailed", action="store_true", default=False, help="Print detailed info")
 
     args = parser.parse_args()
 
@@ -94,7 +94,7 @@ def main():
     if args.logall is True:
         logging.getLogger().setLevel(logging.DEBUG)
     else:
-        logging.getLogger().setLevel(logging.WARNING)
+        logging.getLogger().setLevel(logging.INFO)
 
     initialize_qt()
     settings = SettingsObject()

@@ -282,36 +282,48 @@ class LocalManager(Manager):
         else:
             storedZipFile = os.path.join(outputDir, f"data.zip.{index}")
 
+        _LOGGER.info("loading file: %s", storedZipFile)
         hist_data_raw = persist.load_backup(storedZipFile)
+
+        _LOGGER.info("found files: %s", list(hist_data_raw.keys()))
 
         version_raw = hist_data_raw.get("version.obj", None)
         mngrVersion = persist.load_data(version_raw)
         if mngrVersion != self._class_version:
             _LOGGER.info("converting object from version %s to %s", mngrVersion, self._class_version)
             ## do nothing for now
+        _LOGGER.info("found data version: %s", mngrVersion)
 
-        mapperObject = ModuleMapper(mngrVersion)
+        tasks = None
+        todos = None
+        notes = None
 
-        ## old style
-        tasks_raw = hist_data_raw.get("tasks.obj", None)
-        tasks = persist.load_data(tasks_raw, class_mapper=mapperObject)
-        if tasks is None:
-            tasks = []
+        if mngrVersion < 10:
+            ## old style
+            mapperObject = ModuleMapper(mngrVersion)
+            tasks_raw = hist_data_raw.get("tasks.obj", None)
+            tasks = persist.load_data(tasks_raw, class_mapper=mapperObject)
+            if tasks is None:
+                tasks = []
 
-        todos_raw = hist_data_raw.get("todos.obj", None)
-        todos = persist.load_data(todos_raw, class_mapper=mapperObject)
-        if todos is None:
-            todos = []
+            todos_raw = hist_data_raw.get("todos.obj", None)
+            todos = persist.load_data(todos_raw, class_mapper=mapperObject)
+            if todos is None:
+                todos = []
 
-        notes_raw = hist_data_raw.get("notes.obj", None)
-        notes = persist.load_data(notes_raw, class_mapper=mapperObject)
-        if notes is None:
-            notes = []
+            notes_raw = hist_data_raw.get("notes.obj", None)
+            notes = persist.load_data(notes_raw, class_mapper=mapperObject)
+            if notes is None:
+                notes = []
 
-        ## new style
-        data_raw = hist_data_raw.get("data.obj", None)
-        data_dict = persist.load_data(data_raw, class_mapper=mapperObject)
-        if data_dict is not None:
+        else:
+            ## new style
+            mapperObject = ModuleMapper(mngrVersion)
+            data_raw = hist_data_raw.get("data.obj", None)
+            data_dict = persist.load_data(data_raw, class_mapper=mapperObject)
+            if data_dict is None:
+                return None
+
             tasks = data_dict.get("tasks", [])
             todos = data_dict.get("todos", [])
             notes = data_dict.get("notes", [])
