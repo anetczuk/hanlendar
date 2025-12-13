@@ -84,7 +84,8 @@ options:
                         Password for CalDAV connection
   --caldavcalendar CALDAVCALENDAR
                         CalDAV calendar name
-  --exportlocal         Export local database to CalDAV server
+  --exportlocal         Export local database to CalDAV server (use caldav...
+                        options to connect)
 ```
 
 <!-- insertend -->

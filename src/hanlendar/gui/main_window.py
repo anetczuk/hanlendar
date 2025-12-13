@@ -47,7 +47,7 @@ from .qt import qApp, QtCore, QtGui, QIcon
 
 from .dataobject import DataObject
 from .notifytimer import NotificationTimer
-from .widget.settingsdialog import SettingsDialog, AppSettings, DatabaseMode
+from .widget.settingsdialog import SettingsDialog, AppSettings
 from .widget.navcalendar import NavCalendarHighlightModel
 from .widget.tasktable import get_reminded_color, get_timeout_color
 
@@ -81,7 +81,7 @@ class DataHighlightModel(NavCalendarHighlightModel):
 ##
 class SettingsObject(QObject):
 
-    def getSettings(self):
+    def getSettings(self) -> QtCore.QSettings:
         #         ## store in app directory
         #         if self.settingsFilePath is None:
         # #             scriptDir = os.path.dirname(os.path.realpath(__file__))
@@ -215,29 +215,16 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
     def setLocalDataPath(self, custom_path):
         self._data_custom_path = custom_path
 
-    def createCalDAVConnector(self, caldav_address=None, caldav_user=None, caldav_pass=None, caldav_calendar=None):
-        serverURL = self.appSettings.serverURL
-        if caldav_address is not None:
-            serverURL = caldav_address
-        serverUser = self.appSettings.serverUser
-        if caldav_user is not None:
-            serverUser = caldav_user
-        serverPassword = self.appSettings.serverPassword
-        if caldav_pass is not None:
-            serverPassword = caldav_pass
-        calendarName = self.appSettings.calendarName
-        if caldav_calendar is not None:
-            calendarName = caldav_calendar
-
-        _LOGGER.info("connecting to CalDAV server: %s calendar: %s", serverURL, calendarName)
+    def createCalDAVConnector(self, caldav_address, caldav_user, caldav_pass, caldav_calendar):
+        _LOGGER.info("connecting to CalDAV server: %s calendar: %s", caldav_address, caldav_calendar)
 
         try:
             connector = CalDAVConnector()
-            connector.connectToServer(serverURL, serverUser, serverPassword)
+            connector.connectToServer(caldav_address, caldav_user, caldav_pass)
         except Exception as ex:  # pylint: disable=W0718
             _LOGGER.warning("unable to connect to server: %s", ex)
             return None
-        connector.connectToCalendar(calendarName)
+        connector.connectToCalendar(caldav_calendar)
         return connector
 
     def createCalDAVManager(self, connector):
@@ -246,19 +233,16 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         os.makedirs(dataPath, exist_ok=True)
         return CalDAVManager(connector, dataPath)
 
-    def setCalDAVManager(self, caldav_address=None, caldav_user=None, caldav_pass=None, caldav_calendar=None):
-        self.appSettings.databaseMode = DatabaseMode.CALDAV
-        self.appSettings.serverURL = caldav_address
-        self.appSettings.serverUser = caldav_user
-        self.appSettings.serverPassword = caldav_pass
-        self.appSettings.calendarName = caldav_calendar
+    def setCalDAVManager(self, caldav_address, caldav_user, caldav_pass, caldav_calendar):
+        self.appSettings.calendar_items.clear()
+        self.appSettings.addCalDAVCalendar(caldav_address, caldav_user, caldav_pass, caldav_calendar)
 
         # connector = self.createCalDAVConnector(caldav_address, caldav_user, caldav_pass, caldav_calendar)
         # manager = self.createCalDAVManager(connector)
         # self.data.setManager(manager)
 
-    def exportLocalToCalDAV(self):
-        connector = self.createCalDAVConnector()
+    def exportLocalToCalDAV(self, caldav_address, caldav_user, caldav_pass, caldav_calendar):
+        connector = self.createCalDAVConnector(caldav_address, caldav_user, caldav_pass, caldav_calendar)
         self.exportLocalDB(connector)
 
     def exportLocalDB(self, connector: CalDAVConnector):
@@ -522,21 +506,22 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.setIconTheme(self.appSettings.trayIcon)
 
         manager = self.qtSettings.createLocalManager()
-        if self.appSettings.databaseMode == DatabaseMode.LOCAL:
-            ## do nothing
-            pass
-        elif self.appSettings.databaseMode == DatabaseMode.CALDAV:
-            connector = self.createCalDAVConnector()
-            manager = self.createCalDAVManager(connector)
-        else:
-            _LOGGER.warning("unhandled database mode: %s", self.appSettings.databaseMode)
+        # TODO: fix
+        # if self.appSettings.databaseMode == DatabaseMode.LOCAL:
+        #     manager = self.qtSettings.createLocalManager()
+        # elif self.appSettings.databaseMode == DatabaseMode.CALDAV:
+        #     connector = self.createCalDAVConnector()
+        #     manager = self.createCalDAVManager(connector)
+        # else:
+        #     _LOGGER.warning("unhandled database mode: %s", self.appSettings.databaseMode)
+        #     manager = self.qtSettings.createLocalManager()
 
         self.data.setManager(manager)
         if load_user_data:
             self.loadData()
 
     def loadSettings(self, *, apply=True, load_user_data=True):
-        settings = self.qtSettings.getSettings()
+        settings: QtCore.QSettings = self.qtSettings.getSettings()
         self.logger.debug("loading app state from %s", settings.fileName())
 
         self.appSettings.loadSettings(settings)
@@ -558,7 +543,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         guistate.load_state(self, settings)
 
     def saveSettings(self):
-        settings = self.qtSettings.getSettings()
+        settings: QtCore.QSettings = self.qtSettings.getSettings()
         self.logger.debug("saving app state to %s", settings.fileName())
 
         self.appSettings.saveSettings(settings)

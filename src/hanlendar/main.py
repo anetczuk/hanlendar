@@ -73,7 +73,11 @@ def run_app(args):
     if args.blocksave is True:
         window.disableSaving()
     if args.exportlocal is True:
-        window.exportLocalToCalDAV()
+        caldav_address = args.caldavaddress
+        caldav_user = args.caldavuser
+        caldav_pass = args.caldavpass
+        caldav_calendar = args.caldavcalendar
+        window.exportLocalToCalDAV(caldav_address, caldav_user, caldav_pass, caldav_calendar)
     window.loadSettings(apply=False)
     if args.caldav is True:
         caldav_address = args.caldavaddress
@@ -110,7 +114,7 @@ def create_parser(parser: argparse.ArgumentParser = None):
         action="store_const",
         const=True,
         default=None,
-        help="Export local database to CalDAV server",
+        help="Export local database to CalDAV server (use caldav... options to connect)",
     )
     return parser
 

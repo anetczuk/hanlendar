@@ -144,6 +144,14 @@ def store_object_simple(input_object, output_file):
         pickle.dump(input_object, fp)
 
 
+def serialize(input_object):
+    return pickle.dumps(input_object)
+
+
+def deserialize(raw_data):
+    return pickle.loads(raw_data)
+
+
 def backup_files(input_files, output_archive):
     ## create zip
     tmp_zip_file = output_archive + "_tmp"
