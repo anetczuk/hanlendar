@@ -104,8 +104,6 @@ class CalDAVManager(Manager):
         self.loadFromServer()
         self.fixData()
 
-    #         self._localManager.storeData()
-
     def loadFromServer(self):
         _LOGGER.info("loading data from server")
 

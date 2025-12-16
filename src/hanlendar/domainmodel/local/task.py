@@ -439,7 +439,7 @@ class LocalTask(Task, persist.Versionable):
     ## 10: added '_location', '_url', '_sequence', '_lastModifiedDate', '_unknown_props'
     ## 11: added '_status', '_class'
     ## 12: use '_common_data'
-    ## 12: move '_reminderList' to CommonData
+    ## 13: move '_reminderList' to CommonData
     _class_version = 13
 
     def __init__(self, title: str = ""):

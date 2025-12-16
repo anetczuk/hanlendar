@@ -100,14 +100,6 @@ def main():
     settings = SettingsObject()
 
     localManager: LocalManager = settings.createLocalManager()
-
-    #     localManager.loadData()
-    #     restored = localManager.restoreTaskByTitle( 160, 'ETC-PZL: rozliczyc miniony miesiac' )
-    #     if restored:
-    #         localManager.storeData()
-    #         print( "task restored" )
-    #         exit(1)
-
     handle_history(localManager, args)
 
 

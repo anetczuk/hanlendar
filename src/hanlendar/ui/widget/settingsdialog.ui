@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>449</width>
-    <height>588</height>
+    <height>607</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,15 +45,35 @@
            <string>Local</string>
           </attribute>
           <layout class="QFormLayout" name="formLayout_2">
-           <item row="0" column="0">
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="localEnabledCB">
+             <property name="text">
+              <string>Enabled</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
             <widget class="QLabel" name="label_6">
              <property name="text">
               <string>Calendar name:</string>
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
+           <item row="1" column="1">
             <widget class="QLineEdit" name="localCalendarNameLE"/>
+           </item>
+           <item row="2" column="1">
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>
@@ -62,47 +82,47 @@
            <string>CalDAV</string>
           </attribute>
           <layout class="QFormLayout" name="formLayout_3">
-           <item row="0" column="0">
+           <item row="1" column="0">
             <widget class="QLabel" name="label_2">
              <property name="text">
               <string>Server URL:</string>
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
+           <item row="1" column="1">
             <widget class="QLineEdit" name="serverURLLE"/>
            </item>
-           <item row="1" column="0">
+           <item row="2" column="0">
             <widget class="QLabel" name="label_3">
              <property name="text">
               <string>User:</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
+           <item row="2" column="1">
             <widget class="QLineEdit" name="serverUserLE"/>
            </item>
-           <item row="2" column="0">
+           <item row="3" column="0">
             <widget class="QLabel" name="label_4">
              <property name="text">
               <string>Password:</string>
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
+           <item row="3" column="1">
             <widget class="QLineEdit" name="serverPasswordLE"/>
            </item>
-           <item row="3" column="0">
+           <item row="4" column="0">
             <widget class="QLabel" name="label_5">
              <property name="text">
               <string>Calendar name:</string>
              </property>
             </widget>
            </item>
-           <item row="3" column="1">
+           <item row="4" column="1">
             <widget class="QLineEdit" name="serverCalendarLE"/>
            </item>
-           <item row="4" column="1">
+           <item row="5" column="1">
             <layout class="QHBoxLayout" name="horizontalLayout">
              <item>
               <spacer name="horizontalSpacer_2">
@@ -125,6 +145,13 @@
               </widget>
              </item>
             </layout>
+           </item>
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="caldavEnabledCB">
+             <property name="text">
+              <string>Enabled</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>

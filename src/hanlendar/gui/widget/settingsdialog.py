@@ -75,6 +75,11 @@ class CalendarItem:
         pass
 
     @abc.abstractmethod
+    def isEnabled(self) -> bool:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
     def getCalendarName(self) -> str:
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
@@ -87,12 +92,14 @@ class CalendarItem:
 
 class LocalCalendarItem(CalendarItem, persist.Versionable):
 
-    _class_version = 0
+    ##  1: added 'enabled'
+    _class_version = 1
 
     def __init__(self, calendar_name: str = None):
         super().__init__()
         if calendar_name is None:
             calendar_name = "local"
+        self.enabled: bool = True
         self.calendarName: str = calendar_name
 
     # ruff: noqa: PLR0912
@@ -104,9 +111,9 @@ class LocalCalendarItem(CalendarItem, persist.Versionable):
 
         state_version = max(state_version, 0)
 
-        # if state_version == 0:
-        #     pass
-        #     state_version += 1
+        if state_version == 0:
+            state_dict["enabled"] = True
+            state_version += 1
 
         return state_dict
 
@@ -116,10 +123,14 @@ class LocalCalendarItem(CalendarItem, persist.Versionable):
         return self.__dict__ == other.__dict__
 
     def _key(self):
-        return self.calendarName
+        return (self.enabled, self.calendarName)
 
     def __hash__(self):
         return hash(self._key())
+
+    ## override
+    def isEnabled(self) -> bool:
+        return self.enabled
 
     ## override
     def getCalendarName(self) -> str:
@@ -132,12 +143,14 @@ class LocalCalendarItem(CalendarItem, persist.Versionable):
 
 class CalDAVCalendarItem(CalendarItem, persist.Versionable):
 
-    _class_version = 0
+    ##  1: added 'enabled'
+    _class_version = 1
 
     def __init__(self, cal_name: str = None):
         super().__init__()
         if cal_name is None:
             cal_name = ""
+        self.enabled: bool = True
         self.serverURL: str = ""
         self.serverUser: str = ""
         self.serverPassword: str = ""
@@ -152,9 +165,9 @@ class CalDAVCalendarItem(CalendarItem, persist.Versionable):
 
         state_version = max(state_version, 0)
 
-        # if state_version == 0:
-        #     pass
-        #     state_version += 1
+        if state_version == 0:
+            state_dict["enabled"] = True
+            state_version += 1
 
         return state_dict
 
@@ -164,10 +177,14 @@ class CalDAVCalendarItem(CalendarItem, persist.Versionable):
         return self.__dict__ == other.__dict__
 
     def _key(self):
-        return (self.serverURL, self.serverUser, self.serverPassword, self.calendarName)
+        return (self.enabled, self.serverURL, self.serverUser, self.serverPassword, self.calendarName)
 
     def __hash__(self):
         return hash(self._key())
+
+    ## override
+    def isEnabled(self) -> bool:
+        return self.enabled
 
     ## override
     def getCalendarName(self) -> str:
@@ -346,7 +363,10 @@ class SettingsDialog(QtBaseClass):  # type: ignore[valid-type,misc]
 
         self.ui.caltypeTW.currentChanged.connect(self._calTypeChanged)
 
+        self.ui.localEnabledCB.stateChanged.connect(self._changeCalEnable)
         self.ui.localCalendarNameLE.textChanged.connect(self._changedCalendarName)
+
+        self.ui.caldavEnabledCB.stateChanged.connect(self._changeCalEnable)
         self.ui.serverURLLE.textChanged.connect(self._changedServerURL)
         self.ui.serverUserLE.textChanged.connect(self._changedServerUser)
         self.ui.serverPasswordLE.textChanged.connect(self._changedServerPasswd)
@@ -373,6 +393,14 @@ class SettingsDialog(QtBaseClass):  # type: ignore[valid-type,misc]
 
     def _selectedItemChanged(self, currentRow: int):
         self._refreshWidget(currentRow)
+
+    ## values:
+    ##    0 - disabled
+    ##    2 - enabled
+    def _changeCalEnable(self, _new_state: int):
+        curr_cal = self._getCurrentCalendar()
+        self._updateCalendarFromWidget(curr_cal)
+        self._refreshCalList()
 
     def _changedCalendarName(self, _new_text: str):
         curr_cal = self._getCurrentCalendar()
@@ -458,6 +486,7 @@ class SettingsDialog(QtBaseClass):  # type: ignore[valid-type,misc]
             self.ui.caltypeTW.setEnabled(False)
             self.ui.removeCalendarPB.setEnabled(False)
             local = LocalCalendarItem("")
+            local.enabled = False
             self._setCalendarData(local)  ## set empty
             return
 
@@ -493,9 +522,21 @@ class SettingsDialog(QtBaseClass):  # type: ignore[valid-type,misc]
             self.ui.caltypeTW.setCurrentIndex(0)
             self.ui.caltypeTW.blockSignals(blocked)
 
+            check_state = 2 if prop_cal.isEnabled() else 0
+
+            ## local tab
+            blocked = self.ui.localEnabledCB.blockSignals(True)
+            self.ui.localEnabledCB.setCheckState(check_state)
+            self.ui.localEnabledCB.blockSignals(blocked)
+
             blocked = self.ui.localCalendarNameLE.blockSignals(True)
             self.ui.localCalendarNameLE.setText(prop_cal.calendarName)
             self.ui.localCalendarNameLE.blockSignals(blocked)
+
+            ## caldav tab
+            blocked = self.ui.caldavEnabledCB.blockSignals(True)
+            self.ui.caldavEnabledCB.setCheckState(check_state)
+            self.ui.caldavEnabledCB.blockSignals(blocked)
 
             blocked = self.ui.serverURLLE.blockSignals(True)
             self.ui.serverURLLE.setText("")
@@ -518,9 +559,21 @@ class SettingsDialog(QtBaseClass):  # type: ignore[valid-type,misc]
             self.ui.caltypeTW.setCurrentIndex(1)
             self.ui.caltypeTW.blockSignals(blocked)
 
+            check_state = 2 if prop_cal.isEnabled() else 0
+
+            ## local tab
+            blocked = self.ui.localEnabledCB.blockSignals(True)
+            self.ui.localEnabledCB.setCheckState(check_state)
+            self.ui.localEnabledCB.blockSignals(blocked)
+
             blocked = self.ui.localCalendarNameLE.blockSignals(True)
             self.ui.localCalendarNameLE.setText(prop_cal.calendarName)
             self.ui.localCalendarNameLE.blockSignals(blocked)
+
+            ## caldav tab
+            blocked = self.ui.caldavEnabledCB.blockSignals(True)
+            self.ui.caldavEnabledCB.setCheckState(check_state)
+            self.ui.caldavEnabledCB.blockSignals(blocked)
 
             blocked = self.ui.serverURLLE.blockSignals(True)
             self.ui.serverURLLE.setText(prop_cal.serverURL)
@@ -565,10 +618,12 @@ class SettingsDialog(QtBaseClass):  # type: ignore[valid-type,misc]
         mode = calendar.getCalendarMode()
 
         if isinstance(calendar, LocalCalendarItem):
+            calendar.enabled = self.ui.localEnabledCB.checkState() != 0
             calendar.calendarName = self.ui.localCalendarNameLE.text()
             return True
 
         if isinstance(calendar, CalDAVCalendarItem):
+            calendar.enabled = self.ui.caldavEnabledCB.checkState() != 0
             calendar.serverURL = self.ui.serverURLLE.text()
             calendar.serverUser = self.ui.serverUserLE.text()
             calendar.serverPassword = self.ui.serverPasswordLE.text()

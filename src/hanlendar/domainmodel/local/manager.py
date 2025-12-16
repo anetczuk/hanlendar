@@ -133,7 +133,7 @@ class LocalManager(Manager):
             _LOGGER.warning("unable to store data -- no root directory given")
             return False
 
-        outputDir = self._ioDir
+        outputDir = self._getDataPath()
 
         changed = False
 
@@ -169,7 +169,7 @@ class LocalManager(Manager):
             _LOGGER.warning("unable to load data -- no root directory given")
             return
 
-        inputDir = self._ioDir
+        inputDir = self._getDataPath()
 
         mngrVersion = self._class_version
         try:
@@ -276,7 +276,7 @@ class LocalManager(Manager):
                 "notes": self.notes,
             }
 
-        outputDir = self._ioDir
+        outputDir = self._getDataPath()
         if index <= 0:
             storedZipFile = os.path.join(outputDir, "data.zip")
         else:
@@ -346,6 +346,10 @@ class LocalManager(Manager):
             if task_title == title:
                 return task
         return None
+
+    def _getDataPath(self):
+        ## outputFile = os.path.join(self._ioDir, "version.obj")
+        return self._ioDir
 
     ## ======================================================================
 
