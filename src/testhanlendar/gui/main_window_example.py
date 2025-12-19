@@ -46,6 +46,7 @@ from hanlendar import logger
 from hanlendar.gui.qt import QApplication
 from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.main_window import MainWindow
+from hanlendar.gui.widget.settingsdialog import AppSettings, LocalCalendarItem
 
 from hanlendar.domainmodel.recurrent import Recurrent
 from hanlendar.domainmodel.local.task import LocalTask
@@ -53,9 +54,10 @@ from hanlendar.domainmodel.local.manager import Manager
 
 
 # pylint: disable=R0914, R0915
-def prepare_example_data(dataManager: Manager):
+def prepare_example_data(dataManager: Manager, calendar_id: str = None):
     taskDate = datetime.today() - timedelta(seconds=5)
     task1 = dataManager.addNewTaskDateTime(datetime.today() + timedelta(days=1), "task 1")
+    task1.commonData.calendar_id = calendar_id
     task1.completed = 50
     task1.description = (
         '<a href="http://www.google.com">xxx</a> <br> '
@@ -65,13 +67,16 @@ def prepare_example_data(dataManager: Manager):
     task1.addSubItem(LocalTask("Subtask"))
 
     completedTask = dataManager.addNewTaskDateTime(taskDate + timedelta(days=7), "completed task")
+    completedTask.commonData.calendar_id = calendar_id
     completedTask.setCompleted()
 
     ## add far task
-    dataManager.addNewTaskDateTime(datetime.today() + timedelta(days=360), "far task")
+    item = dataManager.addNewTaskDateTime(datetime.today() + timedelta(days=360), "far task")
+    item.commonData.calendar_id = calendar_id
 
     recurrentDate = taskDate.replace(day=20, hour=12)
     recurrentTask = dataManager.addNewTaskDateTime(recurrentDate, "recurrent task 1")
+    recurrentTask.commonData.calendar_id = calendar_id
     recurrentTask.recurrence = Recurrent()
     recurrentTask.recurrence.setDaily()
     recurrentTask.recurrence.endDate = recurrentDate.date() + timedelta(days=2)
@@ -79,10 +84,12 @@ def prepare_example_data(dataManager: Manager):
     reminder.setDays(1)
 
     task2 = dataManager.addNewTaskDateTime(recurrentTask.startDateTime.replace(hour=11), "task 2")
+    task2.commonData.calendar_id = calendar_id
     dueDateTime = task2.dueDateTime.replace(hour=20)
     task2.setOccurrenceDue(dueDateTime)
 
     task3 = dataManager.addTask()
+    task3.commonData.calendar_id = calendar_id
     task3.title = "task 3"
     dueDateTime = taskDate.replace(hour=20) + timedelta(days=90)
     startDateTime = dueDateTime - timedelta(days=1)
@@ -177,13 +184,26 @@ app.setOrganizationName("arnet")
 MainWindow.toolTip = MainWindow.toolTip + " Preview"
 
 window = MainWindow()
-window.disableSaving()
 window.setWindowTitle(window.windowTitle() + " Preview")
 
-window.loadSettings(load_user_data=args.loadUserData)
+if args.loadUserData:
+    window.disableSaving()
+    window.loadSettings(apply=False)
+else:
+    window.setLocalDataRootPath("/tmp/hanlendar-test-data")
+
+    window.appSettings = AppSettings()
+
+    window.appSettings.addLocalCalendar("cal_1", cal_id="cal_1_id")
+    calitem: LocalCalendarItem = window.appSettings.addLocalCalendar("cal_2", cal_id="cal_2_id")
+    calitem.enabled = False
+    window.appSettings.addLocalCalendar("cal_3", cal_id="cal_3_id")
+    window.applySettings(load_user_data=args.loadUserData)
+
 if not args.loadUserData:
     manager = window.getManager()
-    prepare_example_data(manager)
+    prepare_example_data(manager, "cal_1_id")
+    window.saveData()
     window.refreshView()
 
 window.show()
@@ -192,7 +212,7 @@ setup_interrupt_handling()
 
 exitCode = app.exec_()
 
-if exitCode == 0:
-    window.saveSettings()
+# if exitCode == 0:
+#     window.saveSettings()
 
 sys.exit(exitCode)

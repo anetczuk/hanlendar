@@ -53,6 +53,7 @@ from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.widget.tododialog import ToDoDialog
 
 from hanlendar.domainmodel.local.todo import LocalToDo
+from hanlendar.domainmodel.calendardata import CalendarData
 
 
 ## ============================= main section ===================================
@@ -80,7 +81,12 @@ app.setOrganizationName("arnet")
 
 setup_interrupt_handling()
 
+calendar_data = CalendarData()
+calendar_data.addCalendar("cal1", "id_cal1")
+calendar_data.addCalendar("cal2", "id_cal2")
+
 item = LocalToDo()
+item.commonData.calendar_id = "id_cal1"
 item.title = "ToDo title"
 item.description = "Description"
 item.completed = 50
@@ -90,7 +96,7 @@ item._common_data.unknown_props = {"aaa": "bbb"}  # pylint: disable=W0212
 while True:
     item_backup = copy.deepcopy(item)
 
-    dialog = ToDoDialog(item)
+    dialog = ToDoDialog(item, calendar_data)
     ## dialog.resize(600, 800)
     ## root_path = get_root_path()
     ## renderToPixmap(dialog, root_path + "/tmp/taskdialog-big.png")

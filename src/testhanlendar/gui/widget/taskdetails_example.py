@@ -52,6 +52,7 @@ from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.widget.taskdetails import TaskDetails
 
 from hanlendar.domainmodel.local.task import LocalTask
+from hanlendar.domainmodel.calendardata import CalendarData
 
 
 ## ============================= main section ===================================
@@ -78,7 +79,14 @@ app.setApplicationName("Hanlendar")
 app.setOrganizationName("arnet")
 ### app.setOrganizationDomain("www.my-org.com")
 
+setup_interrupt_handling()
+
+calendar_data = CalendarData()
+calendar_data.addCalendar("cal1", "id_cal1")
+calendar_data.addCalendar("cal2", "id_cal2")
+
 task = LocalTask()
+task.commonData.calendar_id = "id_cal1"
 task.title = "Task title"
 task.description = "Description\nwww.google.pl"
 task.url = "http://www.google.pl"
@@ -91,9 +99,8 @@ task.setOccurrence(start, end)
 
 task_backup = copy.deepcopy(task)
 
-setup_interrupt_handling()
-
 widget = TaskDetails()
+widget.setCalendarData(calendar_data)
 widget.setReadOnly(read_only=args.readonly)
 widget.setTask(task)
 widget.show()

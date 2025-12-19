@@ -33,9 +33,11 @@ from PyQt5.QtWidgets import QMessageBox
 
 from hanlendar import persist
 from hanlendar.domainmodel.caldav.manager import CalDAVConnector
+from hanlendar.domainmodel.calendardata import CalendarData
 from hanlendar.gui import uiloader, tray_icon
 from hanlendar.gui.qt import pyqtSignal
 from hanlendar.persist import serialize, deserialize
+from hanlendar.domainmodel.item import generate_uid
 
 
 @unique
@@ -80,6 +82,11 @@ class CalendarItem:
         raise NotImplementedError(message)
 
     @abc.abstractmethod
+    def getCalendarId(self) -> str:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
     def getCalendarName(self) -> str:
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
@@ -93,12 +100,14 @@ class CalendarItem:
 class LocalCalendarItem(CalendarItem, persist.Versionable):
 
     ##  1: added 'enabled'
-    _class_version = 1
+    ##  2: added 'calendar_id'
+    _class_version = 2
 
     def __init__(self, calendar_name: str = None):
         super().__init__()
         if calendar_name is None:
             calendar_name = "local"
+        self.calendar_id = generate_uid()
         self.enabled: bool = True
         self.calendarName: str = calendar_name
 
@@ -113,6 +122,10 @@ class LocalCalendarItem(CalendarItem, persist.Versionable):
 
         if state_version == 0:
             state_dict["enabled"] = True
+            state_version += 1
+
+        if state_version == 1:
+            state_dict["calendar_id"] = generate_uid()
             state_version += 1
 
         return state_dict
@@ -133,6 +146,10 @@ class LocalCalendarItem(CalendarItem, persist.Versionable):
         return self.enabled
 
     ## override
+    def getCalendarId(self) -> str:
+        return self.calendar_id
+
+    ## override
     def getCalendarName(self) -> str:
         return self.calendarName
 
@@ -144,12 +161,14 @@ class LocalCalendarItem(CalendarItem, persist.Versionable):
 class CalDAVCalendarItem(CalendarItem, persist.Versionable):
 
     ##  1: added 'enabled'
-    _class_version = 1
+    ##  2: added 'calendar_id'
+    _class_version = 2
 
     def __init__(self, cal_name: str = None):
         super().__init__()
         if cal_name is None:
             cal_name = ""
+        self.calendar_id = generate_uid()
         self.enabled: bool = True
         self.serverURL: str = ""
         self.serverUser: str = ""
@@ -169,6 +188,10 @@ class CalDAVCalendarItem(CalendarItem, persist.Versionable):
             state_dict["enabled"] = True
             state_version += 1
 
+        if state_version == 1:
+            state_dict["calendar_id"] = generate_uid()
+            state_version += 1
+
         return state_dict
 
     def __eq__(self, other):
@@ -185,6 +208,10 @@ class CalDAVCalendarItem(CalendarItem, persist.Versionable):
     ## override
     def isEnabled(self) -> bool:
         return self.enabled
+
+    ## override
+    def getCalendarId(self) -> str:
+        return self.calendar_id
 
     ## override
     def getCalendarName(self) -> str:
@@ -219,6 +246,30 @@ class AppSettings:
     def __hash__(self):
         return hash(self._key())
 
+    def getCalendarData(self) -> CalendarData:
+        cal_data = CalendarData()
+        for cal_item in self.calendar_items:
+            enabled_label = ""
+            if cal_item.isEnabled() is False:
+                enabled_label = "[disabled] "
+
+            if isinstance(cal_item, LocalCalendarItem):
+                cal_id = cal_item.getCalendarId()
+                cal_name = cal_item.getCalendarName()
+                cal_mode = cal_item.getCalendarMode().name
+                cal_label = f"{enabled_label}{cal_name}: {cal_mode}"
+                cal_data.addCalendar(cal_label, cal_id)
+            elif isinstance(cal_item, CalDAVCalendarItem):
+                cal_id = cal_item.getCalendarId()
+                cal_name = cal_item.getCalendarName()
+                cal_mode = cal_item.getCalendarMode().name
+                cal_server = cal_item.serverURL
+                cal_label = f"{enabled_label}{cal_name}: {cal_mode} {cal_server}"
+                cal_data.addCalendar(cal_label, cal_id)
+            else:
+                _LOGGER.warning("unhandled calendar item: %s %s", cal_item.getCalendarMode(), cal_item)
+        return cal_data
+
     def getCalendar(self, cal_index: int) -> CalendarItem:
         if cal_index < 0:
             return None
@@ -238,7 +289,7 @@ class AppSettings:
         self.calendar_items[cal_index] = new_cal
         return new_cal
 
-    def createCalendar(self, cal_mode: DatabaseMode, cal_name: str):
+    def createCalendar(self, cal_mode: DatabaseMode, cal_name: str) -> CalendarItem:
         if cal_mode == DatabaseMode.LOCAL:
             return LocalCalendarItem(cal_name)
         if cal_mode == DatabaseMode.CALDAV:
@@ -246,17 +297,30 @@ class AppSettings:
         _LOGGER.warning("unhandled mode: %s", cal_mode)
         return None
 
-    def addLocalCalendar(self, calendar_name: str):
+    def addLocalCalendar(self, calendar_name: str, cal_id: str = None) -> LocalCalendarItem:
         item = LocalCalendarItem(calendar_name)
+        if cal_id:
+            item.calendar_id = cal_id
         self.calendar_items.append(item)
+        return item
 
-    def addCalDAVCalendar(self, server_url: str, user: str, passwd: str, calendar_name: str):
+    def addCalDAVCalendar(
+        self,
+        server_url: str,
+        user: str,
+        passwd: str,
+        calendar_name: str,
+        cal_id: str = None,
+    ) -> CalDAVCalendarItem:
         item = CalDAVCalendarItem()
+        if cal_id:
+            item.calendar_id = cal_id
         item.serverURL = server_url
         item.serverUser = user
         item.serverPassword = passwd
         item.calendarName = calendar_name
         self.calendar_items.append(item)
+        return item
 
     def loadSettings(self, settings: QSettings):
         settings.beginGroup("app_settings")

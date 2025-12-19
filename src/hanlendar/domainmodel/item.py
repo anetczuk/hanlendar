@@ -60,11 +60,14 @@ class CommonData(persist.Versionable):
     """Container for common data for Task and ToDo."""
 
     ##  1: added '_reminderList'
-    _class_version = 1
+    ##  2: added 'calendar_id'
+    _class_version = 2
 
     def __init__(self):
         self.UID: str = generate_uid()
 
+        ## None value means local "default" calendar
+        self.calendar_id: str = None
         self.title: str = ""
         self.location: str = ""
         self.url: str = ""
@@ -110,6 +113,12 @@ class CommonData(persist.Versionable):
         if state_version == 0:
             state_dict["reminderList"] = None
             state_version += 1
+
+        if state_version == 1:
+            state_dict["calendar_id"] = None
+            state_version += 1
+
+        return state_dict
 
     def __eq__(self, other):
         if not isinstance(other, CommonData):

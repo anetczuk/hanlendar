@@ -28,6 +28,7 @@ from PyQt5.QtWidgets import QDialog
 
 from hanlendar.domainmodel.local.task import LocalTask, Task
 from hanlendar.gui import uiloader
+from hanlendar.domainmodel.calendardata import CalendarData
 
 
 UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
@@ -41,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 ##
 class TaskDialog(QtBaseClass):  # type: ignore[valid-type,misc]
 
-    def __init__(self, task: Task, parentWidget=None):
+    def __init__(self, task: Task, calendar_data: CalendarData, parentWidget=None):
         super().__init__(parentWidget)
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
@@ -54,6 +55,7 @@ class TaskDialog(QtBaseClass):  # type: ignore[valid-type,misc]
             self.task = LocalTask()
 
         self.ui.detailsWidget.setReadOnly(read_only=False)
+        self.ui.detailsWidget.setCalendarData(calendar_data)
         self.ui.detailsWidget.setTask(self.task)
         self.finished.connect(self._finished)
 

@@ -31,6 +31,7 @@ from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QWidget, QUndoStack
 from PyQt5.QtWidgets import QDialog
 
+from hanlendar.domainmodel.calendardata import CalendarData
 from hanlendar.gui.widget.taskdialog import TaskDialog
 from hanlendar.gui.widget.tododialog import ToDoDialog
 
@@ -78,6 +79,7 @@ class DataObject(QObject):
 
         self.parentWidget = parent
         self.domainModel: Manager = LocalManager()
+        self.calendar_data: CalendarData = None
 
         self.undoStack = QUndoStack(self)
 
@@ -97,6 +99,9 @@ class DataObject(QObject):
         if hasattr(self.domainModel, "storeToDisk"):
             return self.domainModel.storeToDisk(custom_path)
         return self.domainModel.storeData()
+
+    def getCalendarData(self) -> CalendarData:
+        return self.calendar_data
 
     def getTaskOccurrences(self, taskDate: date, *, includeCompleted=True):
         return self.domainModel.getTaskOccurrencesForDate(taskDate, includeCompleted=includeCompleted)
@@ -127,7 +132,8 @@ class DataObject(QObject):
     def editTask(self, task: Task):
         if task is None:
             return
-        taskDialog = TaskDialog(task, self.parentWidget)
+        calendar_data: CalendarData = self.getCalendarData()
+        taskDialog = TaskDialog(task, calendar_data, self.parentWidget)
         taskDialog.setModal(True)
         dialogCode = taskDialog.exec_()
         if dialogCode == QDialog.Rejected:
@@ -165,7 +171,8 @@ class DataObject(QObject):
         self.undoStack.push(AddSubToDoCommand(self, parent, todo))
 
     def editToDo(self, todo: LocalToDo):
-        todoDialog = ToDoDialog(todo, self.parentWidget)
+        calendar_data: CalendarData = self.getCalendarData()
+        todoDialog = ToDoDialog(todo, calendar_data, self.parentWidget)
         todoDialog.setModal(True)
         dialogCode = todoDialog.exec_()
         if dialogCode == QDialog.Rejected:
@@ -182,7 +189,8 @@ class DataObject(QObject):
         task.completed = todo.completed
         task.priority = todo.priority
 
-        taskDialog = TaskDialog(task, self.parentWidget)
+        calendar_data: CalendarData = self.getCalendarData()
+        taskDialog = TaskDialog(task, calendar_data, self.parentWidget)
         taskDialog.setModal(True)
         dialogCode = taskDialog.exec_()
         if dialogCode == QDialog.Rejected:
@@ -201,7 +209,8 @@ class DataObject(QObject):
             startDate = newTaskDate.toPyDate()
             task.setDefaultDate(startDate)
 
-        taskDialog = TaskDialog(task, self.parentWidget)
+        calendar_data: CalendarData = self.getCalendarData()
+        taskDialog = TaskDialog(task, calendar_data, self.parentWidget)
         taskDialog.setModal(True)
         dialogCode = taskDialog.exec_()
         if dialogCode == QDialog.Rejected:
@@ -212,7 +221,8 @@ class DataObject(QObject):
         todo = self.domainModel.createEmptyToDo()
         if content is not None:
             todo.description = content
-        todoDialog = ToDoDialog(todo, self.parentWidget)
+        calendar_data: CalendarData = self.getCalendarData()
+        todoDialog = ToDoDialog(todo, calendar_data, self.parentWidget)
         todoDialog.setModal(True)
         dialogCode = todoDialog.exec_()
         if dialogCode == QDialog.Rejected:

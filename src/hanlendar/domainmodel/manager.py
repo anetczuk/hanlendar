@@ -269,6 +269,7 @@ class Manager:
         self.fixTaskChildren()
 
     def fixTaskParents(self):
+        ## extract root tasks and add to top list
         rootTasks = self._getTasks()
         allTasks = self.getTasksAll()
         for task in allTasks:
@@ -282,6 +283,7 @@ class Manager:
             self.addTask(rootItem)
 
     def fixTaskRoots(self):
+        ## remove child tasks from root list
         rootTasks = self._getTasks()
         for index in range(len(rootTasks) - 1, -1, -1):
             task = rootTasks[index]

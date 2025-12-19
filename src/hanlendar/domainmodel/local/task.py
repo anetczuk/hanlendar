@@ -600,7 +600,9 @@ class LocalTask(Task, persist.Versionable):
     def __eq__(self, other):
         if not isinstance(other, LocalTask):
             return NotImplemented
-        return self.__dict__ == other.__dict__
+        return self._key() == other._key()
+        ## it triggers infinite recursion
+        # return self.__dict__ == other.__dict__
 
     def _key(self):
         ## no parent, no subitems

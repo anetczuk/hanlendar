@@ -69,7 +69,7 @@ def run_app(args):
 
     window = MainWindow()
     local_data_path = args.localdatadir
-    window.setLocalDataPath(local_data_path)
+    window.setLocalDataRootPath(local_data_path)
     if args.blocksave is True:
         window.disableSaving()
     if args.exportlocal is True:

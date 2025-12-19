@@ -40,6 +40,7 @@ with contextlib.suppress(ImportError):
 import sys
 from datetime import datetime
 import logging
+import argparse
 import copy
 import pprint
 from deepdiff import DeepDiff
@@ -54,6 +55,7 @@ from hanlendar.gui.widget.taskdialog import TaskDialog
 
 from hanlendar.domainmodel.recurrent import Recurrent
 from hanlendar.domainmodel.local.task import LocalTask, Task
+from hanlendar.domainmodel.calendardata import CalendarData
 
 
 ## ============================= main section ===================================
@@ -61,6 +63,11 @@ from hanlendar.domainmodel.local.task import LocalTask, Task
 
 if __name__ != "__main__":
     sys.exit(0)
+
+
+parser = argparse.ArgumentParser(description="Hanlendar Example")
+
+args = parser.parse_args()
 
 
 logFile = logger.get_logging_output_file()
@@ -76,12 +83,17 @@ app.setOrganizationName("arnet")
 
 setup_interrupt_handling()
 
+calendar_data = CalendarData()
+calendar_data.addCalendar("cal1", "id_cal1")
+calendar_data.addCalendar("cal2", "id_cal2")
+
 parentTask = LocalTask()
 parentTask.recurrence = Recurrent()
 parentTask.recurrence.setWeekly(1)
 
 item: Task = LocalTask()
 item.setParent(parentTask)
+item.commonData.calendar_id = "id_cal1"
 item.title = "Task 1"
 item.description = "description example"
 item.completed = 50
@@ -94,7 +106,7 @@ item.setOccurrence(start, end)
 while True:
     item_backup = copy.deepcopy(item)
 
-    dialog = TaskDialog(item)
+    dialog = TaskDialog(item, calendar_data)
     ## dialog.resize(600, 800)
     ## root_path = get_root_path()
     ## renderToPixmap(dialog, root_path + "/tmp/taskdialog-big.png")

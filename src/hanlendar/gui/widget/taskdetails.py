@@ -32,6 +32,7 @@ from PyQt5.QtGui import QDesktopServices, QKeySequence
 from hanlendar.domainmodel.local.task import Task
 from hanlendar.gui import uiloader
 from hanlendar.gui.utils import enable_layout, hide_layout, find_action
+from hanlendar.domainmodel.calendardata import CalendarData
 
 
 UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
@@ -50,6 +51,7 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui = UiTargetClass()
         self.ui.setupUi(self)
 
+        self.calendar_data: CalendarData = None
         self.task: Task = None
         ## store value in temporary variable to
         ## prevent adding "completed date" during field edit
@@ -57,6 +59,7 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         self.completed = None
         self._read_only: bool = True
 
+        self.ui.calendarCB.currentIndexChanged.connect(self._calendarIdChanged)
         self.ui.titleEdit.textChanged.connect(self._titleChanged)
         self.ui.completionSlider.valueChanged.connect(self._completedChanged)
         self.ui.priorityBox.valueChanged.connect(self._priorityChanged)
@@ -85,6 +88,7 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
 
         self._update_tabs_state(self.task)
 
+        self.ui.calendarCB.setDisabled(read_only)
         self.ui.titleEdit.setReadOnly(read_only)
         self.ui.completionSlider.setDisabled(read_only)
         self.ui.priorityBox.setReadOnly(read_only)
@@ -103,6 +107,9 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         enable_layout(self.ui.bottomButtonsLayout, enable_state=not read_only)
         hide_layout(self.ui.bottomButtonsLayout, hide_state=read_only)
 
+    def setCalendarData(self, calendar_data: CalendarData):
+        self.calendar_data = calendar_data
+
     def setTask(self, task: Task):
         self.task = None  ## prevents triggering change callbacks
 
@@ -112,6 +119,7 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
             self.ui.reminderWidget.setItem(None)
             self.ui.recurrentWidget.setItem(None)
 
+            self.ui.calendarCB.clear()
             self.ui.uidText.clear()
             self.ui.parentUidText.clear()
             self.ui.titleEdit.clear()
@@ -134,6 +142,30 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
 
         self.completed = task.completed
 
+        self.ui.calendarCB.clear()
+        curr_cal_id = task.commonData.calendar_id
+        if self.calendar_data is not None:
+            selected_cal = -1
+            cal_items = self.calendar_data.getItems()
+            for cal_index, cal_item in enumerate(cal_items):
+                self.ui.calendarCB.addItem(cal_item[0], cal_item[1])
+                if curr_cal_id == cal_item[1]:
+                    selected_cal = cal_index
+            if selected_cal < 0:
+                _LOGGER.warning(
+                    "unable to find item's calendar: %s curr cals: %s",
+                    curr_cal_id,
+                    self.calendar_data.items,
+                )
+            self.ui.calendarCB.setCurrentIndex(selected_cal)
+        else:
+            _LOGGER.warning("calendar data not given")
+            if curr_cal_id is None:
+                self.ui.calendarCB.addItem(CalendarData.DEFAULT_LABEL, curr_cal_id)
+            else:
+                self.ui.calendarCB.addItem(curr_cal_id, curr_cal_id)
+            self.ui.calendarCB.setCurrentIndex(0)
+
         self.ui.uidText.setText(task.UID)
         taskParent = task.getParent()
         if taskParent is not None:
@@ -150,18 +182,14 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         if task.startDateTime is None:
             self.ui.deadlineBox.setChecked(True)
             self.ui.startDateTime.setNone()
-            # self.ui.startDateTime.setReadOnly(read_only=True)
         else:
             self.ui.deadlineBox.setChecked(False)
             self.ui.startDateTime.setValue(task.startDateTime)
-            # self.ui.startDateTime.setReadOnly(read_only=False)
 
         if task.dueDateTime is not None:
             self.ui.dueDateTime.setValue(task.dueDateTime)
-            # self.ui.dueDateTime.setReadOnly(read_only=False)
         else:
             self.ui.startDateTime.setNone()
-        #     self.ui.dueDateTime.setReadOnly(read_only=True)
 
         self.ui.descriptionEdit.setText(task.description)
         self.ui.insertUrlEdit.setText(task.url)
@@ -207,6 +235,14 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
             self._pasteUnformattedToDescription()
             event.accept()  ## do not propagate event to parents
         super().keyPressEvent(event)
+
+    def _calendarIdChanged(self):
+        if self._read_only:
+            return
+        if not self.task:
+            return
+        cal_id = self.ui.calendarCB.currentData()
+        self.task.commonData.calendar_id = cal_id
 
     def _titleChanged(self, newValue):
         if self._read_only:

@@ -52,6 +52,7 @@ from hanlendar.gui.sigint import setup_interrupt_handling
 from hanlendar.gui.widget.tododetails import ToDoDetails
 
 from hanlendar.domainmodel.local.todo import LocalToDo
+from hanlendar.domainmodel.calendardata import CalendarData
 
 
 ## ============================= main section ===================================
@@ -80,7 +81,12 @@ app.setOrganizationName("arnet")
 
 setup_interrupt_handling()
 
+calendar_data = CalendarData()
+calendar_data.addCalendar("cal1", "id_cal1")
+calendar_data.addCalendar("cal2", "id_cal2")
+
 todo = LocalToDo()
+todo.commonData.calendar_id = "id_cal1"
 todo.title = "Task title"
 todo.description = "Description\nwww.google.pl"
 todo.url = "http://www.google.pl"
@@ -96,6 +102,7 @@ while True:
     todo_backup = copy.deepcopy(todo)
 
     widget = ToDoDetails()
+    widget.setCalendarData(calendar_data)
     widget.setReadOnly(read_only=args.readonly)
     widget.setToDo(todo)
     widget.show()

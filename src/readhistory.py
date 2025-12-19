@@ -25,6 +25,7 @@
 
 # ruff: noqa: T201 (`print` found)
 
+import os
 import logging
 import argparse
 
@@ -99,7 +100,9 @@ def main():
     initialize_qt()
     settings = SettingsObject()
 
-    localManager: LocalManager = settings.createLocalManager()
+    dataPath = settings.getDataPath()
+    os.makedirs(dataPath, exist_ok=True)
+    localManager: LocalManager = LocalManager(dataPath)
     handle_history(localManager, args)
 
 

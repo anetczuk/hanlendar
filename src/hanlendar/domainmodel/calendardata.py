@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2020 Arkadiusz Netczuk <dev.arnet@gmail.com>
+# Copyright (c) 2025 Arkadiusz Netczuk <dev.arnet@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,38 +22,29 @@
 #
 
 import logging
-import copy
 
-from hanlendar.domainmodel.local.todo import LocalToDo
-from hanlendar.domainmodel.calendardata import CalendarData
-from hanlendar.gui import uiloader
-
-
-UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)
+# import datetime
+# from dateutil.relativedelta import relativedelta
+#
+# from hanlendar.domainmodel.recurrent import find_multiplication_after
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ToDoDialog(QtBaseClass):  # type: ignore[valid-type,misc]
+class CalendarData:
 
-    def __init__(self, todo: LocalToDo, calendar_data: CalendarData, parentWidget=None):
-        super().__init__(parentWidget)
-        self.ui = UiTargetClass()
-        self.ui.setupUi(self)
+    DEFAULT_LABEL: str = "(local default)"
 
-        self.todo: LocalToDo = None
+    def __init__(self):
+        self.items: list[tuple[str, str]] = [(CalendarData.DEFAULT_LABEL, None)]
 
-        if todo is not None:
-            self.todo = copy.deepcopy(todo)
-        else:
-            self.todo = LocalToDo()
+    def getItems(self) -> list[tuple[str, str]]:
+        return list(self.items)  ## copy list
 
-        self.ui.detailsWidget.setReadOnly(read_only=False)
-        self.ui.detailsWidget.setCalendarData(calendar_data)
-        self.ui.detailsWidget.setToDo(self.todo)
-        self.finished.connect(self._finished)
-
-    def _finished(self, value):
-        ## do nothing
-        pass
+    def addCalendar(self, cal_label, cal_id):
+        for item in self.items:
+            if item[1] == cal_id:
+                ## item already exists
+                return
+        self.items.append((cal_label, cal_id))

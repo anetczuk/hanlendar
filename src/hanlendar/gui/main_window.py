@@ -107,12 +107,6 @@ class SettingsObject(QObject):
         settingsDir += "-data"
         return settingsDir
 
-    def createLocalManager(self) -> LocalManager:
-        dataPath = self.getDataPath()
-        dataPath = os.path.join(dataPath, "local")
-        os.makedirs(dataPath, exist_ok=True)
-        return LocalManager(dataPath)
-
 
 ##
 class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
@@ -130,7 +124,6 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
 
         self._data_custom_path = None
         self.data = DataObject(self)
-        self.data.setManager(self.qtSettings.createLocalManager())
 
         self.messagesQueueWatchdog = FSWatcher()
         self.messagesQueueWatchdog.start(queue_path, self._handleNextMessage)
@@ -212,8 +205,28 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
 
         self.statusBar().showMessage("Ready", 10000)
 
-    def setLocalDataPath(self, custom_path):
+    def setLocalDataRootPath(self, custom_path):
         self._data_custom_path = custom_path
+
+    def getLocalDataPath(self):
+        dataPath = self._data_custom_path
+        if not dataPath:
+            dataPath = self.qtSettings.getDataPath()
+        dataPath = os.path.join(dataPath, "local")
+        os.makedirs(dataPath, exist_ok=True)
+        return dataPath
+
+    def createLocalManager(self) -> LocalManager:
+        dataPath = self.getLocalDataPath()
+        return LocalManager(dataPath)
+
+    def createCalDAVManager(self, connector):
+        dataPath = self._data_custom_path
+        if not dataPath:
+            dataPath = self.qtSettings.getDataPath()
+        dataPath = os.path.join(dataPath, "caldav")
+        os.makedirs(dataPath, exist_ok=True)
+        return CalDAVManager(connector, dataPath)
 
     def createCalDAVConnector(self, caldav_address, caldav_user, caldav_pass, caldav_calendar):
         _LOGGER.info("connecting to CalDAV server: %s calendar: %s", caldav_address, caldav_calendar)
@@ -226,12 +239,6 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
             return None
         connector.connectToCalendar(caldav_calendar)
         return connector
-
-    def createCalDAVManager(self, connector):
-        dataPath = self.qtSettings.getDataPath()
-        dataPath = os.path.join(dataPath, "caldav")
-        os.makedirs(dataPath, exist_ok=True)
-        return CalDAVManager(connector, dataPath)
 
     def setCalDAVManager(self, caldav_address, caldav_user, caldav_pass, caldav_calendar):
         self.appSettings.calendar_items.clear()
@@ -246,8 +253,9 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.exportLocalDB(connector)
 
     def exportLocalDB(self, connector: CalDAVConnector):
-        manager: LocalManager = self.qtSettings.createLocalManager()
-        manager.loadFromDisk(self._data_custom_path)
+        manager: LocalManager = self.createLocalManager()
+        dataPath = self.getLocalDataPath()
+        manager.loadFromDisk(dataPath)
         caldavManager = self.createCalDAVManager(connector)
         caldavManager.setData(manager)
         caldavManager.saveToServer()
@@ -256,7 +264,8 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         return self.data.getManager()
 
     def loadData(self):
-        self.data.loadData(custom_path=self._data_custom_path)
+        dataPath = self.getLocalDataPath()
+        self.data.loadData(custom_path=dataPath)
         self.refreshView()
 
     def triggerSaveTimer(self):
@@ -276,7 +285,8 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         _LOGGER.info("storing data")
         notes = self.ui.notesWidget.getNotes()
         self.data.getManager().setNotes(notes)
-        return self.data.storeData(custom_path=self._data_custom_path)
+        dataPath = self.getLocalDataPath()
+        return self.data.storeData(custom_path=dataPath)
 
     def disableSaving(self):
         def save_data_mock():
@@ -298,11 +308,15 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
             self.hideDetails()
             return
         if isinstance(entity, Task):
+            calendar_data = self.appSettings.getCalendarData()
+            self.ui.taskDetails.setCalendarData(calendar_data)
             self.ui.taskDetails.setTask(entity)
             self.ui.taskDetails.setReadOnly(read_only=True)
             self.ui.entityDetailsStack.setCurrentIndex(1)
             return
         if isinstance(entity, LocalToDo):
+            calendar_data = self.appSettings.getCalendarData()
+            self.ui.todoDetails.setCalendarData(calendar_data)
             self.ui.todoDetails.setToDo(entity)
             self.ui.entityDetailsStack.setCurrentIndex(2)
             return
@@ -352,7 +366,6 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
 
     def updateTasksView(self, updatedTask: Task = None):
         self.ui.tasksTable.updateView(updatedTask)
-        # self.ui.dayList.updateView()
         self.ui.monthCalendar.updateCells()
         self._updateTrayIndicator()
 
@@ -504,17 +517,18 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
     def applySettings(self, *, load_user_data=True):
         _LOGGER.info("applying settings")
         self.setIconTheme(self.appSettings.trayIcon)
+        self.data.calendar_data = self.appSettings.getCalendarData()
 
-        manager = self.qtSettings.createLocalManager()
+        manager = self.createLocalManager()
         # TODO: fix
         # if self.appSettings.databaseMode == DatabaseMode.LOCAL:
-        #     manager = self.qtSettings.createLocalManager()
+        #     manager = self.createLocalManager()
         # elif self.appSettings.databaseMode == DatabaseMode.CALDAV:
         #     connector = self.createCalDAVConnector()
         #     manager = self.createCalDAVManager(connector)
         # else:
         #     _LOGGER.warning("unhandled database mode: %s", self.appSettings.databaseMode)
-        #     manager = self.qtSettings.createLocalManager()
+        #     manager = self.createLocalManager()
 
         self.data.setManager(manager)
         if load_user_data:
