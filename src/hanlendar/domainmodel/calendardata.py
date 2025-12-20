@@ -37,14 +37,26 @@ class CalendarData:
     DEFAULT_LABEL: str = "(local default)"
 
     def __init__(self):
-        self.items: list[tuple[str, str]] = [(CalendarData.DEFAULT_LABEL, None)]
+        self.items: list[tuple[str, str, bool]] = [(CalendarData.DEFAULT_LABEL, None, True)]
 
-    def getItems(self) -> list[tuple[str, str]]:
+    def getItems(self) -> list[tuple[str, str, bool]]:
         return list(self.items)  ## copy list
 
-    def addCalendar(self, cal_label, cal_id):
+    def addCalendar(self, cal_label, cal_id: str, *, enabled: bool):
         for item in self.items:
             if item[1] == cal_id:
                 ## item already exists
                 return
-        self.items.append((cal_label, cal_id))
+        self.items.append((cal_label, cal_id, enabled))
+
+    def isEnabled(self, calendar_id: str):
+        item = self._findCalendarItem(calendar_id)
+        if item is None:
+            return True
+        return item[2]
+
+    def _findCalendarItem(self, calendar_id: str):
+        for item in self.items:
+            if item[1] == calendar_id:
+                return item
+        return None

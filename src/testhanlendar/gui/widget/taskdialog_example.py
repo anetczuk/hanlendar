@@ -84,8 +84,8 @@ app.setOrganizationName("arnet")
 setup_interrupt_handling()
 
 calendar_data = CalendarData()
-calendar_data.addCalendar("cal1", "id_cal1")
-calendar_data.addCalendar("cal2", "id_cal2")
+calendar_data.addCalendar("cal1", "id_cal1", enabled=True)
+calendar_data.addCalendar("cal2", "id_cal2", enabled=True)
 
 parentTask = LocalTask()
 parentTask.recurrence = Recurrent()

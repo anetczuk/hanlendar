@@ -32,6 +32,7 @@ from PyQt5.QtGui import QColor, QBrush
 
 from hanlendar.gui.customtreemodel import ItemTreeModel
 from hanlendar.gui.widget.tasktable import get_completed_color
+from hanlendar.gui.dataobject import DataObject
 
 from hanlendar.domainmodel.local.todo import LocalToDo
 
@@ -95,11 +96,6 @@ class ToDoTreeModel(ItemTreeModel):
         manager = self.dataObject.getManager()
         return manager.getToDos()
 
-    #     def setRootList(self, newList):
-    #         if self.dataObject is None:
-    #             return
-    #         self.dataObject.setTodosList( newList )
-
     def _getAttrName(self, attrIndex):
         if attrIndex < 0:
             return None
@@ -115,18 +111,23 @@ class ToDoSortFilterProxyModel(QtCore.QSortFilterProxyModel):
 
     def __init__(self, parentObject=None):
         super().__init__(parentObject)
+        self.dataObject: DataObject = None
         self._showCompleted = False
+
+    def setDataObject(self, dataObject: DataObject):
+        self.dataObject = dataObject
 
     def showCompleted(self, *, show=True):
         self._showCompleted = show
         self.invalidateFilter()
 
     def filterAcceptsRow(self, sourceRow, sourceParent: QModelIndex):
-        if self._showCompleted is True:
-            return True
         dataIndex = self.sourceModel().index(sourceRow, 2, sourceParent)
         item: LocalToDo = dataIndex.internalPointer()
-        return item.isCompleted() is False
+        if self._showCompleted is False and item.isCompleted():
+            return False
+        calendar_id = item.commonData.calendar_id
+        return self.dataObject.isCalendarEnabled(calendar_id)
 
     def lessThan(self, left: QModelIndex, right: QModelIndex):
         leftData = self.sourceModel().data(left, QtCore.Qt.DisplayRole)  # type: ignore[attr-defined]
@@ -180,6 +181,7 @@ class ToDoTable(QtWidgets.QTreeView):
     def connectData(self, dataObject):
         self.data = dataObject
         self.itemsModel.setDataObject(dataObject)
+        self.proxyModel.setDataObject(self.data)
         self.addNewToDo.connect(dataObject.addNewToDo)
         self.addNewSubToDo.connect(dataObject.addNewSubToDo)
         self.editToDo.connect(dataObject.editToDo)

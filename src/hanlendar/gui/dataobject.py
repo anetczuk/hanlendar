@@ -83,12 +83,6 @@ class DataObject(QObject):
 
         self.undoStack = QUndoStack(self)
 
-    def getManager(self) -> Manager:
-        return self.domainModel
-
-    def setManager(self, model: Manager):
-        self.domainModel = model
-
     def loadData(self, custom_path=None):
         if hasattr(self.domainModel, "loadFromDisk"):
             self.domainModel.loadFromDisk(custom_path)
@@ -100,8 +94,17 @@ class DataObject(QObject):
             return self.domainModel.storeToDisk(custom_path)
         return self.domainModel.storeData()
 
+    def getManager(self) -> Manager:
+        return self.domainModel
+
+    def setManager(self, model: Manager):
+        self.domainModel = model
+
     def getCalendarData(self) -> CalendarData:
         return self.calendar_data
+
+    def isCalendarEnabled(self, calendar_id: str):
+        return self.calendar_data.isEnabled(calendar_id)
 
     def getTaskOccurrences(self, taskDate: date, *, includeCompleted=True):
         return self.domainModel.getTaskOccurrencesForDate(taskDate, includeCompleted=includeCompleted)

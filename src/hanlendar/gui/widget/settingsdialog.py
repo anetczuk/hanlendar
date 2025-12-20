@@ -249,8 +249,9 @@ class AppSettings:
     def getCalendarData(self) -> CalendarData:
         cal_data = CalendarData()
         for cal_item in self.calendar_items:
+            cal_enabled = cal_item.isEnabled()
             enabled_label = ""
-            if cal_item.isEnabled() is False:
+            if cal_enabled is False:
                 enabled_label = "[disabled] "
 
             if isinstance(cal_item, LocalCalendarItem):
@@ -258,14 +259,14 @@ class AppSettings:
                 cal_name = cal_item.getCalendarName()
                 cal_mode = cal_item.getCalendarMode().name
                 cal_label = f"{enabled_label}{cal_name}: {cal_mode}"
-                cal_data.addCalendar(cal_label, cal_id)
+                cal_data.addCalendar(cal_label, cal_id, enabled=cal_enabled)
             elif isinstance(cal_item, CalDAVCalendarItem):
                 cal_id = cal_item.getCalendarId()
                 cal_name = cal_item.getCalendarName()
                 cal_mode = cal_item.getCalendarMode().name
                 cal_server = cal_item.serverURL
                 cal_label = f"{enabled_label}{cal_name}: {cal_mode} {cal_server}"
-                cal_data.addCalendar(cal_label, cal_id)
+                cal_data.addCalendar(cal_label, cal_id, enabled=cal_enabled)
             else:
                 _LOGGER.warning("unhandled calendar item: %s %s", cal_item.getCalendarMode(), cal_item)
         return cal_data

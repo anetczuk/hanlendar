@@ -34,6 +34,7 @@ from PyQt5.QtGui import QColor, QBrush
 
 from hanlendar.gui.customtreemodel import ItemTreeModel
 from hanlendar.gui.taskcontextmenu import TaskContextMenu
+from hanlendar.gui.dataobject import DataObject
 
 from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.taskoccurrence import TaskOccurrence
@@ -48,9 +49,9 @@ class TaskTreeModel(ItemTreeModel):
 
     def __init__(self, parent, *args):
         super().__init__(parent, *args)
-        self.dataObject = None
+        self.dataObject: DataObject = None
 
-    def setDataObject(self, dataObject):
+    def setDataObject(self, dataObject: DataObject):
         self.beginResetModel()
         self.dataObject = dataObject
         self.endResetModel()
@@ -125,12 +126,6 @@ class TaskTreeModel(ItemTreeModel):
         return manager.getTasks()
 
 
-#     def setRootList(self, newList):
-#         if self.dataObject is None:
-#             return
-#         self.dataObject.setTasksList( newList )
-
-
 ## ===========================================================
 
 
@@ -138,19 +133,25 @@ class TaskSortFilterProxyModel(QtCore.QSortFilterProxyModel):
 
     def __init__(self, parentObject=None):
         super().__init__(parentObject)
+        self.dataObject: DataObject = None
         self._showCompleted = False
+
+    def setDataObject(self, dataObject: DataObject):
+        self.dataObject = dataObject
 
     # ruff: noqa: FBT002
     def showCompleted(self, show=True):
         self._showCompleted = show
         self.invalidateFilter()
 
+    ## returns 'true' if item should be displayed, otherwise will be hidden
     def filterAcceptsRow(self, sourceRow, sourceParent: QModelIndex):
-        if self._showCompleted is True:
-            return True
         dataIndex = self.sourceModel().index(sourceRow, 2, sourceParent)
-        item = dataIndex.internalPointer()
-        return item.isCompleted() is False
+        item: Task = dataIndex.internalPointer()
+        if self._showCompleted is False and item.isCompleted():
+            return False
+        calendar_id = item.commonData.calendar_id
+        return self.dataObject.isCalendarEnabled(calendar_id)
 
     def lessThan(self, left: QModelIndex, right: QModelIndex):
         leftData = self.sourceModel().data(left, QtCore.Qt.DisplayRole)  # type: ignore[attr-defined]
@@ -170,7 +171,7 @@ class TaskTable(QtWidgets.QTreeView):
     def __init__(self, parentWidget=None):
         super().__init__(parentWidget)
 
-        self.data = None
+        self.data: DataObject = None
         self.expandItems = False
 
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -210,9 +211,10 @@ class TaskTable(QtWidgets.QTreeView):
         self.proxyModel.modelReset.connect(self.expandOnDemand)
         self.doubleClicked.connect(self.itemDoubleClicked)
 
-    def connectData(self, dataObject):
+    def connectData(self, dataObject: DataObject):
         self.data = dataObject
         self.itemsModel.setDataObject(self.data)
+        self.proxyModel.setDataObject(self.data)
         self.taskContextMenu.connectData(dataObject)
         self.editTask.connect(dataObject.editTask)
 
