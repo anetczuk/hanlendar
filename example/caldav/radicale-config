@@ -13,5 +13,6 @@ htpasswd_filename = /tmp/radicale/auth_user
 htpasswd_encryption = plain
 
 [rights]
+#type = authenticated
 type = from_file
 file = /tmp/radicale/rights

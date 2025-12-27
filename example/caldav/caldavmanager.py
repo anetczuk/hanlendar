@@ -88,6 +88,29 @@ def create_principal(auth_dict):
     return caldav_client.principal()
 
 
+def get_calendar(args):
+    cal_id = None
+    calendar: caldav.objects.Calendar = None
+
+    auth_path = args.authjson
+    auth_dict = read_json(auth_path)
+
+    caldav_principal = create_principal(auth_dict)
+    if args.calurl:
+        cal_id = args.calurl
+        if not cal_id.endswith("/"):
+            cal_id += "/"
+        calendar = caldav_principal.calendar(cal_url=cal_id)
+    elif args.calid:
+        cal_id = args.calid
+        calendar = caldav_principal.calendar(cal_id=cal_id)
+    else:
+        _LOGGER.error("no 'calid' not 'calurl' given")
+        sys.exit(1)
+
+    return (cal_id, calendar)
+
+
 def convert_to_datetime(value_string: str):
     if value_string is None:
         return None
@@ -100,13 +123,14 @@ def convert_to_datetime(value_string: str):
 
 
 def process_calcreate(args):
-    auth_path = args.authjson
-    auth_dict = read_json(auth_path)
-
-    caldav_principal = create_principal(auth_dict)
-
     try:
         cal_name = args.name
+
+        auth_path = args.authjson
+        auth_dict = read_json(auth_path)
+
+        caldav_principal = create_principal(auth_dict)
+
         calendar: caldav.objects.Calendar = caldav_principal.make_calendar(name=cal_name, cal_id=cal_name)
         _LOGGER.info("created new calendar:")
         _LOGGER.info("  name: %s", calendar.name)
@@ -139,14 +163,11 @@ def process_listcals(args):
 
 
 def process_calitems(args):
-    auth_path = args.authjson
-    auth_dict = read_json(auth_path)
-
-    caldav_principal = create_principal(auth_dict)
+    cal_id = None
+    calendar: caldav.objects.Calendar = None
 
     try:
-        cal_id = args.calid
-        calendar: caldav.objects.Calendar = caldav_principal.calendar(cal_id=cal_id)
+        cal_id, calendar = get_calendar(args)
 
         ## check if calendar exists by just access it's properties
         cal_name = calendar.get_display_name()  # type: ignore[attr-defined]
@@ -212,19 +233,20 @@ def process_calitems(args):
             _LOGGER.info("    raw data: %s", journal.icalendar_component)  # type: ignore[attr-defined]
 
     except error.NotFoundError:
-        _LOGGER.error("calendar with given id '%s' does not exist", cal_id)
+        _LOGGER.error("given calendar '%s' does not exist", cal_id)
+        sys.exit(1)
+
+    except caldav.lib.error.AuthorizationError as ex:
+        _LOGGER.error("authorization error: %s", ex)
         sys.exit(1)
 
 
 def process_addevent(args):
-    auth_path = args.authjson
-    auth_dict = read_json(auth_path)
-
-    caldav_principal = create_principal(auth_dict)
+    cal_id = None
+    calendar: caldav.objects.Calendar = None
 
     try:
-        cal_id = args.calid
-        calendar: caldav.objects.Calendar = caldav_principal.calendar(cal_id=cal_id)
+        cal_id, calendar = get_calendar(args)
 
         event_dict = {}
         start_time = convert_to_datetime(args.start)
@@ -306,7 +328,9 @@ def main():
     )
     subparser.description = description
     subparser.set_defaults(func=process_calitems)
-    subparser.add_argument("--calid", action="store", required=True, help="Id of calendar")
+    group = subparser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--calid", action="store", help="Id of calendar")
+    group.add_argument("--calurl", action="store", help="URL of calendar with cal id and user name, e.g. 'bob/cal1/'")
 
     ## =================================================
 
@@ -318,7 +342,9 @@ def main():
     )
     subparser.description = description
     subparser.set_defaults(func=process_addevent)
-    subparser.add_argument("--calid", action="store", required=True, help="Calendar ID")
+    group = subparser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--calid", action="store", help="Id of calendar")
+    group.add_argument("--calurl", action="store", help="URL of calendar with cal id and user name, e.g. 'bob/cal1/'")
     subparser.add_argument(
         "--start",
         action="store",

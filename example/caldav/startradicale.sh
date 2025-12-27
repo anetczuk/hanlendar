@@ -45,4 +45,4 @@ echo
 echo "Starting server. Available at: http://localhost:5232/"
 echo
 
-python3 -m radicale --config="${CONFIG_FILE}" --storage-filesystem-folder="${BASE_DIR}"
+python3 -m radicale --config="${CONFIG_FILE}" --storage-filesystem-folder="${BASE_DIR}" "${@}"

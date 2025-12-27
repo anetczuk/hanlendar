@@ -1,6 +1,22 @@
 ## rights configuration
+## more info: https://radicale.org/v3.html#authorization-and-rights
 
-[others-readonly]
-user = .*
-collection = .*
-permissions = r
+
+## Radicale WEB UI does not show other users' calendars even if 'rights' file allows access 
+
+
+## Allow reading root collection for authenticated users
+[root]
+user: .+
+collection:
+permissions: Rr
+
+[own-readwrite]
+user: .+
+collection: ^{user}(/.*)?
+permissions: RWrw
+
+[others-read]
+user: .+
+collection: ^(?!{user}/).+
+permissions: Rr
