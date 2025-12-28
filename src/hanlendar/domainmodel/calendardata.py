@@ -37,6 +37,7 @@ class CalendarData:
     DEFAULT_LABEL: str = "(local default)"
 
     def __init__(self):
+        ## calendar_label: str, calendar_id: str, enabled: bool
         self.items: list[tuple[str, str, bool]] = [(CalendarData.DEFAULT_LABEL, None, True)]
 
     def getItems(self) -> list[tuple[str, str, bool]]:

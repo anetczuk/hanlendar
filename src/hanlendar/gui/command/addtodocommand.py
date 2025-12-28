@@ -25,6 +25,8 @@ import logging
 
 from PyQt5.QtWidgets import QUndoCommand
 
+from hanlendar.domainmodel.manager import MultiManager
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +37,7 @@ class AddToDoCommand(QUndoCommand):
         super().__init__(parentCommand)
 
         self.data = dataObject
-        self.domainModel = self.data.getManager()
+        self.domainModel: MultiManager = self.data.getManager()
         self.newToDo = newToDo
 
         self.setText("Add New ToDo: " + newToDo.title)

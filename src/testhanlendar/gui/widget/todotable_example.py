@@ -43,6 +43,7 @@ from hanlendar.gui.dataobject import DataObject
 from hanlendar.gui.widget.todotable import ToDoTable
 
 from hanlendar.domainmodel.local.todo import LocalToDo as ToDo
+from hanlendar.domainmodel.manager import MultiManager
 
 
 ## ============================= main section ===================================
@@ -117,8 +118,8 @@ todoItem.addSubtodo(todoLeaf)
 # todoItem.subtodos.append( todoLeaf )
 
 dataObject = DataObject()
-manager = dataObject.getManager()
-manager.todos = todosList
+manager: MultiManager = dataObject.getManager()
+manager.setToDos(todosList)
 
 setup_interrupt_handling()
 

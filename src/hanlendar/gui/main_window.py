@@ -29,27 +29,28 @@ from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QDialog, QMessageBox
 from PyQt5.QtWidgets import QFileDialog
 
+from hanlendar.fswatchdog import FSWatcher
+from hanlendar.fqueue import queue_path, get_from_queue
+
 from hanlendar.domainmodel.caldav.manager import CalDAVManager, CalDAVConnector
 from hanlendar.domainmodel.reminder import Notification
 from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.local.todo import LocalToDo
 from hanlendar.domainmodel.local.manager import LocalManager
+from hanlendar.domainmodel.calendardata import CalendarData
+from hanlendar.domainmodel.manager import Manager, MultiManager
 
-from hanlendar.fswatchdog import FSWatcher
-from hanlendar.fqueue import queue_path, get_from_queue
-
-from . import uiloader
-from . import resources
-from . import tray_icon
-from . import guistate
-
-from .qt import qApp, QtCore, QtGui, QIcon
-
-from .dataobject import DataObject
-from .notifytimer import NotificationTimer
-from .widget.settingsdialog import SettingsDialog, AppSettings
-from .widget.navcalendar import NavCalendarHighlightModel
-from .widget.tasktable import get_reminded_color, get_timeout_color
+from hanlendar.gui import uiloader
+from hanlendar.gui import resources
+from hanlendar.gui import tray_icon
+from hanlendar.gui import guistate
+from hanlendar.gui.qt import qApp, QtCore, QtGui, QIcon
+from hanlendar.gui.dataobject import DataObject
+from hanlendar.gui.notifytimer import NotificationTimer
+from hanlendar.gui.widget.settingsdialog import SettingsDialog, AppSettings
+from hanlendar.gui.widget.navcalendar import NavCalendarHighlightModel
+from hanlendar.gui.widget.tasktable import get_reminded_color, get_timeout_color
+from hanlendar.gui.widget.settingsdialog import LocalCalendarItem, CalDAVCalendarItem
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,13 +67,13 @@ class DataHighlightModel(NavCalendarHighlightModel):
 
     def isHighlighted(self, date: QDate):
         entryDate = date.toPyDate()
-        manager = self.dataObject.getManager()
+        manager: MultiManager = self.dataObject.getManager()
         occurrencesList = manager.getTaskOccurrencesForDate(entryDate, includeCompleted=False)
         return len(occurrencesList) > 0
 
     def isOccupied(self, date: QDate):
         entryDate = date.toPyDate()
-        manager = self.dataObject.getManager()
+        manager: MultiManager = self.dataObject.getManager()
         occurrencesList = manager.getTaskOccurrencesForDate(entryDate, includeCompleted=True)
         occurrencesList = [task for task in occurrencesList if task.isCompleted()]
         return len(occurrencesList) > 0
@@ -220,7 +221,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         dataPath = self.getLocalDataPath()
         return LocalManager(dataPath)
 
-    def createCalDAVManager(self, connector):
+    def createCalDAVManager(self, connector) -> CalDAVManager:
         dataPath = self._data_custom_path
         if not dataPath:
             dataPath = self.qtSettings.getDataPath()
@@ -244,10 +245,6 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.appSettings.calendar_items.clear()
         self.appSettings.addCalDAVCalendar(caldav_address, caldav_user, caldav_pass, caldav_calendar)
 
-        # connector = self.createCalDAVConnector(caldav_address, caldav_user, caldav_pass, caldav_calendar)
-        # manager = self.createCalDAVManager(connector)
-        # self.data.setManager(manager)
-
     def exportLocalToCalDAV(self, caldav_address, caldav_user, caldav_pass, caldav_calendar):
         connector = self.createCalDAVConnector(caldav_address, caldav_user, caldav_pass, caldav_calendar)
         self.exportLocalDB(connector)
@@ -260,7 +257,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         caldavManager.setData(manager)
         caldavManager.saveToServer()
 
-    def getManager(self):
+    def getManager(self) -> MultiManager:
         return self.data.getManager()
 
     def loadData(self):
@@ -284,7 +281,8 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         ## having separate slot allows to monkey patch / mock "_saveData()" method
         _LOGGER.info("storing data")
         notes = self.ui.notesWidget.getNotes()
-        self.data.getManager().setNotes(notes)
+        manager: MultiManager = self.data.getManager()
+        manager.setNotes(notes)
         dataPath = self.getLocalDataPath()
         return self.data.storeData(custom_path=dataPath)
 
@@ -343,7 +341,8 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
     ## ====================================================================
 
     def updateNotificationTimer(self):
-        notifs: list[Notification] = self.data.getManager().getNotificationList()
+        manager: MultiManager = self.data.getManager()
+        notifs: list[Notification] = manager.getNotificationList()
         self.notifsTimer.setNotifications(notifs)
 
     def handleNotification(self, notification: Notification):
@@ -389,7 +388,8 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.updateNotesView()
 
     def updateNotesView(self):
-        notesDict = self.data.getManager().getNotes()
+        manager: MultiManager = self.data.getManager()
+        notesDict = manager.getNotes()
         self.ui.notesWidget.setNotes(notesDict)
 
     def importXfceNotes(self):
@@ -429,10 +429,11 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
 
     def updateTrayToolTip(self):
         toolTip = ""
-        deadlineTask = self.data.getManager().getNextDeadline()
+        manager: MultiManager = self.data.getManager()
+        deadlineTask = manager.getNextDeadline()
         if deadlineTask is not None:
             toolTip += "\n" + "Next deadline: " + deadlineTask.title
-        nextToDo = self.data.getManager().getNextToDo()
+        nextToDo = manager.getNextToDo()
         if nextToDo is not None:
             toolTip += "\n" + "Next ToDo: " + nextToDo.title
         toolTip = self.toolTip + "\n" + toolTip if toolTip else self.toolTip
@@ -447,8 +448,9 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
 
     def _setTrayIndicator(self, theme: tray_icon.TrayIconTheme):
         self._updateIconTheme(theme)  ## required to clear old number
-        deadlinedTasks = self.data.getManager().getDeadlinedTasks()
-        remindedTasks = self.data.getManager().getRemindedTasks()
+        manager: MultiManager = self.data.getManager()
+        deadlinedTasks = manager.getDeadlinedTasks()
+        remindedTasks = manager.getRemindedTasks()
         indicationTasks = set(deadlinedTasks + remindedTasks)
         indicationSum = len(indicationTasks)
         num = len(deadlinedTasks)
@@ -517,20 +519,40 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
     def applySettings(self, *, load_user_data=True):
         _LOGGER.info("applying settings")
         self.setIconTheme(self.appSettings.trayIcon)
-        self.data.calendar_data = self.appSettings.getCalendarData()
 
-        manager = self.createLocalManager()
-        # TODO: fix
-        # if self.appSettings.databaseMode == DatabaseMode.LOCAL:
-        #     manager = self.createLocalManager()
-        # elif self.appSettings.databaseMode == DatabaseMode.CALDAV:
-        #     connector = self.createCalDAVConnector()
-        #     manager = self.createCalDAVManager(connector)
-        # else:
-        #     _LOGGER.warning("unhandled database mode: %s", self.appSettings.databaseMode)
-        #     manager = self.createLocalManager()
+        calendar_data: CalendarData = self.appSettings.getCalendarData()
+        self.data.setCalendarData(calendar_data)
 
-        self.data.setManager(manager)
+        manager_list: list[Manager] = []
+        default_man: LocalManager = self.createLocalManager()
+        manager_list.append(default_man)
+
+        ## cal_item: CalendarItem
+        for cal_item in self.appSettings.calendar_items:
+            _LOGGER.info("adding manager: %s %s", cal_item.getCalendarMode(), cal_item.getCalendarName())
+
+            if isinstance(cal_item, LocalCalendarItem):
+                # local_cal: LocalCalendarItem = cal_item
+                local_man: LocalManager = self.createLocalManager()
+                local_man.setCalendarId(cal_item.getCalendarId())
+                manager_list.append(local_man)
+
+            elif isinstance(cal_item, CalDAVCalendarItem):
+                caldav_cal: CalDAVCalendarItem = cal_item
+                connector = self.createCalDAVConnector(
+                    caldav_cal.serverURL,
+                    caldav_cal.serverUser,
+                    caldav_cal.serverPassword,
+                    caldav_cal.calendarName,
+                )
+                caldav_man: CalDAVManager = self.createCalDAVManager(connector)
+                caldav_man.calendar_id = cal_item.getCalendarId()
+                manager_list.append(caldav_man)
+
+            else:
+                _LOGGER.warning("unhandled calendar item: %s", cal_item)
+
+        self.data.setManagerList(manager_list)
         if load_user_data:
             self.loadData()
 

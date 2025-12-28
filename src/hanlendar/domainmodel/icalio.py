@@ -34,7 +34,7 @@ import icalendar
 from icalendar.prop import TypesFactory
 
 from hanlendar.domainmodel.manager import Manager
-from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.task import Task, LocalTask
 from hanlendar.domainmodel.local.todo import LocalToDo
 from hanlendar.domainmodel.recurrent import Recurrent, RepeatType, RepeatUntilMode
 from hanlendar.domainmodel.reminder import Reminder, RelatedType
@@ -412,7 +412,7 @@ class TaskSerialization:
         new_items = []
         dangling_children: list[tuple[Any, Any]] = []
 
-        task: Task = manager.createEmptyTask()
+        task: Task = LocalTask()
 
         CommonDataSerialization.from_ical(component, task._common_data)  # type: ignore[attr-defined]
 
@@ -493,7 +493,7 @@ class ToDoSerialization:
         new_items = []
         dangling_children: list[Any] = []
 
-        todo: LocalToDo = manager.createEmptyToDo()
+        todo: LocalToDo = LocalToDo()
 
         CommonDataSerialization.from_ical(component, todo._common_data)
 

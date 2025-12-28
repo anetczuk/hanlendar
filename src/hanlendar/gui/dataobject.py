@@ -57,9 +57,9 @@ from hanlendar.gui.command.renamenotecommand import RenameNoteCommand
 from hanlendar.gui.command.removenotecommand import RemoveNoteCommand
 
 from hanlendar.domainmodel.local.manager import LocalManager
-from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.task import Task, LocalTask
 from hanlendar.domainmodel.local.todo import LocalToDo
-from hanlendar.domainmodel.manager import Manager
+from hanlendar.domainmodel.manager import Manager, MultiManager
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,36 +78,36 @@ class DataObject(QObject):
         super().__init__(parent)
 
         self.parentWidget = parent
-        self.domainModel: Manager = LocalManager()
+
+        default_model = LocalManager()
+        self.managers: MultiManager = MultiManager(default_model)
         self.calendar_data: CalendarData = None
 
         self.undoStack = QUndoStack(self)
 
     def loadData(self, custom_path=None):
-        if hasattr(self.domainModel, "loadFromDisk"):
-            self.domainModel.loadFromDisk(custom_path)
-            return
-        self.domainModel.loadData()
+        self.managers.loadData(custom_path)
 
     def storeData(self, custom_path=None):
-        if hasattr(self.domainModel, "storeToDisk"):
-            return self.domainModel.storeToDisk(custom_path)
-        return self.domainModel.storeData()
+        return self.managers.storeData(custom_path)
 
-    def getManager(self) -> Manager:
-        return self.domainModel
+    def getManager(self) -> MultiManager:
+        return self.managers
 
-    def setManager(self, model: Manager):
-        self.domainModel = model
+    def setManagerList(self, model_list: list[Manager]):
+        self.managers.setManagerList(model_list)
+
+    def getTaskOccurrences(self, taskDate: date, *, includeCompleted=True):
+        return self.managers.getTaskOccurrences(taskDate, includeCompleted=includeCompleted)
 
     def getCalendarData(self) -> CalendarData:
         return self.calendar_data
 
+    def setCalendarData(self, calendar_data: CalendarData):
+        self.calendar_data = calendar_data
+
     def isCalendarEnabled(self, calendar_id: str):
         return self.calendar_data.isEnabled(calendar_id)
-
-    def getTaskOccurrences(self, taskDate: date, *, includeCompleted=True):
-        return self.domainModel.getTaskOccurrencesForDate(taskDate, includeCompleted=includeCompleted)
 
     ## ==============================================================
 
@@ -128,7 +128,7 @@ class DataObject(QObject):
 
     def addTask(self, task: Task = None) -> Task:
         if task is None:
-            task = self.domainModel.createEmptyTask()
+            task = LocalTask()
         self.undoStack.push(AddTaskCommand(self, task))
         return task
 
@@ -160,7 +160,7 @@ class DataObject(QObject):
 
     def addToDo(self, todo: LocalToDo = None) -> LocalToDo:
         if todo is None:
-            todo = self.domainModel.createEmptyToDo()
+            todo = LocalToDo()
         self.undoStack.push(AddToDoCommand(self, todo))
         return todo
 
@@ -186,7 +186,7 @@ class DataObject(QObject):
         self.undoStack.push(RemoveToDoCommand(self, todo))
 
     def convertToDoToTask(self, todo: LocalToDo):
-        task = self.domainModel.createEmptyTask()
+        task = LocalTask()
         task.title = todo.title
         task.description = todo.description
         task.completed = todo.completed
@@ -207,7 +207,7 @@ class DataObject(QObject):
         self.undoStack.push(MoveToDoCommand(self, todoCoords, parentToDo, targetIndex))
 
     def _createTask(self, newTaskDate: QDate = None):
-        task = self.domainModel.createEmptyTask()
+        task = LocalTask()
         if newTaskDate is not None:
             startDate = newTaskDate.toPyDate()
             task.setDefaultDate(startDate)
@@ -221,7 +221,7 @@ class DataObject(QObject):
         return taskDialog.task
 
     def _createToDo(self, content=None):
-        todo = self.domainModel.createEmptyToDo()
+        todo = LocalToDo()
         if content is not None:
             todo.description = content
         calendar_data: CalendarData = self.getCalendarData()

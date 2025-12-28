@@ -27,7 +27,7 @@ import abc
 from datetime import date, datetime
 
 from hanlendar.domainmodel.reminder import Notification
-from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.task import Task, LocalTask
 from hanlendar.domainmodel.item import Item
 from hanlendar.domainmodel.local.todo import LocalToDo
 from hanlendar.domainmodel.taskoccurrence import TaskOccurrence
@@ -77,6 +77,11 @@ class Manager:
         return self._getUnknownProps()
 
     @abc.abstractmethod
+    def getCalendarId(self) -> str:
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
     def _getTasks(self):
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
@@ -104,11 +109,6 @@ class Manager:
     @tasks.setter
     def tasks(self, newList):
         self._setTasks(newList)
-
-    @abc.abstractmethod
-    def createEmptyTask(self) -> Task:
-        message = "You need to define this method in derived class!"
-        raise NotImplementedError(message)
 
     @abc.abstractmethod
     def _getToDos(self):
@@ -141,11 +141,6 @@ class Manager:
         self._setToDos(newList)
 
     @abc.abstractmethod
-    def createEmptyToDo(self) -> LocalToDo:
-        message = "You need to define this method in derived class!"
-        raise NotImplementedError(message)
-
-    @abc.abstractmethod
     def _getNotes(self):
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
@@ -171,7 +166,7 @@ class Manager:
         return None
 
     ## return TaskOccurrence list for given date
-    def getTaskOccurrencesForDate(self, taskDate: date, *, includeCompleted=True):
+    def getTaskOccurrencesForDate(self, taskDate: date, *, includeCompleted=True) -> list[TaskOccurrence]:
         retList = []
         allTasks = self.getTasksAll()
         for task in allTasks:
@@ -195,7 +190,7 @@ class Manager:
                 retTask = task
         return retTask
 
-    def getDeadlinedTasks(self):
+    def getDeadlinedTasks(self) -> list[Task]:
         retTasks = []
         allTasks = self.getTasksAll()
         for task in allTasks:
@@ -206,7 +201,7 @@ class Manager:
                 retTasks.append(task)
         return retTasks
 
-    def getRemindedTasks(self):
+    def getRemindedTasks(self) -> list[Task]:
         retTasks = []
         allTasks = self.getTasksAll()
         for task in allTasks:
@@ -220,8 +215,8 @@ class Manager:
     def getTaskCoords(self, task):
         return Item.getItemCoords(self.tasks, task)
 
-    def getTaskByCoords(self, task):
-        return Item.getItemFromCoords(self.tasks, task)
+    def getTaskByCoords(self, coords) -> Task:
+        return Item.getItemFromCoords(self.tasks, coords)
 
     def insertTask(self, task: Task, taskCoords):
         if taskCoords is None:
@@ -237,29 +232,29 @@ class Manager:
 
     def addTask(self, task: Task = None) -> Task:
         if task is None:
-            task = self.createEmptyTask()
+            task = LocalTask()
         self.tasks.append(task)
         task.setParent(None)
         return task
 
     def addNewTask(self, taskdate: date, title):
-        task = self.createEmptyTask()
+        task = LocalTask()
         task.title = title
         task.setDefaultDate(taskdate)
         self.addTask(task)
         return task
 
     def addNewTaskDateTime(self, start_date: datetime, title) -> Task:
-        task = self.createEmptyTask()
+        task = LocalTask()
         task.title = title
         task.setDefaultDateTime(start_date)
         self.addTask(task)
         return task
 
-    def removeTask(self, task: Task):
+    def removeTask(self, task: Task) -> Task:
         return Item.removeSubItemFromList(self.tasks, task)
 
-    def replaceTask(self, oldTask: Task, newTask: Task):
+    def replaceTask(self, oldTask: Task, newTask: Task) -> bool:
         return Item.replaceSubItemInList(self.tasks, oldTask, newTask)
 
     ### check if ancestor of task is added to root tasks
@@ -321,7 +316,7 @@ class Manager:
         return retStr
 
     def addNewDeadlineDateTime(self, eventdate: datetime, title):
-        eventTask = self.createEmptyTask()
+        eventTask = LocalTask()
         eventTask.title = title
         eventTask.setDeadlineDateTime(eventdate)
         self.addTask(eventTask)
@@ -357,18 +352,18 @@ class Manager:
 
     def addToDo(self, todo: LocalToDo = None):
         if todo is None:
-            todo = self.createEmptyToDo()
+            todo = LocalToDo()
         self.todos.append(todo)
         todo.setParent(None)
         return todo
 
-    def addNewToDo(self, title):
-        todo = self.createEmptyToDo()
+    def addNewToDo(self, title: str):
+        todo = LocalToDo()
         todo.title = title
         self.addToDo(todo)
         return todo
 
-    def removeToDo(self, todo: LocalToDo):
+    def removeToDo(self, todo: LocalToDo) -> LocalToDo:
         return Item.removeSubItemFromList(self.todos, todo)
 
     def replaceToDo(self, oldToDo: LocalToDo, newToDo: LocalToDo):
@@ -389,17 +384,137 @@ class Manager:
 
     ## ========================================================
 
-    def addNote(self, title, content):
+    def addNote(self, title: str, content: str):
         notes = self._getNotes()
         notes[title] = content
 
-    def renameNote(self, fromTitle, toTitle):
+    def renameNote(self, fromTitle: str, toTitle: str):
         notes = self._getNotes()
         notes[toTitle] = notes.pop(fromTitle)
 
-    def removeNote(self, title):
+    def removeNote(self, title: str):
         notes = self._getNotes()
         del notes[title]
+
+
+## ========================================================
+
+
+class MultiManager:
+
+    def __init__(self, default_manager: Manager):
+        self.default_manager: Manager = default_manager
+        self.domain_model: Manager = default_manager
+
+    def getDefaultManager(self) -> Manager:
+        return self.default_manager
+
+    def setManagerList(self, model_list: list[Manager]):
+        self.domain_model = model_list[0]
+
+    def loadData(self, custom_path=None):
+        if hasattr(self.domain_model, "loadFromDisk"):
+            self.domain_model.loadFromDisk(custom_path)
+            return
+        self.domain_model.loadData()
+
+    def storeData(self, custom_path=None):
+        if hasattr(self.domain_model, "storeToDisk"):
+            return self.domain_model.storeToDisk(custom_path)
+        return self.domain_model.storeData()
+
+    ## ======================================================================
+
+    def getTasks(self) -> list[Task]:
+        return self.domain_model.getTasks()
+
+    def setTasks(self, newList):
+        self.domain_model.tasks = newList
+
+    def addTask(self, task: Task = None) -> Task:
+        return self.domain_model.addTask(task)
+
+    def insertTask(self, task: Task, taskCoords):
+        return self.domain_model.insertTask(task, taskCoords)
+
+    def removeTask(self, task: Task):
+        return self.domain_model.removeTask(task)
+
+    def replaceTask(self, oldTask: Task, newTask: Task) -> bool:
+        return self.domain_model.replaceTask(oldTask, newTask)
+
+    def getRemindedTasks(self) -> list[Task]:
+        return self.domain_model.getRemindedTasks()
+
+    def getNextDeadline(self) -> Task:
+        return self.domain_model.getNextDeadline()
+
+    def getDeadlinedTasks(self) -> list[Task]:
+        return self.domain_model.getDeadlinedTasks()
+
+    def getTaskCoords(self, task):
+        return self.domain_model.getTaskCoords(task)
+
+    def getTaskByCoords(self, task) -> Task:
+        return self.domain_model.getTaskByCoords(task)
+
+    def getTaskOccurrences(self, taskDate: date, *, includeCompleted=True) -> list[TaskOccurrence]:
+        return self.domain_model.getTaskOccurrencesForDate(taskDate, includeCompleted=includeCompleted)
+
+    def getTaskOccurrencesForDate(self, taskDate: date, *, includeCompleted=True) -> list[TaskOccurrence]:
+        return self.domain_model.getTaskOccurrencesForDate(taskDate, includeCompleted=includeCompleted)
+
+    def getNotificationList(self) -> list[Notification]:
+        return self.domain_model.getNotificationList()
+
+    ## ======================================================================
+
+    def getToDos(self):
+        return self.domain_model.todos
+
+    def setToDos(self, newList):
+        self.domain_model.todos = newList
+
+    def addToDo(self, todo: LocalToDo = None):
+        return self.domain_model.addToDo(todo)
+
+    def addNewToDo(self, title: str):
+        return self.domain_model.addNewToDo(title)
+
+    def insertToDo(self, todo: LocalToDo, todoCoords):
+        self.domain_model.insertToDo(todo, todoCoords)
+
+    def removeToDo(self, todo: LocalToDo) -> LocalToDo:
+        return self.domain_model.removeToDo(todo)
+
+    def replaceToDo(self, oldToDo: LocalToDo, newToDo: LocalToDo):
+        return self.domain_model.replaceToDo(oldToDo, newToDo)
+
+    def getToDoByCoords(self, todo) -> LocalToDo:
+        return self.domain_model.getToDoByCoords(todo)
+
+    def getNextToDo(self) -> LocalToDo:
+        return self.domain_model.getNextToDo()
+
+    def getToDoCoords(self, todo):
+        return self.domain_model.getToDoCoords(todo)
+
+    ## ======================================================================
+
+    def getNotes(self):
+        return self.domain_model.getNotes()
+
+    def setNotes(self, notesDict):
+        self.domain_model.setNotes(notesDict)
+
+    def addNote(self, title: str, content: str):
+        self.domain_model.addNote(title, content)
+
+    def removeNote(self, title: str):
+        self.domain_model.removeNote(title)
+
+    def renameNote(self, from_title: str, to_title: str):
+        self.domain_model.renameNote(from_title, to_title)
 
 
 ## ========================================================

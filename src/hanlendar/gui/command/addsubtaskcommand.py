@@ -35,7 +35,6 @@ class AddSubTaskCommand(QUndoCommand):
         super().__init__(parentCommand)
 
         self.data = dataObject
-        self.domainModel = self.data.getManager()
         self.parentTask = parentTask
         self.newTask = newTask
 

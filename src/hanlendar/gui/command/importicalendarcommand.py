@@ -24,9 +24,10 @@
 import logging
 
 from PyQt5.QtWidgets import QUndoCommand
-
 from PyQt5.QtWidgets import QMessageBox
+
 from hanlendar.domainmodel.icalio import import_icalendar_content
+from hanlendar.domainmodel.manager import MultiManager, Manager
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +39,8 @@ class ImportICalendarCommand(QUndoCommand):
         super().__init__(parentCommand)
 
         self.data = dataObject
-        self.domainModel = self.data.getManager()
+        multi_manager: MultiManager = self.data.getManager()
+        self.domainModel: Manager = multi_manager.getDefaultManager()
         self.content = content
         self.newTasks = []
         self.silent = silent

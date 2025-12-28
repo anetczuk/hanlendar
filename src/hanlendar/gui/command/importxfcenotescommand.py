@@ -25,6 +25,8 @@ import logging
 
 from PyQt5.QtWidgets import QUndoCommand
 
+from hanlendar.domainmodel.manager import MultiManager
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,8 +37,8 @@ class ImportXfceNotesCommand(QUndoCommand):
         super().__init__(parentCommand)
 
         self.data = dataObject
-        self.domainModel = self.data.getManager()
-        self.oldNotes = self.data.getManager().getNotes()
+        self.domainModel: MultiManager = self.data.getManager()
+        self.oldNotes = self.domainModel.getNotes()
         self.newNotes = newNotes
 
         self.setText("Import Xfce Notes")

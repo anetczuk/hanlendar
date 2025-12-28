@@ -35,7 +35,6 @@ class AddSubToDoCommand(QUndoCommand):
         super().__init__(parentCommand)
 
         self.data = dataObject
-        self.domainModel = self.data.getManager()
         self.parentToDo = parentToDo
         self.newToDo = newToDo
 

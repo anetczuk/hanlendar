@@ -39,6 +39,7 @@ from hanlendar.gui.dataobject import DataObject
 from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.taskoccurrence import TaskOccurrence
 from hanlendar.domainmodel.utils import is_offset_naive
+from hanlendar.domainmodel.manager import MultiManager
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,7 +124,7 @@ class TaskTreeModel(ItemTreeModel):
     def getRootList(self):
         if self.dataObject is None:
             return None
-        manager = self.dataObject.getManager()
+        manager: MultiManager = self.dataObject.getManager()
         return manager.getTasks()
 
 

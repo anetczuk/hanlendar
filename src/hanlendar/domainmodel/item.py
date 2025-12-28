@@ -566,7 +566,7 @@ class Item:
         return None
 
     @staticmethod
-    def replaceSubItemInList(itemList, oldItem, newItem):
+    def replaceSubItemInList(itemList, oldItem, newItem) -> bool:
         if itemList is None:
             return None
         items_num = len(itemList)

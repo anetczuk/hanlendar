@@ -35,6 +35,7 @@ from hanlendar.gui.widget.tasktable import get_completed_color
 from hanlendar.gui.dataobject import DataObject
 
 from hanlendar.domainmodel.local.todo import LocalToDo
+from hanlendar.domainmodel.manager import MultiManager
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +94,7 @@ class ToDoTreeModel(ItemTreeModel):
     def getRootList(self):
         if self.dataObject is None:
             return None
-        manager = self.dataObject.getManager()
+        manager: MultiManager = self.dataObject.getManager()
         return manager.getToDos()
 
     def _getAttrName(self, attrIndex):

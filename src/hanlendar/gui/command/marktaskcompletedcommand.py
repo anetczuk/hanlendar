@@ -26,6 +26,8 @@ import copy
 
 from PyQt5.QtWidgets import QUndoCommand
 
+from hanlendar.domainmodel.manager import MultiManager
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +38,7 @@ class MarkTaskCompletedCommand(QUndoCommand):
         super().__init__(parentCommand)
 
         self.data = dataObject
-        self.domainModel = self.data.getManager()
+        self.domainModel: MultiManager = self.data.getManager()
         self.oldState = copy.deepcopy(task)
         self.task = task
         self.task.setCompleted()

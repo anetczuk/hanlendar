@@ -94,7 +94,11 @@ class CalDAVManager(Manager):
     """Root class for domain data structure."""
 
     def __init__(self, connector, ioDir=None):
+        self.calendar_id = None
         self._connector: CalDAVConnector = connector
+        calendar = self._connector.getCalendar()
+        if calendar is not None:
+            self.calendar_id = calendar.id
         self._localManager = LocalManager(ioDir)
 
     ## overriden
@@ -190,6 +194,10 @@ class CalDAVManager(Manager):
         return self._localManager._getUnknownProps()
 
     # override
+    def getCalendarId(self) -> str:
+        return self.calendar_id
+
+    # override
     def _getTasks(self):
         return self._localManager._getTasks()
 
@@ -200,10 +208,6 @@ class CalDAVManager(Manager):
     ## overriden
     def getTasksAll(self):
         return self._localManager.getTasksAll()
-
-    # override
-    def createEmptyTask(self):
-        return self._localManager.createEmptyTask()
 
     ## overriden
     def _getToDos(self):
@@ -216,10 +220,6 @@ class CalDAVManager(Manager):
     ## overriden
     def getTodosAll(self):
         return self._localManager.getTodosAll()
-
-    # override
-    def createEmptyToDo(self):
-        return self._localManager.createEmptyToDo()
 
     ## overriden
     def _getNotes(self):

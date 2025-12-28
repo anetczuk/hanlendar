@@ -316,7 +316,7 @@ END:VCALENDAR
 
     def test_io_task_basic(self):
         manager = Manager()
-        task: LocalTask = manager.createEmptyTask()
+        task: LocalTask = LocalTask()
         manager.addTask(task)
         self.assertEqual(len(manager.getTasksAll()), 1)
 
@@ -345,7 +345,7 @@ END:VCALENDAR
 
     def test_io_task_dtstart_none(self):
         manager = Manager()
-        task: LocalTask = manager.createEmptyTask()
+        task: LocalTask = LocalTask()
         manager.addTask(task)
         self.assertEqual(len(manager.getTasksAll()), 1)
 
@@ -365,7 +365,7 @@ END:VCALENDAR
 
     def test_io_task_recurrence(self):
         manager = Manager()
-        task: LocalTask = manager.createEmptyTask()
+        task: LocalTask = LocalTask()
         manager.addTask(task)
         self.assertEqual(len(manager.getTasksAll()), 1)
 
@@ -389,7 +389,7 @@ END:VCALENDAR
 
     def test_io_task_subitems(self):
         manager = Manager()
-        task: LocalTask = manager.createEmptyTask()
+        task: LocalTask = LocalTask()
         manager.addTask(task)
         task.title = "title example"
         subTask = task.addSubTask()
@@ -412,7 +412,7 @@ END:VCALENDAR
 
     def test_io_task_reminder(self):
         manager = Manager()
-        task: LocalTask = manager.createEmptyTask()
+        task: LocalTask = LocalTask()
         manager.addTask(task)
         task.title = "title example"
         task.addReminderDays(2)
@@ -432,7 +432,7 @@ END:VCALENDAR
 
     def test_io_task_reminder_list(self):
         manager = Manager()
-        task: LocalTask = manager.createEmptyTask()
+        task: LocalTask = LocalTask()
         manager.addTask(task)
         task.title = "title example"
         task.addReminderDays(2)
@@ -467,7 +467,7 @@ END:VCALENDAR
 
     def test_export_icalendar_task(self):
         manager = Manager()
-        task: LocalTask = manager.createEmptyTask()
+        task: LocalTask = LocalTask()
         task.UID = "1111-2222-3333-4444"
         task._common_data.createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
         task._common_data.lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # pylint: disable=W0212
@@ -494,7 +494,7 @@ END:VCALENDAR
 
     def test_export_icalendar_todo(self):
         manager = Manager()
-        todo: LocalToDo = manager.createEmptyToDo()
+        todo: LocalToDo = LocalToDo()
         todo.UID = "1111-2222-3333-4444"
         todo._common_data.createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # pylint: disable=W0212
         manager.addToDo(todo)

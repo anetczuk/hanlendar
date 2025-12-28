@@ -30,8 +30,7 @@ from hanlendar import persist
 from hanlendar.domainmodel.manager import Manager
 from hanlendar.domainmodel.item import Item
 from hanlendar.domainmodel.local.task import Task
-from hanlendar.domainmodel.local.task import LocalTask, fill_completed_list, update_start_due_date
-from hanlendar.domainmodel.local.todo import LocalToDo
+from hanlendar.domainmodel.local.task import fill_completed_list, update_start_due_date
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,9 +108,11 @@ class LocalManager(Manager):
     ##      moved remaining content from "hanlendar.domainmodel.task" to "hanlendar.domainmodel.taskoccurence"
     ## 10 - replaced tasks.obj, todos.obj, notes.obj with data.obj
     ## 11 - added "_unknown_props"
-    _class_version = 11
+    ## 12 - added "_calendar_id"
+    _class_version = 12
 
     def __init__(self, ioDir=None):
+        self._calendar_id: str = None  ## None for default calendar
         self._tasks = []
         self._todos = []
         self.notes = {"notes": ""}  ## default notes
@@ -142,6 +143,7 @@ class LocalManager(Manager):
             changed = True
 
         data_dict = {
+            "calendar_id": self._calendar_id,
             "tasks": self.tasks,
             "todos": self.todos,
             "notes": self.notes,
@@ -184,6 +186,8 @@ class LocalManager(Manager):
         mapperObject = ModuleMapper(mngrVersion)
 
         if mngrVersion < 10:
+            self._calendar_id = None
+
             try:
                 inputFile = os.path.join(inputDir, "tasks.obj")
                 self.tasks = persist.load_object(inputFile, class_mapper=mapperObject)
@@ -219,6 +223,7 @@ class LocalManager(Manager):
                 _LOGGER.warning("unable to load file: %s", inputFile)
                 data_dict = {}
 
+            self._calendar_id = data_dict.get("calendar_id")
             self.tasks = data_dict.get("tasks", [])
             self.todos = data_dict.get("todos", [])
             self.notes = data_dict.get("notes", {"notes": ""})
@@ -349,7 +354,9 @@ class LocalManager(Manager):
 
     def _getDataPath(self):
         ## outputFile = os.path.join(self._ioDir, "version.obj")
-        return self._ioDir
+        if not self._calendar_id:
+            return self._ioDir
+        return os.path.join(self._ioDir, self._calendar_id)
 
     ## ======================================================================
 
@@ -358,6 +365,13 @@ class LocalManager(Manager):
         if self._unknown_props is None:
             self._unknown_props = {}
         return self._unknown_props
+
+    # override
+    def getCalendarId(self) -> str:
+        return self._calendar_id
+
+    def setCalendarId(self, cal_id: str):
+        self._calendar_id = cal_id
 
     # override
     def _getTasks(self):
@@ -372,10 +386,6 @@ class LocalManager(Manager):
         return Item.getAllSubItemsFromList(self.tasks)
 
     # override
-    def createEmptyTask(self):
-        return LocalTask()
-
-    # override
     def _getToDos(self):
         return self._todos
 
@@ -386,10 +396,6 @@ class LocalManager(Manager):
     # override
     def getTodosAll(self):
         return Item.getAllSubItemsFromList(self.todos)
-
-    # override
-    def createEmptyToDo(self) -> LocalToDo:
-        return LocalToDo()
 
     # override
     def _getNotes(self):

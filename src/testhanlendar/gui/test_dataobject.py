@@ -24,6 +24,7 @@
 import unittest
 
 from hanlendar.gui.dataobject import DataObject
+from hanlendar.domainmodel.manager import MultiManager
 
 
 class DataObjectTest(unittest.TestCase):
@@ -37,7 +38,7 @@ class DataObjectTest(unittest.TestCase):
 
     def test_removeToDo(self):
         dataobject = DataObject()
-        manager = dataobject.getManager()
+        manager: MultiManager = dataobject.getManager()
         manager.addNewToDo("Todo 1")
         todo2 = manager.addNewToDo("Todo 2")
         subToDo = todo2.addSubtodo()
