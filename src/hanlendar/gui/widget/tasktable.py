@@ -24,7 +24,7 @@
 import logging
 from typing import ClassVar
 
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QModelIndex
@@ -38,6 +38,7 @@ from hanlendar.gui.dataobject import DataObject
 
 from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.taskoccurrence import TaskOccurrence
+from hanlendar.domainmodel.utils import is_offset_naive
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -302,7 +303,12 @@ def get_task_fgcolor(task: TaskOccurrence) -> QBrush:
         return QBrush(get_reminded_color())
     taskFirstDate = task.getFirstDateTime()
     if taskFirstDate is not None:
-        diff = taskFirstDate - datetime.today()
+        currTime: datetime = None
+        if is_offset_naive(taskFirstDate):
+            currTime = datetime.today()
+        else:
+            currTime = datetime.now(timezone.utc)
+        diff = taskFirstDate - currTime
         if diff > timedelta(days=90):
             ## far task -- light gray
             return QBrush(QColor(180, 180, 180))

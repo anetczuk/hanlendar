@@ -27,8 +27,9 @@ from typing import Any
 
 from hanlendar import persist
 
-from hanlendar.domainmodel.item import Item, generate_uid, CommonData, DateDateTime, ensure_date_time
+from hanlendar.domainmodel.item import Item, generate_uid, CommonData, DateDateTime
 from hanlendar.domainmodel.recurrent import Recurrent
+from hanlendar.domainmodel.utils import ensure_date_time
 
 
 _LOGGER = logging.getLogger(__name__)

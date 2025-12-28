@@ -29,12 +29,10 @@ import datetime
 from dateutil.relativedelta import relativedelta
 
 from hanlendar import persist
+from hanlendar.domainmodel.utils import DateDateTime
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-DateDateTime = datetime.date | datetime.datetime
 
 
 @unique

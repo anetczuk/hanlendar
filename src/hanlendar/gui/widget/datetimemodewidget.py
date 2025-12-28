@@ -27,8 +27,9 @@ from enum import Enum, unique
 
 from PyQt5.QtCore import pyqtSignal
 
-from hanlendar.domainmodel.item import DateDateTime, ensure_date_time
+from hanlendar.domainmodel.item import DateDateTime
 from hanlendar.gui import uiloader
+from hanlendar.domainmodel.utils import ensure_date_time
 
 
 UiTargetClass, QtBaseClass = uiloader.load_ui_from_class_name(__file__)

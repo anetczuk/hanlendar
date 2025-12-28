@@ -60,6 +60,11 @@ class CalDAVConnector:
         else:
             self._calendar = self._initCalendar(calendar_name)
 
+        if self._calendar is None:
+            _LOGGER.warning("unable to connect to calendar '%s'", self._calendarName)
+        else:
+            _LOGGER.info("connected to calendar '%s' id: %s", self._calendar.name, self._calendar.id)
+
     def createCalendar(self, calendar_name=None) -> caldav.objects.Calendar:
         if calendar_name is not None:
             self._calendarName = calendar_name

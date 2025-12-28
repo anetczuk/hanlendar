@@ -23,34 +23,16 @@
 
 import logging
 import abc
-import uuid
 from typing import Any
 import datetime
+
 from hanlendar.domainmodel.recurrent import Recurrent
 from hanlendar.domainmodel.reminder import Reminder
+from hanlendar.domainmodel.utils import generate_uid, hashable_object, DateDateTime
 from hanlendar import persist
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-DateDateTime = datetime.date | datetime.datetime
-
-
-def ensure_date_time(value: DateDateTime) -> datetime.datetime:
-    if value is None:
-        return value
-    if isinstance(value, datetime.datetime):
-        return value
-    if isinstance(value, datetime.date):
-        return datetime.datetime(value.year, value.month, value.day)
-    _LOGGER.warning("unknown type: %s %s", value, type(value))
-    return None
-
-
-def generate_uid() -> str:
-    return str(uuid.uuid4())
-    # return str(uuid.uuid4()) + "@hanlendar"
 
 
 ## ============================================================
@@ -142,7 +124,7 @@ class CommonData(persist.Versionable):
             self.startDate,
             self.recurrence,
             None if not self.reminderList else tuple(self.reminderList),
-            self.unknown_props,
+            hashable_object(self.unknown_props),
         )
 
     def __hash__(self):

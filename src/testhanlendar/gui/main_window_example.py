@@ -190,6 +190,8 @@ if args.loadUserData:
     window.disableSaving()
     window.loadSettings(apply=False)
 else:
+    window.loadGeometry()
+
     window.setLocalDataRootPath("/tmp/hanlendar-test-data")
 
     window.appSettings = AppSettings()
@@ -198,9 +200,9 @@ else:
     calitem: LocalCalendarItem = window.appSettings.addLocalCalendar("cal_2", cal_id="cal_2_id")
     calitem.enabled = False
     window.appSettings.addLocalCalendar("cal_3", cal_id="cal_3_id")
-    window.applySettings(load_user_data=args.loadUserData)
 
-if not args.loadUserData:
+    window.applySettings(load_user_data=False)
+
     manager = window.getManager()
     prepare_example_data(manager, "cal_1_id")
     window.saveData()

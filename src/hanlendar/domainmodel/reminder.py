@@ -27,12 +27,10 @@ import datetime
 
 from enum import Enum, unique
 from hanlendar import persist
+from hanlendar.domainmodel.utils import DateDateTime, hashable_object, is_offset_naive
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-DateDateTime = datetime.date | datetime.datetime
 
 
 @unique
@@ -62,13 +60,18 @@ class Notification:
             self.notifyTime = value
         else:
             self.notifyTime = datetime.datetime(value.year, value.month, value.day)
+            self.notifyTime = self.notifyTime.astimezone()  ## convert to local timezone
 
     def remainingSeconds(self) -> float:
         timeDiff = self.remainingTime()
         return timeDiff.total_seconds()
 
     def remainingTime(self) -> datetime.timedelta:
-        currTime = datetime.datetime.today()
+        currTime: datetime.datetime = None
+        if is_offset_naive(self.notifyTime):
+            currTime = datetime.datetime.today()
+        else:
+            currTime = datetime.datetime.now(datetime.timezone.utc)
         return self.notifyTime - currTime
 
     def __str__(self):
@@ -119,7 +122,14 @@ class Reminder(persist.Versionable):
         return state_dict
 
     def _key(self):
-        return (self.timeOffset, self.direction, self.action, self.description, self.related, self.unknownProps)
+        return (
+            self.timeOffset,
+            self.direction,
+            self.action,
+            self.description,
+            self.related,
+            hashable_object(self.unknownProps),
+        )
 
     def __hash__(self):
         return hash(self._key())

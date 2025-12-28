@@ -28,10 +28,11 @@ import abc
 from dateutil.relativedelta import relativedelta
 
 from hanlendar import persist
-from hanlendar.domainmodel.item import generate_uid, Item, CommonData, DateDateTime, ensure_date_time
+from hanlendar.domainmodel.item import generate_uid, Item, CommonData, DateDateTime
 from hanlendar.domainmodel.recurrent import Recurrent, find_multiplication_after
 from hanlendar.domainmodel.reminder import Reminder, Notification
 from hanlendar.domainmodel.taskoccurrence import DateTimeRange, TaskOccurrence, DateRange
+from hanlendar.domainmodel.utils import ensure_date_time, is_offset_naive
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -136,6 +137,7 @@ class Task(Item):
 
     def setDefaultDate(self, startDate: datetime.date):
         start = datetime.datetime.combine(startDate, datetime.time(10, 0, 0))
+        start = start.astimezone()  ## convert to local timezone
         self.setDefaultDateTime(start)
 
     def setDeadline(self):
@@ -275,8 +277,6 @@ class Task(Item):
             minDate = remindDate
         return minDate
 
-        # datetime.datetime(value.year, value.month, value.day)
-
     def getDateTimeRange(self) -> DateTimeRange:
         startDate = self._getStartDateTime()
         endDate = self._getDueDateTime()
@@ -357,7 +357,13 @@ class Task(Item):
     def getNotifications(self) -> list[Notification]:
         if self.dueDateTime is None:
             return []
-        currTime = datetime.datetime.today()
+
+        currTime: datetime.datetime = None
+        if is_offset_naive(self.dueDateTime):
+            currTime = datetime.datetime.today()
+        else:
+            currTime = datetime.datetime.now(datetime.timezone.utc)
+
         ret: list[Notification] = []
         if self.dueDateTime > currTime:
             notif = Notification()

@@ -72,8 +72,8 @@ class IcalioEvolutionTest(unittest.TestCase):
             datetime.datetime(2025, 11, 11, 15, 3, 31),
             new_item.lastModifiedDateTime.replace(tzinfo=None),
         )
-        self.assertEqual(datetime.datetime(2025, 11, 28, 0, 0), new_item.startDateTime)
-        self.assertEqual(datetime.datetime(2025, 11, 29, 0, 0), new_item.endDateTime)
+        self.assertEqual(datetime.datetime(2025, 11, 28, 0, 0).astimezone(), new_item.startDateTime)
+        self.assertEqual(datetime.datetime(2025, 11, 29, 0, 0).astimezone(), new_item.endDateTime)
         self.assertEqual("summary data", new_item.summary)
         self.assertEqual("location data", new_item.location)
         self.assertEqual("webpage data", new_item.url)
@@ -120,8 +120,8 @@ class IcalioEvolutionTest(unittest.TestCase):
             datetime.datetime(2025, 11, 6, 22, 52, 59),
             new_item.lastModifiedDateTime.replace(tzinfo=None),
         )
-        self.assertEqual(datetime.datetime(2025, 11, 25, 0, 0), new_item.startDateTime)
-        self.assertEqual(datetime.datetime(2025, 11, 26, 0, 0), new_item.dueDateTime)
+        self.assertEqual(datetime.datetime(2025, 11, 25, 0, 0).astimezone(), new_item.startDateTime)
+        self.assertEqual(datetime.datetime(2025, 11, 26, 0, 0).astimezone(), new_item.dueDateTime)
         self.assertEqual("evolution all day event", new_item.summary)
         self.assertEqual("loc", new_item.location)
         self.assertEqual("", new_item.url)

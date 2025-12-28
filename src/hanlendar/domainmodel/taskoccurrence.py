@@ -26,6 +26,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 
 from hanlendar.domainmodel.recurrent import find_multiplication_after
+from hanlendar.domainmodel.utils import is_offset_naive
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -247,7 +248,11 @@ class TaskOccurrence:
     def isTimedout(self):
         if self.dateRange.end is None:
             return False
-        currTime = datetime.datetime.today()
+        currTime: datetime.datetime = None
+        if is_offset_naive(self.dateRange.end):
+            currTime = datetime.datetime.today()
+        else:
+            currTime = datetime.datetime.now(datetime.timezone.utc)
         return currTime > self.dateRange.end
 
     def isReminded(self):
@@ -256,8 +261,12 @@ class TaskOccurrence:
         retOffset = self.task.getReminderGreatest()
         if retOffset is None:
             return False
-        currTime = datetime.datetime.today()
         notifTime = self.dateRange.end - retOffset
+        currTime: datetime.datetime = None
+        if is_offset_naive(notifTime):
+            currTime = datetime.datetime.today()
+        else:
+            currTime = datetime.datetime.now(datetime.timezone.utc)
         return not notifTime > currTime
 
     @property
@@ -320,6 +329,8 @@ def calc_time_span(entryDate: datetime.date, start: datetime.datetime, end: date
             return None
         if entryDate == startDate:
             midnight = datetime.datetime.combine(entryDate, datetime.datetime.min.time())
+            if is_offset_naive(start) is False:
+                midnight = midnight.astimezone()  ## convert to local timezone
             startDiff = start - midnight
             daySecs = datetime.timedelta(days=1).total_seconds()
             startFactor = startDiff.total_seconds() / datetime.timedelta(days=1).total_seconds()
@@ -330,6 +341,8 @@ def calc_time_span(entryDate: datetime.date, start: datetime.datetime, end: date
             return None
         if entryDate == endDate:
             midnight = datetime.datetime.combine(entryDate, datetime.datetime.min.time())
+            if is_offset_naive(end) is False:
+                midnight = midnight.astimezone()  ## convert to local timezone
             startDiff = end - midnight
             daySecs = datetime.timedelta(days=1).total_seconds()
             dueFactor = startDiff.total_seconds() / daySecs

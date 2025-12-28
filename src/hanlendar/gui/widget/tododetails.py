@@ -122,7 +122,7 @@ class ToDoDetails(QtBaseClass):  # type: ignore[valid-type,misc]
             self.ui.urlEdit.clear()
             self.ui.completionSlider.setValue(0)
             self.ui.priorityBox.setValue(0)
-            todayDate = datetime.datetime.today()
+            todayDate = datetime.datetime.now(datetime.timezone.utc)
             self.ui.startDateTime.setValue(todayDate)
             self.ui.dueDateTime.setValue(todayDate)
             self.ui.completedDateTime.setDateTime(todayDate)

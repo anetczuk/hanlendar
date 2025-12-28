@@ -539,11 +539,15 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.logger.debug("loading app state from %s", settings.fileName())
 
         self.appSettings.loadSettings(settings)
-
         if apply:
             self.applySettings(load_user_data=load_user_data)
 
-        ## restore widget state and geometry
+        self.loadGeometry()
+
+    ## restore widget state and geometry
+    def loadGeometry(self):
+        settings: QtCore.QSettings = self.qtSettings.getSettings()
+
         settings.beginGroup(self.objectName())
         geometry = settings.value("geometry")
         state = settings.value("windowState")

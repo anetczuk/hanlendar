@@ -1007,7 +1007,8 @@ def get_ical_value_dt(component, field: Enum):
         return valueDate.astimezone()  ## convert to local timezone
     if value_type == "DATE":
         value_date: datetime.date = value_raw.dt
-        return datetime.datetime(value_date.year, value_date.month, value_date.day)
+        value_datetime = datetime.datetime(value_date.year, value_date.month, value_date.day)
+        return value_datetime.astimezone()  ## convert to local timezone
     _LOGGER.warning("unhandled ical date type: %s", value_type)
     return None
 
