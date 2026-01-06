@@ -43,7 +43,10 @@ class MoveToDoCommand(QUndoCommand):
         self.parentToDo = parentToDo
         self.targetIndex = targetIndex
 
-        self.setText("Move ToDo: " + self.todo.title)
+        if self.todo:
+            self.setText("Move ToDo: " + self.todo.title)
+        else:
+            self.setText("Move ToDo: None")
 
     def redo(self):
         self.domainModel.removeToDo(self.todo)

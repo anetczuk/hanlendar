@@ -122,19 +122,18 @@ class LocalManager(Manager):
         ## unknown icalendar properties
         self._unknown_props: dict[Any, Any] = None
 
-    def storeToDisk(self, outputDir):
+    def storeToDisk(self, outputDir) -> bool:
         if outputDir:
             self._ioDir = outputDir
-        self.storeData()
+        return self.storeData()
 
     # override
-    def storeData(self):
-        _LOGGER.info("storing data")
-        if self._ioDir is None:
+    def storeData(self) -> bool:
+        outputDir = self._getDataPath()
+        _LOGGER.info("storing data to %s", outputDir)
+        if outputDir is None:
             _LOGGER.warning("unable to store data -- no root directory given")
             return False
-
-        outputDir = self._getDataPath()
 
         changed = False
 
@@ -221,7 +220,7 @@ class LocalManager(Manager):
                 data_dict = persist.load_object(inputFile, class_mapper=mapperObject)
             except FileNotFoundError:
                 _LOGGER.warning("unable to load file: %s", inputFile)
-                data_dict = {}
+                data_dict = {"calendar_id": self._calendar_id}
 
             self._calendar_id = data_dict.get("calendar_id")
             self.tasks = data_dict.get("tasks", [])
@@ -353,7 +352,8 @@ class LocalManager(Manager):
         return None
 
     def _getDataPath(self):
-        ## outputFile = os.path.join(self._ioDir, "version.obj")
+        if self._ioDir is None:
+            return None
         if not self._calendar_id:
             return self._ioDir
         return os.path.join(self._ioDir, self._calendar_id)

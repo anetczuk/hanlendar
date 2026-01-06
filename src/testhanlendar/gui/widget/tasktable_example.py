@@ -46,7 +46,7 @@ from hanlendar.gui.dataobject import DataObject
 from hanlendar.gui.widget.tasktable import TaskTable
 
 from hanlendar.domainmodel.local.task import LocalTask
-from hanlendar.domainmodel.manager import MultiManager
+from hanlendar.domainmodel.manager import Manager
 
 
 ## ============================= main section ===================================
@@ -84,8 +84,8 @@ task.title = "Default constructed task"
 tasksList.append(task)
 
 dataObject = DataObject()
-manager: MultiManager = dataObject.getManager()
-manager.setTasks(tasksList)
+def_manager: Manager = dataObject.getDefaultManager()
+def_manager.tasks = tasksList
 
 setup_interrupt_handling()
 

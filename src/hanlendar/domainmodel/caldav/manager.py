@@ -48,6 +48,14 @@ class CalDAVConnector:
         self._calendarName: str = None
         self._calendar: caldav.objects.Calendar = None
 
+    def getURL(self) -> str:
+        if self._client is None:
+            return None
+        return self._client.url
+
+    def getCalendarName(self) -> str:
+        return self._calendarName
+
     def connectToServer(self, caldav_url, username, password):
         self._client = caldav.DAVClient(url=caldav_url, username=username, password=password)
         self._principal = self._client.principal()
@@ -100,9 +108,10 @@ class CalDAVManager(Manager):
         if calendar is not None:
             self.calendar_id = calendar.id
         self._localManager = LocalManager(ioDir)
+        self._localManager.setCalendarId(self.calendar_id)
 
     ## overriden
-    def storeData(self):
+    def storeData(self) -> bool:
         _LOGGER.info("storing data")
         ret = self._localManager.storeData()
         self.saveToServer()
@@ -114,7 +123,9 @@ class CalDAVManager(Manager):
         self.fixData()
 
     def loadFromServer(self):
-        _LOGGER.info("loading data from server")
+        server_url = self._connector.getURL()
+        calendar_name = self._connector.getCalendarName()
+        _LOGGER.info("loading calendar '%s' data from server %s", calendar_name, server_url)
 
         calendar: caldav.objects.Calendar = self._connector.getCalendar()
         if calendar is None:

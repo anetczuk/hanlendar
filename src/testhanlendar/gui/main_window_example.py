@@ -51,6 +51,7 @@ from hanlendar.gui.widget.settingsdialog import AppSettings, LocalCalendarItem
 from hanlendar.domainmodel.recurrent import Recurrent
 from hanlendar.domainmodel.local.task import LocalTask
 from hanlendar.domainmodel.local.manager import Manager
+from hanlendar.domainmodel.manager import MultiManager
 
 
 # pylint: disable=R0914, R0915
@@ -196,15 +197,21 @@ else:
 
     window.appSettings = AppSettings()
 
+    window.appSettings.addCalDAVCalendar("http://localhost:5232", "bob", "bob", "new_cal")
+
+    # connector = self.createCalDAVConnector("http://localhost:5232", "bob", "bob", "new_cal")
+    # # connector = self.createCalDAVConnector("http://localhost:5232", "bob", "bob", "test_xxx2")
+    # # connector = self.createCalDAVConnector("http://localhost:5232", "bob", "bob", "test")
+
     window.appSettings.addLocalCalendar("cal_1", cal_id="cal_1_id")
     calitem: LocalCalendarItem = window.appSettings.addLocalCalendar("cal_2", cal_id="cal_2_id")
     calitem.enabled = False
     window.appSettings.addLocalCalendar("cal_3", cal_id="cal_3_id")
 
-    window.applySettings(load_user_data=False)
+    window.applySettings(load_user_data=True)
 
-    manager = window.getManager()
-    prepare_example_data(manager, "cal_1_id")
+    manager: MultiManager = window.getManager()
+    # prepare_example_data(manager, "cal_1_id")
     window.saveData()
     window.refreshView()
 

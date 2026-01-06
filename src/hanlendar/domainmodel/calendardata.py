@@ -56,6 +56,16 @@ class CalendarData:
             return True
         return item[2]
 
+    ## returns: dict[calendar_id, is_enabled]
+    def getEnableMap(self) -> dict[str, bool]:
+        ret_dict = {}
+        for item in self.items:
+            calendar_id = item[1]
+            ret_dict[calendar_id] = item[2]
+        ## default calendar, always enabled
+        ret_dict[None] = True
+        return ret_dict
+
     def _findCalendarItem(self, calendar_id: str):
         for item in self.items:
             if item[1] == calendar_id:

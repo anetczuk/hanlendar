@@ -47,7 +47,7 @@ class Manager:
     """Root class for domain data structure."""
 
     @abc.abstractmethod
-    def storeData(self):
+    def storeData(self) -> bool:
         """Return bool: True if new data saved, otherwise False."""
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
@@ -167,9 +167,13 @@ class Manager:
 
     ## return TaskOccurrence list for given date
     def getTaskOccurrencesForDate(self, taskDate: date, *, includeCompleted=True) -> list[TaskOccurrence]:
-        retList = []
         allTasks = self.getTasksAll()
-        for task in allTasks:
+        return Manager.getTaskOccurrencesForDateFromList(allTasks, taskDate, includeCompleted=includeCompleted)
+
+    @staticmethod
+    def getTaskOccurrencesForDateFromList(task_list, taskDate: date, *, includeCompleted=True) -> list[TaskOccurrence]:
+        retList = []
+        for task in task_list:
             entry = task.getTaskOccurrenceForDate(taskDate)
             if entry is None:
                 continue
@@ -179,9 +183,13 @@ class Manager:
         return retList
 
     def getNextDeadline(self) -> Task:
-        retTask: Task = None
         allTasks = self.getTasksAll()
-        for task in allTasks:
+        return Manager.getNextDeadlineFromList(allTasks)
+
+    @staticmethod
+    def getNextDeadlineFromList(tasks_list) -> Task:
+        retTask: Task = None
+        for task in tasks_list:
             if task.isCompleted():
                 continue
             if task.dueDateTime is None:
@@ -191,9 +199,13 @@ class Manager:
         return retTask
 
     def getDeadlinedTasks(self) -> list[Task]:
-        retTasks = []
         allTasks = self.getTasksAll()
-        for task in allTasks:
+        return Manager.getDeadlinedTasksFromList(allTasks)
+
+    @staticmethod
+    def getDeadlinedTasksFromList(tasks_list) -> list[Task]:
+        retTasks = []
+        for task in tasks_list:
             occurrence: TaskOccurrence = task.currentOccurrence()
             if occurrence.isCompleted():
                 continue
@@ -202,9 +214,13 @@ class Manager:
         return retTasks
 
     def getRemindedTasks(self) -> list[Task]:
-        retTasks = []
         allTasks = self.getTasksAll()
-        for task in allTasks:
+        return Manager.getRemindedTasksFromList(allTasks)
+
+    @staticmethod
+    def getRemindedTasksFromList(task_list) -> list[Task]:
+        retTasks = []
+        for task in task_list:
             occurrence: TaskOccurrence = task.currentOccurrence()
             if occurrence.isCompleted():
                 continue
@@ -216,7 +232,11 @@ class Manager:
         return Item.getItemCoords(self.tasks, task)
 
     def getTaskByCoords(self, coords) -> Task:
-        return Item.getItemFromCoords(self.tasks, coords)
+        return Manager.getTaskByCoordsFromList(self.tasks, coords)
+
+    @staticmethod
+    def getTaskByCoordsFromList(task_list, coords) -> Task:
+        return Item.getItemFromCoords(task_list, coords)
 
     def insertTask(self, task: Task, taskCoords):
         if taskCoords is None:
@@ -233,12 +253,14 @@ class Manager:
     def addTask(self, task: Task = None) -> Task:
         if task is None:
             task = LocalTask()
+            task.commonData.calendar_id = self.getCalendarId()
         self.tasks.append(task)
         task.setParent(None)
         return task
 
     def addNewTask(self, taskdate: date, title):
         task = LocalTask()
+        task.commonData.calendar_id = self.getCalendarId()
         task.title = title
         task.setDefaultDate(taskdate)
         self.addTask(task)
@@ -246,6 +268,7 @@ class Manager:
 
     def addNewTaskDateTime(self, start_date: datetime, title) -> Task:
         task = LocalTask()
+        task.commonData.calendar_id = self.getCalendarId()
         task.title = title
         task.setDefaultDateTime(start_date)
         self.addTask(task)
@@ -317,14 +340,19 @@ class Manager:
 
     def addNewDeadlineDateTime(self, eventdate: datetime, title):
         eventTask = LocalTask()
+        eventTask.commonData.calendar_id = self.getCalendarId()
         eventTask.title = title
         eventTask.setDeadlineDateTime(eventdate)
         self.addTask(eventTask)
         return eventTask
 
     def getNotificationList(self) -> list[Notification]:
+        return Manager.getNotificationListFromList(self.tasks)
+
+    @staticmethod
+    def getNotificationListFromList(tasks_list) -> list[Notification]:
         ret = []
-        for task in self.tasks:
+        for task in tasks_list:
             notifs = task.getNotifications()
             ret.extend(notifs)
         ret.sort(key=Notification.sortByTime)
@@ -332,11 +360,15 @@ class Manager:
 
     ## ========================================================
 
-    def getToDoCoords(self, todo):
+    def getToDoCoords(self, todo: LocalToDo):
         return Item.getItemCoords(self.todos, todo)
 
-    def getToDoByCoords(self, todo):
-        return Item.getItemFromCoords(self.todos, todo)
+    def getToDoByCoords(self, todoCoords) -> LocalToDo:
+        return Manager.getToDoByCoordsFromList(self.todos, todoCoords)
+
+    @staticmethod
+    def getToDoByCoordsFromList(todo_list, coords) -> LocalToDo:
+        return Item.getItemFromCoords(todo_list, coords)
 
     def insertToDo(self, todo: LocalToDo, todoCoords):
         if todoCoords is None:
@@ -350,15 +382,17 @@ class Manager:
         else:
             self.todos.insert(listPos, todo)
 
-    def addToDo(self, todo: LocalToDo = None):
+    def addToDo(self, todo: LocalToDo = None) -> LocalToDo:
         if todo is None:
             todo = LocalToDo()
+            todo.commonData.calendar_id = self.getCalendarId()
         self.todos.append(todo)
         todo.setParent(None)
         return todo
 
-    def addNewToDo(self, title: str):
+    def addNewToDo(self, title: str) -> LocalToDo:
         todo = LocalToDo()
+        todo.commonData.calendar_id = self.getCalendarId()
         todo.title = title
         self.addToDo(todo)
         return todo
@@ -370,9 +404,13 @@ class Manager:
         return Item.replaceSubItemInList(self.todos, oldToDo, newToDo)
 
     def getNextToDo(self) -> LocalToDo:
-        nextToDo = None
         allItems = self.getTodosAll()
-        for item in allItems:
+        return Manager.getNextToDoFromList(allItems)
+
+    @staticmethod
+    def getNextToDoFromList(todo_list) -> LocalToDo:
+        nextToDo = None
+        for item in todo_list:
             if item.isCompleted():
                 continue
             if nextToDo is None:
@@ -403,118 +441,184 @@ class Manager:
 class MultiManager:
 
     def __init__(self, default_manager: Manager):
+        self.enable_map: dict[str, bool] = {}  ## dict: calendar_id, is_enabled
         self.default_manager: Manager = default_manager
-        self.domain_model: Manager = default_manager
+        self.manager_list: list[Manager] = []
+
+    def setEnableMap(self, enable_map):
+        if enable_map is None:
+            self.enable_map = {}
+            return
+        self.enable_map = enable_map
 
     def getDefaultManager(self) -> Manager:
         return self.default_manager
 
+    def getManagerById(self, calendar_id: str) -> Manager:
+        for manager in self.manager_list:
+            cal_id = manager.getCalendarId()
+            if cal_id != calendar_id:
+                continue
+            return manager
+        return self.default_manager
+
     def setManagerList(self, model_list: list[Manager]):
-        self.domain_model = model_list[0]
+        self.manager_list = model_list
+        self.manager_list.insert(0, self.default_manager)
 
     def loadData(self, custom_path=None):
-        if hasattr(self.domain_model, "loadFromDisk"):
-            self.domain_model.loadFromDisk(custom_path)
-            return
-        self.domain_model.loadData()
+        for manager in self.manager_list:
+            if hasattr(manager, "loadFromDisk"):
+                manager.loadFromDisk(custom_path)
+            else:
+                manager.loadData()
 
-    def storeData(self, custom_path=None):
-        if hasattr(self.domain_model, "storeToDisk"):
-            return self.domain_model.storeToDisk(custom_path)
-        return self.domain_model.storeData()
+    def storeData(self, custom_path=None) -> bool:
+        changed = False
+        for manager in self.manager_list:
+            if hasattr(manager, "storeToDisk"):
+                if manager.storeToDisk(custom_path):
+                    changed = True
+            elif manager.storeData():
+                changed = True
+        return changed
 
     ## ======================================================================
 
+    ## get all tasks (e.g. for task list table)
+    ## it does not matter if any calendar is enabled or disabled - return all tasks for all managers
     def getTasks(self) -> list[Task]:
-        return self.domain_model.getTasks()
-
-    def setTasks(self, newList):
-        self.domain_model.tasks = newList
+        ret_items = []
+        for manager in self.manager_list:
+            manager_items = manager.getTasks()
+            if not manager_items:
+                continue
+            ret_items.extend(manager_items)
+        return ret_items
 
     def addTask(self, task: Task = None) -> Task:
-        return self.domain_model.addTask(task)
+        cal_id = task.commonData.calendar_id
+        manager = self.getManagerById(cal_id)
+        return manager.addTask(task)
 
     def insertTask(self, task: Task, taskCoords):
-        return self.domain_model.insertTask(task, taskCoords)
+        cal_id = task.commonData.calendar_id
+        manager = self.getManagerById(cal_id)
+        return manager.insertTask(task, taskCoords)
 
     def removeTask(self, task: Task):
-        return self.domain_model.removeTask(task)
+        cal_id = task.commonData.calendar_id
+        manager = self.getManagerById(cal_id)
+        return manager.removeTask(task)
 
     def replaceTask(self, oldTask: Task, newTask: Task) -> bool:
-        return self.domain_model.replaceTask(oldTask, newTask)
+        old_cal_id = oldTask.commonData.calendar_id
+        new_cal_id = newTask.commonData.calendar_id
+        if new_cal_id == old_cal_id:
+            manager = self.getManagerById(new_cal_id)
+            return manager.replaceTask(oldTask, newTask)
+        old_manager = self.getManagerById(old_cal_id)
+        old_manager.removeTask(oldTask)
+        new_manager = self.getManagerById(new_cal_id)
+        new_manager.addTask(newTask)
+        return True
 
     def getRemindedTasks(self) -> list[Task]:
-        return self.domain_model.getRemindedTasks()
+        allTasks = self.getTasks()
+        return Manager.getRemindedTasksFromList(allTasks)
 
     def getNextDeadline(self) -> Task:
-        return self.domain_model.getNextDeadline()
+        allTasks = self.getTasks()
+        return Manager.getNextDeadlineFromList(allTasks)
 
     def getDeadlinedTasks(self) -> list[Task]:
-        return self.domain_model.getDeadlinedTasks()
+        allTasks = self.getTasks()
+        return Manager.getDeadlinedTasksFromList(allTasks)
 
     def getTaskCoords(self, task):
-        return self.domain_model.getTaskCoords(task)
+        cal_id = task.commonData.calendar_id
+        manager = self.getManagerById(cal_id)
+        return manager.getTaskCoords(task)
 
-    def getTaskByCoords(self, task) -> Task:
-        return self.domain_model.getTaskByCoords(task)
-
-    def getTaskOccurrences(self, taskDate: date, *, includeCompleted=True) -> list[TaskOccurrence]:
-        return self.domain_model.getTaskOccurrencesForDate(taskDate, includeCompleted=includeCompleted)
+    def getTaskByCoords(self, coords) -> Task:
+        allTasks = self.getTasks()
+        return Manager.getTaskByCoordsFromList(allTasks, coords)
 
     def getTaskOccurrencesForDate(self, taskDate: date, *, includeCompleted=True) -> list[TaskOccurrence]:
-        return self.domain_model.getTaskOccurrencesForDate(taskDate, includeCompleted=includeCompleted)
+        allTasks = self.getTasks()
+        return Manager.getTaskOccurrencesForDateFromList(allTasks, taskDate, includeCompleted=includeCompleted)
 
     def getNotificationList(self) -> list[Notification]:
-        return self.domain_model.getNotificationList()
+        allTasks = self.getTasks()
+        return Manager.getNotificationListFromList(allTasks)
 
     ## ======================================================================
 
     def getToDos(self):
-        return self.domain_model.todos
+        ret_items = []
+        for manager in self.manager_list:
+            manager_items = manager.todos
+            if not manager_items:
+                continue
+            ret_items.extend(manager_items)
+        return ret_items
 
-    def setToDos(self, newList):
-        self.domain_model.todos = newList
-
-    def addToDo(self, todo: LocalToDo = None):
-        return self.domain_model.addToDo(todo)
-
-    def addNewToDo(self, title: str):
-        return self.domain_model.addNewToDo(title)
+    def addToDo(self, todo: LocalToDo) -> LocalToDo:
+        cal_id = todo.commonData.calendar_id
+        manager = self.getManagerById(cal_id)
+        return manager.addToDo(todo)
 
     def insertToDo(self, todo: LocalToDo, todoCoords):
-        self.domain_model.insertToDo(todo, todoCoords)
+        cal_id = todo.commonData.calendar_id
+        manager = self.getManagerById(cal_id)
+        manager.insertToDo(todo, todoCoords)
 
     def removeToDo(self, todo: LocalToDo) -> LocalToDo:
-        return self.domain_model.removeToDo(todo)
+        cal_id = todo.commonData.calendar_id
+        manager = self.getManagerById(cal_id)
+        return manager.removeToDo(todo)
 
     def replaceToDo(self, oldToDo: LocalToDo, newToDo: LocalToDo):
-        return self.domain_model.replaceToDo(oldToDo, newToDo)
+        old_cal_id = oldToDo.commonData.calendar_id
+        new_cal_id = newToDo.commonData.calendar_id
+        if new_cal_id == old_cal_id:
+            manager = self.getManagerById(new_cal_id)
+            return manager.replaceToDo(oldToDo, newToDo)
+        old_manager = self.getManagerById(old_cal_id)
+        old_manager.removeToDo(oldToDo)
+        new_manager = self.getManagerById(new_cal_id)
+        new_manager.addToDo(newToDo)
+        return True
 
-    def getToDoByCoords(self, todo) -> LocalToDo:
-        return self.domain_model.getToDoByCoords(todo)
+    def getToDoByCoords(self, todoCoords) -> LocalToDo:
+        allItems = self.getToDos()
+        return Manager.getToDoByCoordsFromList(allItems, todoCoords)
 
     def getNextToDo(self) -> LocalToDo:
-        return self.domain_model.getNextToDo()
+        allItems = self.getToDos()
+        return Manager.getNextToDoFromList(allItems)
 
-    def getToDoCoords(self, todo):
-        return self.domain_model.getToDoCoords(todo)
+    def getToDoCoords(self, todo: LocalToDo):
+        cal_id = todo.commonData.calendar_id
+        manager = self.getManagerById(cal_id)
+        return manager.getToDoCoords(todo)
 
     ## ======================================================================
 
     def getNotes(self):
-        return self.domain_model.getNotes()
+        return self.default_manager.getNotes()
 
     def setNotes(self, notesDict):
-        self.domain_model.setNotes(notesDict)
+        self.default_manager.setNotes(notesDict)
 
     def addNote(self, title: str, content: str):
-        self.domain_model.addNote(title, content)
+        self.default_manager.addNote(title, content)
 
     def removeNote(self, title: str):
-        self.domain_model.removeNote(title)
+        self.default_manager.removeNote(title)
 
     def renameNote(self, from_title: str, to_title: str):
-        self.domain_model.renameNote(from_title, to_title)
+        self.default_manager.renameNote(from_title, to_title)
 
 
 ## ========================================================

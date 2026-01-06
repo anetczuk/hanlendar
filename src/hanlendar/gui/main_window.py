@@ -221,13 +221,31 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         dataPath = self.getLocalDataPath()
         return LocalManager(dataPath)
 
-    def createCalDAVManager(self, connector) -> CalDAVManager:
+    def createCalDAVManager(self, connector: CalDAVConnector) -> CalDAVManager:
         dataPath = self._data_custom_path
         if not dataPath:
             dataPath = self.qtSettings.getDataPath()
         dataPath = os.path.join(dataPath, "caldav")
         os.makedirs(dataPath, exist_ok=True)
         return CalDAVManager(connector, dataPath)
+
+    def createCalDAVManagerFromCalendarItem(self, caldav_cal: CalDAVCalendarItem) -> CalDAVManager:
+        connector = self.createCalDAVConnector(
+            caldav_cal.serverURL,
+            caldav_cal.serverUser,
+            caldav_cal.serverPassword,
+            caldav_cal.calendarName,
+        )
+        return self.createCalDAVManager(connector)
+
+    def createCalDAVManagerFromData(self, serverURL, serverUser, serverPassword, calendarName) -> CalDAVManager:
+        connector = self.createCalDAVConnector(
+            serverURL,
+            serverUser,
+            serverPassword,
+            calendarName,
+        )
+        return self.createCalDAVManager(connector)
 
     def createCalDAVConnector(self, caldav_address, caldav_user, caldav_pass, caldav_calendar):
         _LOGGER.info("connecting to CalDAV server: %s calendar: %s", caldav_address, caldav_calendar)
@@ -277,7 +295,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
             self.setStatusMessage("Nothing to save", ["Nothing to save +", "Nothing to save ="], 6000)
 
     # pylint: disable=E0202
-    def _saveData(self):
+    def _saveData(self) -> bool:
         ## having separate slot allows to monkey patch / mock "_saveData()" method
         _LOGGER.info("storing data")
         notes = self.ui.notesWidget.getNotes()
@@ -511,7 +529,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         dialog.exportLocal.connect(self.exportLocalDB)
         dialogCode = dialog.exec_()
         if dialogCode == QDialog.Rejected:
-            self.applySettings()
+            self.setIconTheme(self.appSettings.trayIcon)
             return
         self.appSettings = dialog.appSettings
         self.applySettings()
@@ -524,8 +542,8 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.data.setCalendarData(calendar_data)
 
         manager_list: list[Manager] = []
-        default_man: LocalManager = self.createLocalManager()
-        manager_list.append(default_man)
+        # default_man: LocalManager = self.createLocalManager()
+        # manager_list.append(default_man)
 
         ## cal_item: CalendarItem
         for cal_item in self.appSettings.calendar_items:
@@ -534,18 +552,13 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
             if isinstance(cal_item, LocalCalendarItem):
                 # local_cal: LocalCalendarItem = cal_item
                 local_man: LocalManager = self.createLocalManager()
-                local_man.setCalendarId(cal_item.getCalendarId())
+                calendar_id = cal_item.getCalendarId()
+                local_man.setCalendarId(calendar_id)
                 manager_list.append(local_man)
 
             elif isinstance(cal_item, CalDAVCalendarItem):
                 caldav_cal: CalDAVCalendarItem = cal_item
-                connector = self.createCalDAVConnector(
-                    caldav_cal.serverURL,
-                    caldav_cal.serverUser,
-                    caldav_cal.serverPassword,
-                    caldav_cal.calendarName,
-                )
-                caldav_man: CalDAVManager = self.createCalDAVManager(connector)
+                caldav_man: CalDAVManager = self.createCalDAVManagerFromCalendarItem(caldav_cal)
                 caldav_man.calendar_id = cal_item.getCalendarId()
                 manager_list.append(caldav_man)
 

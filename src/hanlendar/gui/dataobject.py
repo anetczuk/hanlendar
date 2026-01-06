@@ -88,23 +88,28 @@ class DataObject(QObject):
     def loadData(self, custom_path=None):
         self.managers.loadData(custom_path)
 
-    def storeData(self, custom_path=None):
+    def storeData(self, custom_path=None) -> bool:
         return self.managers.storeData(custom_path)
 
     def getManager(self) -> MultiManager:
         return self.managers
 
+    def getDefaultManager(self) -> Manager:
+        return self.managers.getDefaultManager()
+
     def setManagerList(self, model_list: list[Manager]):
         self.managers.setManagerList(model_list)
 
     def getTaskOccurrences(self, taskDate: date, *, includeCompleted=True):
-        return self.managers.getTaskOccurrences(taskDate, includeCompleted=includeCompleted)
+        return self.managers.getTaskOccurrencesForDate(taskDate, includeCompleted=includeCompleted)
 
     def getCalendarData(self) -> CalendarData:
         return self.calendar_data
 
     def setCalendarData(self, calendar_data: CalendarData):
         self.calendar_data = calendar_data
+        enable_map = self.calendar_data.getEnableMap()
+        self.managers.setEnableMap(enable_map)
 
     def isCalendarEnabled(self, calendar_id: str):
         return self.calendar_data.isEnabled(calendar_id)

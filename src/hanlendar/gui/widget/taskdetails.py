@@ -249,7 +249,7 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
             return
         if not self.task:
             return
-        _LOGGER.debug("changing title from %s to %s", self.task.title, newValue)
+        # _LOGGER.debug("changing title from %s to %s", self.task.title, newValue)
         self.task.title = newValue
 
     def _locationChanged(self):
@@ -274,7 +274,7 @@ class TaskDetails(QtBaseClass):  # type: ignore[valid-type,misc]
         if not self.task:
             return
         newValue = self.ui.descriptionEdit.toHtml()
-        _LOGGER.debug("changing description from %s to %s", self.task.description, newValue)
+        # _LOGGER.debug("changing description from %s to %s", self.task.description, newValue)
         self.task.description = newValue
 
     def _completedChanged(self, newValue):
