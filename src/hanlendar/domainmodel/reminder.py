@@ -78,7 +78,7 @@ class Notification:
         return f"[nt:{self.notifyTime} m:{self.message} t:{self.task.title}]"  # pylint: disable=E1101
 
     @staticmethod
-    def sortByTime(notification):
+    def sortByTime(notification: "Notification"):
         return notification.notifyTime
 
 

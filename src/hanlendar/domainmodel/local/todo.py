@@ -29,7 +29,7 @@ from hanlendar import persist
 
 from hanlendar.domainmodel.item import Item, generate_uid, CommonData, DateDateTime
 from hanlendar.domainmodel.recurrent import Recurrent
-from hanlendar.domainmodel.utils import ensure_date_time
+from hanlendar.domainmodel.utils import ensure_date_time, is_offset_naive
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,8 +54,8 @@ class LocalToDo(Item, persist.Versionable):
     def __init__(self, title: str = ""):
         super().__init__()
 
-        self._parent = None
-        self.subitems: list = None
+        self._parent: LocalToDo = None
+        self.subitems: list[LocalToDo] = None
 
         self._common_data: CommonData = CommonData()
         self._common_data.title = title
@@ -164,11 +164,11 @@ class LocalToDo(Item, persist.Versionable):
         return f"[t:{self.title} d:{self.description} c:{self._common_data.completed} p:{self.priority} subs:{subLen}]"
 
     ## overrided
-    def getParent(self):
+    def getParent(self) -> "LocalToDo":
         return self._parent
 
     ## overrided
-    def setParent(self, parentItem=None):
+    def setParent(self, parentItem: "LocalToDo" = None):
         self._parent = parentItem
 
     ## return mutable reference
@@ -186,6 +186,11 @@ class LocalToDo(Item, persist.Versionable):
         return self.addSubItem(todo, index)
 
     ## ========================================================================
+
+    def updateData(self, todo: "LocalToDo"):
+        self._common_data = todo.commonData
+        self._dueDate = todo.dueDate
+        self._completedDate = todo.completedDate
 
     ## overriden
     def _get_common_data(self) -> CommonData:
@@ -309,7 +314,13 @@ class LocalToDo(Item, persist.Versionable):
         return ensure_date_time(value)
 
     def setStartDateTime(self, value: DateDateTime):
-        self._common_data.startDate = value
+        if not isinstance(value, datetime.datetime):
+            self._common_data.startDate = value
+            return
+        if not is_offset_naive(value):
+            self._common_data.startDate = value
+            return
+        self._common_data.startDate = value.astimezone()  ## convert to local timezone
 
     @property
     def dueDDT(self) -> DateDateTime:
@@ -328,7 +339,13 @@ class LocalToDo(Item, persist.Versionable):
         return ensure_date_time(value)
 
     def setDueDateTime(self, value: DateDateTime):
-        self._dueDate = value
+        if not isinstance(value, datetime.datetime):
+            self._dueDate = value
+            return
+        if not is_offset_naive(value):
+            self._dueDate = value
+            return
+        self._dueDate = value.astimezone()  ## convert to local timezone
 
     @property
     def completedDDT(self) -> DateDateTime:

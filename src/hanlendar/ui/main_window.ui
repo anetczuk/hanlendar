@@ -387,6 +387,7 @@
      <string>&amp;File</string>
     </property>
     <addaction name="actionSave_data"/>
+    <addaction name="actionSync_calendars"/>
     <addaction name="actionImportNotes"/>
     <addaction name="actionImport_iCalendar"/>
     <addaction name="actionExit"/>
@@ -450,6 +451,11 @@
   <action name="actionImport_iCalendar">
    <property name="text">
     <string>Import iCalendar</string>
+   </property>
+  </action>
+  <action name="actionSync_calendars">
+   <property name="text">
+    <string>Sync calendars</string>
    </property>
   </action>
  </widget>

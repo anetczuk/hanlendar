@@ -518,8 +518,10 @@ class SettingsDialog(QtBaseClass):  # type: ignore[valid-type,misc]
         calendarName = self.ui.serverCalendarLE.text()
 
         try:
-            connector = CalDAVConnector()
-            connector.connectToServer(serverURL, serverUser, serverPassword)
+            connector = CalDAVConnector(serverURL, serverUser, serverPassword)
+            if connector.connectToServer() is False:
+                QMessageBox.critical(self, "Connection test", "Unable to connect to: " + serverURL)
+                return
         except Exception as ex:  # pylint: disable=W0718
             _LOGGER.warning("unable to connect to server: %s", ex)
             message = str(ex)
@@ -531,6 +533,7 @@ class SettingsDialog(QtBaseClass):  # type: ignore[valid-type,misc]
             QMessageBox.information(self, "Connection test", "Successfully connected to calendar")
         except Exception as ex:  # pylint: disable=W0718
             _LOGGER.warning("unable to get calendar: %s", ex)
+            message = str(ex)
             QMessageBox.critical(self, "Connection test", "Unable t connect to calendar:\n" + message)
 
     ## ====================================================

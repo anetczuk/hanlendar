@@ -91,6 +91,9 @@ class DataObject(QObject):
     def storeData(self, custom_path=None) -> bool:
         return self.managers.storeData(custom_path)
 
+    def synchronize_data(self):
+        self.managers.synchronize_data()
+
     def getManager(self) -> MultiManager:
         return self.managers
 

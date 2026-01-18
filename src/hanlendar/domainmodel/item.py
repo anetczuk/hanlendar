@@ -28,7 +28,7 @@ import datetime
 
 from hanlendar.domainmodel.recurrent import Recurrent
 from hanlendar.domainmodel.reminder import Reminder
-from hanlendar.domainmodel.utils import generate_uid, hashable_object, DateDateTime
+from hanlendar.domainmodel.utils import generate_uid, hashable_object, DateDateTime, is_offset_naive
 from hanlendar import persist
 
 
@@ -43,7 +43,8 @@ class CommonData(persist.Versionable):
 
     ##  1: added '_reminderList'
     ##  2: added 'calendar_id'
-    _class_version = 2
+    ##  3: convert 'startDate' - add local timezone
+    _class_version = 3
 
     def __init__(self):
         self.UID: str = generate_uid()
@@ -100,6 +101,14 @@ class CommonData(persist.Versionable):
             state_dict["calendar_id"] = None
             state_version += 1
 
+        if state_version == 2:
+            start_date = state_dict["startDate"]
+            if start_date is not None and is_offset_naive(start_date):
+                _LOGGER.warning("fixed due date missing timezone")
+                start_date = start_date.astimezone()  ## convert to local timezone
+                state_dict["startDate"] = start_date
+            state_version += 1
+
         return state_dict
 
     def __eq__(self, other):
@@ -132,7 +141,7 @@ class CommonData(persist.Versionable):
 
     def __str__(self):
         return (
-            f"[uid:{self.UID} t:{self.title} l:{self.location} u:{self.url} d:{self.description}"
+            f"[uid:{self.UID} cid:{self.calendar_id} t:{self.title} l:{self.location} u:{self.url} d:{self.description}"
             f" c:{self.component_class} s:{self.status} s:{self.sequence} c:{self.completed} p:{self.priority}"
             f" cd:{self.createDate} lm:{self.lastModifiedDate} sd:{self.startDate}"
             f" rec:{self.recurrence} rem:{self.reminderList} up:{self.unknown_props}]"
@@ -408,6 +417,11 @@ class Item:
     def sequence(self, value: int):
         self.setSequence(value)
 
+    def increaseSequence(self):
+        curr_seq = self.getSequence()
+        curr_seq += 1
+        self.setSequence(curr_seq)
+
     ## ========================================================================
 
     @abc.abstractmethod
@@ -579,6 +593,60 @@ class Item:
             if currItem.replaceSubItem(oldItem, newItem) is True:
                 return True
         return False
+
+    @staticmethod
+    def get_added_items(reference_list: list["Item"], modified_list: list["Item"]):
+        ret_item = []
+
+        current_item_map = {}
+        for item in reference_list:
+            item_uid = item.getUID()
+            current_item_map[item_uid] = item
+
+        for item in modified_list:
+            item_uid = item.getUID()
+            if item_uid not in current_item_map:
+                ret_item.append(item)
+
+        return ret_item
+
+    @staticmethod
+    def get_modified_items(reference_list: list["Item"], modified_list: list["Item"]):
+        ret_item = []
+
+        current_item_map = {}
+        for item in reference_list:
+            item_uid = item.getUID()
+            current_item_map[item_uid] = item
+
+        for item in modified_list:
+            item_uid = item.getUID()
+            ref_item = current_item_map.get(item_uid)
+            if ref_item is None:
+                ## new item - skip (not modified, but added)
+                continue
+            if item == ref_item:
+                ## not changed - skip
+                continue
+            ret_item.append(item)
+
+        return ret_item
+
+    @staticmethod
+    def get_deleted_items(reference_list: list["Item"], modified_list: list["Item"]):
+        ret_item = []
+
+        current_item_map = {}
+        for item in modified_list:
+            item_uid = item.getUID()
+            current_item_map[item_uid] = item
+
+        for item in reference_list:
+            item_uid = item.getUID()
+            if item_uid not in current_item_map:
+                ret_item.append(item)
+
+        return ret_item
 
     @staticmethod
     def getItemCoords(itemsList, item):

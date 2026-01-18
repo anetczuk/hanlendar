@@ -33,6 +33,7 @@ from hanlendar.main import initialize_qt
 from hanlendar.domainmodel.local.manager import LocalManager
 from hanlendar.gui.main_window import SettingsObject
 from hanlendar.domainmodel.local.task import Task
+from hanlendar.domainmodel.local.todo import LocalToDo
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,8 +43,10 @@ def print_data(data_dict, *, detailed=False):
     print("archive:", data_dict.get("file", None))
     tasks: list[Task] = data_dict.get("tasks", [])
     all_tasks = get_tasks_all(tasks)
-    all_tasks.sort(reverse=True, key=lambda task: task.dueDateTime)
+    all_todos: list[LocalToDo] = data_dict.get("todos", [])
+    print("tasks number:", len(all_tasks), "todos number:", len(all_todos))
 
+    all_tasks.sort(reverse=True, key=lambda task: task.dueDateTime)
     for task in all_tasks:
         if detailed is False:
             due = str(task.dueDateTime)
@@ -56,7 +59,6 @@ def print_data(data_dict, *, detailed=False):
             print(data)
 
 
-# Zapłacić podatek za wynajem Woli
 def get_tasks_all(tasks_list: list[Task]):
     ret_list: list[Task] = []
     for task in tasks_list:
@@ -86,6 +88,7 @@ def handle_history(localManager: LocalManager, args):
 def main():
     parser = argparse.ArgumentParser(description="History read")
     parser.add_argument("-la", "--logall", action="store_true", help="Log all messages")
+    parser.add_argument("-d", "--dir", action="store", required=False, default=None, help="Data custom directory")
     parser.add_argument("-i", "--index", action="store", required=False, default=None, help="Log all messages")
     parser.add_argument("--detailed", action="store_true", default=False, help="Print detailed info")
 
@@ -97,10 +100,12 @@ def main():
     else:
         logging.getLogger().setLevel(logging.INFO)
 
-    initialize_qt()
-    settings = SettingsObject()
+    dataPath = args.dir
+    if dataPath is None:
+        initialize_qt()
+        settings = SettingsObject()
+        dataPath = settings.getDataPath()
 
-    dataPath = settings.getDataPath()
     os.makedirs(dataPath, exist_ok=True)
     localManager: LocalManager = LocalManager(dataPath)
     handle_history(localManager, args)

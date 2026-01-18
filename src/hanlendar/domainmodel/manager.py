@@ -57,6 +57,11 @@ class Manager:
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
+    @abc.abstractmethod
+    def synchronize_data(self):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
     ## ======================================================================
 
     def setData(self, manager: "Manager"):
@@ -165,6 +170,10 @@ class Manager:
                 return task
         return None
 
+    def findTaskInstance(self, task: Task) -> Task:
+        task_id = task.UID
+        return self.findTaskByUID(task_id)
+
     ## return TaskOccurrence list for given date
     def getTaskOccurrencesForDate(self, taskDate: date, *, includeCompleted=True) -> list[TaskOccurrence]:
         allTasks = self.getTasksAll()
@@ -172,9 +181,9 @@ class Manager:
 
     @staticmethod
     def getTaskOccurrencesForDateFromList(task_list, taskDate: date, *, includeCompleted=True) -> list[TaskOccurrence]:
-        retList = []
+        retList: list[TaskOccurrence] = []
         for task in task_list:
-            entry = task.getTaskOccurrenceForDate(taskDate)
+            entry: TaskOccurrence = task.getTaskOccurrenceForDate(taskDate)
             if entry is None:
                 continue
             if includeCompleted is False and entry.isCompleted():
@@ -285,6 +294,7 @@ class Manager:
         self.fixTaskParents()
         self.fixTaskRoots()
         self.fixTaskChildren()
+        self.fixCalendarId()
 
     def fixTaskParents(self):
         ## extract root tasks and add to top list
@@ -330,6 +340,15 @@ class Manager:
                     _LOGGER.warning("task '%s' have invalid parent -- moved to task %s", child.title, task.title)
                     task.setParent(taskParent)
 
+    def fixCalendarId(self):
+        tasks = self.getTasksAll()
+        for item in tasks:
+            item.commonData.calendar_id = self.getCalendarId()
+
+        todos = self.getTodosAll()
+        for item in todos:
+            item.commonData.calendar_id = self.getCalendarId()
+
     def printTasks(self):
         retStr = ""
         tSize = len(self.tasks)
@@ -351,14 +370,25 @@ class Manager:
 
     @staticmethod
     def getNotificationListFromList(tasks_list) -> list[Notification]:
-        ret = []
+        ret: list[Notification] = []
         for task in tasks_list:
-            notifs = task.getNotifications()
+            notifs: list[Notification] = task.getNotifications()
             ret.extend(notifs)
         ret.sort(key=Notification.sortByTime)
         return ret
 
     ## ========================================================
+
+    def findTodoByUID(self, uid) -> LocalToDo:
+        all_items = self.getTodosAll()
+        for item in all_items:
+            if uid == item.UID:
+                return item
+        return None
+
+    def findTodoInstance(self, todo: LocalToDo) -> LocalToDo:
+        todo_id = todo.UID
+        return self.findTodoByUID(todo_id)
 
     def getToDoCoords(self, todo: LocalToDo):
         return Item.getItemCoords(self.todos, todo)
@@ -460,6 +490,8 @@ class MultiManager:
             if cal_id != calendar_id:
                 continue
             return manager
+        if calendar_id is not None:
+            _LOGGER.warning("unable to find calendar by id '%s'", calendar_id)
         return self.default_manager
 
     def setManagerList(self, model_list: list[Manager]):
@@ -482,6 +514,10 @@ class MultiManager:
             elif manager.storeData():
                 changed = True
         return changed
+
+    def synchronize_data(self):
+        for manager in self.manager_list:
+            manager.synchronize_data()
 
     ## ======================================================================
 

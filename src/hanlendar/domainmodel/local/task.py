@@ -446,13 +446,14 @@ class LocalTask(Task, persist.Versionable):
     ## 11: added '_status', '_class'
     ## 12: use '_common_data'
     ## 13: move '_reminderList' to CommonData
-    _class_version = 13
+    ## 14: convert '_dueDate' and '_completedList' - add local timezone
+    _class_version = 14
 
     def __init__(self, title: str = ""):
         super().__init__()
 
-        self._parent = None
-        self.subitems: list = None
+        self._parent: Task = None
+        self.subitems: list[Task] = None
 
         self._common_data: CommonData = CommonData()
         self._common_data.title = title
@@ -601,6 +602,24 @@ class LocalTask(Task, persist.Versionable):
             common_data.reminderList = state_dict["_reminderList"]
             state_version += 1
 
+        if state_version == 13:
+            due_date = state_dict["_dueDate"]
+            if due_date is not None and is_offset_naive(due_date):
+                _LOGGER.warning("fixed due date missing timezone")
+                due_date = due_date.astimezone()  ## convert to local timezone
+                state_dict["_dueDate"] = due_date
+
+            completed_list = state_dict["_completedList"]
+            ## item: DateTimeRange
+            for item in completed_list:
+                if item.start is not None and is_offset_naive(item.start):
+                    _LOGGER.warning("fixed completed_list start date missing timezone")
+                    item.start = item.start.astimezone()
+                if item.end is not None and is_offset_naive(item.end):
+                    _LOGGER.warning("fixed completed_list end date missing timezone")
+                    item.end = item.end.astimezone()
+            state_version += 1
+
         return state_dict
 
     def __eq__(self, other):
@@ -621,11 +640,11 @@ class LocalTask(Task, persist.Versionable):
         return f"[common:{self._common_data} due:{self._dueDate} completed:{self._completedList}]"
 
     ## overrided
-    def getParent(self):
+    def getParent(self) -> Task:
         return self._parent
 
     ## overrided
-    def setParent(self, parentItem=None):
+    def setParent(self, parentItem: Task = None):
         self._parent = parentItem
 
     ## return mutable reference
@@ -642,6 +661,11 @@ class LocalTask(Task, persist.Versionable):
         return self.addSubItem(LocalTask())
 
     ## ========================================================================
+
+    def updateData(self, task: "LocalTask"):
+        self._common_data = task.commonData
+        self._dueDate = task.dueDate
+        self._completedList = task.completedList
 
     ## overriden
     def _get_common_data(self) -> CommonData:
@@ -762,7 +786,13 @@ class LocalTask(Task, persist.Versionable):
 
     ## overriden
     def _setStartDateTime(self, value: DateDateTime):
-        self._common_data.startDate = value
+        if not isinstance(value, datetime.datetime):
+            self._common_data.startDate = value
+            return
+        if not is_offset_naive(value):
+            self._common_data.startDate = value
+            return
+        self._common_data.startDate = value.astimezone()  ## convert to local timezone
 
     ## overriden
     def _getDueDateTime(self) -> DateDateTime:
@@ -770,7 +800,13 @@ class LocalTask(Task, persist.Versionable):
 
     ## overriden
     def _setDueDateTime(self, value: DateDateTime):
-        self._dueDate = value
+        if not isinstance(value, datetime.datetime):
+            self._dueDate = value
+            return
+        if not is_offset_naive(value):
+            self._dueDate = value
+            return
+        self._dueDate = value.astimezone()  ## convert to local timezone
 
     ## overriden
     def _getCompletedList(self) -> list[DateTimeRange]:

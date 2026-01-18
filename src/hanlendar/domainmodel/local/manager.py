@@ -125,12 +125,14 @@ class LocalManager(Manager):
     def storeToDisk(self, outputDir) -> bool:
         if outputDir:
             self._ioDir = outputDir
+            if self._calendar_id:
+                self._ioDir = os.path.join(self._ioDir, self._calendar_id)
         return self.storeData()
 
     # override
     def storeData(self) -> bool:
         outputDir = self._getDataPath()
-        _LOGGER.info("storing data to %s", outputDir)
+        _LOGGER.info("storing calendar '%s' data to %s", self._calendar_id, outputDir)
         if outputDir is None:
             _LOGGER.warning("unable to store data -- no root directory given")
             return False
@@ -162,8 +164,11 @@ class LocalManager(Manager):
     def loadFromDisk(self, inputDir):
         if inputDir:
             self._ioDir = inputDir
+            if self._calendar_id:
+                self._ioDir = os.path.join(self._ioDir, self._calendar_id)
         self.loadData()
 
+    # pylint: disable=R0915
     # override
     def loadData(self):
         if self._ioDir is None:
@@ -265,11 +270,13 @@ class LocalManager(Manager):
             if task.dueDateTime is None:
                 _LOGGER.warning("task '%s' has invalid occurrence due date", task.title)
 
+        _LOGGER.info("loaded tasks: %s todos: %s", len(self.tasks), len(self.todos))
+
     ## index meaning:
     ##    negative: current
     ##           0: first history entry
     ##    positive: history entry by index
-    def loadHistory(self, index=-1):
+    def loadHistory(self, index=-1) -> dict[str, Any]:
         if index < 0:
             self.loadData()
             return {
@@ -285,6 +292,9 @@ class LocalManager(Manager):
             storedZipFile = os.path.join(outputDir, "data.zip")
         else:
             storedZipFile = os.path.join(outputDir, f"data.zip.{index}")
+
+        if not os.path.exists(storedZipFile):
+            return None
 
         _LOGGER.info("loading file: %s", storedZipFile)
         hist_data_raw = persist.load_backup(storedZipFile)
@@ -354,9 +364,12 @@ class LocalManager(Manager):
     def _getDataPath(self):
         if self._ioDir is None:
             return None
-        if not self._calendar_id:
-            return self._ioDir
-        return os.path.join(self._ioDir, self._calendar_id)
+        return self._ioDir
+
+    ## overriden
+    def synchronize_data(self):
+        pass
+        ## do nothing
 
     ## ======================================================================
 

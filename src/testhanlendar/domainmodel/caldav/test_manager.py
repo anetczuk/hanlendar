@@ -55,14 +55,17 @@ class CalDAVManagerTest(unittest.TestCase):
         self.manager = CalDAVManager(self.connector)
 
     def _connect(self) -> CalDAVConnector:
-        connector = CalDAVConnector()
         local_address = self.radicale_server.get_local_address()
         for _i in range(100):
             try:
-                connector.connectToServer(f"http://{local_address}", self.RADICALE_USER, "bob")
+                connector = CalDAVConnector(f"http://{local_address}", self.RADICALE_USER, "bob")
+                if connector.connectToServer() is False:
+                    time.sleep(0.01)  ## sleep a bit to allow server startup
+                    continue
             # ruff: noqa: PERF203
             except requests.exceptions.ConnectionError:
-                time.sleep(0.01)
+                time.sleep(0.01)  ## sleep a bit to allow server startup
+                continue
             else:
                 return connector
         return None
@@ -133,3 +136,72 @@ END:VCALENDAR
 """,
             content,
         )
+
+    def test_save_new(self):
+        calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)
+        self.assertEqual(calendar_items_num, 0)
+
+        ## add new task
+        taskDate = datetime.datetime(2025, 11, 22, 10, 20, 30)
+        new_task = self.manager.addNewTaskDateTime(taskDate, "task1")
+        new_task.UID = "1111-2222-3333-4444"
+        new_task._common_data.createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
+        new_task._common_data.lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
+        self.manager.saveToServer()
+
+        calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)
+        self.assertEqual(calendar_items_num, 1)
+
+    def test_save_modify(self):
+        calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)
+        self.assertEqual(calendar_items_num, 0)
+
+        ## add new task
+        taskDate = datetime.datetime(2025, 11, 22, 10, 20, 30)
+        new_task = self.manager.addNewTaskDateTime(taskDate, "task1")
+        new_task.UID = "1111-2222-3333-4444"
+        new_task._common_data.createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
+        new_task._common_data.lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
+        self.manager.saveToServer()
+        self.assertEqual(new_task.sequence, 0)
+
+        calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)
+        self.assertEqual(calendar_items_num, 1)
+
+        ## modify task
+        new_task = self.manager.findTaskInstance(new_task)
+        modified_title = new_task.title + "_xxx"
+        new_task.title = modified_title
+        self.manager.saveToServer()
+
+        ## check change
+        manager = CalDAVManager(self.connector)
+        manager.loadFromServer()
+        self.assertEqual(len(manager.tasks), 1)
+        loaded_task = manager.tasks[0]
+        self.assertEqual(loaded_task.title, modified_title)
+        self.assertEqual(loaded_task.sequence, 1)
+
+    def test_save_delete(self):
+        calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)
+        self.assertEqual(calendar_items_num, 0)
+
+        ## add new task
+        taskDate = datetime.datetime(2025, 11, 22, 10, 20, 30)
+        new_task = self.manager.addNewTaskDateTime(taskDate, "task1")
+        new_task.UID = "1111-2222-3333-4444"
+        new_task._common_data.createDate = datetime.datetime(2025, 11, 22, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
+        new_task._common_data.lastModifiedDate = datetime.datetime(2025, 11, 23, 9, 20, 30)  # type: ignore[attr-defined] # pylint: disable=W0212
+        self.manager.saveToServer()
+
+        calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)
+        self.assertEqual(calendar_items_num, 1)
+
+        ## remove task
+        new_task = self.manager.findTaskInstance(new_task)
+        self.manager.removeTask(new_task)
+        self.manager.saveToServer()
+
+        ## check change
+        calendar_items_num = self.radicale_server.count_calendar_items(self.RADICALE_USER, self.calendar_uuid)
+        self.assertEqual(calendar_items_num, 0)

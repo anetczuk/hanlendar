@@ -197,7 +197,7 @@ else:
 
     window.appSettings = AppSettings()
 
-    window.appSettings.addCalDAVCalendar("http://localhost:5232", "bob", "bob", "new_cal")
+    window.appSettings.addCalDAVCalendar("http://localhost:5232", "bob", "bob", "new_cal", cal_id="0000-0001")
 
     # connector = self.createCalDAVConnector("http://localhost:5232", "bob", "bob", "new_cal")
     # # connector = self.createCalDAVConnector("http://localhost:5232", "bob", "bob", "test_xxx2")
@@ -212,7 +212,7 @@ else:
 
     manager: MultiManager = window.getManager()
     # prepare_example_data(manager, "cal_1_id")
-    window.saveData()
+    # window.saveData()
     window.refreshView()
 
 window.show()

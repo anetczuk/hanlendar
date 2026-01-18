@@ -23,6 +23,8 @@
 # SOFTWARE.
 #
 
+# ruff: noqa: T201
+
 import sys
 import os
 import argparse
@@ -44,6 +46,8 @@ else:
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+JSON_AUTH_DEFAULT_PATH = os.path.join(SCRIPT_DIR, "caldavmanager.auth.json")
 
 
 def read_json(file_path):
@@ -93,6 +97,8 @@ def get_calendar(args):
     calendar: caldav.objects.Calendar = None
 
     auth_path = args.authjson
+    if auth_path is None:
+        auth_path = JSON_AUTH_DEFAULT_PATH
     auth_dict = read_json(auth_path)
 
     caldav_principal = create_principal(auth_dict)
@@ -127,6 +133,8 @@ def process_calcreate(args):
         cal_name = args.name
 
         auth_path = args.authjson
+        if auth_path is None:
+            auth_path = JSON_AUTH_DEFAULT_PATH
         auth_dict = read_json(auth_path)
 
         caldav_principal = create_principal(auth_dict)
@@ -143,6 +151,8 @@ def process_calcreate(args):
 
 def process_listcals(args):
     auth_path = args.authjson
+    if auth_path is None:
+        auth_path = JSON_AUTH_DEFAULT_PATH
     auth_dict = read_json(auth_path)
 
     caldav_principal = create_principal(auth_dict)
@@ -150,16 +160,11 @@ def process_listcals(args):
 
     calendars.sort(key=lambda item: item.name)
 
-    _LOGGER.info("current calendars:")
+    print("current calendars:")
     for calitem in calendars:
         description = calitem.get_property(caldav.elements.cdav.CalendarDescription())
-        _LOGGER.info("  - name: %s id: %s url: %s description: %s", calitem.name, calitem.id, calitem.url, description)
-        _LOGGER.info(
-            "    events: %s journals: %s todos: %s",
-            len(calitem.events()),
-            len(calitem.journals()),
-            len(calitem.todos()),
-        )
+        print(f"  - name: {calitem.name} id: {calitem.id} url: {calitem.url} description: {description}")
+        print(f"    events: {len(calitem.events())} journals: {len(calitem.journals())} todos: {len(calitem.todos())}")
 
 
 def process_calitems(args):
@@ -175,10 +180,10 @@ def process_calitems(args):
         todos: list[caldav.objects.Todo] = calendar.todos()
         journals: list[caldav.objects.Journal] = calendar.journals()
 
-        _LOGGER.info("calendar name: %s id: %s url: %s", cal_name, calendar.id, calendar.url)
-        _LOGGER.info("events: %s todos: %s journals: %s", len(events), len(todos), len(journals))
+        print(f"calendar name: {cal_name} id: {calendar.id} url: {calendar.url}")
+        print(f"events: {len(events)} todos: {len(todos)} journals: {len(journals)}")
 
-        _LOGGER.info("events:")
+        print("events:")
         for event in events:
             name = event.name
             if name is not None:
@@ -193,44 +198,33 @@ def process_calitems(args):
             if summary is not None:
                 summary = f"'{summary}'"
 
-            _LOGGER.info(
-                "  - name: %s start: %s end: %s duration: %s summary: %s url: %s",
-                name,
-                start,
-                end,
-                event.get_duration(),
-                summary,
-                event.url,
+            print(
+                f"  - name: {name} summary: {summary} start: {start} end: {end}"
+                f" duration: {event.get_duration()} url: {event.url}",
             )
-            _LOGGER.info("    raw data: %s", event.icalendar_component)  # type: ignore[attr-defined]
+            print(f"    raw data: {event.icalendar_component}")  # type: ignore[attr-defined]
 
-        _LOGGER.info("todos:")
+        print("todos:")
         for todo in todos:
             name = todo.name
             if name is not None:
                 name = f"'{name}'"
-            _LOGGER.info(
-                "  - name: %s due: %s duration: %s url: %s",
-                name,
-                todo.get_due(),  # type: ignore[attr-defined]
-                todo.get_duration(),
-                todo.url,
+            print(
+                f"  - name: {name} due: {todo.get_due()}"  # type: ignore[attr-defined]
+                f" duration: {todo.get_duration()} url: {todo.url}",
             )
-            _LOGGER.info("    raw data: %s", todo.icalendar_component)  # type: ignore[attr-defined]
+            print(f"    raw data: {todo.icalendar_component}")  # type: ignore[attr-defined]
 
-        _LOGGER.info("journals:")
+        print("journals:")
         for journal in journals:
             name = journal.name
             if name is not None:
                 name = f"'{name}'"
-            _LOGGER.info(
-                "  - name: %s due: %s duration: %s url: %s",
-                name,
-                journal.get_due(),  # type: ignore[attr-defined]
-                journal.get_duration(),
-                journal.url,
+            print(
+                f"  - name: {name} due: {journal.get_due()}"  # type: ignore[attr-defined]
+                f" duration: {journal.get_duration()} url: {journal.url}",
             )
-            _LOGGER.info("    raw data: %s", journal.icalendar_component)  # type: ignore[attr-defined]
+            print(f"    raw data: {journal.icalendar_component}")  # type: ignore[attr-defined]
 
     except error.NotFoundError:
         _LOGGER.error("given calendar '%s' does not exist", cal_id)

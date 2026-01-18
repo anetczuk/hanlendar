@@ -59,6 +59,7 @@ def hashable_object(obj):
     return obj
 
 
+## check if datetime object does not have timezone information
 def is_offset_naive(dt: datetime.datetime) -> bool:
     return dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None
 

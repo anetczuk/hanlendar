@@ -196,6 +196,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         ## === main menu settings ===
 
         self.ui.actionSave_data.triggered.connect(self.saveData)
+        self.ui.actionSync_calendars.triggered.connect(self.synchronize_calendars)
         self.ui.actionImportNotes.triggered.connect(self.importXfceNotes)
         self.ui.actionImport_iCalendar.triggered.connect(self.importICalendar)
 
@@ -217,9 +218,13 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         os.makedirs(dataPath, exist_ok=True)
         return dataPath
 
-    def createLocalManager(self) -> LocalManager:
+    def createLocalManager(self, calendar_id: str = None) -> LocalManager:
         dataPath = self.getLocalDataPath()
-        return LocalManager(dataPath)
+        if dataPath and calendar_id:
+            dataPath = os.path.join(dataPath, calendar_id)
+        local_man = LocalManager(dataPath)
+        local_man.setCalendarId(calendar_id)
+        return local_man
 
     def createCalDAVManager(self, connector: CalDAVConnector) -> CalDAVManager:
         dataPath = self._data_custom_path
@@ -236,7 +241,10 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
             caldav_cal.serverPassword,
             caldav_cal.calendarName,
         )
-        return self.createCalDAVManager(connector)
+        manager = self.createCalDAVManager(connector)
+        calendar_id = caldav_cal.getCalendarId()
+        manager.setCalendarId(calendar_id)
+        return manager
 
     def createCalDAVManagerFromData(self, serverURL, serverUser, serverPassword, calendarName) -> CalDAVManager:
         connector = self.createCalDAVConnector(
@@ -249,15 +257,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
 
     def createCalDAVConnector(self, caldav_address, caldav_user, caldav_pass, caldav_calendar):
         _LOGGER.info("connecting to CalDAV server: %s calendar: %s", caldav_address, caldav_calendar)
-
-        try:
-            connector = CalDAVConnector()
-            connector.connectToServer(caldav_address, caldav_user, caldav_pass)
-        except Exception as ex:  # pylint: disable=W0718
-            _LOGGER.warning("unable to connect to server: %s", ex)
-            return None
-        connector.connectToCalendar(caldav_calendar)
-        return connector
+        return CalDAVConnector(caldav_address, caldav_user, caldav_pass, caldav_calendar)
 
     def setCalDAVManager(self, caldav_address, caldav_user, caldav_pass, caldav_calendar):
         self.appSettings.calendar_items.clear()
@@ -310,6 +310,10 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
 
         _LOGGER.info("disabling saving data")
         self._saveData = save_data_mock  # type: ignore[method-assign]
+
+    def synchronize_calendars(self):
+        self.data.synchronize_data()
+        self.refreshView()
 
     ## ===============================================================
 
@@ -542,8 +546,6 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.data.setCalendarData(calendar_data)
 
         manager_list: list[Manager] = []
-        # default_man: LocalManager = self.createLocalManager()
-        # manager_list.append(default_man)
 
         ## cal_item: CalendarItem
         for cal_item in self.appSettings.calendar_items:
@@ -551,15 +553,13 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
 
             if isinstance(cal_item, LocalCalendarItem):
                 # local_cal: LocalCalendarItem = cal_item
-                local_man: LocalManager = self.createLocalManager()
                 calendar_id = cal_item.getCalendarId()
-                local_man.setCalendarId(calendar_id)
+                local_man: LocalManager = self.createLocalManager(calendar_id)
                 manager_list.append(local_man)
 
             elif isinstance(cal_item, CalDAVCalendarItem):
                 caldav_cal: CalDAVCalendarItem = cal_item
                 caldav_man: CalDAVManager = self.createCalDAVManagerFromCalendarItem(caldav_cal)
-                caldav_man.calendar_id = cal_item.getCalendarId()
                 manager_list.append(caldav_man)
 
             else:

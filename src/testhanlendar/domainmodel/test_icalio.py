@@ -340,8 +340,8 @@ END:VCALENDAR
         self.assertEqual(newTask.description, task.description)
         self.assertEqual(newTask.completed, task.completed)
         self.assertEqual(newTask.priority, task.priority)
-        self.assertEqual(newTask.startDateTime.replace(tzinfo=None), task.startDateTime)
-        self.assertEqual(newTask.dueDateTime.replace(tzinfo=None), task.dueDateTime)
+        self.assertEqual(newTask.startDateTime, task.startDateTime)
+        self.assertEqual(newTask.dueDateTime, task.dueDateTime)
 
     def test_io_task_dtstart_none(self):
         manager = Manager()

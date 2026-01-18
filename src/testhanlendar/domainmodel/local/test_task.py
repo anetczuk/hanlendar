@@ -272,9 +272,18 @@ class TaskTest(unittest.TestCase):
         self.assertListEqual(
             task.completedList,
             [
-                DateTimeRange(datetime.datetime(2020, 5, 2, 10), datetime.datetime(2020, 5, 2, 11)),
-                DateTimeRange(datetime.datetime(2020, 5, 3, 10), datetime.datetime(2020, 5, 3, 11)),
-                DateTimeRange(datetime.datetime(2020, 5, 4, 10), datetime.datetime(2020, 5, 4, 11)),
+                DateTimeRange(
+                    datetime.datetime(2020, 5, 2, 10).astimezone(),
+                    datetime.datetime(2020, 5, 2, 11).astimezone(),
+                ),
+                DateTimeRange(
+                    datetime.datetime(2020, 5, 3, 10).astimezone(),
+                    datetime.datetime(2020, 5, 3, 11).astimezone(),
+                ),
+                DateTimeRange(
+                    datetime.datetime(2020, 5, 4, 10).astimezone(),
+                    datetime.datetime(2020, 5, 4, 11).astimezone(),
+                ),
             ],
         )
         self.assertEqual(task.startDate, datetime.date(2020, 5, 5))
