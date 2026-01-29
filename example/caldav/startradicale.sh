@@ -1,48 +1,97 @@
 #!/bin/bash
 
+##
+## Helper script for running radicale server.
+##
+## Required:
+##      pip3 install radicale --break-system-packages
+##
+
 set -eu
 
 
-## works both under bash and sh
-SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+## works both under bash and sh (works on direct call and when sourcing)
+SCRIPT_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
 
 
-RADICALE_CONF_DIR="/tmp/radicale"
+print_usage() {
+    SCRIPT_NAME=$(basename "$(readlink -f "${BASH_SOURCE[0]}")")
+    
+    cat << EOF
+Script for starting radicale server.
 
-BASE_DIR="${SCRIPT_DIR}"/../../tmp/radicale
-CONFIG_FILE="${SCRIPT_DIR}"/radicale-config
-AUTH_PATH="${SCRIPT_DIR}"/auth.json
+usage: ${SCRIPT_NAME} [OPTIONS]
+
+options:
+    -h, --help          -- this information
+    --bashcfg [PATH]    -- path to bash file with additional configuration
+    --lldebug           -- same as "--logging-level debug"
+EOF
+
+    echo
+    echo
+    echo "radicale options:"
+    echo
+
+    python3 -m radicale --help
+}
 
 
-mkdir -p "${RADICALE_CONF_DIR}"
+## args to preserve
+args=()
 
+BASH_CFG=""
 
-RADICALE_AUTH="${RADICALE_CONF_DIR}/auth_user"
+while [[ $# -gt 0 ]]; do
+    case $1 in
+      -h|--help)    print_usage
+                    exit 0
+                    ;;
 
-caldav_users=$(cat "${AUTH_PATH}" | jq -r '.users[].user')
-caldav_passes=$(cat "${AUTH_PATH}" | jq -r '.users[].password')
+      --bashcfg)    BASH_CFG="${2}"
+                    shift 2             ## past argument
+                    ;;
 
-mapfile -t user_arr <<< "${caldav_users}"
-mapfile -t pass_arr <<< "${caldav_passes}"
+      --bashcfg=*)  BASH_CFG="${1#*=}"
+                    shift               ## past argument
+                    ;;
 
-truncate -s 0 "${RADICALE_AUTH}"
-for i in "${!user_arr[@]}"; do
-    echo "${user_arr[i]}:${pass_arr[i]}" >> "${RADICALE_AUTH}"
+      --lldebug)    args+=("--logging-level" "debug")
+                    shift               ## past argument
+                    ;;
+
+      *)    args+=("${1}")      ## preserve arg
+            shift               ## past argument
+            ;;
+    esac
 done
 
+## restore args
+set -- "${args[@]}"
 
-RADICALE_RIGHTS="${RADICALE_CONF_DIR}/rights"
-cp "${SCRIPT_DIR}/rights" "${RADICALE_RIGHTS}"
+
+if [[ "${BASH_CFG}" == "" ]]; then
+    ## sourcing default file
+
+    DEFAULT_BASH_CFG="${SCRIPT_DIR}/radicale-config.bash"
+    if [[ -f "${DEFAULT_BASH_CFG}" ]]; then
+        echo "Importing config: ${DEFAULT_BASH_CFG}"
+        echo
+    
+        # shellcheck disable=SC1091,SC1090
+        source "${DEFAULT_BASH_CFG}"
+    fi
+else
+    echo "Importing config: ${BASH_CFG}"
+    echo
+
+    # shellcheck disable=SC1090
+    source "${BASH_CFG}"
+fi
 
 
-echo "Server dir: ${BASE_DIR}"
-echo "Server config: ${CONFIG_FILE}"
-
-echo "Accounts:"
-cat "${RADICALE_AUTH}"
-
+echo "Server config: ${RADICALE_CONFIG_FILE}"
+echo "Server storage: ${RADICALE_STORAGE_DIR}"
 echo
-echo "Starting server. Available at: http://localhost:5232/"
-echo
 
-python3 -m radicale --config="${CONFIG_FILE}" --storage-filesystem-folder="${BASE_DIR}" "${@}"
+python3 -m radicale --config="${RADICALE_CONFIG_FILE}" --storage-filesystem-folder="${RADICALE_STORAGE_DIR}" "${@}"

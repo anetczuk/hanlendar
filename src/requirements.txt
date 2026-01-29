@@ -1,15 +1,15 @@
 PyQt5
 python-dateutil
 
-deepdiff
+deepdiff >= 8.6.1
 
 ## for ics files
 icalendar
 pidfile
 pqueue
-filelock
+filelock >= 3.12.4
 watchdog
 
 ## for iCalendar client/server functionality
-radicale
+radicale >= 3.2.3
 caldav
