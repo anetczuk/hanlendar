@@ -272,6 +272,11 @@ class LocalManager(Manager):
 
         _LOGGER.info("loaded tasks: %s todos: %s", len(self.tasks), len(self.todos))
 
+    ## load data from local storage only (do not perform any connection)
+    # override
+    def loadDataLocal(self):
+        self.loadData()
+
     ## index meaning:
     ##    negative: current
     ##           0: first history entry

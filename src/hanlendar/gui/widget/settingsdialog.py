@@ -225,6 +225,7 @@ class CalDAVCalendarItem(CalendarItem, persist.Versionable):
 ## ====================================================================
 
 
+## container for application settings
 class AppSettings:
 
     ##  0: first version
@@ -270,6 +271,9 @@ class AppSettings:
             else:
                 _LOGGER.warning("unhandled calendar item: %s %s", cal_item.getCalendarMode(), cal_item)
         return cal_data
+
+    def getCalendarCount(self) -> int:
+        return len(self.calendar_items)
 
     def getCalendar(self, cal_index: int) -> CalendarItem:
         if cal_index < 0:

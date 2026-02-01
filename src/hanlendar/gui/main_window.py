@@ -47,7 +47,7 @@ from hanlendar.gui import guistate
 from hanlendar.gui.qt import qApp, QtCore, QtGui, QIcon
 from hanlendar.gui.dataobject import DataObject
 from hanlendar.gui.notifytimer import NotificationTimer
-from hanlendar.gui.widget.settingsdialog import SettingsDialog, AppSettings
+from hanlendar.gui.widget.settingsdialog import SettingsDialog, AppSettings, CalendarItem
 from hanlendar.gui.widget.navcalendar import NavCalendarHighlightModel
 from hanlendar.gui.widget.tasktable import get_reminded_color, get_timeout_color
 from hanlendar.gui.widget.settingsdialog import LocalCalendarItem, CalDAVCalendarItem
@@ -82,6 +82,15 @@ class DataHighlightModel(NavCalendarHighlightModel):
 ##
 class SettingsObject(QObject):
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.appSettings = AppSettings()
+        self._data_custom_path = None
+
+    def getAppSettings(self) -> AppSettings:
+        return self.appSettings
+
     def getSettings(self) -> QtCore.QSettings:
         #         ## store in app directory
         #         if self.settingsFilePath is None:
@@ -101,12 +110,101 @@ class SettingsObject(QObject):
             self,
         )
 
+    def getSettingsFilePath(self) -> str:
+        settings = self.getSettings()
+        return settings.fileName()
+
     def getDataPath(self):
         settings = self.getSettings()
         settingsDir = settings.fileName()
         settingsDir = settingsDir[0:-4]  ## remove extension
         settingsDir += "-data"
         return settingsDir
+
+    def getLocalDataRootPath(self):
+        if self._data_custom_path:
+            return self._data_custom_path
+        return self.getDataPath()
+
+    def setLocalDataRootPath(self, custom_path):
+        self._data_custom_path = custom_path
+
+    def getLocalDataPath(self):
+        dataPath = self.getLocalDataRootPath()
+        dataPath = os.path.join(dataPath, "local")
+        os.makedirs(dataPath, exist_ok=True)
+        return dataPath
+
+    def saveSettings(self):
+        settings: QtCore.QSettings = self.getSettings()
+        self.appSettings.saveSettings(settings)
+        ## force save to file
+        settings.sync()
+
+    def loadSettings(self):
+        settings: QtCore.QSettings = self.getSettings()
+        self.appSettings.loadSettings(settings)
+
+    ## ===================================================================
+
+    def createLocalManager(self, calendar_id: str = None) -> LocalManager:
+        dataPath = self.getLocalDataPath()
+        if dataPath and calendar_id:
+            dataPath = os.path.join(dataPath, calendar_id)
+        local_man = LocalManager(dataPath)
+        local_man.setCalendarId(calendar_id)
+        return local_man
+
+    def createCalDAVManager(self, connector: CalDAVConnector) -> CalDAVManager:
+        dataPath = self.getLocalDataRootPath()
+        dataPath = os.path.join(dataPath, "caldav")
+        os.makedirs(dataPath, exist_ok=True)
+        return CalDAVManager(connector, dataPath)
+
+    def createCalDAVManagerFromData(self, serverURL, serverUser, serverPassword, calendarName) -> CalDAVManager:
+        _LOGGER.info("connecting to CalDAV server: %s calendar: %s", serverURL, calendarName)
+        connector = CalDAVConnector(serverURL, serverUser, serverPassword, calendarName)
+        return self.createCalDAVManager(connector)
+
+    def createCalDAVManagerFromCalendarItem(self, caldav_cal: CalDAVCalendarItem) -> CalDAVManager:
+        _LOGGER.info("connecting to CalDAV server: %s calendar: %s", caldav_cal.serverURL, caldav_cal.calendarName)
+        connector = CalDAVConnector(
+            caldav_cal.serverURL,
+            caldav_cal.serverUser,
+            caldav_cal.serverPassword,
+            caldav_cal.calendarName,
+        )
+        manager = self.createCalDAVManager(connector)
+        calendar_id = caldav_cal.getCalendarId()
+        manager.setCalendarId(calendar_id)
+        return manager
+
+    def createManager(self, calendar_item: CalendarItem) -> Manager:
+        if isinstance(calendar_item, LocalCalendarItem):
+            # local_cal: LocalCalendarItem = cal_item
+            calendar_id = calendar_item.getCalendarId()
+            local_man: LocalManager = self.createLocalManager(calendar_id)
+            return local_man
+
+        if isinstance(calendar_item, CalDAVCalendarItem):
+            caldav_cal: CalDAVCalendarItem = calendar_item
+            caldav_man: CalDAVManager = self.createCalDAVManagerFromCalendarItem(caldav_cal)
+            return caldav_man
+
+        _LOGGER.warning("unhandled calendar item: %s", calendar_item)
+        return None
+
+    def createManagersList(self) -> list[Manager]:
+        manager_list: list[Manager] = []
+
+        ## cal_item: CalendarItem
+        for cal_item in self.appSettings.calendar_items:
+            _LOGGER.info("adding manager: %s %s", cal_item.getCalendarMode(), cal_item.getCalendarName())
+            manager: Manager = self.createManager(cal_item)
+            if manager:
+                manager_list.append(manager)
+
+        return manager_list
 
 
 ##
@@ -121,9 +219,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.ui.setupUi(self)
 
         self.qtSettings = SettingsObject(self)
-        self.appSettings = AppSettings()
 
-        self._data_custom_path = None
         self.data = DataObject(self)
 
         self.messagesQueueWatchdog = FSWatcher()
@@ -208,70 +304,21 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self.statusBar().showMessage("Ready", 10000)
 
     def setLocalDataRootPath(self, custom_path):
-        self._data_custom_path = custom_path
-
-    def getLocalDataPath(self):
-        dataPath = self._data_custom_path
-        if not dataPath:
-            dataPath = self.qtSettings.getDataPath()
-        dataPath = os.path.join(dataPath, "local")
-        os.makedirs(dataPath, exist_ok=True)
-        return dataPath
-
-    def createLocalManager(self, calendar_id: str = None) -> LocalManager:
-        dataPath = self.getLocalDataPath()
-        if dataPath and calendar_id:
-            dataPath = os.path.join(dataPath, calendar_id)
-        local_man = LocalManager(dataPath)
-        local_man.setCalendarId(calendar_id)
-        return local_man
-
-    def createCalDAVManager(self, connector: CalDAVConnector) -> CalDAVManager:
-        dataPath = self._data_custom_path
-        if not dataPath:
-            dataPath = self.qtSettings.getDataPath()
-        dataPath = os.path.join(dataPath, "caldav")
-        os.makedirs(dataPath, exist_ok=True)
-        return CalDAVManager(connector, dataPath)
-
-    def createCalDAVManagerFromCalendarItem(self, caldav_cal: CalDAVCalendarItem) -> CalDAVManager:
-        connector = self.createCalDAVConnector(
-            caldav_cal.serverURL,
-            caldav_cal.serverUser,
-            caldav_cal.serverPassword,
-            caldav_cal.calendarName,
-        )
-        manager = self.createCalDAVManager(connector)
-        calendar_id = caldav_cal.getCalendarId()
-        manager.setCalendarId(calendar_id)
-        return manager
-
-    def createCalDAVManagerFromData(self, serverURL, serverUser, serverPassword, calendarName) -> CalDAVManager:
-        connector = self.createCalDAVConnector(
-            serverURL,
-            serverUser,
-            serverPassword,
-            calendarName,
-        )
-        return self.createCalDAVManager(connector)
-
-    def createCalDAVConnector(self, caldav_address, caldav_user, caldav_pass, caldav_calendar):
-        _LOGGER.info("connecting to CalDAV server: %s calendar: %s", caldav_address, caldav_calendar)
-        return CalDAVConnector(caldav_address, caldav_user, caldav_pass, caldav_calendar)
+        self.qtSettings.setLocalDataRootPath(custom_path)
 
     def setCalDAVManager(self, caldav_address, caldav_user, caldav_pass, caldav_calendar):
-        self.appSettings.calendar_items.clear()
-        self.appSettings.addCalDAVCalendar(caldav_address, caldav_user, caldav_pass, caldav_calendar)
+        appSettings = self.qtSettings.getAppSettings()
+        appSettings.calendar_items.clear()
+        appSettings.addCalDAVCalendar(caldav_address, caldav_user, caldav_pass, caldav_calendar)
 
     def exportLocalToCalDAV(self, caldav_address, caldav_user, caldav_pass, caldav_calendar):
-        connector = self.createCalDAVConnector(caldav_address, caldav_user, caldav_pass, caldav_calendar)
+        _LOGGER.info("connecting to CalDAV server: %s calendar: %s", caldav_address, caldav_calendar)
+        connector = CalDAVConnector(caldav_address, caldav_user, caldav_pass, caldav_calendar)
         self.exportLocalDB(connector)
 
     def exportLocalDB(self, connector: CalDAVConnector):
-        manager: LocalManager = self.createLocalManager()
-        dataPath = self.getLocalDataPath()
-        manager.loadFromDisk(dataPath)
-        caldavManager = self.createCalDAVManager(connector)
+        manager: LocalManager = self.qtSettings.createLocalManager()
+        caldavManager = self.qtSettings.createCalDAVManager(connector)
         caldavManager.setData(manager)
         caldavManager.saveToServer()
 
@@ -279,7 +326,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         return self.data.getManager()
 
     def loadData(self):
-        dataPath = self.getLocalDataPath()
+        dataPath = self.qtSettings.getLocalDataPath()
         self.data.loadData(custom_path=dataPath)
         self.refreshView()
 
@@ -301,7 +348,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         notes = self.ui.notesWidget.getNotes()
         manager: MultiManager = self.data.getManager()
         manager.setNotes(notes)
-        dataPath = self.getLocalDataPath()
+        dataPath = self.qtSettings.getLocalDataPath()
         return self.data.storeData(custom_path=dataPath)
 
     def disableSaving(self):
@@ -328,14 +375,15 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
             self.hideDetails()
             return
         if isinstance(entity, Task):
-            calendar_data = self.appSettings.getCalendarData()
+            appSettings = self.qtSettings.getAppSettings()
+            calendar_data = appSettings.getCalendarData()
             self.ui.taskDetails.setCalendarData(calendar_data)
             self.ui.taskDetails.setTask(entity)
             self.ui.taskDetails.setReadOnly(read_only=True)
             self.ui.entityDetailsStack.setCurrentIndex(1)
             return
         if isinstance(entity, LocalToDo):
-            calendar_data = self.appSettings.getCalendarData()
+            calendar_data = appSettings.getCalendarData()
             self.ui.todoDetails.setCalendarData(calendar_data)
             self.ui.todoDetails.setToDo(entity)
             self.ui.entityDetailsStack.setCurrentIndex(2)
@@ -466,7 +514,8 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
         self._setTrayIndicator(theme)
 
     def _updateTrayIndicator(self):
-        self._setTrayIndicator(self.appSettings.trayIcon)  ## required to clear old number
+        appSettings = self.qtSettings.getAppSettings()
+        self._setTrayIndicator(appSettings.trayIcon)  ## required to clear old number
 
     def _setTrayIndicator(self, theme: tray_icon.TrayIconTheme):
         self._updateIconTheme(theme)  ## required to clear old number
@@ -527,53 +576,37 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
     ## ====================================================================
 
     def openSettingsDialog(self):
-        dialog = SettingsDialog(self.appSettings, self)
+        appSettings = self.qtSettings.getAppSettings()
+        dialog = SettingsDialog(appSettings, self)
         dialog.setModal(True)
         dialog.iconThemeChanged.connect(self.setIconTheme)
         dialog.exportLocal.connect(self.exportLocalDB)
         dialogCode = dialog.exec_()
         if dialogCode == QDialog.Rejected:
-            self.setIconTheme(self.appSettings.trayIcon)
+            self.setIconTheme(appSettings.trayIcon)
             return
-        self.appSettings = dialog.appSettings
+        self.qtSettings.appSettings = dialog.appSettings
         self.applySettings()
 
     def applySettings(self, *, load_user_data=True):
         _LOGGER.info("applying settings")
-        self.setIconTheme(self.appSettings.trayIcon)
+        appSettings = self.qtSettings.getAppSettings()
+        self.setIconTheme(appSettings.trayIcon)
 
-        calendar_data: CalendarData = self.appSettings.getCalendarData()
+        calendar_data: CalendarData = appSettings.getCalendarData()
         self.data.setCalendarData(calendar_data)
 
-        manager_list: list[Manager] = []
-
-        ## cal_item: CalendarItem
-        for cal_item in self.appSettings.calendar_items:
-            _LOGGER.info("adding manager: %s %s", cal_item.getCalendarMode(), cal_item.getCalendarName())
-
-            if isinstance(cal_item, LocalCalendarItem):
-                # local_cal: LocalCalendarItem = cal_item
-                calendar_id = cal_item.getCalendarId()
-                local_man: LocalManager = self.createLocalManager(calendar_id)
-                manager_list.append(local_man)
-
-            elif isinstance(cal_item, CalDAVCalendarItem):
-                caldav_cal: CalDAVCalendarItem = cal_item
-                caldav_man: CalDAVManager = self.createCalDAVManagerFromCalendarItem(caldav_cal)
-                manager_list.append(caldav_man)
-
-            else:
-                _LOGGER.warning("unhandled calendar item: %s", cal_item)
+        manager_list: list[Manager] = self.qtSettings.createManagersList()
 
         self.data.setManagerList(manager_list)
         if load_user_data:
             self.loadData()
 
     def loadSettings(self, *, apply=True, load_user_data=True):
-        settings: QtCore.QSettings = self.qtSettings.getSettings()
-        self.logger.debug("loading app state from %s", settings.fileName())
+        self.logger.debug("loading app state from %s", self.qtSettings.getSettingsFilePath())
 
-        self.appSettings.loadSettings(settings)
+        self.qtSettings.loadSettings()
+
         if apply:
             self.applySettings(load_user_data=load_user_data)
 
@@ -582,32 +615,15 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
     ## restore widget state and geometry
     def loadGeometry(self):
         settings: QtCore.QSettings = self.qtSettings.getSettings()
-
-        settings.beginGroup(self.objectName())
-        geometry = settings.value("geometry")
-        state = settings.value("windowState")
-        if geometry is not None:
-            self.restoreGeometry(geometry)
-        if state is not None:
-            self.restoreState(state)
-        settings.endGroup()
-
-        ## restore widget state and geometry
         guistate.load_state(self, settings)
 
     def saveSettings(self):
+        self.logger.debug("saving app state to %s", self.qtSettings.getSettingsFilePath())
+
+        self.qtSettings.saveSettings()
+
+        ## store widget state and geometry
         settings: QtCore.QSettings = self.qtSettings.getSettings()
-        self.logger.debug("saving app state to %s", settings.fileName())
-
-        self.appSettings.saveSettings(settings)
-
-        ## store widget state and geometry
-        settings.beginGroup(self.objectName())
-        settings.setValue("geometry", self.saveGeometry())
-        settings.setValue("windowState", self.saveState())
-        settings.endGroup()
-
-        ## store widget state and geometry
         guistate.save_state(self, settings)
 
         ## force save to file

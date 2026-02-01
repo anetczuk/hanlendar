@@ -298,9 +298,17 @@ class CalDAVManager(Manager):
         if self._calendar_id is None:
             _LOGGER.warning("unable to load data - no calendar id")
             return
+        self.loadDataLocal()
+        self.loadFromServer()
+
+    ## load data from local storage only (do not perform any connection)
+    # override
+    def loadDataLocal(self):
+        if self._calendar_id is None:
+            _LOGGER.warning("unable to load data - no calendar id")
+            return
         self._serverManager.loadData()
         self._localManager.loadData()
-        self.loadFromServer()
 
     def loadFromServer(self, *, save_cache_data: bool = True):
         server_url = self._connector.getURL()

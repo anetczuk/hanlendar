@@ -57,6 +57,12 @@ class Manager:
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
+    ## load data from local storage only (do not perform any connection)
+    @abc.abstractmethod
+    def loadDataLocal(self):
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
     @abc.abstractmethod
     def synchronize_data(self):
         message = "You need to define this method in derived class!"

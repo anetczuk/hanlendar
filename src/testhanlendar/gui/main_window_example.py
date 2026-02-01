@@ -199,10 +199,6 @@ else:
 
     window.appSettings.addCalDAVCalendar("http://localhost:5232", "bob", "bob", "new_cal", cal_id="0000-0001")
 
-    # connector = self.createCalDAVConnector("http://localhost:5232", "bob", "bob", "new_cal")
-    # # connector = self.createCalDAVConnector("http://localhost:5232", "bob", "bob", "test_xxx2")
-    # # connector = self.createCalDAVConnector("http://localhost:5232", "bob", "bob", "test")
-
     window.appSettings.addLocalCalendar("cal_1", cal_id="cal_1_id")
     calitem: LocalCalendarItem = window.appSettings.addLocalCalendar("cal_2", cal_id="cal_2_id")
     calitem.enabled = False
