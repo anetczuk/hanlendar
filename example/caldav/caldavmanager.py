@@ -164,7 +164,11 @@ def process_listcals(args):
     for calitem in calendars:
         description = calitem.get_property(caldav.elements.cdav.CalendarDescription())
         print(f"  - name: {calitem.name} id: {calitem.id} url: {calitem.url} description: {description}")
-        print(f"    events: {len(calitem.events())} journals: {len(calitem.journals())} todos: {len(calitem.todos())}")
+        print(
+            f"    events: {len(calitem.events())}"
+            f" journals: {len(calitem.journals())}"
+            f" todos: {len(calitem.todos(include_completed=True))}",
+        )
 
 
 def process_calitems(args):
@@ -177,7 +181,7 @@ def process_calitems(args):
         ## check if calendar exists by just access it's properties
         cal_name = calendar.get_display_name()  # type: ignore[attr-defined]
         events: list[caldav.objects.Event] = calendar.events()
-        todos: list[caldav.objects.Todo] = calendar.todos()
+        todos: list[caldav.objects.Todo] = calendar.todos(include_completed=True)
         journals: list[caldav.objects.Journal] = calendar.journals()
 
         print(f"calendar name: {cal_name} id: {calendar.id} url: {calendar.url}")
@@ -225,6 +229,41 @@ def process_calitems(args):
                 f" duration: {journal.get_duration()} url: {journal.url}",
             )
             print(f"    raw data: {journal.icalendar_component}")  # type: ignore[attr-defined]
+
+    except error.NotFoundError:
+        _LOGGER.error("given calendar '%s' does not exist", cal_id)
+        sys.exit(1)
+
+    except caldav.lib.error.AuthorizationError as ex:
+        _LOGGER.error("authorization error: %s", ex)
+        sys.exit(1)
+
+
+def process_clear_calendar(args):
+    cal_id = None
+    calendar: caldav.objects.Calendar = None
+
+    try:
+        cal_id, calendar = get_calendar(args)
+
+        ## check if calendar exists by just access it's properties
+        events: list[caldav.objects.Event] = calendar.events()
+        todos: list[caldav.objects.Todo] = calendar.todos(include_completed=True)
+        journals: list[caldav.objects.Journal] = calendar.journals()
+
+        print("removing events", len(events))
+        for event in events:
+            event.delete()
+
+        print("removing todos", len(todos))
+        for todo in todos:
+            todo.delete()
+
+        print("removing journals", len(journals))
+        for journal in journals:
+            journal.delete()
+
+        print("done")
 
     except error.NotFoundError:
         _LOGGER.error("given calendar '%s' does not exist", cal_id)
@@ -322,6 +361,20 @@ def main():
     )
     subparser.description = description
     subparser.set_defaults(func=process_calitems)
+    group = subparser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--calid", action="store", help="Id of calendar")
+    group.add_argument("--calurl", action="store", help="URL of calendar with cal id and user name, e.g. 'bob/cal1/'")
+
+    ## =================================================
+
+    description = "clear calendar"
+    subparser = subparsers.add_parser(
+        "clearcal",
+        help=description,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    subparser.description = description
+    subparser.set_defaults(func=process_clear_calendar)
     group = subparser.add_mutually_exclusive_group(required=True)
     group.add_argument("--calid", action="store", help="Id of calendar")
     group.add_argument("--calurl", action="store", help="URL of calendar with cal id and user name, e.g. 'bob/cal1/'")
