@@ -161,6 +161,10 @@ class LocalManager(Manager):
 
         return changed
 
+    # override
+    def storeDataLocal(self) -> bool:
+        return self.storeData()
+
     def loadFromDisk(self, inputDir):
         if inputDir:
             self._ioDir = inputDir
@@ -272,7 +276,6 @@ class LocalManager(Manager):
 
         _LOGGER.info("loaded tasks: %s todos: %s", len(self.tasks), len(self.todos))
 
-    ## load data from local storage only (do not perform any connection)
     # override
     def loadDataLocal(self):
         self.loadData()

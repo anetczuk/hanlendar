@@ -38,6 +38,7 @@ from hanlendar.domainmodel.local.manager import LocalManager
 from hanlendar.domainmodel.icalio import import_icalendar, TaskSerialization, ToDoSerialization
 from hanlendar.domainmodel.local.task import Task
 from hanlendar.domainmodel.item import Item
+from hanlendar.domainmodel.local.todo import LocalToDo
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -155,8 +156,15 @@ class CalDAVManager(Manager):
             self._calendar_id,
         )
         self.saveToServer()
-        ret1 = self._localManager.storeData()
-        ret2 = self._serverManager.storeData()
+        return self.storeDataLocal()
+
+    # override
+    def storeDataLocal(self) -> bool:
+        if self._calendar_id is None:
+            _LOGGER.warning("unable to store data - no calendar id")
+            return False
+        ret1 = self._localManager.storeDataLocal()
+        ret2 = self._serverManager.storeDataLocal()
         return ret1 and ret2
 
     def saveToServer(self):
@@ -400,11 +408,11 @@ class CalDAVManager(Manager):
         manager.tasks.clear()
 
         ### sync events
-        all_events = calendar.events()
+        all_events: list[caldav.objects.Event] = calendar.events()
         dangling_children = []
-        ## event: caldav.objects.Event = None
-        for event in all_events:
-            iCalendar: icalendar.cal.Calendar = event.icalendar_instance
+        ## item: caldav.objects.Event = None
+        for cal_item in all_events:
+            iCalendar: icalendar.cal.Calendar = cal_item.icalendar_instance
             _item, children = import_icalendar(manager, iCalendar)
             dangling_children.extend(children)
 
@@ -413,15 +421,36 @@ class CalDAVManager(Manager):
         if len(dangling_children) > 0:
             _LOGGER.warning("not all children could be handled properly")
             _LOGGER.info("dangling children:")
-            for item in dangling_children:
-                child, parent_uuid = item
+            for child_item in dangling_children:
+                child, parent_uuid = child_item
                 _LOGGER.info("item: %s %s %s", child.UID, child.title, parent_uuid)
             _LOGGER.info("tasks:")
-            for task in manager.getTasksAll():
-                _LOGGER.info("item: %s %s", task.UID, task.title)
+            for task_item in manager.getTasksAll():
+                _LOGGER.info("item: %s %s", task_item.UID, task_item.title)
 
     def _loadToDos(self, calendar: caldav.objects.Calendar, manager: LocalManager):
-        pass
+        manager.todos.clear()
+
+        ### sync events
+        all_todos: list[caldav.objects.Todo] = calendar.todos(include_completed=True)
+        dangling_children = []
+        ## item: caldav.objects.Todo = None
+        for cal_item in all_todos:
+            iCalendar: icalendar.cal.Calendar = cal_item.icalendar_instance
+            _item, children = import_icalendar(manager, iCalendar)
+            dangling_children.extend(children)
+
+        fix_dangling_todos(manager, dangling_children)
+
+        if len(dangling_children) > 0:
+            _LOGGER.warning("not all children could be handled properly")
+            _LOGGER.info("dangling children:")
+            for child_item in dangling_children:
+                child, parent_uuid = child_item
+                _LOGGER.info("item: %s %s %s", child.UID, child.title, parent_uuid)
+            _LOGGER.info("tasks:")
+            for todo_item in manager.getTodosAll():
+                _LOGGER.info("item: %s %s", todo_item.UID, todo_item.title)
 
     ## overriden
     def synchronize_data(self):
@@ -490,27 +519,39 @@ def fix_dangling_tasks(manager: Manager, dangling_children):
         handled = False
         for i in range(len(dangling_children) - 1, -1, -1):
             child, parent_uid = dangling_children[i]
-            taskParent: Task = manager.findTaskByUID(parent_uid)
-            if taskParent is not None:
+            itemParent: Task = manager.findTaskByUID(parent_uid)
+            if itemParent is not None:
                 ## add as subitem
-                taskParent.addSubItem(child)
+                itemParent.addSubItem(child)
                 del dangling_children[i]
                 handled = True
         if handled is True:
             continue
 
-        #         _LOGGER.warning( "not all children could be handled properly" )
-        #
-        #         print( "dangling children:" )
-        #         for item in dangling_children:
-        #             child, parent_uuid = item
-        #             print( "item:", child.UID, parent_uuid )
-        #         print( "tasks:" )
-        #         for item in manager.getTasksAll():
-        #             print( "item:", item.UID )
-
         ## add remaining dangling children as regular tasks
         for item in dangling_children:
             child, _other = item
             manager.addTask(child)
+        break
+
+
+def fix_dangling_todos(manager: Manager, dangling_children):
+    ## handle dangling children
+    while len(dangling_children) > 0:
+        handled = False
+        for i in range(len(dangling_children) - 1, -1, -1):
+            child, parent_uid = dangling_children[i]
+            itemParent: LocalToDo = manager.findTodoByUID(parent_uid)
+            if itemParent is not None:
+                ## add as subitem
+                itemParent.addSubItem(child)
+                del dangling_children[i]
+                handled = True
+        if handled is True:
+            continue
+
+        ## add remaining dangling children as regular tasks
+        for item in dangling_children:
+            child, _other = item
+            manager.addToDo(child)
         break

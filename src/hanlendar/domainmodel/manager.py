@@ -53,13 +53,19 @@ class Manager:
         raise NotImplementedError(message)
 
     @abc.abstractmethod
+    def storeDataLocal(self) -> bool:
+        """Store data to local storage only (do not perform any connections)."""
+        message = "You need to define this method in derived class!"
+        raise NotImplementedError(message)
+
+    @abc.abstractmethod
     def loadData(self):
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
-    ## load data from local storage only (do not perform any connection)
     @abc.abstractmethod
     def loadDataLocal(self):
+        """Load data from local storage only (do not perform any connections)."""
         message = "You need to define this method in derived class!"
         raise NotImplementedError(message)
 
@@ -334,7 +340,7 @@ class Manager:
                 subitems = taskParent.getSubitems()
                 if task not in subitems:
                     ## invalid case
-                    _LOGGER.warning("task '%s' have invalid parent -- moved to task %s", task.title, taskParent.title)
+                    _LOGGER.warning("task '%s' have invalid parent -- moved to task '%s'", task.title, taskParent.title)
                     task.setParent(taskParent)
             children = task.getSubitems()
             if children is None:
@@ -343,7 +349,7 @@ class Manager:
                 childParent = child.getParent()
                 if childParent is not task:
                     ## invalid case
-                    _LOGGER.warning("task '%s' have invalid parent -- moved to task %s", child.title, task.title)
+                    _LOGGER.warning("task '%s' have invalid parent -- moved to task '%s'", child.title, task.title)
                     task.setParent(taskParent)
 
     def fixCalendarId(self):

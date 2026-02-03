@@ -282,6 +282,18 @@ class AppSettings:
             return None
         return self.calendar_items[cal_index]
 
+    def getCalendarById(self, cal_id: str) -> CalendarItem:
+        if cal_id is None:
+            default_item = LocalCalendarItem()
+            default_item.calendar_id = None
+            return default_item
+
+        for item in self.calendar_items:
+            item_id = item.getCalendarId()
+            if cal_id == item_id:
+                return item
+        return None
+
     def setCalendarMode(self, cal_index: int, cal_mode: DatabaseMode, cal_name: str = None) -> CalendarItem:
         curr_cal: CalendarItem = self.getCalendar(cal_index)
         if curr_cal is None:

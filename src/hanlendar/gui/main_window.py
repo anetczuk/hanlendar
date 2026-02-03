@@ -383,6 +383,7 @@ class MainWindow(QtBaseClass):  # type: ignore[valid-type,misc]
             self.ui.entityDetailsStack.setCurrentIndex(1)
             return
         if isinstance(entity, LocalToDo):
+            appSettings = self.qtSettings.getAppSettings()
             calendar_data = appSettings.getCalendarData()
             self.ui.todoDetails.setCalendarData(calendar_data)
             self.ui.todoDetails.setToDo(entity)

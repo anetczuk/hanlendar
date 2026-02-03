@@ -49,7 +49,9 @@ class LocalToDo(Item, persist.Versionable):
     ##  8: added '_status', '_class'
     ##  9: use '_common_data'
     ## 10: added '_dueDate', '_completedDate'
-    _class_version = 10
+    ## 11: added missing '_dueDate'
+    ## 12: added missing '_completedDate'
+    _class_version = 12
 
     def __init__(self, title: str = ""):
         super().__init__()
@@ -140,6 +142,23 @@ class LocalToDo(Item, persist.Versionable):
                 common_data.__dict__[key] = state_dict[value]
                 del state_dict[value]
             state_dict["_common_data"] = common_data
+            state_version += 1
+
+        if state_version == 9:
+            if "_dueDate" not in state_dict:
+                state_dict["_dueDate"] = None
+            if "_completedDate" not in state_dict:
+                state_dict["_completedDate"] = None
+            state_version += 1
+
+        if state_version == 10:
+            if "_dueDate" not in state_dict:
+                state_dict["_dueDate"] = None
+            state_version += 1
+
+        if state_version == 11:
+            if "_completedDate" not in state_dict:
+                state_dict["_completedDate"] = None
             state_version += 1
 
         return state_dict

@@ -21,7 +21,7 @@
 # SOFTWARE.
 #
 
-# pylint: disable=W0212,C0302
+# pylint: disable=W0212,C0302,R0912,R0915
 
 import logging
 from enum import Enum, unique
@@ -261,7 +261,7 @@ class ToDoField(Enum):
     COMPLETED = "completed"
     SEQUENCE = "sequence"
 
-    COMPLETE = "percent-complete"
+    PERCENT_COMPLETE = "percent-complete"
     PRIORITY = "priority"
 
     GROUP_PARENT = "x-hanlendar-parent"  ## uuid of parent
@@ -505,7 +505,7 @@ class ToDoSerialization:
         if completed_date is not None:
             todo.setCompletedDateTime(completed_date)
 
-        todo.completed = get_ical_value_int(component, ToDoField.COMPLETE, 0)
+        todo.completed = get_ical_value_int(component, ToDoField.PERCENT_COMPLETE, 0)
 
         unhandled_props = PropsDict()
         unhandled_props.add_props(component)
@@ -564,10 +564,10 @@ class ToDoSerialization:
         completed_date_time = convert_to_ical_dt(todo.completedDateTime)
         if completed_date_time is not None:
             ## optional in VTODO
-            itodo.add(ToDoField.COMPLETED.value, completed_date_time.date())
+            itodo.add(ToDoField.COMPLETED.value, completed_date_time)
 
         if todo.completed != 0:
-            itodo.add(ToDoField.COMPLETE.value, todo.completed)
+            itodo.add(ToDoField.PERCENT_COMPLETE.value, todo.completed)
 
         taskParent = todo.getParent()
         if taskParent is not None:
@@ -740,7 +740,8 @@ class RecurrentSerialization:
         if recurrence.mode == RepeatType.WEEKLY:
             ## WEEKLY: BYDAY=SU,MO,TU,WE,TH,FR,SA
             prop_byday_list = rrule.get("BYDAY")
-            recurrence.weekday = convert_weekday_to_index(prop_byday_list)
+            if prop_byday_list is not None:
+                recurrence.weekday = convert_weekday_to_index(prop_byday_list)
 
         elif recurrence.mode == RepeatType.MONTHLY:
             prop_byday_list = rrule.get("BYDAY")
@@ -766,12 +767,15 @@ class RecurrentSerialization:
                 _LOGGER.warning("invalid RRULE: %s", rrule)
                 return RecurrentSerialization.get_unhandled(component)
             ## YEARLY: BYMONTH=11;BYDAY=1SU,1WE,2SU,3FR,4TU,5TU,-1WE
-            recurrence.month = [int(month) for month in prop_bymonth_list]
-            weekday_list, monthday_list = convert_monthday_to_index(prop_byday_list)
-            recurrence.weekday = weekday_list
-            recurrence.monthweek = monthday_list
-            ## YEARLY: BYMONTH=11;BYMONTHDAY=7,30
-            recurrence.monthday = [int(day) for day in prop_bymonthday_list]
+            if prop_bymonth_list is not None:
+                recurrence.month = [int(month) for month in prop_bymonth_list]
+            if prop_byday_list is not None:
+                weekday_list, monthday_list = convert_monthday_to_index(prop_byday_list)
+                recurrence.weekday = weekday_list
+                recurrence.monthweek = monthday_list
+            if prop_bymonthday_list is not None:
+                ## YEARLY: BYMONTH=11;BYMONTHDAY=7,30
+                recurrence.monthday = [int(day) for day in prop_bymonthday_list]
 
         unhandled_props = PropsDict()
 
@@ -843,7 +847,8 @@ class RecurrentSerialization:
 
         if recurrence.mode == RepeatType.WEEKLY:
             ## WEEKLY: BYDAY=SU,MO,TU,WE,TH,FR,SA
-            rrule["BYDAY"] = convert_index_to_weekday(recurrence.weekday)
+            if recurrence.weekday:
+                rrule["BYDAY"] = convert_index_to_weekday(recurrence.weekday)
 
         elif recurrence.mode == RepeatType.MONTHLY:
             if recurrence.weekday and recurrence.monthweek:
@@ -866,9 +871,10 @@ class RecurrentSerialization:
 
         component.add("RRULE", rrule)
 
-        exdates = list(recurrence.exception_dates)
-        for item in exdates:
-            component.add("EXDATE", item)
+        if recurrence.exception_dates:
+            exdates = list(recurrence.exception_dates)
+            for item in exdates:
+                component.add("EXDATE", item)
 
 
 def convert_weekday_to_index(weekday_list) -> list[int]:
@@ -892,6 +898,8 @@ def convert_weekday_to_index(weekday_list) -> list[int]:
 
 
 def convert_index_to_weekday(index_list) -> list[str]:
+    if index_list is None:
+        return None
     weekday_index_dict = {
         0: "MO",
         1: "TU",

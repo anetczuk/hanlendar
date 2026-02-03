@@ -195,14 +195,15 @@ else:
 
     window.setLocalDataRootPath("/tmp/hanlendar-test-data")
 
-    window.appSettings = AppSettings()
+    window.qtSettings.appSettings = AppSettings()
+    appSettings = window.qtSettings.appSettings
 
-    window.appSettings.addCalDAVCalendar("http://localhost:5232", "bob", "bob", "new_cal", cal_id="0000-0001")
+    appSettings.addCalDAVCalendar("http://localhost:5232", "bob", "bob", "new_cal", cal_id="0000-0001")
 
-    window.appSettings.addLocalCalendar("cal_1", cal_id="cal_1_id")
-    calitem: LocalCalendarItem = window.appSettings.addLocalCalendar("cal_2", cal_id="cal_2_id")
+    appSettings.addLocalCalendar("cal_1", cal_id="cal_1_id")
+    calitem: LocalCalendarItem = appSettings.addLocalCalendar("cal_2", cal_id="cal_2_id")
     calitem.enabled = False
-    window.appSettings.addLocalCalendar("cal_3", cal_id="cal_3_id")
+    appSettings.addLocalCalendar("cal_3", cal_id="cal_3_id")
 
     window.applySettings(load_user_data=True)
 

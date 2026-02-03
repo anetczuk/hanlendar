@@ -234,7 +234,7 @@ class ToDoDetails(QtBaseClass):  # type: ignore[valid-type,misc]
             return
         if not self.todo:
             return
-        _LOGGER.debug("changing title from %s to %s", self.todo.title, newValue)
+        # _LOGGER.debug("changing title from %s to %s", self.todo.title, newValue)
         self.todo.title = newValue
 
     def _locationChanged(self):
