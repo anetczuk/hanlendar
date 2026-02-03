@@ -10,14 +10,19 @@ SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 SRC_DIR="$SCRIPT_DIR/../src"
 
 
+## $1 - output base name
+## $2 - script path
 generate_tools_help() {
-    HELP_MD_PATH="$SCRIPT_DIR/cmdargs.md"
-    HELP_TXT_PATH="$SCRIPT_DIR/cmdargs.txt"
+    local out_base_name="${1}"
+    local script_path="${2}"
+
+    HELP_MD_PATH="$SCRIPT_DIR/${out_base_name}.md"
+    HELP_TXT_PATH="$SCRIPT_DIR/${out_base_name}.txt"
 
     cd "$SRC_DIR"
 
-    COMMAND="$SRC_DIR/startcalendar"
-    COMMAND_TEXT="startcalendar"
+    COMMAND="${script_path}"
+    COMMAND_TEXT=$(basename "${COMMAND}")
 
     echo "## <a name=\"main_help\"></a> $COMMAND_TEXT --help" > "${HELP_MD_PATH}"
     echo -e "\`\`\`" >> "${HELP_MD_PATH}"
@@ -55,7 +60,9 @@ generate_tools_help() {
 }
 
 
-generate_tools_help
+generate_tools_help "hanlendar-cmdargs" "$SRC_DIR/startcalendar"
+generate_tools_help "managecals-cmdargs" "$SRC_DIR//managecals.py"
+generate_tools_help "caldavmanager-cmdargs" "$SRC_DIR/../example/caldav/caldavmanager.py"
 
 
 "$SCRIPT_DIR"/generate_small.sh

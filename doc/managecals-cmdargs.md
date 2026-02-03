@@ -1,0 +1,21 @@
+## <a name="main_help"></a> managecals.py --help
+```
+usage: managecals.py [-h] [-la]
+                     {listcals,moveitems,storecals,removerepeated} ...
+
+History read
+
+options:
+  -h, --help            show this help message and exit
+  -la, --logall         Log all messages
+
+subcommands:
+  commands
+
+  {listcals,moveitems,storecals,removerepeated}
+                        commands
+    listcals            list configured calendars
+    moveitems           move items between calendars
+    storecals           store calendars to server
+    removerepeated      remove repeated items from calendar
+```

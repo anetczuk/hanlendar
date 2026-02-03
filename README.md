@@ -23,6 +23,7 @@ Application is inspired by:
 - notes tabs
 - system tray icon with tasks indicator
 - importing data from *Xfce Notes* application
+- CalDAV support
 
 
 ## Screens
@@ -59,7 +60,7 @@ In addition application can be added to system menu and autostart by followings 
 
 Application accepts following parameters:
 
-<!-- insertstart include="doc/cmdargs.txt" pre="\n" post="\n" -->
+<!-- insertstart include="doc/hanlendar-cmdargs.txt" pre="\n" post="\n" -->
 ```
 usage: startcalendar [-h] [--minimized] [--blocksave]
                      [--localdatadir LOCALDATADIR] [--caldav]
@@ -86,6 +87,59 @@ options:
                         CalDAV calendar name
   --exportlocal         Export local database to CalDAV server (use caldav...
                         options to connect)
+```
+
+<!-- insertend -->
+
+Supporting calendars management script *src/managecals.py*:
+
+<!-- insertstart include="doc/managecals-cmdargs.txt" pre="\n" post="\n" -->
+```
+usage: managecals.py [-h] [-la]
+                     {listcals,moveitems,storecals,removerepeated} ...
+
+History read
+
+options:
+  -h, --help            show this help message and exit
+  -la, --logall         Log all messages
+
+subcommands:
+  commands
+
+  {listcals,moveitems,storecals,removerepeated}
+                        commands
+    listcals            list configured calendars
+    moveitems           move items between calendars
+    storecals           store calendars to server
+    removerepeated      remove repeated items from calendar
+```
+
+<!-- insertend -->
+
+Supporting CalDAV management script *example/caldav/caldavmanager.py*:
+
+<!-- insertstart include="doc/caldavmanager-cmdargs.txt" pre="\n" post="\n" -->
+```
+usage: caldavmanager.py [-h] [--authjson AUTHJSON]
+                        {calcreate,listcals,calitems,clearcal,addevent} ...
+
+CalDAV manager
+
+options:
+  -h, --help            show this help message and exit
+  --authjson AUTHJSON   Path to JSON with credentials (default: None)
+
+subcommands:
+  commands
+
+  {calcreate,listcals,calitems,clearcal,addevent}
+                        commands
+    calcreate           create new calendar
+    listcals            list calendars
+    calitems            list calendar content
+    clearcal            clear calendar
+    addevent            add event
 ```
 
 <!-- insertend -->

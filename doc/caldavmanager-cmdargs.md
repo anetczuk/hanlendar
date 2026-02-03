@@ -1,0 +1,22 @@
+## <a name="main_help"></a> caldavmanager.py --help
+```
+usage: caldavmanager.py [-h] [--authjson AUTHJSON]
+                        {calcreate,listcals,calitems,clearcal,addevent} ...
+
+CalDAV manager
+
+options:
+  -h, --help            show this help message and exit
+  --authjson AUTHJSON   Path to JSON with credentials (default: None)
+
+subcommands:
+  commands
+
+  {calcreate,listcals,calitems,clearcal,addevent}
+                        commands
+    calcreate           create new calendar
+    listcals            list calendars
+    calitems            list calendar content
+    clearcal            clear calendar
+    addevent            add event
+```

@@ -484,7 +484,7 @@ class IcalioEvolutionTest(unittest.TestCase):
         event_ical_content = replace_line(
             event_ical_content,
             "COMPLETED:20251113T000000Z",
-            "COMPLETED;VALUE=DATE:20251113",
+            "COMPLETED;TZID=CET:20251113T010000",
             replace_whole_line=True,
         )
 
